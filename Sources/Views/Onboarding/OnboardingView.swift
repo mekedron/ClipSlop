@@ -4,6 +4,8 @@ import KeyboardShortcuts
 struct OnboardingView: View {
     let appState: AppState
     @State private var currentStep = 0
+    @State private var accessibilityGranted = false
+    @State private var screenRecordingGranted = false
 
     private let totalSteps = 6
 
@@ -59,6 +61,10 @@ struct OnboardingView: View {
             .padding(20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear { refreshPermissions() }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            refreshPermissions()
+        }
     }
 
     // MARK: - Step 1: Welcome
@@ -124,7 +130,7 @@ struct OnboardingView: View {
                     title: "Accessibility",
                     description: "Required to capture selected text from other apps",
                     icon: "hand.raised",
-                    isGranted: TextCaptureService.isAccessibilityEnabled(),
+                    isGranted: accessibilityGranted,
                     onRequest: {
                         TextCaptureService.requestAccessibility()
                     }
@@ -134,7 +140,7 @@ struct OnboardingView: View {
                     title: "Screen Recording",
                     description: "Required for OCR — scanning text from screen regions",
                     icon: "rectangle.dashed.badge.record",
-                    isGranted: screenRecordingGranted(),
+                    isGranted: screenRecordingGranted,
                     onRequest: {
                         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
                             NSWorkspace.shared.open(url)
@@ -216,12 +222,9 @@ struct OnboardingView: View {
 
     // MARK: - Helpers
 
-    private func screenRecordingGranted() -> Bool {
-        CGPreflightScreenCaptureAccess()
-    }
-
-    private func requestScreenRecording() {
-        CGRequestScreenCaptureAccess()
+    private func refreshPermissions() {
+        accessibilityGranted = AXIsProcessTrusted()
+        screenRecordingGranted = CGPreflightScreenCaptureAccess()
     }
 }
 

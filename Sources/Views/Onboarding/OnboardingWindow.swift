@@ -18,7 +18,6 @@ final class OnboardingWindow: NSWindow {
         titleVisibility = .hidden
         isMovableByWindowBackground = true
         isReleasedWhenClosed = false
-        level = .floating
         contentView = hostingView
 
         center()
