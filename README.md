@@ -56,7 +56,7 @@ Select text → ⌃⌘C → Pick a prompt → Get result → Copy / Paste back
 
 ## Features
 
-- **Multi-provider AI** — Anthropic (Claude), OpenAI (GPT), Ollama (local), any OpenAI-compatible API
+- **Multi-provider AI** — Anthropic (Claude), OpenAI (GPT), Ollama (local), CLI tools (Claude Code, Codex), any OpenAI-compatible API
 - **Nested prompt tree** — Organize prompts in folders with single-key mnemonics
 - **Full history** — See every transformation step, navigate back and forth
 - **Manual editing** — Edit any result by hand (`⌘E`), saved as a history step
@@ -89,7 +89,23 @@ Select text → ⌃⌘C → Pick a prompt → Get result → Copy / Paste back
 
 ### Download
 
-Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest). Drag to Applications. On first launch, right-click → Open (unsigned app).
+Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest). Drag to Applications.
+
+#### Opening the app (important)
+
+ClipSlop is not signed with an Apple Developer certificate, so macOS will block it on first launch. This is expected — I simply don't want to pay Apple $99/year for a developer account.
+
+**The app is safe.** The source code is fully open, and all release builds are produced automatically by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) — nothing is added to the binary that isn't in this repository.
+
+To open ClipSlop:
+
+1. **Drag** `ClipSlop.app` to your **Applications** folder
+2. **Double-click** to open — macOS will show a warning and refuse
+3. Open **System Settings → Privacy & Security**
+4. Scroll down — you'll see *"ClipSlop was blocked from use because it is not from an identified developer"*
+5. Click **Open Anyway**, then confirm
+
+You only need to do this once. After that, the app opens normally.
 
 ### Build from source
 
@@ -115,7 +131,7 @@ Fully customizable — add your own prompts, folders, and mnemonics in Settings 
 ## Requirements
 
 - macOS 14.0+
-- An AI provider API key (Anthropic, OpenAI, or local Ollama)
+- An AI provider: API key (Anthropic, OpenAI), local Ollama, or a CLI tool like Claude Code or Codex
 
 ## Acknowledgements
 
