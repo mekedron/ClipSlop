@@ -8,6 +8,7 @@ struct SettingsView: View {
         ("General", "gear"),
         ("Providers", "brain"),
         ("Prompts", "text.bubble"),
+        ("About", "info.circle"),
     ]
 
     var body: some View {
@@ -52,6 +53,7 @@ struct SettingsView: View {
                 case 0: GeneralSettingsView(appState: appState)
                 case 1: ProvidersSettingsView(appState: appState)
                 case 2: PromptsSettingsView(appState: appState)
+                case 3: AboutView()
                 default: EmptyView()
                 }
             }

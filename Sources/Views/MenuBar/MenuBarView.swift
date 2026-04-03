@@ -37,6 +37,10 @@ struct MenuBarView: View {
         }
         .keyboardShortcut(",", modifiers: .command)
 
+        Button("About ClipSlop") {
+            appState.showAbout()
+        }
+
         Button("Show Onboarding...") {
             appState.showOnboarding()
         }
