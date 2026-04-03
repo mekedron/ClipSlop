@@ -38,6 +38,9 @@ struct GeneralSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
+                if case .pendingConflict = appState.syncService.status {
+                    iCloudConflictView
+                }
             }
 
             Section("Keyboard Shortcuts") {
@@ -149,10 +152,41 @@ struct GeneralSettingsView: View {
             ProgressView()
                 .controlSize(.small)
                 .help("Syncing...")
+        case .pendingConflict:
+            Image(systemName: "questionmark.app.dashed")
+                .foregroundStyle(.orange)
         case .error:
             Image(systemName: "xmark.icloud")
                 .foregroundStyle(.red)
                 .help("Sync error")
         }
+    }
+
+    private var iCloudConflictView: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Existing prompts found in iCloud", systemImage: "icloud.and.arrow.down")
+                .font(.subheadline.weight(.medium))
+
+            Text("Would you like to use the prompts from iCloud or upload your current prompts?")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 12) {
+                Button {
+                    appState.syncService.resolveUseCloud()
+                } label: {
+                    Label("Use iCloud", systemImage: "icloud.and.arrow.down")
+                }
+                .buttonStyle(.borderedProminent)
+
+                Button {
+                    appState.syncService.resolveUseLocal()
+                } label: {
+                    Label("Upload Local", systemImage: "icloud.and.arrow.up")
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }

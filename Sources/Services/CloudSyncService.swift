@@ -5,6 +5,7 @@ enum SyncStatus: Equatable, Sendable {
     case unavailable
     case current
     case syncing
+    case pendingConflict   // First sync on device, iCloud has existing data — needs user choice
     case error(String)
 }
 
@@ -12,6 +13,9 @@ enum SyncStatus: Equatable, Sendable {
 @Observable
 final class CloudSyncService {
     private(set) var status: SyncStatus = .disabled
+
+    /// Holds cloud prompt data while waiting for user to resolve first-sync conflict.
+    private(set) var pendingCloudPrompts: [PromptNode]?
 
     private weak var promptStore: PromptStore?
     private var metadataQuery: NSMetadataQuery?
@@ -22,6 +26,12 @@ final class CloudSyncService {
 
     private let containerID: String? = nil // nil = default container from entitlements
     private let syncFileName = "prompts.json"
+
+    /// True after the very first sync completes on this device.
+    private var hasCompletedInitialSync: Bool {
+        get { UserDefaults.standard.bool(forKey: "cloudSync.hasCompletedInitialSync") }
+        set { UserDefaults.standard.set(newValue, forKey: "cloudSync.hasCompletedInitialSync") }
+    }
 
     private var documentsURL: URL? {
         containerURL?.appendingPathComponent("Documents")
@@ -61,6 +71,7 @@ final class CloudSyncService {
         debounceTask = nil
         containerURL = nil
         lastUploadHash = nil
+        pendingCloudPrompts = nil
         if let identityObserver {
             NotificationCenter.default.removeObserver(identityObserver)
         }
@@ -70,8 +81,8 @@ final class CloudSyncService {
 
     /// Called by PromptStore.onPromptsChanged when local prompts are saved.
     func handleLocalChange(data: Data) {
+        guard status != .pendingConflict else { return }
         let hash = data.hashValue
-        // Skip if this is data we just uploaded (prevent echo)
         if hash == lastUploadHash { return }
 
         debounceTask?.cancel()
@@ -82,6 +93,31 @@ final class CloudSyncService {
         }
     }
 
+    // MARK: - Conflict Resolution (user actions)
+
+    /// User chose "Use iCloud" — replace local prompts with cloud data.
+    func resolveUseCloud() {
+        guard let nodes = pendingCloudPrompts else { return }
+        pendingCloudPrompts = nil
+        promptStore?.replaceFromSync(nodes)
+        // Upload the resolved data back so hashes stay in sync
+        if let data = try? JSONEncoder.pretty.encode(nodes) {
+            uploadToCloud(data)
+        }
+        hasCompletedInitialSync = true
+        status = .current
+    }
+
+    /// User chose "Keep local" — upload local prompts to iCloud.
+    func resolveUseLocal() {
+        pendingCloudPrompts = nil
+        if let data = try? Data(contentsOf: Constants.promptsFileURL) {
+            uploadToCloud(data)
+        }
+        hasCompletedInitialSync = true
+        status = .current
+    }
+
     // MARK: - Initial Sync
 
     private func performInitialSync() {
@@ -89,18 +125,57 @@ final class CloudSyncService {
 
         let fm = FileManager.default
         if fm.fileExists(atPath: cloudFileURL.path) {
-            // Cloud file exists — download if needed, then compare dates
             triggerDownloadIfNeeded(cloudFileURL)
-            resolveConflict()
+
+            if hasCompletedInitialSync {
+                // Normal ongoing sync — auto-resolve by date
+                resolveByDate()
+            } else {
+                // First sync on this device — check if cloud has meaningful data
+                presentConflictChoice()
+            }
         } else {
             // No cloud file — upload local prompts
             if let data = try? Data(contentsOf: Constants.promptsFileURL) {
                 uploadToCloud(data)
             }
+            hasCompletedInitialSync = true
+            status = .current
         }
     }
 
-    private func resolveConflict() {
+    /// First-time sync: read cloud data and let the user decide.
+    private func presentConflictChoice() {
+        guard let cloudFileURL else { return }
+
+        let coordinator = NSFileCoordinator()
+        var error: NSError?
+
+        coordinator.coordinate(readingItemAt: cloudFileURL, options: [], error: &error) { url in
+            guard let data = try? Data(contentsOf: url),
+                  let nodes = try? JSONDecoder().decode([PromptNode].self, from: data),
+                  !nodes.isEmpty
+            else {
+                // Cloud file is empty or unreadable — just upload local
+                if let localData = try? Data(contentsOf: Constants.promptsFileURL) {
+                    uploadToCloud(localData)
+                }
+                hasCompletedInitialSync = true
+                status = .current
+                return
+            }
+
+            pendingCloudPrompts = nodes
+            status = .pendingConflict
+        }
+
+        if let error {
+            status = .error(error.localizedDescription)
+        }
+    }
+
+    /// Ongoing sync conflict resolution — newer file wins.
+    private func resolveByDate() {
         guard let cloudFileURL else { return }
 
         let coordinator = NSFileCoordinator()
@@ -114,16 +189,13 @@ final class CloudSyncService {
                 return
             }
 
-            // Compare modification dates — newer wins
             let fm = FileManager.default
             let cloudDate = (try? fm.attributesOfItem(atPath: url.path))?[.modificationDate] as? Date ?? .distantPast
             let localDate = (try? fm.attributesOfItem(atPath: Constants.promptsFileURL.path))?[.modificationDate] as? Date ?? .distantPast
 
             if cloudDate > localDate {
-                // Cloud is newer — apply to local
                 applyRemoteData(cloudData)
             } else if localDate > cloudDate {
-                // Local is newer — upload to cloud
                 uploadToCloud(localData)
             }
             status = .current
@@ -162,11 +234,9 @@ final class CloudSyncService {
     // MARK: - Download / Remote Changes
 
     private func handleRemoteChange() {
-        guard let cloudFileURL else { return }
+        guard let cloudFileURL, status != .pendingConflict else { return }
 
         status = .syncing
-
-        // Ensure the file is downloaded
         triggerDownloadIfNeeded(cloudFileURL)
 
         let coordinator = NSFileCoordinator()
@@ -179,7 +249,6 @@ final class CloudSyncService {
             }
 
             let hash = data.hashValue
-            // Skip if this matches what we last uploaded
             if hash == lastUploadHash {
                 status = .current
                 return
@@ -201,9 +270,8 @@ final class CloudSyncService {
     }
 
     private func triggerDownloadIfNeeded(_ url: URL) {
-        let fm = FileManager.default
         do {
-            try fm.startDownloadingUbiquitousItem(at: url)
+            try FileManager.default.startDownloadingUbiquitousItem(at: url)
         } catch {
             // File might already be downloaded — not an error
         }
@@ -261,10 +329,8 @@ final class CloudSyncService {
         let downloadStatus = item.value(forAttribute: NSMetadataUbiquitousItemDownloadingStatusKey) as? String
 
         if downloadStatus == NSMetadataUbiquitousItemDownloadingStatusCurrent {
-            // File is downloaded and ready
             handleRemoteChange()
         } else {
-            // Not yet downloaded — trigger download
             if let url = item.value(forAttribute: NSMetadataItemURLKey) as? URL {
                 triggerDownloadIfNeeded(url)
             }
@@ -280,7 +346,6 @@ final class CloudSyncService {
             queue: .main
         ) { [weak self] _ in
             guard let self else { return }
-            // User signed in/out of iCloud — re-check availability
             if FileManager.default.ubiquityIdentityToken == nil {
                 self.stop()
                 self.status = .unavailable

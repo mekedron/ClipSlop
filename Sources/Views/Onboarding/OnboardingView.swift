@@ -5,7 +5,7 @@ struct OnboardingView: View {
     let appState: AppState
     @State private var currentStep = 0
 
-    private let totalSteps = 5
+    private let totalSteps = 6
 
     var body: some View {
         VStack(spacing: 0) {
@@ -16,7 +16,8 @@ struct OnboardingView: View {
                 case 1: permissionsStep
                 case 2: shortcutsStep
                 case 3: providerStep
-                case 4: demoStep
+                case 4: iCloudStep
+                case 5: demoStep
                 default: EmptyView()
                 }
             }
@@ -201,7 +202,13 @@ struct OnboardingView: View {
         OnboardingProviderView(appState: appState)
     }
 
-    // MARK: - Step 5: Demo
+    // MARK: - Step 5: iCloud Sync
+
+    private var iCloudStep: some View {
+        OnboardingICloudView(appState: appState)
+    }
+
+    // MARK: - Step 6: Demo
 
     private var demoStep: some View {
         OnboardingDemoView(appState: appState)
