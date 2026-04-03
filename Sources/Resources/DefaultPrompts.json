@@ -25,6 +25,34 @@
         "mnemonicKey": "R",
         "nodeType": "prompt",
         "systemPrompt": "You are a translator. Translate the following message into Russian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "00000000-0001-0004-0000-000000000001",
+        "name": "Spanish",
+        "mnemonicKey": "S",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a translator. Translate the following message into Spanish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "00000000-0001-0005-0000-000000000001",
+        "name": "French",
+        "mnemonicKey": "A",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a translator. Translate the following message into French. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "00000000-0001-0006-0000-000000000001",
+        "name": "German",
+        "mnemonicKey": "G",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a translator. Translate the following message into German. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "00000000-0001-0007-0000-000000000001",
+        "name": "Chinese",
+        "mnemonicKey": "C",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a translator. Translate the following message into Simplified Chinese (Mandarin). Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       }
     ]
   },
