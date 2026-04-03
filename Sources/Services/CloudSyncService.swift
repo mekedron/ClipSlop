@@ -54,11 +54,24 @@ final class CloudSyncService {
 
         status = .syncing
 
-        // Discover ubiquity container on background thread (can block for seconds)
+        // Discover ubiquity container on background thread with timeout
         Task { @MainActor [weak self] in
-            let url = await Task.detached {
-                FileManager.default.url(forUbiquityContainerIdentifier: nil)
-            }.value
+            let url: URL? = await withTaskGroup(of: URL?.self) { group in
+                group.addTask {
+                    FileManager.default.url(forUbiquityContainerIdentifier: nil)
+                }
+                group.addTask {
+                    try? await Task.sleep(for: .seconds(5))
+                    return nil
+                }
+                // Return whichever finishes first
+                for await result in group {
+                    group.cancelAll()
+                    return result
+                }
+                return nil
+            }
+
             guard let self else { return }
             guard let url else {
                 self.status = .unavailable
