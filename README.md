@@ -16,6 +16,10 @@
 
 ---
 
+<p align="center">
+  <img src="docs/screenshot.png" width="680" alt="ClipSlop — translating Finnish text to English with history sidebar, prompt cards, and keyboard shortcuts">
+</p>
+
 ## What it does
 
 ClipSlop sits in your menu bar and transforms any text through AI prompts. Grab text from anywhere — a browser, email, terminal — and run it through translation, reformatting, summarization, or your own custom prompts. All without leaving the app you're working in.
