@@ -5,41 +5,23 @@ import LaunchAtLogin
 @main
 struct ClipSlopApp: App {
     @State private var appState = AppState()
-    @State private var menuBarVisible = true
+    @State private var menuBarVisible = !UserDefaults.standard.bool(forKey: "hideMenuBarIcon")
+    @State private var didSetup = false
 
     var body: some Scene {
         MenuBarExtra("ClipSlop", systemImage: "doc.on.clipboard", isInserted: $menuBarVisible) {
             MenuBarView(appState: appState)
+                .onAppear {
+                    if !didSetup {
+                        didSetup = true
+                        appState.setup()
+                        NSApplication.shared.setActivationPolicy(.accessory)
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .menuBarVisibilityChanged)) { _ in
+                    menuBarVisible = !UserDefaults.standard.bool(forKey: "hideMenuBarIcon")
+                }
         }
-    }
-
-    init() {
-        NSApplication.shared.setActivationPolicy(.accessory)
-
-        // Read initial value directly from UserDefaults (not @Observable)
-        _menuBarVisible = State(initialValue: !UserDefaults.standard.bool(forKey: "hideMenuBarIcon"))
-
-        // Setup hotkeys on next run loop
-        DispatchQueue.main.async { [self] in
-            appState.setup()
-        }
-
-        // Watch for hide menu bar changes
-        NotificationCenter.default.addObserver(
-            forName: .menuBarVisibilityChanged,
-            object: nil,
-            queue: .main
-        ) { [self] _ in
-            menuBarVisible = !UserDefaults.standard.bool(forKey: "hideMenuBarIcon")
-        }
-
-        // Handle app reopen
-        NSAppleEventManager.shared().setEventHandler(
-            ReopenHandler.shared,
-            andSelector: #selector(ReopenHandler.handleReopen(_:withReply:)),
-            forEventClass: AEEventClass(kCoreEventClass),
-            andEventID: AEEventID(kAEReopenApplication)
-        )
     }
 }
 
