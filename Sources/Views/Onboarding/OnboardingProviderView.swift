@@ -10,6 +10,7 @@ struct OnboardingProviderView: View {
     @State private var customModel: String = ""
     @State private var isTesting = false
     @State private var testResult: TestResult?
+    @State private var configuredProviderIDs: Set<UUID> = []
 
     private var providerStore: ProviderStore { appState.providerStore }
 
@@ -123,8 +124,8 @@ struct OnboardingProviderView: View {
                 }
             }
 
-            // Configured providers — pick default
-            let configured = providerStore.providers.filter { hasKeyFor($0) }
+            // Configured providers — pick default (uses cached state, no Keychain reads in body)
+            let configured = providerStore.providers.filter { configuredProviderIDs.contains($0.id) }
             if !configured.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Default provider for processing:")
@@ -160,7 +161,10 @@ struct OnboardingProviderView: View {
             Spacer()
         }
         .padding(32)
-        .onAppear { loadExistingKey() }
+        .onAppear {
+            loadExistingKey()
+            refreshConfiguredProviders()
+        }
     }
 
     // MARK: - Subviews
@@ -197,10 +201,16 @@ struct OnboardingProviderView: View {
         canTest
     }
 
-    private func hasKeyFor(_ provider: AIProviderConfig) -> Bool {
-        if provider.providerType == .ollama { return true }
-        let key = KeychainService.load(key: provider.apiKeyRef) ?? ""
-        return !key.isEmpty
+    private func refreshConfiguredProviders() {
+        var ids = Set<UUID>()
+        for provider in providerStore.providers {
+            if provider.providerType == .ollama {
+                ids.insert(provider.id)
+            } else if let key = KeychainService.load(key: provider.apiKeyRef), !key.isEmpty {
+                ids.insert(provider.id)
+            }
+        }
+        configuredProviderIDs = ids
     }
 
     private func loadExistingKey() {
@@ -236,9 +246,11 @@ struct OnboardingProviderView: View {
             providerID = newProvider.id
         }
 
+        refreshConfiguredProviders()
+
         // Auto-set as default if no default is configured yet
         let currentDefault = providerStore.defaultProvider
-        if currentDefault == nil || !hasKeyFor(currentDefault!) {
+        if currentDefault == nil || !configuredProviderIDs.contains(currentDefault!.id) {
             providerStore.setDefault(id: providerID)
         }
     }
@@ -256,18 +268,10 @@ struct OnboardingProviderView: View {
     }
 
     private func refocusOnboarding() {
-        // Keychain dialog steals focus — watch for app becoming active again
-        var observer: Any?
-        observer = NotificationCenter.default.addObserver(
-            forName: NSApplication.didBecomeActiveNotification,
-            object: nil,
-            queue: .main
-        ) { _ in
-            if let observer { NotificationCenter.default.removeObserver(observer) }
-            NSApp.windows.first { $0 is OnboardingWindow }?.makeKeyAndOrderFront(nil)
-        }
-        // Also try immediately in case Keychain dialog was instant
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        // Keychain dialog steals focus — bring onboarding window back.
+        // The window is .floating level so it stays on top; just re-activate the app.
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
             NSApplication.shared.activate(ignoringOtherApps: true)
         }
     }
