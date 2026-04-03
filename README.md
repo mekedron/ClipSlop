@@ -109,6 +109,13 @@ Fully customizable — add your own prompts, folders, and mnemonics in Settings 
 - macOS 14.0+
 - An AI provider API key (Anthropic, OpenAI, or local Ollama)
 
+## Acknowledgements
+
+ClipSlop is built with these open-source libraries:
+
+- [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) by Sindre Sorhus — customizable global keyboard shortcuts
+- [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin-Modern) by Sindre Sorhus — launch at login support
+
 ## License
 
 MIT License — see [LICENSE](LICENSE).
