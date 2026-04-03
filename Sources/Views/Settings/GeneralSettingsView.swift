@@ -12,6 +12,34 @@ struct GeneralSettingsView: View {
         @Bindable var settings = appState.settings
 
         Form {
+            Section("iCloud") {
+                HStack {
+                    Toggle("Sync prompts via iCloud", isOn: $settings.iCloudSyncEnabled)
+                        .onChange(of: settings.iCloudSyncEnabled) {
+                            if settings.iCloudSyncEnabled {
+                                appState.syncService.start(promptStore: appState.promptStore)
+                            } else {
+                                appState.syncService.stop()
+                            }
+                        }
+
+                    Spacer()
+
+                    syncStatusIndicator
+                }
+
+                if case .unavailable = appState.syncService.status {
+                    Text("Sign in to iCloud in System Settings to enable sync.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                if case .error(let message) = appState.syncService.status {
+                    Text(message)
+                        .font(.caption)
+                        .foregroundStyle(.red)
+                }
+            }
+
             Section("Keyboard Shortcuts") {
                 KeyboardShortcuts.Recorder("Trigger ClipSlop:", name: .triggerClipSlop)
                 KeyboardShortcuts.Recorder("From clipboard:", name: .triggerFromClipboard)
@@ -102,5 +130,29 @@ struct GeneralSettingsView: View {
     private func refreshPermissions() {
         accessibilityGranted = AXIsProcessTrusted()
         screenCaptureGranted = CGPreflightScreenCaptureAccess()
+    }
+
+    @ViewBuilder
+    private var syncStatusIndicator: some View {
+        switch appState.syncService.status {
+        case .disabled:
+            EmptyView()
+        case .unavailable:
+            Image(systemName: "exclamationmark.icloud")
+                .foregroundStyle(.orange)
+                .help("iCloud is not available")
+        case .current:
+            Image(systemName: "checkmark.icloud")
+                .foregroundStyle(.green)
+                .help("Synced")
+        case .syncing:
+            ProgressView()
+                .controlSize(.small)
+                .help("Syncing...")
+        case .error:
+            Image(systemName: "xmark.icloud")
+                .foregroundStyle(.red)
+                .help("Sync error")
+        }
     }
 }

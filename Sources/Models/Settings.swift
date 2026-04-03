@@ -44,6 +44,10 @@ final class AppSettings {
         }
     }
 
+    var iCloudSyncEnabled: Bool {
+        didSet { UserDefaults.standard.set(iCloudSyncEnabled, forKey: "iCloudSyncEnabled") }
+    }
+
     private init() {
         // Load from UserDefaults (didSet does NOT fire during init)
         let defaults = UserDefaults.standard
@@ -56,6 +60,7 @@ final class AppSettings {
         popupHeight = defaults.object(forKey: "popupHeight") as? Double ?? 520
         hideMenuBarIcon = defaults.bool(forKey: "hideMenuBarIcon")
         hideDockIcon = defaults.object(forKey: "hideDockIcon") as? Bool ?? true
+        iCloudSyncEnabled = defaults.bool(forKey: "iCloudSyncEnabled")
     }
 }
 

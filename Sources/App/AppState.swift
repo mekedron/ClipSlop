@@ -7,6 +7,7 @@ final class AppState {
     let providerStore = ProviderStore()
     let hotkeyService = HotkeyService()
     let settings = AppSettings.shared
+    let syncService = CloudSyncService()
 
     // Session state
     var currentSession: TransformationSession?
@@ -70,6 +71,14 @@ final class AppState {
             self?.triggerFromScreenCapture()
         }
         hotkeyService.register()
+
+        // Wire iCloud sync
+        promptStore.onPromptsChanged = { [weak self] data in
+            self?.syncService.handleLocalChange(data: data)
+        }
+        if settings.iCloudSyncEnabled {
+            syncService.start(promptStore: promptStore)
+        }
 
         if !settings.hasCompletedOnboarding {
             showOnboarding()

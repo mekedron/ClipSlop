@@ -22,5 +22,17 @@
     <string>ClipSlop needs screen capture access to recognize text from screen regions (OCR).</string>
     <key>NSAccessibilityUsageDescription</key>
     <string>ClipSlop needs accessibility access to capture selected text from other applications.</string>
+    <key>NSUbiquitousContainers</key>
+    <dict>
+        <key>iCloud.com.clipslop.app</key>
+        <dict>
+            <key>NSUbiquitousContainerIsDocumentScopePublic</key>
+            <false/>
+            <key>NSUbiquitousContainerSupportedFolderLevels</key>
+            <string>None</string>
+            <key>NSUbiquitousContainerName</key>
+            <string>ClipSlop</string>
+        </dict>
+    </dict>
 </dict>
 </plist>

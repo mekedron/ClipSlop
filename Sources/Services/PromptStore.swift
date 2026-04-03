@@ -5,8 +5,23 @@ import Foundation
 final class PromptStore {
     private(set) var prompts: [PromptNode] = []
 
+    /// Called after every local save with the encoded JSON data.
+    /// CloudSyncService hooks into this to upload changes.
+    var onPromptsChanged: ((_ data: Data) -> Void)?
+
+    /// True while applying a remote sync — suppresses onPromptsChanged to prevent echo loops.
+    private var isSyncing = false
+
     init() {
         prompts = loadFromDisk() ?? loadDefaults()
+    }
+
+    /// Replace prompts from a remote iCloud sync. Saves locally but does NOT fire onPromptsChanged.
+    func replaceFromSync(_ nodes: [PromptNode]) {
+        isSyncing = true
+        prompts = nodes
+        saveToDisk(nodes)
+        isSyncing = false
     }
 
     func save() {
@@ -77,7 +92,11 @@ final class PromptStore {
     }
 
     private func saveToDisk(_ nodes: [PromptNode]) {
-        try? JSONEncoder.pretty.encode(nodes).write(to: Constants.promptsFileURL)
+        guard let data = try? JSONEncoder.pretty.encode(nodes) else { return }
+        try? data.write(to: Constants.promptsFileURL)
+        if !isSyncing {
+            onPromptsChanged?(data)
+        }
     }
 
     private func insertNode(_ node: PromptNode, into nodes: inout [PromptNode], parentID: UUID) {
