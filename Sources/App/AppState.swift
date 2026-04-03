@@ -174,6 +174,7 @@ final class AppState {
 
     func completeOnboarding() {
         settings.hasCompletedOnboarding = true
+        UserDefaults.standard.removeObject(forKey: "onboardingStep")
         onboardingWindow?.close()
         onboardingWindow = nil
     }

@@ -3,7 +3,7 @@ import KeyboardShortcuts
 
 struct OnboardingView: View {
     let appState: AppState
-    @State private var currentStep = 0
+    @State private var currentStep = UserDefaults.standard.integer(forKey: "onboardingStep")
     @State private var accessibilityGranted = false
     @State private var screenRecordingGranted = false
 
@@ -63,6 +63,9 @@ struct OnboardingView: View {
             .padding(20)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: currentStep) {
+            UserDefaults.standard.set(currentStep, forKey: "onboardingStep")
+        }
         .onAppear { refreshPermissions() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             refreshPermissions()
@@ -135,6 +138,7 @@ struct OnboardingView: View {
                     isGranted: accessibilityGranted,
                     grantLabel: loc.t("onboarding.permissions.grant"),
                     onRequest: {
+                        moveOnboardingAside()
                         TextCaptureService.requestAccessibility()
                     }
                 )
@@ -146,6 +150,7 @@ struct OnboardingView: View {
                     isGranted: screenRecordingGranted,
                     grantLabel: loc.t("onboarding.permissions.grant"),
                     onRequest: {
+                        moveOnboardingAside()
                         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
                             NSWorkspace.shared.open(url)
                         }
@@ -229,6 +234,12 @@ struct OnboardingView: View {
     private func refreshPermissions() {
         accessibilityGranted = AXIsProcessTrusted()
         screenRecordingGranted = CGPreflightScreenCaptureAccess()
+    }
+
+    private func moveOnboardingAside() {
+        if let window = NSApp.windows.first(where: { $0 is OnboardingWindow }) as? OnboardingWindow {
+            window.moveAside()
+        }
     }
 }
 
