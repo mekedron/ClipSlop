@@ -172,16 +172,16 @@ struct OnboardingView: View {
 
             VStack(spacing: 16) {
                 ShortcutRow(
-                    label: "Process selected text",
+                    label: "Trigger ClipSlop",
                     name: .triggerClipSlop
                 )
                 ShortcutRow(
-                    label: "Copy & process",
-                    name: .triggerCopyAndProcess
+                    label: "From clipboard",
+                    name: .triggerFromClipboard
                 )
                 ShortcutRow(
-                    label: "Process clipboard",
-                    name: .triggerFromClipboard
+                    label: "Blank editor",
+                    name: .triggerBlankEditor
                 )
                 ShortcutRow(
                     label: "Screen capture (OCR)",

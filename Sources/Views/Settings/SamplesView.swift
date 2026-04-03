@@ -3,69 +3,54 @@ import SwiftUI
 struct SamplesView: View {
     let appState: AppState
     @State private var showRestoreConfirmation = false
-    @State private var showImportPicker = false
-    @State private var showExportPicker = false
     @State private var statusMessage: String?
 
     private var promptStore: PromptStore { appState.promptStore }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Prompt Samples & Templates")
-                        .font(.headline)
-                    Text("View the default prompt structure, restore defaults, or import/export configurations.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .padding()
+        Form {
+            Section("Default Prompt Structure") {
+                let flat = flattenTree(loadDefaultPrompts(), indent: 0)
+                ForEach(flat) { item in
+                    HStack(spacing: 8) {
+                        Text(String(repeating: "      ", count: item.indent))
+                            .font(.caption2)
 
-            Divider()
+                        Text(item.node.mnemonicKey.uppercased())
+                            .font(.system(.caption2, design: .rounded, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 18, height: 18)
+                            .background(item.node.isFolder ? Color.blue : Color.purple)
+                            .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
 
-            // Default prompt tree preview
-            ScrollView {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Default Prompt Structure")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(.horizontal)
+                        Text(item.node.name)
+                            .font(.subheadline)
 
-                    defaultTreePreview
-                        .padding(.horizontal)
-
-                    if let msg = statusMessage {
-                        Text(msg)
-                            .font(.caption)
-                            .foregroundStyle(.green)
-                            .padding(.horizontal)
+                        if item.node.isFolder {
+                            Image(systemName: "folder")
+                                .font(.caption2).foregroundStyle(.secondary)
+                        }
                     }
                 }
-                .padding(.vertical)
             }
 
-            Divider()
-
-            // Action buttons
-            HStack(spacing: 12) {
-                Button("Restore Defaults") {
+            Section("Actions") {
+                Button("Restore Defaults...") {
                     showRestoreConfirmation = true
                 }
 
-                Button("Export Prompts...") {
-                    exportPrompts()
-                }
+                Button("Export Prompts...") { exportPrompts() }
 
-                Button("Import Prompts...") {
-                    importPrompts()
-                }
+                Button("Import Prompts...") { importPrompts() }
 
-                Spacer()
+                if let msg = statusMessage {
+                    Label(msg, systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
+                        .font(.caption)
+                }
             }
-            .padding()
         }
+        .formStyle(.grouped)
         .alert("Restore Defaults?", isPresented: $showRestoreConfirmation) {
             Button("Cancel", role: .cancel) {}
             Button("Restore", role: .destructive) {
@@ -75,35 +60,6 @@ struct SamplesView: View {
         } message: {
             Text("This will replace all your current prompts with the default set. This cannot be undone.")
         }
-    }
-
-    private var defaultTreePreview: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            let nodes = loadDefaultPrompts()
-            let flat = flattenTree(nodes, indent: 0)
-            ForEach(flat) { item in
-                HStack(spacing: 6) {
-                    Text(String(repeating: "  ", count: item.indent))
-                    Text("[\(item.node.mnemonicKey)]")
-                        .font(.system(.caption, design: .monospaced, weight: .bold))
-                        .foregroundStyle(item.node.isFolder ? .blue : .purple)
-                    Text(item.node.name)
-                        .font(.caption)
-                    if item.node.isFolder {
-                        Image(systemName: "folder")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
-        }
-        .padding(12)
-        .background(.background)
-        .clipShape(RoundedRectangle(cornerRadius: 8))
-        .overlay(
-            RoundedRectangle(cornerRadius: 8)
-                .strokeBorder(.quaternary)
-        )
     }
 
     private struct FlatTreeItem: Identifiable {
@@ -133,7 +89,6 @@ struct SamplesView: View {
 
     private func exportPrompts() {
         guard let data = promptStore.exportJSON() else { return }
-
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "clipslop-prompts.json"
         panel.allowedContentTypes = [.json]

@@ -67,39 +67,35 @@ struct PromptCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                // Mnemonic key badge
+            HStack(spacing: 8) {
                 Text(node.mnemonicKey.uppercased())
-                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .font(.system(.body, design: .rounded, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 40, height: 40)
+                    .frame(width: 28, height: 28)
                     .background(node.isFolder ? Color.blue : Color.purple)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(node.name)
-                        .font(.headline)
-                        .lineLimit(1)
-
-                    if node.isFolder {
-                        Text("\(node.children?.count ?? 0) items")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                Text(node.name)
+                    .font(.subheadline)
+                    .lineLimit(1)
 
                 Spacer()
 
                 if node.isFolder {
+                    Text("\(node.children?.count ?? 0)")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                     Image(systemName: "chevron.right")
+                        .font(.caption2)
                         .foregroundStyle(.tertiary)
                 }
             }
-            .padding(12)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .background(.background.opacity(0.6))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 8)
                     .strokeBorder(.quaternary)
             )
         }

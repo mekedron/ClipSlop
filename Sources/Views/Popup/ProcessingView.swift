@@ -1,7 +1,9 @@
 import SwiftUI
+import Combine
 
 struct ProcessingView: View {
     let appState: AppState
+    @State private var scrollTrigger = false
 
     var body: some View {
         VStack(spacing: 16) {
@@ -27,8 +29,15 @@ struct ProcessingView: View {
                             .padding(16)
                             .id("streamingEnd")
                     }
-                    .onChange(of: appState.streamingText) {
+                    .onChange(of: scrollTrigger) {
                         proxy.scrollTo("streamingEnd", anchor: .bottom)
+                    }
+                }
+                .onReceive(
+                    Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()
+                ) { _ in
+                    if !appState.streamingText.isEmpty {
+                        scrollTrigger.toggle()
                     }
                 }
             }
@@ -45,7 +54,6 @@ struct ProcessingView: View {
                 Button("Cancel") {
                     appState.cancelProcessing()
                 }
-                .keyboardShortcut(.escape, modifiers: [])
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)

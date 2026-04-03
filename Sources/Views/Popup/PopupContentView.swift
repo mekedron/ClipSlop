@@ -4,26 +4,23 @@ struct PopupContentView: View {
     let appState: AppState
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Shared header across full width
-            headerBar
-            Divider()
+        HStack(spacing: 0) {
+            if let session = appState.currentSession, session.hasSteps {
+                HistorySidebarView(appState: appState)
+                    .frame(width: 180)
+                Divider()
+            }
 
-            // Content area: sidebar + main
-            HStack(spacing: 0) {
-                if let session = appState.currentSession, session.hasSteps {
-                    HistorySidebarView(appState: appState)
-                        .frame(width: 180)
-                    Divider()
-                }
-
-                // Main content
+            // Main content (right side)
+            VStack(spacing: 0) {
                 if let error = appState.errorMessage {
                     errorView(error)
                 } else if appState.isProcessing {
                     ProcessingView(appState: appState)
+                } else if appState.isEditing {
+                    editView
                 } else {
-                    unifiedView
+                    mainContentArea
                 }
             }
         }
@@ -32,74 +29,12 @@ struct PopupContentView: View {
         .background(KeyEventHandler(appState: appState))
     }
 
-    // MARK: - Header
+    // MARK: - Main Content Area
 
-    private var headerBar: some View {
-        HStack {
-            HStack(spacing: 4) {
-                Button("ClipSlop") {
-                    appState.navigateToRoot()
-                }
-                .buttonStyle(.plain)
-                .font(.headline)
-
-                ForEach(appState.breadcrumb, id: \.self) { name in
-                    Image(systemName: "chevron.right")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(name)
-                        .font(.headline)
-                }
-            }
-
-            Spacer()
-
-            if let session = appState.currentSession {
-                sourceBadge(session.inputSource)
-            }
-
-            Button {
-                appState.dismissPopup()
-            } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.secondary)
-            }
-            .buttonStyle(.plain)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
-    }
-
-    private func sourceBadge(_ source: TransformationSession.InputSource) -> some View {
-        let (icon, label) = switch source {
-        case .clipboard: ("doc.on.clipboard", "Clipboard")
-        case .selectedText: ("text.cursor", "Selected")
-        case .screenCapture: ("camera.viewfinder", "OCR")
-        }
-        return Label(label, systemImage: icon)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(.quaternary)
-            .clipShape(Capsule())
-    }
-
-    // MARK: - Unified View
-
-    private var unifiedView: some View {
-        VStack(spacing: 0) {
-            if appState.isEditing {
-                editView
-            } else {
-                normalView
-            }
-        }
-    }
-
-    private var normalView: some View {
+    private var mainContentArea: some View {
         VStack(spacing: 0) {
             // Text display
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 Text(appState.currentDisplayText)
                     .font(.system(.body, design: .monospaced))
                     .textSelection(.enabled)
@@ -110,11 +45,69 @@ struct PopupContentView: View {
 
             Divider()
 
+            // Breadcrumb (always visible)
+            HStack(spacing: 4) {
+                Image(systemName: "folder")
+                    .font(.caption2)
+                    .foregroundStyle(.tertiary)
+
+                if appState.navigationPath.isEmpty {
+                    Text("Prompts")
+                        .font(.caption.bold())
+                } else {
+                    Button {
+                        appState.navigateToRoot()
+                    } label: {
+                        Text("Prompts")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+
+                    ForEach(Array(appState.navigationPath.enumerated()), id: \.element.id) { i, node in
+                        Image(systemName: "chevron.right")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        if i < appState.navigationPath.count - 1 {
+                            Button {
+                                appState.navigationPath = Array(appState.navigationPath.prefix(i + 1))
+                            } label: {
+                                Text(node.name)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Text(node.name)
+                                .font(.caption.bold())
+                        }
+                    }
+                }
+
+                Spacer()
+
+                if !appState.navigationPath.isEmpty {
+                    Button {
+                        appState.navigateBack()
+                    } label: {
+                        HStack(spacing: 2) {
+                            Image(systemName: "chevron.left")
+                            Text("Back")
+                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+
             // Prompt navigator
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: false) {
                 LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 180), spacing: 8)],
-                    spacing: 8
+                    columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
+                    spacing: 6
                 ) {
                     ForEach(appState.currentPrompts) { node in
                         PromptCard(node: node) {
@@ -128,7 +121,6 @@ struct PopupContentView: View {
 
             Divider()
 
-            // Actions + shortcuts
             actionsBar
 
             shortcutsHint
@@ -140,6 +132,7 @@ struct PopupContentView: View {
             TextEditor(text: Bindable(appState).editingText)
                 .font(.system(.body, design: .monospaced))
                 .scrollContentBackground(.hidden)
+                .scrollIndicators(.hidden)
                 .padding(12)
 
             Divider()
@@ -150,12 +143,12 @@ struct PopupContentView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle")
-                        Text("Save")
-                        Text("⌘S").foregroundStyle(.tertiary)
+                        Text("Done")
+                        Text("⌘↩").foregroundStyle(.white.opacity(0.6))
                     }
                     .font(.caption)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(AlwaysProminentButtonStyle())
 
                 Button {
                     appState.cancelEdit()
@@ -171,7 +164,7 @@ struct PopupContentView: View {
 
                 Spacer()
 
-                Label("Editing mode", systemImage: "pencil")
+                Label("Editing", systemImage: "pencil")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -196,6 +189,14 @@ struct PopupContentView: View {
 
             actionButton("Edit", icon: "pencil", shortcut: "⌘E") {
                 appState.startEditing()
+            }
+
+            actionButton("Open", icon: "square.and.arrow.up", shortcut: "⌘O") {
+                appState.openInTextEdit()
+            }
+
+            actionButton("Save", icon: "square.and.arrow.down", shortcut: "⌘S") {
+                appState.saveToFile()
             }
 
             Spacer()
@@ -331,18 +332,46 @@ struct KeyEventHandler: NSViewRepresentable {
             super.removeFromSuperview()
         }
 
+        // Key codes for physical keys (layout-independent)
+        private enum KeyCode {
+            static let a: UInt16 = 0
+            static let s: UInt16 = 1
+            static let c: UInt16 = 8
+            static let v: UInt16 = 9
+            static let e: UInt16 = 14
+            static let o: UInt16 = 31
+            static let n: UInt16 = 45
+            static let z: UInt16 = 6
+            static let comma: UInt16 = 43
+            static let escape: UInt16 = 53
+            static let enter: UInt16 = 36
+            static let delete: UInt16 = 51
+            static let forwardDelete: UInt16 = 117
+            static let space: UInt16 = 49
+            static let upArrow: UInt16 = 126
+            static let downArrow: UInt16 = 125
+            static let leftArrow: UInt16 = 123
+            static let rightArrow: UInt16 = 124
+        }
+
         @MainActor
         private func handleKey(_ event: NSEvent, appState: AppState) -> Bool {
-            let key = event.charactersIgnoringModifiers?.lowercased() ?? ""
+            let code = event.keyCode
             let hasCmd = event.modifierFlags.contains(.command)
 
             // --- Edit mode ---
             if appState.isEditing {
-                if hasCmd && key == "s" {
+                // Cmd+Enter — Done editing
+                if hasCmd && code == KeyCode.enter {
                     appState.saveEdit()
                     return true
                 }
-                if event.keyCode == 53 {
+                // Cmd+, — Open Settings (works in all modes)
+                if hasCmd && code == KeyCode.comma {
+                    appState.openSettings()
+                    return true
+                }
+                if code == KeyCode.escape {
                     appState.cancelEdit()
                     return true
                 }
@@ -352,7 +381,7 @@ struct KeyEventHandler: NSViewRepresentable {
             // --- Normal mode ---
 
             // Escape
-            if event.keyCode == 53 {
+            if code == KeyCode.escape {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
                 } else {
@@ -362,22 +391,37 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             // Cmd+E — Edit mode
-            if hasCmd && key == "e" {
+            if hasCmd && code == KeyCode.e {
                 appState.startEditing()
                 return true
             }
 
-            // Cmd+S — no-op in normal mode
-            if hasCmd && key == "s" { return true }
+            // Cmd+O — Open in TextEdit
+            if hasCmd && code == KeyCode.o {
+                appState.openInTextEdit()
+                return true
+            }
+
+            // Cmd+S — Save to file
+            if hasCmd && code == KeyCode.s {
+                appState.saveToFile()
+                return true
+            }
+
+            // Cmd+, — Open Settings
+            if hasCmd && code == KeyCode.comma {
+                appState.openSettings()
+                return true
+            }
 
             // Cmd+A — Select All
-            if hasCmd && key == "a" {
+            if hasCmd && code == KeyCode.a {
                 appState.selectAllText()
                 return true
             }
 
             // Cmd+C — Copy
-            if hasCmd && key == "c" {
+            if hasCmd && code == KeyCode.c {
                 if let textView = self.window?.firstResponder as? NSTextView,
                    textView.selectedRange().length > 0 {
                     return false
@@ -387,17 +431,17 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             // Cmd+V — Paste
-            if hasCmd && key == "v" {
+            if hasCmd && code == KeyCode.v {
                 appState.pasteCurrentText()
                 return true
             }
 
-            let isArrowUp = event.keyCode == 126
-            let isArrowDown = event.keyCode == 125
-            let isArrowLeft = event.keyCode == 123
-            let isArrowRight = event.keyCode == 124
+            let isArrowUp = code == KeyCode.upArrow
+            let isArrowDown = code == KeyCode.downArrow
+            let isArrowLeft = code == KeyCode.leftArrow
+            let isArrowRight = code == KeyCode.rightArrow
             let hasShift = event.modifierFlags.contains(.shift)
-            let isSpace = event.keyCode == 49
+            let isSpace = code == KeyCode.space
 
             // ← / → — navigate history (← = newer, → = older)
             if isArrowLeft {
@@ -420,7 +464,7 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             // Delete/Backspace — go back in navigation
-            if event.keyCode == 51 || event.keyCode == 117 {
+            if code == KeyCode.delete || code == KeyCode.forwardDelete {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
                     return true
@@ -428,10 +472,11 @@ struct KeyEventHandler: NSViewRepresentable {
                 return false
             }
 
-            // Mnemonic key navigation
-            guard !appState.isProcessing, !hasCmd, !key.isEmpty else { return false }
+            // Mnemonic key navigation (use typed character, works with any layout)
+            let typedChar = event.characters?.lowercased() ?? ""
+            guard !appState.isProcessing, !hasCmd, !typedChar.isEmpty else { return false }
 
-            appState.handleMnemonicKey(key)
+            appState.handleMnemonicKey(typedChar)
             return true
         }
 

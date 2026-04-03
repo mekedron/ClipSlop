@@ -78,4 +78,11 @@ struct TransformationSession: Identifiable, Sendable {
         copy.steps = Array(steps.prefix(index + 1))
         return copy
     }
+
+    func removingStep(at index: Int) -> TransformationSession {
+        guard index >= 0, index < steps.count else { return self }
+        var copy = self
+        copy.steps.remove(at: index)
+        return copy
+    }
 }

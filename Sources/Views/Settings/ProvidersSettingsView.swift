@@ -12,18 +12,28 @@ struct ProvidersSettingsView: View {
             // Provider list
             VStack(spacing: 0) {
                 List(providerStore.providers, selection: $selectedProviderID) { provider in
-                    providerRow(provider)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(provider.name)
+                                .font(.subheadline).fontWeight(.medium)
+                            Text(provider.modelID)
+                                .font(.caption).foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                        if provider.isDefault {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(.green)
+                                .font(.caption)
+                        }
+                    }
                 }
 
                 Divider()
 
-                HStack {
-                    Button {
-                        showAddProvider = true
-                    } label: {
+                HStack(spacing: 8) {
+                    Button { showAddProvider = true } label: {
                         Image(systemName: "plus")
-                    }
-                    .buttonStyle(.borderless)
+                    }.buttonStyle(.borderless)
 
                     Button {
                         if let id = selectedProviderID {
@@ -42,41 +52,20 @@ struct ProvidersSettingsView: View {
             }
             .frame(minWidth: 180, maxWidth: 220)
 
-            // Provider detail
+            // Detail
             if let id = selectedProviderID,
                let provider = providerStore.providers.first(where: { $0.id == id }) {
-                ProviderDetailView(
-                    provider: provider,
-                    providerStore: providerStore
-                )
+                ProviderDetailView(provider: provider, providerStore: providerStore)
+                    .id(provider.id)
             } else {
                 VStack {
-                    Text("Select a provider")
-                        .foregroundStyle(.secondary)
+                    Text("Select a provider").foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .sheet(isPresented: $showAddProvider) {
             AddProviderSheet(providerStore: providerStore, isPresented: $showAddProvider)
-        }
-    }
-
-    private func providerRow(_ provider: AIProviderConfig) -> some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(provider.name)
-                    .font(.body)
-                Text(provider.modelID)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            if provider.isDefault {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-                    .font(.caption)
-            }
         }
     }
 }
@@ -95,8 +84,7 @@ struct ProviderDetailView: View {
         Form {
             Section("Provider") {
                 TextField("Name", text: $name)
-                Text("Type: \(provider.providerType.displayName)")
-                    .foregroundStyle(.secondary)
+                LabeledContent("Type", value: provider.providerType.displayName)
             }
 
             Section("Connection") {
@@ -117,18 +105,19 @@ struct ProviderDetailView: View {
                         Button("Set as Default") {
                             providerStore.setDefault(id: provider.id)
                         }
+                    } else {
+                        Label("Default Provider", systemImage: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .font(.caption)
                     }
                     Spacer()
-                    Button("Save") {
-                        save()
-                    }
-                    .buttonStyle(.borderedProminent)
+                    Button("Save") { save() }
+                        .buttonStyle(.borderedProminent)
                 }
             }
         }
         .formStyle(.grouped)
         .onAppear { loadValues() }
-        .onChange(of: provider.id) { loadValues() }
     }
 
     private func loadValues() {
@@ -158,8 +147,7 @@ struct AddProviderSheet: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Text("Add Provider")
-                .font(.headline)
+            Text("Add Provider").font(.headline)
 
             Picker("Type", selection: $selectedType) {
                 ForEach(AIProviderType.allCases) { type in
@@ -168,11 +156,10 @@ struct AddProviderSheet: View {
             }
 
             TextField("Name", text: $name)
+                .textFieldStyle(.roundedBorder)
 
             HStack {
-                Button("Cancel") {
-                    isPresented = false
-                }
+                Button("Cancel") { isPresented = false }
                 Spacer()
                 Button("Add") {
                     let config = AIProviderConfig(
@@ -185,7 +172,7 @@ struct AddProviderSheet: View {
                 .buttonStyle(.borderedProminent)
             }
         }
-        .padding()
+        .padding(20)
         .frame(width: 350)
     }
 }

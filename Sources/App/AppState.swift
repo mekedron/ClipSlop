@@ -24,10 +24,11 @@ final class AppState {
     var isEditing = false
     var editingText = ""
 
-    // Window references
-    private var popupWindow: PopupWindow?
-    private var onboardingWindow: OnboardingWindow?
-    private var currentTask: Task<Void, Never>?
+    // Window references — not observed by views, excluded from @Observable tracking
+    @ObservationIgnored private var popupWindow: PopupWindow?
+    @ObservationIgnored private var settingsWindow: NSWindow?
+    @ObservationIgnored private var onboardingWindow: OnboardingWindow?
+    @ObservationIgnored private var currentTask: Task<Void, Never>?
 
     var currentPrompts: [PromptNode] {
         if let last = navigationPath.last {
@@ -62,8 +63,8 @@ final class AppState {
         hotkeyService.onTriggerFromClipboard = { [weak self] in
             self?.triggerFromClipboard()
         }
-        hotkeyService.onTriggerCopyAndProcess = { [weak self] in
-            self?.triggerCopyAndProcess()
+        hotkeyService.onTriggerBlankEditor = { [weak self] in
+            self?.triggerBlankEditor()
         }
         hotkeyService.onTriggerScreenCapture = { [weak self] in
             self?.triggerFromScreenCapture()
@@ -73,9 +74,46 @@ final class AppState {
         if !settings.hasCompletedOnboarding {
             showOnboarding()
         }
+
+        // Listen for reopen requests (dock click when menu bar is hidden)
+        NotificationCenter.default.addObserver(
+            forName: .clipSlopOpenSettings,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.openSettings()
+        }
     }
 
     // MARK: - Onboarding
+
+    func openSettings() {
+        if settingsWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 650, height: 800),
+                styleMask: [.titled, .closable, .resizable, .miniaturizable],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "ClipSlop Settings"
+            window.contentView = NSHostingView(rootView: SettingsView(appState: self))
+            window.isReleasedWhenClosed = false
+            window.minSize = NSSize(width: 600, height: 400)
+            window.center()
+            settingsWindow = window
+        }
+
+        // Defer window presentation to next run loop to avoid "Publishing changes
+        // from within view updates" — setActivationPolicy and activate() trigger
+        // notifications that can fire during the current SwiftUI update cycle.
+        let window = settingsWindow
+        DispatchQueue.main.async {
+            window?.level = .floating
+            NSApplication.shared.setActivationPolicy(.regular)
+            window?.makeKeyAndOrderFront(nil)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
 
     func showOnboarding() {
         if onboardingWindow == nil {
@@ -95,29 +133,45 @@ final class AppState {
     // MARK: - Triggers
 
     func triggerFromSelection() {
-        let text = TextCaptureService.captureSelectedText()
-            ?? ClipboardService.getText()
-        guard let text, !text.isEmpty else {
-            showError("No text selected or in clipboard")
+        // First try Accessibility API (works in native apps)
+        if let text = TextCaptureService.captureSelectedText(), !text.isEmpty {
+            startSession(text: text, source: .selectedText)
             return
         }
-        startSession(text: text, source: .selectedText)
-    }
 
-    func triggerCopyAndProcess() {
-        // Simulate Cmd+C to copy selected text
+        // Fallback: simulate Cmd+C to grab selection (works in Chrome, Electron, etc.)
+        let oldClipboard = ClipboardService.getText()
         let source = CGEventSource(stateID: .combinedSessionState)
-        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true) // C key
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
         let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
         keyDown?.flags = .maskCommand
         keyUp?.flags = .maskCommand
         keyDown?.post(tap: .cghidEventTap)
         keyUp?.post(tap: .cghidEventTap)
 
-        // Wait for clipboard to update, then open ClipSlop
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            self?.triggerFromClipboard()
+            let newClipboard = ClipboardService.getText()
+            if let text = newClipboard, !text.isEmpty, text != oldClipboard {
+                self?.startSession(text: text, source: .selectedText)
+            } else if let text = newClipboard, !text.isEmpty {
+                // Clipboard didn't change — use whatever is there
+                self?.startSession(text: text, source: .clipboard)
+            } else {
+                self?.showError("No text selected or in clipboard")
+            }
         }
+    }
+
+    func triggerBlankEditor() {
+        currentSession = TransformationSession(originalText: "", inputSource: .clipboard)
+        navigationPath = []
+        selectedHistoryStepIndex = nil
+        errorMessage = nil
+        streamingText = ""
+        isProcessing = false
+        isEditing = true
+        editingText = ""
+        showPopup()
     }
 
     func triggerFromClipboard() {
@@ -148,7 +202,8 @@ final class AppState {
         currentSession = TransformationSession(originalText: text, inputSource: source)
         navigationPath = []
         selectedHistoryStepIndex = nil
-
+        isEditing = false
+        editingText = ""
         errorMessage = nil
         streamingText = ""
         isProcessing = false
@@ -242,6 +297,17 @@ final class AppState {
         selectedHistoryStepIndex = nil
     }
 
+    func removeHistoryStep(at index: Int) {
+        guard let session = currentSession else { return }
+        currentSession = session.removingStep(at: index)
+        // Reset selection if we deleted the selected step
+        if selectedHistoryStepIndex == index {
+            selectedHistoryStepIndex = nil
+        } else if let selected = selectedHistoryStepIndex, selected > index {
+            selectedHistoryStepIndex = selected - 1
+        }
+    }
+
     func selectHistoryStep(at index: Int) {
         selectedHistoryStepIndex = index
     }
@@ -277,13 +343,18 @@ final class AppState {
 
     func saveEdit() {
         guard isEditing, let session = currentSession else { return }
-        let trimmed = editingText
-        guard trimmed != currentDisplayText else {
-            // No changes — just exit edit mode
+        let text = editingText
+        guard !text.isEmpty else {
             isEditing = false
             return
         }
-        currentSession = session.addingStep(promptName: "Manual Edit", outputText: trimmed)
+
+        // If original text is empty (blank editor), set it as the original
+        if session.originalText.isEmpty {
+            currentSession = TransformationSession(originalText: text, inputSource: session.inputSource)
+        } else if text != currentDisplayText {
+            currentSession = session.addingStep(promptName: "Manual Edit", outputText: text)
+        }
         selectedHistoryStepIndex = nil
         isEditing = false
     }
@@ -293,8 +364,35 @@ final class AppState {
         editingText = ""
     }
 
+    func openInTextEdit() {
+        let text = currentDisplayText
+        guard !text.isEmpty else { return }
+
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClipSlop-\(UUID().uuidString.prefix(8))")
+            .appendingPathExtension("txt")
+        try? text.write(to: tempURL, atomically: true, encoding: .utf8)
+        NSWorkspace.shared.open(tempURL)
+    }
+
+    func saveToFile() {
+        let text = currentDisplayText
+        guard !text.isEmpty else { return }
+
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "ClipSlop output.txt"
+        panel.allowedContentTypes = [.plainText]
+
+        // Show as sheet on the popup window so it's not hidden behind it
+        if let window = popupWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? text.write(to: url, atomically: true, encoding: .utf8)
+            }
+        }
+    }
+
     func selectAllText() {
-        // Send selectAll to the focused text view in the popup
         NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
     }
 

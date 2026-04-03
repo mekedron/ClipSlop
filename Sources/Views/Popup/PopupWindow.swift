@@ -8,15 +8,18 @@ final class PopupWindow: NSPanel {
     init(appState: AppState) {
         self.appState = appState
 
+        let w = appState.settings.popupWidth
+        let h = appState.settings.popupHeight
+
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: w, height: h),
             styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
         )
 
+        title = "ClipSlop"
         titlebarAppearsTransparent = true
-        titleVisibility = .hidden
         isMovableByWindowBackground = true
         level = .floating
         isOpaque = false

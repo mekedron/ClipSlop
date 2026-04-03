@@ -3,17 +3,17 @@ import KeyboardShortcuts
 extension KeyboardShortcuts.Name {
     static let triggerClipSlop = Self(
         "triggerClipSlop",
-        default: .init(.v, modifiers: [.command, .shift])
+        default: .init(.c, modifiers: [.command, .control])
     )
 
     static let triggerFromClipboard = Self(
         "triggerFromClipboard",
-        default: .init(.v, modifiers: [.command, .option])
+        default: .init(.v, modifiers: [.command, .control])
     )
 
-    static let triggerCopyAndProcess = Self(
-        "triggerCopyAndProcess",
-        default: .init(.c, modifiers: [.command, .control])
+    static let triggerBlankEditor = Self(
+        "triggerBlankEditor",
+        default: .init(.n, modifiers: [.command, .control])
     )
 
     static let triggerScreenCapture = Self(

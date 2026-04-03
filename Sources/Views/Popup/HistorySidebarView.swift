@@ -76,5 +76,14 @@ struct HistorySidebarView: View {
             .clipShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if index >= 0 {
+                Button(role: .destructive) {
+                    appState.removeHistoryStep(at: index)
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        }
     }
 }

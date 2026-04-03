@@ -4,7 +4,7 @@ import KeyboardShortcuts
 final class HotkeyService {
     var onTrigger: (() -> Void)?
     var onTriggerFromClipboard: (() -> Void)?
-    var onTriggerCopyAndProcess: (() -> Void)?
+    var onTriggerBlankEditor: (() -> Void)?
     var onTriggerScreenCapture: (() -> Void)?
 
     func register() {
@@ -14,8 +14,8 @@ final class HotkeyService {
         KeyboardShortcuts.onKeyUp(for: .triggerFromClipboard) { [weak self] in
             self?.onTriggerFromClipboard?()
         }
-        KeyboardShortcuts.onKeyUp(for: .triggerCopyAndProcess) { [weak self] in
-            self?.onTriggerCopyAndProcess?()
+        KeyboardShortcuts.onKeyUp(for: .triggerBlankEditor) { [weak self] in
+            self?.onTriggerBlankEditor?()
         }
         KeyboardShortcuts.onKeyUp(for: .triggerScreenCapture) { [weak self] in
             self?.onTriggerScreenCapture?()
@@ -25,7 +25,7 @@ final class HotkeyService {
     func unregister() {
         KeyboardShortcuts.disable(.triggerClipSlop)
         KeyboardShortcuts.disable(.triggerFromClipboard)
-        KeyboardShortcuts.disable(.triggerCopyAndProcess)
+        KeyboardShortcuts.disable(.triggerBlankEditor)
         KeyboardShortcuts.disable(.triggerScreenCapture)
     }
 }
