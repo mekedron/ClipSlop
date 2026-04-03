@@ -3,6 +3,7 @@ import KeyboardShortcuts
 
 struct MenuBarView: View {
     let appState: AppState
+    let updater: SparkleUpdater
 
     var body: some View {
         menuButton("Trigger", shortcut: .triggerClipSlop) {
@@ -45,6 +46,10 @@ struct MenuBarView: View {
 
         Button("Buy Me a Coffee ☕") {
             NSWorkspace.shared.open(URL(string: "https://buymeacoffee.com/mekedron")!)
+        }
+
+        Button("Check for Updates...") {
+            updater.checkForUpdates()
         }
 
         Button("About") {

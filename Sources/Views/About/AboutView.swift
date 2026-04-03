@@ -17,7 +17,7 @@ struct AboutView: View {
             Text("AI-powered clipboard processor")
                 .foregroundStyle(.secondary)
 
-            Text("Version 0.1.0")
+            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -103,6 +103,12 @@ struct ThirdPartyLibrariesView: View {
             "Sindre Sorhus",
             "Add launch at login functionality to sandboxed macOS apps",
             "https://github.com/sindresorhus/LaunchAtLogin-Modern"
+        ),
+        (
+            "Sparkle",
+            "Sparkle Project",
+            "A software update framework for macOS applications",
+            "https://github.com/sparkle-project/Sparkle"
         ),
     ]
 
