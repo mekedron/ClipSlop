@@ -11,25 +11,16 @@ struct ClipSlopApp: App {
     var body: some Scene {
         MenuBarExtra("ClipSlop", systemImage: "doc.on.clipboard", isInserted: $menuBarVisible) {
             MenuBarView(appState: appState)
-                .onAppear {
-                    if !didSetup {
-                        didSetup = true
-                        appState.setup()
-                        NSApplication.shared.setActivationPolicy(.accessory)
-                    }
+                .task {
+                    guard !didSetup else { return }
+                    didSetup = true
+                    NSApplication.shared.setActivationPolicy(.accessory)
+                    appState.setup()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .menuBarVisibilityChanged)) { _ in
                     menuBarVisible = !UserDefaults.standard.bool(forKey: "hideMenuBarIcon")
                 }
         }
-    }
-}
-
-final class ReopenHandler: NSObject, @unchecked Sendable {
-    static let shared = ReopenHandler()
-
-    @objc func handleReopen(_ event: NSAppleEventDescriptor, withReply reply: NSAppleEventDescriptor) {
-        NotificationCenter.default.post(name: .clipSlopOpenSettings, object: nil)
     }
 }
 

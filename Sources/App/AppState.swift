@@ -73,12 +73,15 @@ final class AppState {
         }
         hotkeyService.register()
 
-        // Wire iCloud sync
+        // Wire iCloud sync (deferred to avoid blocking menu bar appearance)
         promptStore.onPromptsChanged = { [weak self] data in
             self?.syncService.handleLocalChange(data: data)
         }
         if settings.iCloudSyncEnabled {
-            syncService.start(promptStore: promptStore)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                self.syncService.start(promptStore: self.promptStore)
+            }
         }
 
         if !settings.hasCompletedOnboarding {
