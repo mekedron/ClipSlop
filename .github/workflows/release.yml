@@ -23,8 +23,8 @@ jobs:
       - name: Resolve packages
         run: swift package resolve
 
-      - name: Build
-        run: swift build -c release
+      - name: Build (Universal Binary)
+        run: swift build -c release --arch arm64 --arch x86_64
 
       - name: Download Sparkle tools
         run: |
@@ -60,8 +60,8 @@ jobs:
           mkdir -p "${APP_DIR}/Resources"
           mkdir -p "${APP_DIR}/Frameworks"
 
-          # Copy binary
-          cp .build/release/${APP_NAME} "${APP_DIR}/MacOS/${APP_NAME}"
+          # Copy universal binary
+          cp .build/apple/Products/Release/${APP_NAME} "${APP_DIR}/MacOS/${APP_NAME}"
 
           # Copy Info.plist
           cp SupportingFiles/Info.plist "${APP_DIR}/Info.plist"
@@ -78,8 +78,11 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string AppIcon" "${APP_DIR}/Info.plist" 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile AppIcon" "${APP_DIR}/Info.plist"
 
-          # Copy resources bundle if it exists
-          RESOURCES=$(find .build/release -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
+          # Copy resources bundle if it exists (universal build path first, then fallback)
+          RESOURCES=$(find .build/apple/Products/Release -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
+          if [ -z "$RESOURCES" ]; then
+            RESOURCES=$(find .build -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
+          fi
           if [ -n "$RESOURCES" ]; then
             cp -R "$RESOURCES" "${APP_DIR}/Resources/"
           fi
