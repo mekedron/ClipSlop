@@ -152,11 +152,62 @@ jobs:
           echo "FILE_LENGTH=${FILE_LENGTH}" >> $GITHUB_ENV
           echo "Signed DMG: edSignature=${ED_SIGNATURE}, length=${FILE_LENGTH}"
 
+      - name: Generate release notes
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+
+          # Find previous tag
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^v${TAG}$" | head -1)
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          # Collect commits grouped by type
+          FEATURES=""
+          FIXES=""
+          OTHER=""
+
+          while IFS= read -r msg; do
+            [ -z "$msg" ] && continue
+            # Strip type prefix for display
+            CLEAN=$(echo "$msg" | sed 's/^[a-z]*: //' | sed 's/^[a-z]*(.*): //')
+            CLEAN="$(echo "$CLEAN" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+
+            case "$msg" in
+              feat:*|feat\(*) FEATURES="${FEATURES}- ${CLEAN}\n" ;;
+              fix:*|fix\(*)   FIXES="${FIXES}- ${CLEAN}\n" ;;
+              *)              OTHER="${OTHER}- ${CLEAN}\n" ;;
+            esac
+          done <<< "$(git log ${RANGE} --pretty=format:'%s' --no-merges)"
+
+          # Build release body
+          BODY=""
+          if [ -n "$FEATURES" ]; then
+            BODY="${BODY}## What's New\n${FEATURES}\n"
+          fi
+          if [ -n "$FIXES" ]; then
+            BODY="${BODY}## Bug Fixes\n${FIXES}\n"
+          fi
+          if [ -n "$OTHER" ]; then
+            BODY="${BODY}## Other Changes\n${OTHER}\n"
+          fi
+
+          # Fallback if no categorized commits
+          if [ -z "$BODY" ]; then
+            BODY="Maintenance release."
+          fi
+
+          echo -e "$BODY" > release_notes.md
+          cat release_notes.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: release/${{ env.DMG_NAME }}
-          generate_release_notes: true
+          body_path: release_notes.md
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
         env:
