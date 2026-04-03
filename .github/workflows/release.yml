@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
@@ -158,23 +160,30 @@ jobs:
       - name: Generate release notes
         run: |
           TAG="${GITHUB_REF_NAME#v}"
+          REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
 
-          # Find previous tag
-          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^v${TAG}$" | head -1)
+          # Find previous tag (exclude current)
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
 
           if [ -n "$PREV_TAG" ]; then
-            RANGE="${PREV_TAG}..HEAD"
+            RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
           else
-            RANGE="HEAD"
+            RANGE="${GITHUB_REF_NAME}"
           fi
 
-          # Collect commits grouped by type
+          echo "Generating notes for range: ${RANGE}"
+
+          # Collect commits grouped by type (skip chore: commits from CI)
           FEATURES=""
           FIXES=""
           OTHER=""
 
           while IFS= read -r msg; do
             [ -z "$msg" ] && continue
+            # Skip CI-generated commits
+            case "$msg" in
+              chore:\ update\ appcast*) continue ;;
+            esac
             # Strip type prefix for display
             CLEAN=$(echo "$msg" | sed 's/^[a-z]*: //' | sed 's/^[a-z]*(.*): //')
             CLEAN="$(echo "$CLEAN" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
@@ -182,6 +191,7 @@ jobs:
             case "$msg" in
               feat:*|feat\(*) FEATURES="${FEATURES}- ${CLEAN}\n" ;;
               fix:*|fix\(*)   FIXES="${FIXES}- ${CLEAN}\n" ;;
+              chore:*|docs:*|ci:*|refactor:*|perf:*|test:*) OTHER="${OTHER}- ${CLEAN}\n" ;;
               *)              OTHER="${OTHER}- ${CLEAN}\n" ;;
             esac
           done <<< "$(git log ${RANGE} --pretty=format:'%s' --no-merges)"
@@ -200,7 +210,14 @@ jobs:
 
           # Fallback if no categorized commits
           if [ -z "$BODY" ]; then
-            BODY="Maintenance release."
+            BODY="Maintenance release.\n"
+          fi
+
+          # Add full changelog link
+          if [ -n "$PREV_TAG" ]; then
+            BODY="${BODY}**Full Changelog**: ${REPO_URL}/compare/${PREV_TAG}...${GITHUB_REF_NAME}"
+          else
+            BODY="${BODY}**Full Changelog**: ${REPO_URL}/commits/${GITHUB_REF_NAME}"
           fi
 
           echo -e "$BODY" > release_notes.md
