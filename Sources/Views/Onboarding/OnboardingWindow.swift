@@ -8,7 +8,7 @@ final class OnboardingWindow: NSWindow {
         let hostingView = DragSafeHostingView(rootView: rootView)
 
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 600),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 720),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
