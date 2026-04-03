@@ -147,7 +147,6 @@ final class AppState {
 
         let window = aboutWindow
         DispatchQueue.main.async {
-            window?.level = .floating
             NSApplication.shared.activate(ignoringOtherApps: true)
             window?.makeKeyAndOrderFront(nil)
         }
