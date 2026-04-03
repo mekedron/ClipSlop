@@ -162,6 +162,6 @@ struct ThirdPartyLibrariesView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(24)
-        .frame(width: 380, height: 320)
+        .frame(width: 380, height: 420)
     }
 }
