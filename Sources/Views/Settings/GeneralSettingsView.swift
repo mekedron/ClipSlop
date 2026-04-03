@@ -53,6 +53,8 @@ struct GeneralSettingsView: View {
             Section("Behavior") {
                 Toggle("Enable streaming responses", isOn: $settings.streamingEnabled)
                 LaunchAtLogin.Toggle("Launch at login")
+                Toggle("Use key codes (layout-independent shortcuts)", isOn: $settings.useKeyCodes)
+                    .help("Match by physical key position — mnemonics work with any keyboard layout")
             }
 
             Section("Appearance") {

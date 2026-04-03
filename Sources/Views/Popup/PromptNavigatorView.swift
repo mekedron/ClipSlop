@@ -68,10 +68,11 @@ struct PromptCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Text(node.mnemonicKey.uppercased())
-                    .font(.system(.body, design: .rounded, weight: .bold))
+                Text(node.mnemonicDisplay)
+                    .font(.system(node.mnemonicModifiers == nil ? .body : .caption, design: .rounded, weight: .bold))
                     .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
+                    .frame(minWidth: 28, minHeight: 28)
+                    .padding(.horizontal, node.mnemonicModifiers == nil ? 0 : 4)
                     .background(node.isFolder ? Color.blue : Color.purple)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
 

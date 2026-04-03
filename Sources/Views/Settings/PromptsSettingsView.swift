@@ -185,10 +185,11 @@ struct PromptsSettingsView: View {
 
     private func promptTreeRow(_ node: PromptNode) -> some View {
         HStack(spacing: 8) {
-            Text(node.mnemonicKey.uppercased())
+            Text(node.mnemonicDisplay)
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
-                .frame(width: 22, height: 22)
+                .frame(minWidth: 22, minHeight: 22)
+                .padding(.horizontal, node.mnemonicModifiers == nil ? 0 : 2)
                 .background(node.isFolder ? Color.blue : Color.purple)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
 
@@ -289,6 +290,16 @@ struct PromptEditorView: View {
                 TextField("Mnemonic Key", text: $node.mnemonicKey)
                     .onChange(of: node.mnemonicKey) { autoSave() }
 
+                HStack(spacing: 12) {
+                    Text("Modifiers")
+                    Spacer()
+                    modifierToggle("⇧", flag: .shift)
+                    modifierToggle("⌃", flag: .control)
+                    modifierToggle("⌥", flag: .option)
+                    modifierToggle("⌘", flag: .command)
+                }
+                .onChange(of: node.mnemonicModifiers) { autoSave() }
+
                 HStack {
                     Text("Type")
                     Spacer()
@@ -348,6 +359,18 @@ struct PromptEditorView: View {
             }
         }
         .formStyle(.grouped)
+    }
+
+    private func modifierToggle(_ symbol: String, flag: MnemonicModifiers) -> some View {
+        Toggle(symbol, isOn: Binding(
+            get: { (node.mnemonicModifiers ?? []).contains(flag) },
+            set: { isOn in
+                var mods = node.mnemonicModifiers ?? []
+                if isOn { mods.insert(flag) } else { mods.remove(flag) }
+                node.mnemonicModifiers = mods.isEmpty ? nil : mods
+            }
+        ))
+        .toggleStyle(.checkbox)
     }
 
     private func autoSave() {

@@ -28,6 +28,7 @@ final class AppState {
     // Window references — not observed by views, excluded from @Observable tracking
     @ObservationIgnored private var popupWindow: PopupWindow?
     @ObservationIgnored private var settingsWindow: NSWindow?
+    @ObservationIgnored private var aboutWindow: NSWindow?
     @ObservationIgnored private var onboardingWindow: OnboardingWindow?
     @ObservationIgnored private var currentTask: Task<Void, Never>?
 
@@ -121,6 +122,31 @@ final class AppState {
             NSApplication.shared.setActivationPolicy(.regular)
             window?.makeKeyAndOrderFront(nil)
             NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
+
+    func showAbout() {
+        if aboutWindow == nil {
+            let window = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 360, height: 440),
+                styleMask: [.titled, .closable, .fullSizeContentView],
+                backing: .buffered,
+                defer: false
+            )
+            window.title = "About ClipSlop"
+            window.titlebarAppearsTransparent = true
+            window.contentView = NSHostingView(rootView: AboutView())
+            window.isReleasedWhenClosed = false
+            window.isMovableByWindowBackground = true
+            window.center()
+            aboutWindow = window
+        }
+
+        let window = aboutWindow
+        DispatchQueue.main.async {
+            window?.level = .floating
+            NSApplication.shared.activate(ignoringOtherApps: true)
+            window?.makeKeyAndOrderFront(nil)
         }
     }
 
@@ -239,10 +265,16 @@ final class AppState {
         navigationPath = []
     }
 
-    func handleMnemonicKey(_ key: String) {
-        if let node = currentPrompts.first(where: { $0.mnemonicKey.lowercased() == key.lowercased() }) {
+    @discardableResult
+    func handleMnemonicKey(_ key: String, modifiers: MnemonicModifiers = []) -> Bool {
+        if let node = currentPrompts.first(where: {
+            $0.mnemonicKey.lowercased() == key.lowercased()
+                && ($0.mnemonicModifiers ?? []) == modifiers
+        }) {
             navigateInto(node)
+            return true
         }
+        return false
     }
 
     // MARK: - Processing

@@ -48,6 +48,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(iCloudSyncEnabled, forKey: "iCloudSyncEnabled") }
     }
 
+    var useKeyCodes: Bool {
+        didSet { UserDefaults.standard.set(useKeyCodes, forKey: "useKeyCodes") }
+    }
+
     private init() {
         // Load from UserDefaults (didSet does NOT fire during init)
         let defaults = UserDefaults.standard
@@ -61,6 +65,7 @@ final class AppSettings {
         hideMenuBarIcon = defaults.bool(forKey: "hideMenuBarIcon")
         hideDockIcon = defaults.object(forKey: "hideDockIcon") as? Bool ?? true
         iCloudSyncEnabled = defaults.bool(forKey: "iCloudSyncEnabled")
+        useKeyCodes = defaults.bool(forKey: "useKeyCodes")
     }
 }
 

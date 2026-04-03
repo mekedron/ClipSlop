@@ -491,12 +491,19 @@ struct KeyEventHandler: NSViewRepresentable {
                 return false
             }
 
-            // Mnemonic key navigation (use typed character, works with any layout)
-            let typedChar = event.characters?.lowercased() ?? ""
-            guard !appState.isProcessing, !hasCmd, !typedChar.isEmpty else { return false }
+            // Mnemonic key navigation
+            let matchChar: String
+            if appState.settings.useKeyCodes {
+                matchChar = keyCodeToCharacter(code) ?? ""
+            } else {
+                matchChar = event.characters?.lowercased() ?? ""
+            }
 
-            appState.handleMnemonicKey(typedChar)
-            return true
+            let mods = MnemonicModifiers(eventFlags: event.modifierFlags)
+
+            guard !appState.isProcessing, !matchChar.isEmpty else { return false }
+
+            return appState.handleMnemonicKey(matchChar, modifiers: mods)
         }
 
         private func scrollTextArea(up: Bool, by amount: CGFloat) {

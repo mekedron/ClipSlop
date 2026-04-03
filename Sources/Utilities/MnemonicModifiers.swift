@@ -1,0 +1,52 @@
+import AppKit
+
+struct MnemonicModifiers: OptionSet, Codable, Hashable, Sendable {
+    let rawValue: Int
+
+    init(rawValue: Int) {
+        self.rawValue = rawValue
+    }
+
+    static let shift   = MnemonicModifiers(rawValue: 1 << 0)
+    static let control = MnemonicModifiers(rawValue: 1 << 1)
+    static let option  = MnemonicModifiers(rawValue: 1 << 2)
+    static let command = MnemonicModifiers(rawValue: 1 << 3)
+
+    /// Build from NSEvent modifier flags (only includes the 4 supported modifiers).
+    init(eventFlags: NSEvent.ModifierFlags) {
+        var raw = 0
+        if eventFlags.contains(.shift)   { raw |= MnemonicModifiers.shift.rawValue }
+        if eventFlags.contains(.control)  { raw |= MnemonicModifiers.control.rawValue }
+        if eventFlags.contains(.option)   { raw |= MnemonicModifiers.option.rawValue }
+        if eventFlags.contains(.command)  { raw |= MnemonicModifiers.command.rawValue }
+        self.rawValue = raw
+    }
+
+    /// Symbols for display, e.g. "⇧⌘" for shift+command.
+    var symbolString: String {
+        var s = ""
+        if contains(.control) { s += "⌃" }
+        if contains(.option)  { s += "⌥" }
+        if contains(.shift)   { s += "⇧" }
+        if contains(.command) { s += "⌘" }
+        return s
+    }
+}
+
+// MARK: - Key code → QWERTY character map
+
+/// Maps a macOS virtual key code to its QWERTY letter/symbol.
+/// Works regardless of the active keyboard layout.
+func keyCodeToCharacter(_ keyCode: UInt16) -> String? {
+    let map: [UInt16: String] = [
+        0: "a",   1: "s",   2: "d",   3: "f",   4: "h",   5: "g",
+        6: "z",   7: "x",   8: "c",   9: "v",  11: "b",  12: "q",
+       13: "w",  14: "e",  15: "r",  16: "y",  17: "t",  18: "1",
+       19: "2",  20: "3",  21: "4",  22: "6",  23: "5",  24: "=",
+       25: "9",  26: "7",  27: "-",  28: "8",  29: "0",  30: "]",
+       31: "o",  32: "u",  33: "[",  34: "i",  35: "p",  37: "l",
+       38: "j",  39: "'",  40: "k",  41: ";",  42: "\\", 43: ",",
+       44: "/",  45: "n",  46: "m",  47: ".",
+    ]
+    return map[keyCode]
+}
