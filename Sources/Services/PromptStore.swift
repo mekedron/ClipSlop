@@ -58,6 +58,15 @@ final class PromptStore {
         saveToDisk(updated)
     }
 
+    enum MoveDirection { case up, down }
+
+    func moveNode(id: UUID, direction: MoveDirection) {
+        var updated = prompts
+        moveNodeRecursive(id: id, direction: direction, in: &updated)
+        prompts = updated
+        saveToDisk(updated)
+    }
+
     func restoreDefaults() {
         prompts = loadDefaults()
         saveToDisk(prompts)
@@ -134,6 +143,21 @@ final class PromptStore {
             }
             if var children = nodes[i].children {
                 updateNodeRecursive(node, in: &children)
+                nodes[i].children = children
+            }
+        }
+    }
+
+    private func moveNodeRecursive(id: UUID, direction: MoveDirection, in nodes: inout [PromptNode]) {
+        if let index = nodes.firstIndex(where: { $0.id == id }) {
+            let targetIndex = direction == .up ? index - 1 : index + 1
+            guard targetIndex >= 0, targetIndex < nodes.count else { return }
+            nodes.swapAt(index, targetIndex)
+            return
+        }
+        for i in nodes.indices {
+            if var children = nodes[i].children {
+                moveNodeRecursive(id: id, direction: direction, in: &children)
                 nodes[i].children = children
             }
         }

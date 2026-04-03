@@ -45,9 +45,16 @@ final class CloudSyncService {
 
     func start(promptStore: PromptStore) {
         self.promptStore = promptStore
+
+        // Quick pre-check: if no iCloud account at all, bail immediately
+        guard FileManager.default.ubiquityIdentityToken != nil else {
+            status = .unavailable
+            return
+        }
+
         status = .syncing
 
-        // Discover ubiquity container on background thread (can block)
+        // Discover ubiquity container on background thread (can block for seconds)
         Task.detached { [weak self] in
             let url = FileManager.default.url(forUbiquityContainerIdentifier: nil)
             await MainActor.run {

@@ -161,9 +161,10 @@ struct PromptsSettingsView: View {
                         }
                     } label: {
                         promptTreeRow(node)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                             .contentShape(Rectangle())
                             .onTapGesture(count: 2) {
-                                // Double-click toggles folder
+                                selectedNodeID = node.id
                                 if expandedFolders.contains(node.id) {
                                     expandedFolders.remove(node.id)
                                 } else {
@@ -223,6 +224,20 @@ struct PromptsSettingsView: View {
 
             Divider()
         }
+
+        Button {
+            promptStore.moveNode(id: node.id, direction: .up)
+        } label: {
+            Label("Move Up", systemImage: "arrow.up")
+        }
+
+        Button {
+            promptStore.moveNode(id: node.id, direction: .down)
+        } label: {
+            Label("Move Down", systemImage: "arrow.down")
+        }
+
+        Divider()
 
         Button(role: .destructive) {
             confirmDelete(node)

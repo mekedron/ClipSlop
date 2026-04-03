@@ -62,10 +62,6 @@ struct AboutView: View {
             .frame(width: 260)
 
             Spacer()
-
-            Text("Made with Claude Code")
-                .font(.caption2)
-                .foregroundStyle(.quaternary)
         }
         .padding(32)
         .frame(width: 360, height: 440)

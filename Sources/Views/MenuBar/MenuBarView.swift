@@ -5,7 +5,7 @@ struct MenuBarView: View {
     let appState: AppState
 
     var body: some View {
-        menuButton("Trigger ClipSlop", shortcut: .triggerClipSlop) {
+        menuButton("Trigger", shortcut: .triggerClipSlop) {
             appState.triggerFromSelection()
         }
 
@@ -37,17 +37,23 @@ struct MenuBarView: View {
         }
         .keyboardShortcut(",", modifiers: .command)
 
-        Button("About ClipSlop") {
-            appState.showAbout()
-        }
-
         Button("Show Onboarding...") {
             appState.showOnboarding()
         }
 
         Divider()
 
-        Button("Quit ClipSlop") {
+        Button("Buy Me a Coffee ☕") {
+            NSWorkspace.shared.open(URL(string: "https://buymeacoffee.com/mekedron")!)
+        }
+
+        Button("About") {
+            appState.showAbout()
+        }
+
+        Divider()
+
+        Button("Quit") {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q")
