@@ -80,13 +80,18 @@ jobs:
           /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string AppIcon" "${APP_DIR}/Info.plist" 2>/dev/null || \
           /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile AppIcon" "${APP_DIR}/Info.plist"
 
-          # Copy resources bundle if it exists (universal build path first, then fallback)
-          RESOURCES=$(find .build/apple/Products/Release -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
-          if [ -z "$RESOURCES" ]; then
-            RESOURCES=$(find .build -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
-          fi
-          if [ -n "$RESOURCES" ]; then
-            cp -R "$RESOURCES" "${APP_DIR}/Resources/"
+          # Copy all SPM resource bundles (ClipSlop, KeyboardShortcuts, etc.)
+          RELEASE_DIR=".build/apple/Products/Release"
+          for BUNDLE in $(find "$RELEASE_DIR" -name "*.bundle" -type d -maxdepth 1 2>/dev/null); do
+            echo "Copying resource bundle: $(basename "$BUNDLE")"
+            cp -R "$BUNDLE" "${APP_DIR}/Resources/"
+          done
+          # Fallback: if no bundles found in universal build dir, search entire .build
+          if [ -z "$(find "${APP_DIR}/Resources" -name "*.bundle" -type d 2>/dev/null)" ]; then
+            for BUNDLE in $(find .build -name "*_*.bundle" -type d -not -path "*/checkouts/*" -not -path "*/index-build/*" 2>/dev/null | sort -u); do
+              echo "Copying resource bundle (fallback): $(basename "$BUNDLE")"
+              cp -R "$BUNDLE" "${APP_DIR}/Resources/"
+            done
           fi
 
           # Copy Sparkle.framework into the app bundle
