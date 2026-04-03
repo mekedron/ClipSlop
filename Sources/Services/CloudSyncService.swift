@@ -55,20 +55,20 @@ final class CloudSyncService {
         status = .syncing
 
         // Discover ubiquity container on background thread (can block for seconds)
-        Task.detached { [weak self] in
-            let url = FileManager.default.url(forUbiquityContainerIdentifier: nil)
-            await MainActor.run {
-                guard let self else { return }
-                guard let url else {
-                    self.status = .unavailable
-                    return
-                }
-                self.containerURL = url
-                self.ensureDocumentsDirectory()
-                self.performInitialSync()
-                self.startMetadataQuery()
-                self.observeIdentityChanges()
+        Task { @MainActor [weak self] in
+            let url = await Task.detached {
+                FileManager.default.url(forUbiquityContainerIdentifier: nil)
+            }.value
+            guard let self else { return }
+            guard let url else {
+                self.status = .unavailable
+                return
             }
+            self.containerURL = url
+            self.ensureDocumentsDirectory()
+            self.performInitialSync()
+            self.startMetadataQuery()
+            self.observeIdentityChanges()
         }
     }
 
@@ -352,10 +352,12 @@ final class CloudSyncService {
             object: nil,
             queue: .main
         ) { [weak self] _ in
-            guard let self else { return }
-            if FileManager.default.ubiquityIdentityToken == nil {
-                self.stop()
-                self.status = .unavailable
+            Task { @MainActor in
+                guard let self else { return }
+                if FileManager.default.ubiquityIdentityToken == nil {
+                    self.stop()
+                    self.status = .unavailable
+                }
             }
         }
     }

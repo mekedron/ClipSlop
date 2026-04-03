@@ -40,7 +40,7 @@ final class ProviderStore {
     }
 
     func setDefault(id: UUID) {
-        var updated = providers.map { provider in
+        let updated = providers.map { provider in
             var p = provider
             p.isDefault = (p.id == id)
             return p
