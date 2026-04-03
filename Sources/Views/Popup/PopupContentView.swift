@@ -134,6 +134,16 @@ struct PopupContentView: View {
                 .scrollContentBackground(.hidden)
                 .scrollIndicators(.hidden)
                 .padding(12)
+                .onAppear {
+                    // Focus the TextEditor automatically
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        if let window = NSApp.windows.first(where: { $0 is PopupWindow }) {
+                            if let textView = findTextView(in: window.contentView) {
+                                window.makeFirstResponder(textView)
+                            }
+                        }
+                    }
+                }
 
             Divider()
 
@@ -293,6 +303,15 @@ struct PopupContentView: View {
         }
         .padding(32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func findTextView(in view: NSView?) -> NSTextView? {
+        guard let view else { return nil }
+        if let textView = view as? NSTextView { return textView }
+        for subview in view.subviews {
+            if let found = findTextView(in: subview) { return found }
+        }
+        return nil
     }
 }
 
