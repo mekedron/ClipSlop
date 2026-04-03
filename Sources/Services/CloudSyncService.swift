@@ -44,22 +44,21 @@ final class CloudSyncService {
 
         status = .syncing
 
-        // Container discovery — completely off main thread
-        Task.detached { [weak self] in
-            let url = FileManager.default.url(forUbiquityContainerIdentifier: nil)
-            await MainActor.run {
-                guard let self else { return }
-                guard let url else {
-                    self.status = .unavailable
-                    return
-                }
-                self.containerURL = url
-                self.ensureDocumentsDirectory()
-                self.startMetadataQuery()
-                self.observeIdentityChanges()
-                // Initial sync also off main thread
-                self.performInitialSyncAsync()
+        // Container discovery — off main thread, then back to main actor
+        Task { [weak self] in
+            let url = await Task.detached {
+                FileManager.default.url(forUbiquityContainerIdentifier: nil)
+            }.value
+            guard let self else { return }
+            guard let url else {
+                self.status = .unavailable
+                return
             }
+            self.containerURL = url
+            self.ensureDocumentsDirectory()
+            self.startMetadataQuery()
+            self.observeIdentityChanges()
+            self.performInitialSyncAsync()
         }
     }
 
@@ -143,21 +142,21 @@ final class CloudSyncService {
     private func presentConflictChoiceAsync() {
         guard let cloudFileURL else { return }
 
-        Task.detached { [weak self] in
-            let result = Self.coordinatedRead(at: cloudFileURL)
-            await MainActor.run {
-                guard let self else { return }
-                switch result {
-                case .success(let data):
-                    if let nodes = try? JSONDecoder().decode([PromptNode].self, from: data), !nodes.isEmpty {
-                        self.pendingCloudPrompts = nodes
-                        self.status = .pendingConflict
-                    } else {
-                        self.uploadLocalAndFinish()
-                    }
-                case .failure(let error):
-                    self.status = .error(error.localizedDescription)
+        Task { [weak self] in
+            let result = await Task.detached {
+                Self.coordinatedRead(at: cloudFileURL)
+            }.value
+            guard let self else { return }
+            switch result {
+            case .success(let data):
+                if let nodes = try? JSONDecoder().decode([PromptNode].self, from: data), !nodes.isEmpty {
+                    self.pendingCloudPrompts = nodes
+                    self.status = .pendingConflict
+                } else {
+                    self.uploadLocalAndFinish()
                 }
+            case .failure(let error):
+                self.status = .error(error.localizedDescription)
             }
         }
     }
@@ -165,31 +164,31 @@ final class CloudSyncService {
     private func resolveByDateAsync() {
         guard let cloudFileURL else { return }
 
-        Task.detached { [weak self] in
-            let result = Self.coordinatedRead(at: cloudFileURL)
-            await MainActor.run {
-                guard let self else { return }
-                switch result {
-                case .success(let cloudData):
-                    guard let localData = try? Data(contentsOf: Constants.promptsFileURL) else {
-                        self.status = .current
-                        return
-                    }
-
-                    let fm = FileManager.default
-                    let cloudDate = (try? fm.attributesOfItem(atPath: cloudFileURL.path))?[.modificationDate] as? Date ?? .distantPast
-                    let localDate = (try? fm.attributesOfItem(atPath: Constants.promptsFileURL.path))?[.modificationDate] as? Date ?? .distantPast
-
-                    if cloudDate > localDate {
-                        self.applyRemoteData(cloudData)
-                    } else if localDate > cloudDate {
-                        self.uploadToCloudAsync(localData)
-                    }
+        Task { [weak self] in
+            let result = await Task.detached {
+                Self.coordinatedRead(at: cloudFileURL)
+            }.value
+            guard let self else { return }
+            switch result {
+            case .success(let cloudData):
+                guard let localData = try? Data(contentsOf: Constants.promptsFileURL) else {
                     self.status = .current
-
-                case .failure:
-                    self.status = .current
+                    return
                 }
+
+                let fm = FileManager.default
+                let cloudDate = (try? fm.attributesOfItem(atPath: cloudFileURL.path))?[.modificationDate] as? Date ?? .distantPast
+                let localDate = (try? fm.attributesOfItem(atPath: Constants.promptsFileURL.path))?[.modificationDate] as? Date ?? .distantPast
+
+                if cloudDate > localDate {
+                    self.applyRemoteData(cloudData)
+                } else if localDate > cloudDate {
+                    self.uploadToCloudAsync(localData)
+                }
+                self.status = .current
+
+            case .failure:
+                self.status = .current
             }
         }
     }
@@ -203,16 +202,16 @@ final class CloudSyncService {
         lastUploadHash = data.hashValue
         let url = cloudFileURL
 
-        Task.detached { [weak self] in
-            let result = Self.coordinatedWrite(data: data, to: url)
-            await MainActor.run {
-                guard let self else { return }
-                switch result {
-                case .success:
-                    self.status = .current
-                case .failure(let error):
-                    self.status = .error(error.localizedDescription)
-                }
+        Task { [weak self] in
+            let result = await Task.detached {
+                Self.coordinatedWrite(data: data, to: url)
+            }.value
+            guard let self else { return }
+            switch result {
+            case .success:
+                self.status = .current
+            case .failure(let error):
+                self.status = .error(error.localizedDescription)
             }
         }
     }
@@ -225,20 +224,20 @@ final class CloudSyncService {
         status = .syncing
         triggerDownloadIfNeeded(cloudFileURL)
 
-        Task.detached { [weak self] in
-            let result = Self.coordinatedRead(at: cloudFileURL)
-            await MainActor.run {
-                guard let self else { return }
-                switch result {
-                case .success(let data):
-                    let hash = data.hashValue
-                    if hash != self.lastUploadHash {
-                        self.applyRemoteData(data)
-                    }
-                    self.status = .current
-                case .failure:
-                    self.status = .current
+        Task { [weak self] in
+            let result = await Task.detached {
+                Self.coordinatedRead(at: cloudFileURL)
+            }.value
+            guard let self else { return }
+            switch result {
+            case .success(let data):
+                let hash = data.hashValue
+                if hash != self.lastUploadHash {
+                    self.applyRemoteData(data)
                 }
+                self.status = .current
+            case .failure:
+                self.status = .current
             }
         }
     }
