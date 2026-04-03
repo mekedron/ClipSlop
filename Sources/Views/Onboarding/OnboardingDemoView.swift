@@ -33,14 +33,7 @@ struct OnboardingDemoView: View {
 
                 HStack {
                     Button("Select All") {
-                        // Focus the TextEditor and send Cmd+A to select all text
-                        if let window = NSApp.windows.first(where: { $0 is OnboardingWindow }) {
-                            window.makeFirstResponder(
-                                findTextView(in: window.contentView)
-                            )
-                            NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
-                        }
-                        isAllSelected = true
+                        selectAllInEditor()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
@@ -95,11 +88,11 @@ struct OnboardingDemoView: View {
                     // Manual button
                     VStack(spacing: 4) {
                         Button("Trigger") {
-                            if isAllSelected {
-                                appState.triggerFromClipboard()
-                            } else {
-                                appState.triggerFromSelection()
-                            }
+                            // Select all text in the editor for visual feedback
+                            selectAllInEditor()
+                            // Put sample text on clipboard and trigger
+                            ClipboardService.setText(sampleText)
+                            appState.triggerFromClipboard()
                         }
                         .buttonStyle(AlwaysProminentButtonStyle())
 
@@ -121,6 +114,14 @@ struct OnboardingDemoView: View {
             Spacer()
         }
         .padding(16)
+    }
+
+    private func selectAllInEditor() {
+        if let window = NSApp.windows.first(where: { $0 is OnboardingWindow }) {
+            window.makeFirstResponder(findTextView(in: window.contentView))
+            NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+        }
+        isAllSelected = true
     }
 
     /// Recursively find NSTextView inside the view hierarchy (backing TextEditor)
