@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleIdentifier</key>
+    <string>com.clipslop.app</string>
+    <key>CFBundleName</key>
+    <string>ClipSlop</string>
+    <key>CFBundleDisplayName</key>
+    <string>ClipSlop</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleExecutable</key>
+    <string>ClipSlop</string>
+    <key>LSUIElement</key>
+    <true/>
+    <key>NSScreenCaptureUsageDescription</key>
+    <string>ClipSlop needs screen capture access to recognize text from screen regions (OCR).</string>
+    <key>NSAccessibilityUsageDescription</key>
+    <string>ClipSlop needs accessibility access to capture selected text from other applications.</string>
+</dict>
+</plist>

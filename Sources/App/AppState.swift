@@ -1,0 +1,351 @@
+import SwiftUI
+
+@MainActor
+@Observable
+final class AppState {
+    let promptStore = PromptStore()
+    let providerStore = ProviderStore()
+    let hotkeyService = HotkeyService()
+    let settings = AppSettings.shared
+
+    // Session state
+    var currentSession: TransformationSession?
+    var isPopupVisible = false
+    var isProcessing = false
+    var streamingText = ""
+    var errorMessage: String?
+    var showCopiedFeedback = false
+
+    // Navigation state
+    var navigationPath: [PromptNode] = []
+    var selectedHistoryStepIndex: Int?
+
+    // Edit mode
+    var isEditing = false
+    var editingText = ""
+
+    // Window references
+    private var popupWindow: PopupWindow?
+    private var onboardingWindow: OnboardingWindow?
+    private var currentTask: Task<Void, Never>?
+
+    var currentPrompts: [PromptNode] {
+        if let last = navigationPath.last {
+            return last.sortedChildren
+        }
+        return promptStore.prompts.sorted { $0.mnemonicKey < $1.mnemonicKey }
+    }
+
+    var breadcrumb: [String] {
+        navigationPath.map(\.name)
+    }
+
+    var currentDisplayText: String {
+        guard let session = currentSession else { return "" }
+        if let index = selectedHistoryStepIndex {
+            if index < 0 {
+                return session.originalText
+            }
+            if index < session.steps.count {
+                return session.steps[index].outputText
+            }
+        }
+        return session.currentText
+    }
+
+    // MARK: - Lifecycle
+
+    func setup() {
+        hotkeyService.onTrigger = { [weak self] in
+            self?.triggerFromSelection()
+        }
+        hotkeyService.onTriggerFromClipboard = { [weak self] in
+            self?.triggerFromClipboard()
+        }
+        hotkeyService.onTriggerCopyAndProcess = { [weak self] in
+            self?.triggerCopyAndProcess()
+        }
+        hotkeyService.onTriggerScreenCapture = { [weak self] in
+            self?.triggerFromScreenCapture()
+        }
+        hotkeyService.register()
+
+        if !settings.hasCompletedOnboarding {
+            showOnboarding()
+        }
+    }
+
+    // MARK: - Onboarding
+
+    func showOnboarding() {
+        if onboardingWindow == nil {
+            onboardingWindow = OnboardingWindow(appState: self)
+        }
+        onboardingWindow?.center()
+        onboardingWindow?.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+
+    func completeOnboarding() {
+        settings.hasCompletedOnboarding = true
+        onboardingWindow?.close()
+        onboardingWindow = nil
+    }
+
+    // MARK: - Triggers
+
+    func triggerFromSelection() {
+        let text = TextCaptureService.captureSelectedText()
+            ?? ClipboardService.getText()
+        guard let text, !text.isEmpty else {
+            showError("No text selected or in clipboard")
+            return
+        }
+        startSession(text: text, source: .selectedText)
+    }
+
+    func triggerCopyAndProcess() {
+        // Simulate Cmd+C to copy selected text
+        let source = CGEventSource(stateID: .combinedSessionState)
+        let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true) // C key
+        let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
+        keyDown?.flags = .maskCommand
+        keyUp?.flags = .maskCommand
+        keyDown?.post(tap: .cghidEventTap)
+        keyUp?.post(tap: .cghidEventTap)
+
+        // Wait for clipboard to update, then open ClipSlop
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
+            self?.triggerFromClipboard()
+        }
+    }
+
+    func triggerFromClipboard() {
+        guard let text = ClipboardService.getText(), !text.isEmpty else {
+            showError("Clipboard is empty")
+            return
+        }
+        startSession(text: text, source: .clipboard)
+    }
+
+    func triggerFromScreenCapture() {
+        Task {
+            do {
+                let text = try await ScreenCaptureService.captureAndRecognize()
+                startSession(text: text, source: .screenCapture)
+            } catch let captureError as ScreenCaptureService.CaptureError {
+                if case .userCancelled = captureError { return }
+                showError(captureError.localizedDescription)
+            } catch {
+                showError(error.localizedDescription)
+            }
+        }
+    }
+
+    // MARK: - Session Management
+
+    private func startSession(text: String, source: TransformationSession.InputSource) {
+        currentSession = TransformationSession(originalText: text, inputSource: source)
+        navigationPath = []
+        selectedHistoryStepIndex = nil
+
+        errorMessage = nil
+        streamingText = ""
+        isProcessing = false
+        showPopup()
+    }
+
+    // MARK: - Navigation
+
+    func navigateInto(_ node: PromptNode) {
+        if node.isFolder {
+            navigationPath.append(node)
+        } else if node.isPrompt, let prompt = node.systemPrompt {
+            applyPrompt(name: node.name, systemPrompt: prompt)
+        }
+    }
+
+    func navigateBack() {
+        if !navigationPath.isEmpty {
+            navigationPath.removeLast()
+        }
+    }
+
+    func navigateToRoot() {
+        navigationPath = []
+    }
+
+    func handleMnemonicKey(_ key: String) {
+        if let node = currentPrompts.first(where: { $0.mnemonicKey.lowercased() == key.lowercased() }) {
+            navigateInto(node)
+        }
+    }
+
+    // MARK: - Processing
+
+    func applyPrompt(name: String, systemPrompt: String) {
+        guard let session = currentSession,
+              let provider = providerStore.defaultProvider
+        else { return }
+
+
+        isProcessing = true
+        streamingText = ""
+        errorMessage = nil
+
+        let service = AIServiceFactory.service(for: provider.providerType)
+        let inputText = session.currentText
+        let config = provider
+
+        currentTask = Task {
+            do {
+                if settings.streamingEnabled {
+                    var accumulated = ""
+                    for try await chunk in service.stream(text: inputText, systemPrompt: systemPrompt, config: config) {
+                        accumulated += chunk
+                        streamingText = accumulated
+                    }
+                    guard !accumulated.isEmpty else {
+                        throw AIServiceError.emptyResponse
+                    }
+                    currentSession = session.addingStep(promptName: name, outputText: accumulated)
+                } else {
+                    let result = try await service.process(text: inputText, systemPrompt: systemPrompt, config: config)
+                    currentSession = session.addingStep(promptName: name, outputText: result)
+                }
+                selectedHistoryStepIndex = nil
+                navigationPath = []
+                isProcessing = false
+                streamingText = ""
+            } catch {
+                if !(error is CancellationError) {
+                    errorMessage = error.localizedDescription
+                }
+                isProcessing = false
+                streamingText = ""
+            }
+        }
+    }
+
+    func cancelProcessing() {
+        currentTask?.cancel()
+        currentTask = nil
+        isProcessing = false
+        streamingText = ""
+    }
+
+    // MARK: - Actions
+
+    func undoLastStep() {
+        guard let session = currentSession else { return }
+        currentSession = session.undoingLastStep()
+        selectedHistoryStepIndex = nil
+    }
+
+    func selectHistoryStep(at index: Int) {
+        selectedHistoryStepIndex = index
+    }
+
+    /// Move to a newer step (towards latest result). In sidebar: up direction.
+    func navigateHistoryNewer() {
+        guard let session = currentSession, session.hasSteps else { return }
+        let maxIndex = session.steps.count - 1
+        let current = selectedHistoryStepIndex ?? maxIndex
+
+        if current < maxIndex {
+            selectedHistoryStepIndex = current + 1
+        }
+    }
+
+    /// Move to an older step (towards original). In sidebar: down direction.
+    func navigateHistoryOlder() {
+        guard let session = currentSession, session.hasSteps else { return }
+        let maxIndex = session.steps.count - 1
+        let current = selectedHistoryStepIndex ?? maxIndex
+
+        if current > -1 {
+            selectedHistoryStepIndex = current - 1
+        }
+    }
+
+    // MARK: - Edit Mode
+
+    func startEditing() {
+        editingText = currentDisplayText
+        isEditing = true
+    }
+
+    func saveEdit() {
+        guard isEditing, let session = currentSession else { return }
+        let trimmed = editingText
+        guard trimmed != currentDisplayText else {
+            // No changes — just exit edit mode
+            isEditing = false
+            return
+        }
+        currentSession = session.addingStep(promptName: "Manual Edit", outputText: trimmed)
+        selectedHistoryStepIndex = nil
+        isEditing = false
+    }
+
+    func cancelEdit() {
+        isEditing = false
+        editingText = ""
+    }
+
+    func selectAllText() {
+        // Send selectAll to the focused text view in the popup
+        NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+    }
+
+    func copyCurrentText() {
+        ClipboardService.setText(currentDisplayText)
+        showCopiedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            showCopiedFeedback = false
+        }
+    }
+
+    func pasteCurrentText() {
+        ClipboardService.setText(currentDisplayText)
+        dismissPopup()
+        ClipboardService.simulatePaste()
+    }
+
+    func transformAgain() {
+        // If viewing a history step, truncate to that step first
+        if let index = selectedHistoryStepIndex, let session = currentSession, index >= 0 {
+            currentSession = session.steppingTo(index: index)
+        }
+        selectedHistoryStepIndex = nil
+        navigationPath = []
+    }
+
+    // MARK: - Popup
+
+    func showPopup() {
+        if popupWindow == nil {
+            popupWindow = PopupWindow(appState: self)
+        }
+        popupWindow?.showAtCenter()
+        isPopupVisible = true
+    }
+
+    func dismissPopup() {
+        popupWindow?.close()
+        isPopupVisible = false
+        cancelProcessing()
+    }
+
+    // MARK: - Error
+
+    func showError(_ message: String) {
+        errorMessage = message
+        showPopup()
+    }
+
+    func clearError() {
+        errorMessage = nil
+    }
+}

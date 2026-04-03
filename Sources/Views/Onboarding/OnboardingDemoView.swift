@@ -1,0 +1,135 @@
+import SwiftUI
+import KeyboardShortcuts
+
+struct OnboardingDemoView: View {
+    let appState: AppState
+    @State private var sampleText = "The quick brown fox jumps over the lazy dog. This sentence contains every letter of the English alphabet and is commonly used for testing. Try selecting it and triggering ClipSlop!"
+    @State private var isAllSelected = false
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "sparkles")
+                .font(.system(size: 48))
+                .foregroundStyle(.blue)
+
+            Text("Try it out!")
+                .font(.title.bold())
+
+            Text("Select the text below, then trigger ClipSlop to process it.")
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            // Sample text
+            VStack(spacing: 0) {
+                TextEditor(text: $sampleText)
+                    .font(.system(.body, design: .monospaced))
+                    .scrollContentBackground(.hidden)
+                    .frame(height: 90)
+                    .padding(8)
+
+                Divider()
+
+                HStack {
+                    Button("Select All") {
+                        // Focus the TextEditor and send Cmd+A to select all text
+                        if let window = NSApp.windows.first(where: { $0 is OnboardingWindow }) {
+                            window.makeFirstResponder(
+                                findTextView(in: window.contentView)
+                            )
+                            NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+                        }
+                        isAllSelected = true
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+
+                    if isAllSelected {
+                        Label("Text selected — now use your shortcut!", systemImage: "checkmark")
+                            .font(.caption)
+                            .foregroundStyle(.green)
+                    }
+
+                    Spacer()
+                }
+                .padding(8)
+            }
+            .background(.background)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(.quaternary)
+            )
+            .padding(.horizontal, 32)
+
+            // Trigger hint
+            VStack(spacing: 8) {
+                Text("Now trigger ClipSlop:")
+                    .font(.headline)
+
+                HStack(spacing: 16) {
+                    // Shortcut hint
+                    VStack(spacing: 4) {
+                        KeyboardShortcuts.Recorder(for: .triggerClipSlop)
+                            .disabled(true)
+                        Text("Selected text")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text("or")
+                        .foregroundStyle(.tertiary)
+
+                    VStack(spacing: 4) {
+                        KeyboardShortcuts.Recorder(for: .triggerFromClipboard)
+                            .disabled(true)
+                        Text("From clipboard")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Text("or")
+                        .foregroundStyle(.tertiary)
+
+                    // Manual button
+                    VStack(spacing: 4) {
+                        Button("Trigger") {
+                            if isAllSelected {
+                                appState.triggerFromClipboard()
+                            } else {
+                                appState.triggerFromSelection()
+                            }
+                        }
+                        .buttonStyle(AlwaysProminentButtonStyle())
+
+                        Text("Manual")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .padding(16)
+            .background(.background)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(.quaternary)
+            )
+            .padding(.horizontal, 32)
+
+            Spacer()
+        }
+        .padding(16)
+    }
+
+    /// Recursively find NSTextView inside the view hierarchy (backing TextEditor)
+    private func findTextView(in view: NSView?) -> NSTextView? {
+        guard let view else { return nil }
+        if let textView = view as? NSTextView { return textView }
+        for subview in view.subviews {
+            if let found = findTextView(in: subview) { return found }
+        }
+        return nil
+    }
+}
