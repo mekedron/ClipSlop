@@ -77,6 +77,9 @@ struct GeneralSettingsView: View {
                 Slider(value: $settings.popupHeight, in: 350...900, step: 10)
 
                 Toggle("Hide menu bar icon", isOn: $settings.hideMenuBarIcon)
+                    .onChange(of: settings.hideMenuBarIcon) {
+                        NotificationCenter.default.post(name: .menuBarVisibilityChanged, object: nil)
+                    }
 
                 Toggle("Hide Dock icon", isOn: $settings.hideDockIcon)
             }
