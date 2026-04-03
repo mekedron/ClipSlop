@@ -82,6 +82,9 @@ struct GeneralSettingsView: View {
                     }
 
                 Toggle("Hide Dock icon", isOn: $settings.hideDockIcon)
+                    .onChange(of: settings.hideDockIcon) {
+                        NSApplication.shared.setActivationPolicy(settings.hideDockIcon ? .accessory : .regular)
+                    }
             }
 
             Section("Permissions") {

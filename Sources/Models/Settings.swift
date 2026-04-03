@@ -38,10 +38,7 @@ final class AppSettings {
     }
 
     var hideDockIcon: Bool {
-        didSet {
-            UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon")
-            NSApplication.shared.setActivationPolicy(hideDockIcon ? .accessory : .regular)
-        }
+        didSet { UserDefaults.standard.set(hideDockIcon, forKey: "hideDockIcon") }
     }
 
     var iCloudSyncEnabled: Bool {
