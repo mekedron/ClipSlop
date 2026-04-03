@@ -7,3 +7,4 @@ DerivedData/
 .swiftpm/
 Package.resolved
 xcuserdata/
+docs/initial-prompt.md
