@@ -10,7 +10,7 @@ final class ProviderStore {
     }
 
     init() {
-        providers = loadFromDisk() ?? Self.defaultProviders
+        providers = loadFromDisk() ?? Self.buildDefaultProviders()
     }
 
     func save() {
@@ -18,8 +18,14 @@ final class ProviderStore {
     }
 
     func addProvider(_ provider: AIProviderConfig) {
+        var newProvider = provider
+        // First provider with an actual configuration becomes the default automatically
+        let hasDefault = providers.contains(where: \.isDefault)
+        if !hasDefault {
+            newProvider.isDefault = true
+        }
         var updated = providers
-        updated.append(provider)
+        updated.append(newProvider)
         providers = updated
         saveToDisk(updated)
     }
@@ -63,11 +69,22 @@ final class ProviderStore {
 
     // MARK: - Private
 
-    private static let defaultProviders: [AIProviderConfig] = [
-        .builtInAnthropic,
-        .builtInOpenAI,
-        .builtInOllama,
-    ]
+    private static func buildDefaultProviders() -> [AIProviderConfig] {
+        var defaults: [AIProviderConfig] = [
+            .builtInAnthropic,
+            .builtInOpenAI,
+            .builtInOllama,
+        ]
+        for result in CLIToolDetector.detectAll() {
+            defaults.append(AIProviderConfig(
+                name: result.definition.displayName,
+                providerType: .cliTool,
+                baseURL: result.binaryPath,
+                modelID: result.definition.id
+            ))
+        }
+        return defaults
+    }
 
     private func loadFromDisk() -> [AIProviderConfig]? {
         guard FileManager.default.fileExists(atPath: Constants.providersFileURL.path),

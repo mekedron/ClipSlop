@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI poskytovatel";
-"onboarding.provider.subtitle" = "Vyberte svého AI poskytovatele a zadejte API klíč.";
+"onboarding.provider.subtitle" = "Nakonfigurujte alespoň jednoho poskytovatele AI.";
+"onboarding.provider.configured" = "Výchozí poskytovatel nakonfigurován";
+"onboarding.provider.not_configured" = "Výchozí poskytovatel není nakonfigurován";
+"onboarding.provider.not_configured_hint" = "Přidejte alespoň jednoho poskytovatele pro zpracování textu.";
+"onboarding.provider.configure" = "Konfigurovat poskytovatele";
 "onboarding.provider.api_key" = "API klíč";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "Základní URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Klíč získáte na console.anthropic.com";
 "onboarding.provider.hint.openai" = "Klíč získáte na platform.openai.com";
 "onboarding.provider.hint.ollama" = "Ujistěte se, že Ollama běží lokálně (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "Nástroje CLI používají vlastní ověřování. Spusťte nástroj jednou v Terminálu pro nastavení.";
+"onboarding.provider.cli.detected" = "Zjištěné nástroje CLI:";
+"onboarding.provider.cli.none_found" = "Nebyly nalezeny žádné podporované nástroje CLI. Nainstalujte Claude Code nebo Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Vybrat nástroj";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Synchronizace iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Vzhled";
+"settings.general.appearance.theme" = "Motiv";
+"settings.general.appearance.theme.system" = "Systémový";
+"settings.general.appearance.theme.light" = "Světlý";
+"settings.general.appearance.theme.dark" = "Tmavý";
 "settings.general.appearance.opacity" = "Průhlednost vyskakovacího okna";
 "settings.general.appearance.width" = "Šířka vyskakovacího okna";
 "settings.general.appearance.height" = "Výška vyskakovacího okna";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Uložit";
 "settings.providers.cancel" = "Zrušit";
 "settings.providers.add_button" = "Přidat";
+"settings.providers.name_optional" = "Název (volitelné)";
+"settings.providers.fetch_models" = "Načíst dostupné modely";
+"settings.providers.add_first" = "Přidat prvního poskytovatele";
+"settings.providers.cli.tool" = "Nástroj CLI";
+"settings.providers.cli.binary_path" = "Cesta k souboru";
+"settings.providers.cli.redetect" = "Znovu zjistit";
+"settings.providers.cli.available" = "Dostupný";
+"settings.providers.cli.not_found" = "Nenalezen — nástroj mohl být odinstalován";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Vyberte prompt k úpravě";

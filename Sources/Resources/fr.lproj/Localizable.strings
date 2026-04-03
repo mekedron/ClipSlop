@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Fournisseur d'IA";
-"onboarding.provider.subtitle" = "Choisissez votre fournisseur d'IA et entrez votre clé API.";
+"onboarding.provider.subtitle" = "Configurez au moins un fournisseur IA pour commencer.";
+"onboarding.provider.configured" = "Fournisseur par défaut configuré";
+"onboarding.provider.not_configured" = "Aucun fournisseur par défaut configuré";
+"onboarding.provider.not_configured_hint" = "Ajoutez au moins un fournisseur pour traiter du texte.";
+"onboarding.provider.configure" = "Configurer les fournisseurs";
 "onboarding.provider.api_key" = "Clé API";
 "onboarding.provider.model" = "Modèle";
 "onboarding.provider.base_url" = "URL de base";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Obtenez votre clé sur console.anthropic.com";
 "onboarding.provider.hint.openai" = "Obtenez votre clé sur platform.openai.com";
 "onboarding.provider.hint.ollama" = "Assurez-vous qu'Ollama est en cours d'exécution localement (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "Les outils CLI utilisent leur propre authentification. Lancez l'outil une fois dans le Terminal pour le configurer.";
+"onboarding.provider.cli.detected" = "Outils CLI détectés :";
+"onboarding.provider.cli.none_found" = "Aucun outil CLI pris en charge trouvé. Installez Claude Code ou Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Sélectionner l'outil";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Synchronisation iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Apparence";
+"settings.general.appearance.theme" = "Thème";
+"settings.general.appearance.theme.system" = "Système";
+"settings.general.appearance.theme.light" = "Clair";
+"settings.general.appearance.theme.dark" = "Sombre";
 "settings.general.appearance.opacity" = "Opacité du popup";
 "settings.general.appearance.width" = "Largeur du popup";
 "settings.general.appearance.height" = "Hauteur du popup";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Enregistrer";
 "settings.providers.cancel" = "Annuler";
 "settings.providers.add_button" = "Ajouter";
+"settings.providers.name_optional" = "Nom (optionnel)";
+"settings.providers.fetch_models" = "Récupérer les modèles disponibles";
+"settings.providers.add_first" = "Ajouter un premier fournisseur";
+"settings.providers.cli.tool" = "Outil CLI";
+"settings.providers.cli.binary_path" = "Chemin du binaire";
+"settings.providers.cli.redetect" = "Redétecter";
+"settings.providers.cli.available" = "Disponible";
+"settings.providers.cli.not_found" = "Introuvable — l'outil a peut-être été désinstallé";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Sélectionnez un prompt à modifier";

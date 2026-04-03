@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Tekoälypalvelu";
-"onboarding.provider.subtitle" = "Valitse tekoälypalvelu ja syötä API-avaimesi.";
+"onboarding.provider.subtitle" = "Määritä vähintään yksi AI-palveluntarjoaja aloittaaksesi.";
+"onboarding.provider.configured" = "Oletuspalveluntarjoaja määritetty";
+"onboarding.provider.not_configured" = "Oletuspalveluntarjoajaa ei ole määritetty";
+"onboarding.provider.not_configured_hint" = "Lisää vähintään yksi palveluntarjoaja tekstin käsittelyyn.";
+"onboarding.provider.configure" = "Määritä palveluntarjoajat";
 "onboarding.provider.api_key" = "API-avain";
 "onboarding.provider.model" = "Malli";
 "onboarding.provider.base_url" = "Perus-URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Hae avaimesi osoitteesta console.anthropic.com";
 "onboarding.provider.hint.openai" = "Hae avaimesi osoitteesta platform.openai.com";
 "onboarding.provider.hint.ollama" = "Varmista, että Ollama on käynnissä paikallisesti (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-työkalut käyttävät omaa todennusta. Suorita työkalu kerran Terminaalissa sen määrittämiseksi.";
+"onboarding.provider.cli.detected" = "Havaitut CLI-työkalut:";
+"onboarding.provider.cli.none_found" = "Tuettuja CLI-työkaluja ei löytynyt. Asenna Claude Code tai Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Valitse työkalu";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-synkronointi";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Ulkoasu";
+"settings.general.appearance.theme" = "Teema";
+"settings.general.appearance.theme.system" = "Järjestelmä";
+"settings.general.appearance.theme.light" = "Vaalea";
+"settings.general.appearance.theme.dark" = "Tumma";
 "settings.general.appearance.opacity" = "Ponnahdusikkunan läpinäkyvyys";
 "settings.general.appearance.width" = "Ponnahdusikkunan leveys";
 "settings.general.appearance.height" = "Ponnahdusikkunan korkeus";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Tallenna";
 "settings.providers.cancel" = "Peruuta";
 "settings.providers.add_button" = "Lisää";
+"settings.providers.name_optional" = "Nimi (valinnainen)";
+"settings.providers.fetch_models" = "Hae käytettävissä olevat mallit";
+"settings.providers.add_first" = "Lisää ensimmäinen palveluntarjoaja";
+"settings.providers.cli.tool" = "CLI-työkalu";
+"settings.providers.cli.binary_path" = "Tiedostopolku";
+"settings.providers.cli.redetect" = "Tunnista uudelleen";
+"settings.providers.cli.available" = "Saatavilla";
+"settings.providers.cli.not_found" = "Ei löytynyt — työkalu on saatettu poistaa";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Valitse muokattava kehote";

@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "MI-szolgáltató";
-"onboarding.provider.subtitle" = "Válaszd ki az MI-szolgáltatódat és add meg az API-kulcsot.";
+"onboarding.provider.subtitle" = "Állítson be legalább egy AI szolgáltatót a kezdéshez.";
+"onboarding.provider.configured" = "Alapértelmezett szolgáltató beállítva";
+"onboarding.provider.not_configured" = "Nincs alapértelmezett szolgáltató beállítva";
+"onboarding.provider.not_configured_hint" = "Adjon hozzá legalább egy szolgáltatót a szövegfeldolgozáshoz.";
+"onboarding.provider.configure" = "Szolgáltatók beállítása";
 "onboarding.provider.api_key" = "API-kulcs";
 "onboarding.provider.model" = "Modell";
 "onboarding.provider.base_url" = "Alap URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Kulcs igénylése: console.anthropic.com";
 "onboarding.provider.hint.openai" = "Kulcs igénylése: platform.openai.com";
 "onboarding.provider.hint.ollama" = "Győződj meg róla, hogy az Ollama fut helyileg (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "A CLI eszközök saját hitelesítést használnak. Futtassa az eszközt egyszer a Terminálban a beállításhoz.";
+"onboarding.provider.cli.detected" = "Észlelt CLI eszközök:";
+"onboarding.provider.cli.none_found" = "Nem található támogatott CLI eszköz. Telepítse a Claude Code-ot vagy a Codex CLI-t.";
+"onboarding.provider.cli.select_tool" = "Eszköz kiválasztása";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-szinkronizálás";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Megjelenés";
+"settings.general.appearance.theme" = "Téma";
+"settings.general.appearance.theme.system" = "Rendszer";
+"settings.general.appearance.theme.light" = "Világos";
+"settings.general.appearance.theme.dark" = "Sötét";
 "settings.general.appearance.opacity" = "Felugró ablak átlátszósága";
 "settings.general.appearance.width" = "Felugró ablak szélessége";
 "settings.general.appearance.height" = "Felugró ablak magassága";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Mentés";
 "settings.providers.cancel" = "Mégse";
 "settings.providers.add_button" = "Hozzáadás";
+"settings.providers.name_optional" = "Név (opcionális)";
+"settings.providers.fetch_models" = "Elérhető modellek lekérése";
+"settings.providers.add_first" = "Első szolgáltató hozzáadása";
+"settings.providers.cli.tool" = "CLI eszköz";
+"settings.providers.cli.binary_path" = "Fájl elérési út";
+"settings.providers.cli.redetect" = "Újrafelismerés";
+"settings.providers.cli.available" = "Elérhető";
+"settings.providers.cli.not_found" = "Nem található — az eszköz eltávolításra kerülhetett";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Válassz promptot a szerkesztéshez";

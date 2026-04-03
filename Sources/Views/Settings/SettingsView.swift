@@ -2,7 +2,6 @@ import SwiftUI
 
 struct SettingsView: View {
     let appState: AppState
-    @State private var selectedTab = 0
 
     private let loc = Loc.shared
 
@@ -21,7 +20,7 @@ struct SettingsView: View {
             HStack(spacing: 2) {
                 ForEach(Array(tabNames.enumerated()), id: \.offset) { index, name in
                     Button {
-                        selectedTab = index
+                        appState.settingsSelectedTab = index
                     } label: {
                         VStack(spacing: 5) {
                             Image(systemName: tabIcons[index])
@@ -30,14 +29,14 @@ struct SettingsView: View {
                             Text(name)
                                 .font(.caption2).fontWeight(.medium)
                         }
-                        .foregroundStyle(selectedTab == index ? .primary : .tertiary)
+                        .foregroundStyle(appState.settingsSelectedTab == index ? .primary : .tertiary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 52)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .overlay(alignment: .bottom) {
-                        if selectedTab == index {
+                        if appState.settingsSelectedTab == index {
                             Capsule()
                                 .fill(Color.accentColor)
                                 .frame(width: 24, height: 3)
@@ -53,7 +52,7 @@ struct SettingsView: View {
 
             // Tab content
             Group {
-                switch selectedTab {
+                switch appState.settingsSelectedTab {
                 case 0: GeneralSettingsView(appState: appState)
                 case 1: ProvidersSettingsView(appState: appState)
                 case 2: PromptsSettingsView(appState: appState)

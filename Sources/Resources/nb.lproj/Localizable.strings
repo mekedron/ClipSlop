@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-leverandor";
-"onboarding.provider.subtitle" = "Velg din AI-leverandor og skriv inn API-nokkelen din.";
+"onboarding.provider.subtitle" = "Konfigurer minst én AI-leverandør for å komme i gang.";
+"onboarding.provider.configured" = "Standardleverandør konfigurert";
+"onboarding.provider.not_configured" = "Ingen standardleverandør konfigurert";
+"onboarding.provider.not_configured_hint" = "Legg til minst én leverandør for å behandle tekst.";
+"onboarding.provider.configure" = "Konfigurer leverandører";
 "onboarding.provider.api_key" = "API-nokkel";
 "onboarding.provider.model" = "Modell";
 "onboarding.provider.base_url" = "Basis-URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Hent nokkelen din pa console.anthropic.com";
 "onboarding.provider.hint.openai" = "Hent nokkelen din pa platform.openai.com";
 "onboarding.provider.hint.ollama" = "Sorge for at Ollama kjorer lokalt (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-verktøy bruker sin egen autentisering. Kjør verktøyet én gang i Terminalen for å sette det opp.";
+"onboarding.provider.cli.detected" = "Oppdagede CLI-verktøy:";
+"onboarding.provider.cli.none_found" = "Ingen støttede CLI-verktøy funnet. Installer Claude Code eller Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Velg verktøy";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-synkronisering";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Utseende";
+"settings.general.appearance.theme" = "Tema";
+"settings.general.appearance.theme.system" = "System";
+"settings.general.appearance.theme.light" = "Lyst";
+"settings.general.appearance.theme.dark" = "Mørkt";
 "settings.general.appearance.opacity" = "Ugjennomsiktighet for popup";
 "settings.general.appearance.width" = "Popupbredde";
 "settings.general.appearance.height" = "Popuphoyde";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Lagre";
 "settings.providers.cancel" = "Avbryt";
 "settings.providers.add_button" = "Legg til";
+"settings.providers.name_optional" = "Navn (valgfritt)";
+"settings.providers.fetch_models" = "Hent tilgjengelige modeller";
+"settings.providers.add_first" = "Legg til første leverandør";
+"settings.providers.cli.tool" = "CLI-verktøy";
+"settings.providers.cli.binary_path" = "Filbane";
+"settings.providers.cli.redetect" = "Oppdag på nytt";
+"settings.providers.cli.available" = "Tilgjengelig";
+"settings.providers.cli.not_found" = "Ikke funnet — verktøyet kan ha blitt avinstallert";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Velg et prompt a redigere";

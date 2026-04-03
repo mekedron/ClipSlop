@@ -1,4 +1,29 @@
 import AppKit
+import SwiftUI
+
+enum AppColorScheme: String, CaseIterable, Identifiable, Sendable {
+    case system
+    case light
+    case dark
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .system: "System"
+        case .light: "Light"
+        case .dark: "Dark"
+        }
+    }
+
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+}
 
 @MainActor
 @Observable
@@ -49,6 +74,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useKeyCodes, forKey: "useKeyCodes") }
     }
 
+    var appColorScheme: AppColorScheme {
+        didSet { UserDefaults.standard.set(appColorScheme.rawValue, forKey: "appColorScheme") }
+    }
+
     private init() {
         // Load from UserDefaults (didSet does NOT fire during init)
         let defaults = UserDefaults.standard
@@ -63,6 +92,8 @@ final class AppSettings {
         hideDockIcon = defaults.object(forKey: "hideDockIcon") as? Bool ?? true
         iCloudSyncEnabled = defaults.bool(forKey: "iCloudSyncEnabled")
         useKeyCodes = defaults.bool(forKey: "useKeyCodes")
+        appColorScheme = defaults.string(forKey: "appColorScheme")
+            .flatMap(AppColorScheme.init(rawValue:)) ?? .system
     }
 }
 

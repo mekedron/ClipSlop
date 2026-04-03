@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Furnizor AI";
-"onboarding.provider.subtitle" = "Alege furnizorul AI și introdu cheia API.";
+"onboarding.provider.subtitle" = "Configurați cel puțin un furnizor AI pentru a începe.";
+"onboarding.provider.configured" = "Furnizor implicit configurat";
+"onboarding.provider.not_configured" = "Niciun furnizor implicit configurat";
+"onboarding.provider.not_configured_hint" = "Adăugați cel puțin un furnizor pentru a procesa textul.";
+"onboarding.provider.configure" = "Configurați furnizorii";
 "onboarding.provider.api_key" = "Cheie API";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "URL de bază";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Obține cheia de la console.anthropic.com";
 "onboarding.provider.hint.openai" = "Obține cheia de la platform.openai.com";
 "onboarding.provider.hint.ollama" = "Asigură-te că Ollama rulează local (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "Instrumentele CLI folosesc propria autentificare. Rulați instrumentul o dată în Terminal pentru configurare.";
+"onboarding.provider.cli.detected" = "Instrumente CLI detectate:";
+"onboarding.provider.cli.none_found" = "Nu s-au găsit instrumente CLI compatibile. Instalați Claude Code sau Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Selectați instrumentul";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Sincronizare iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Aspect";
+"settings.general.appearance.theme" = "Temă";
+"settings.general.appearance.theme.system" = "Sistem";
+"settings.general.appearance.theme.light" = "Deschisă";
+"settings.general.appearance.theme.dark" = "Întunecată";
 "settings.general.appearance.opacity" = "Opacitate popup";
 "settings.general.appearance.width" = "Lățime popup";
 "settings.general.appearance.height" = "Înălțime popup";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Salvează";
 "settings.providers.cancel" = "Anulează";
 "settings.providers.add_button" = "Adaugă";
+"settings.providers.name_optional" = "Nume (opțional)";
+"settings.providers.fetch_models" = "Încarcă modelele disponibile";
+"settings.providers.add_first" = "Adăugați primul furnizor";
+"settings.providers.cli.tool" = "Instrument CLI";
+"settings.providers.cli.binary_path" = "Calea fișierului";
+"settings.providers.cli.redetect" = "Redetectare";
+"settings.providers.cli.available" = "Disponibil";
+"settings.providers.cli.not_found" = "Negăsit — instrumentul a fost posibil dezinstalat";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Selectează un prompt pentru editare";

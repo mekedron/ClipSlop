@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI Provider";
-"onboarding.provider.subtitle" = "Choose your AI provider and enter your API key.";
+"onboarding.provider.subtitle" = "Configure at least one AI provider to get started.";
+"onboarding.provider.configured" = "Default provider configured";
+"onboarding.provider.not_configured" = "No default provider configured";
+"onboarding.provider.not_configured_hint" = "Add at least one provider to start processing text.";
+"onboarding.provider.configure" = "Configure Providers";
 "onboarding.provider.api_key" = "API Key";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "Base URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Get your key at console.anthropic.com";
 "onboarding.provider.hint.openai" = "Get your key at platform.openai.com";
 "onboarding.provider.hint.ollama" = "Make sure Ollama is running locally (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI tools use their own authentication. Run the tool once in Terminal to set it up.";
+"onboarding.provider.cli.detected" = "Detected CLI tools:";
+"onboarding.provider.cli.none_found" = "No supported CLI tools found. Install Claude Code or Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Select Tool";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud Sync";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Appearance";
+"settings.general.appearance.theme" = "Theme";
+"settings.general.appearance.theme.system" = "System";
+"settings.general.appearance.theme.light" = "Light";
+"settings.general.appearance.theme.dark" = "Dark";
 "settings.general.appearance.opacity" = "Popup opacity";
 "settings.general.appearance.width" = "Popup width";
 "settings.general.appearance.height" = "Popup height";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Save";
 "settings.providers.cancel" = "Cancel";
 "settings.providers.add_button" = "Add";
+"settings.providers.name_optional" = "Name (optional)";
+"settings.providers.fetch_models" = "Fetch available models";
+"settings.providers.add_first" = "Add First Provider";
+"settings.providers.cli.tool" = "CLI Tool";
+"settings.providers.cli.binary_path" = "Binary Path";
+"settings.providers.cli.redetect" = "Re-detect";
+"settings.providers.cli.available" = "Available";
+"settings.providers.cli.not_found" = "Not found — tool may have been uninstalled";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Select a prompt to edit";

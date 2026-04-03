@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "ИИ-провайдер";
-"onboarding.provider.subtitle" = "Выберите провайдера ИИ и введите API-ключ.";
+"onboarding.provider.subtitle" = "Настройте хотя бы одного AI-провайдера для начала работы.";
+"onboarding.provider.configured" = "Провайдер по умолчанию настроен";
+"onboarding.provider.not_configured" = "Провайдер по умолчанию не настроен";
+"onboarding.provider.not_configured_hint" = "Добавьте хотя бы одного провайдера для обработки текста.";
+"onboarding.provider.configure" = "Настроить провайдеров";
 "onboarding.provider.api_key" = "API-ключ";
 "onboarding.provider.model" = "Модель";
 "onboarding.provider.base_url" = "Базовый URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Получите ключ на console.anthropic.com";
 "onboarding.provider.hint.openai" = "Получите ключ на platform.openai.com";
 "onboarding.provider.hint.ollama" = "Убедитесь, что Ollama запущена локально (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-инструменты используют собственную аутентификацию. Запустите инструмент один раз в Терминале для настройки.";
+"onboarding.provider.cli.detected" = "Обнаруженные CLI-инструменты:";
+"onboarding.provider.cli.none_found" = "Поддерживаемые CLI-инструменты не найдены. Установите Claude Code или Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Выбрать инструмент";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Синхронизация iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Оформление";
+"settings.general.appearance.theme" = "Тема";
+"settings.general.appearance.theme.system" = "Системная";
+"settings.general.appearance.theme.light" = "Светлая";
+"settings.general.appearance.theme.dark" = "Тёмная";
 "settings.general.appearance.opacity" = "Прозрачность окна";
 "settings.general.appearance.width" = "Ширина окна";
 "settings.general.appearance.height" = "Высота окна";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Сохранить";
 "settings.providers.cancel" = "Отмена";
 "settings.providers.add_button" = "Добавить";
+"settings.providers.name_optional" = "Название (необязательно)";
+"settings.providers.fetch_models" = "Загрузить доступные модели";
+"settings.providers.add_first" = "Добавить первый провайдер";
+"settings.providers.cli.tool" = "CLI-инструмент";
+"settings.providers.cli.binary_path" = "Путь к файлу";
+"settings.providers.cli.redetect" = "Обнаружить заново";
+"settings.providers.cli.available" = "Доступен";
+"settings.providers.cli.not_found" = "Не найден — инструмент мог быть удалён";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Выберите промпт для редактирования";

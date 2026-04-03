@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-udbyder";
-"onboarding.provider.subtitle" = "Vælg din AI-udbyder, og indtast din API-nøgle.";
+"onboarding.provider.subtitle" = "Konfigurer mindst én AI-udbyder for at komme i gang.";
+"onboarding.provider.configured" = "Standardudbyder konfigureret";
+"onboarding.provider.not_configured" = "Ingen standardudbyder konfigureret";
+"onboarding.provider.not_configured_hint" = "Tilføj mindst én udbyder for at behandle tekst.";
+"onboarding.provider.configure" = "Konfigurer udbydere";
 "onboarding.provider.api_key" = "API-nøgle";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "Basis-URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Hent din nøgle på console.anthropic.com";
 "onboarding.provider.hint.openai" = "Hent din nøgle på platform.openai.com";
 "onboarding.provider.hint.ollama" = "Sørg for at Ollama kører lokalt (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-værktøjer bruger deres egen godkendelse. Kør værktøjet én gang i Terminalen for at sætte det op.";
+"onboarding.provider.cli.detected" = "Fundne CLI-værktøjer:";
+"onboarding.provider.cli.none_found" = "Ingen understøttede CLI-værktøjer fundet. Installér Claude Code eller Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Vælg værktøj";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-synkronisering";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Udseende";
+"settings.general.appearance.theme" = "Tema";
+"settings.general.appearance.theme.system" = "System";
+"settings.general.appearance.theme.light" = "Lyst";
+"settings.general.appearance.theme.dark" = "Mørkt";
 "settings.general.appearance.opacity" = "Popup-gennemsigtighed";
 "settings.general.appearance.width" = "Popup-bredde";
 "settings.general.appearance.height" = "Popup-højde";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Gem";
 "settings.providers.cancel" = "Annuller";
 "settings.providers.add_button" = "Tilføj";
+"settings.providers.name_optional" = "Navn (valgfrit)";
+"settings.providers.fetch_models" = "Hent tilgængelige modeller";
+"settings.providers.add_first" = "Tilføj første udbyder";
+"settings.providers.cli.tool" = "CLI-værktøj";
+"settings.providers.cli.binary_path" = "Filsti";
+"settings.providers.cli.redetect" = "Genfind";
+"settings.providers.cli.available" = "Tilgængelig";
+"settings.providers.cli.not_found" = "Ikke fundet — værktøjet er muligvis afinstalleret";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Vælg en prompt at redigere";

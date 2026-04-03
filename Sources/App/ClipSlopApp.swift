@@ -17,6 +17,11 @@ struct ClipSlopApp: App {
                     guard !didSetup else { return }
                     didSetup = true
                     NSApplication.shared.setActivationPolicy(.accessory)
+                    switch appState.settings.appColorScheme {
+                    case .system: NSApp.appearance = nil
+                    case .light: NSApp.appearance = NSAppearance(named: .aqua)
+                    case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+                    }
                     updater.start()
                     appState.setup()
                 }

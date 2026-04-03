@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Dostawca AI";
-"onboarding.provider.subtitle" = "Wybierz dostawcę AI i wpisz swój klucz API.";
+"onboarding.provider.subtitle" = "Skonfiguruj co najmniej jednego dostawcę AI, aby rozpocząć.";
+"onboarding.provider.configured" = "Domyślny dostawca skonfigurowany";
+"onboarding.provider.not_configured" = "Brak domyślnego dostawcy";
+"onboarding.provider.not_configured_hint" = "Dodaj co najmniej jednego dostawcę, aby przetwarzać tekst.";
+"onboarding.provider.configure" = "Konfiguruj dostawców";
 "onboarding.provider.api_key" = "Klucz API";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "Bazowy URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Pobierz klucz na console.anthropic.com";
 "onboarding.provider.hint.openai" = "Pobierz klucz na platform.openai.com";
 "onboarding.provider.hint.ollama" = "Upewnij się, że Ollama działa lokalnie (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "Narzędzia CLI używają własnego uwierzytelniania. Uruchom narzędzie raz w Terminalu, aby je skonfigurować.";
+"onboarding.provider.cli.detected" = "Wykryte narzędzia CLI:";
+"onboarding.provider.cli.none_found" = "Nie znaleziono obsługiwanych narzędzi CLI. Zainstaluj Claude Code lub Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Wybierz narzędzie";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Synchronizacja iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Wygląd";
+"settings.general.appearance.theme" = "Motyw";
+"settings.general.appearance.theme.system" = "Systemowy";
+"settings.general.appearance.theme.light" = "Jasny";
+"settings.general.appearance.theme.dark" = "Ciemny";
 "settings.general.appearance.opacity" = "Przezroczystość okna";
 "settings.general.appearance.width" = "Szerokość okna";
 "settings.general.appearance.height" = "Wysokość okna";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Zapisz";
 "settings.providers.cancel" = "Anuluj";
 "settings.providers.add_button" = "Dodaj";
+"settings.providers.name_optional" = "Nazwa (opcjonalnie)";
+"settings.providers.fetch_models" = "Pobierz dostępne modele";
+"settings.providers.add_first" = "Dodaj pierwszego dostawcę";
+"settings.providers.cli.tool" = "Narzędzie CLI";
+"settings.providers.cli.binary_path" = "Ścieżka pliku";
+"settings.providers.cli.redetect" = "Wykryj ponownie";
+"settings.providers.cli.available" = "Dostępne";
+"settings.providers.cli.not_found" = "Nie znaleziono — narzędzie mogło zostać odinstalowane";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Wybierz prompt do edycji";

@@ -69,6 +69,16 @@ struct GeneralSettingsView: View {
             }
 
             Section(loc.t("settings.general.appearance")) {
+                Picker(loc.t("settings.general.appearance.theme"), selection: $settings.appColorScheme) {
+                    ForEach(AppColorScheme.allCases) { scheme in
+                        Text(loc.t("settings.general.appearance.theme.\(scheme.rawValue)")).tag(scheme)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: settings.appColorScheme) {
+                    applyColorScheme(settings.appColorScheme)
+                }
+
                 LabeledContent(loc.t("settings.general.appearance.opacity")) {
                     Text("\(Int(settings.popupOpacity * 100))%")
                         .monospacedDigit().foregroundStyle(.secondary)
@@ -152,6 +162,17 @@ struct GeneralSettingsView: View {
     private func refreshPermissions() {
         accessibilityGranted = AXIsProcessTrusted()
         screenCaptureGranted = CGPreflightScreenCaptureAccess()
+    }
+
+    private func applyColorScheme(_ scheme: AppColorScheme) {
+        switch scheme {
+        case .system:
+            NSApp.appearance = nil
+        case .light:
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark:
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
     }
 
     @ViewBuilder

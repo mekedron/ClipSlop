@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-provider";
-"onboarding.provider.subtitle" = "Kies je AI-provider en voer je API-sleutel in.";
+"onboarding.provider.subtitle" = "Configureer minstens één AI-provider om te beginnen.";
+"onboarding.provider.configured" = "Standaardprovider geconfigureerd";
+"onboarding.provider.not_configured" = "Geen standaardprovider geconfigureerd";
+"onboarding.provider.not_configured_hint" = "Voeg minstens één provider toe om tekst te verwerken.";
+"onboarding.provider.configure" = "Providers configureren";
 "onboarding.provider.api_key" = "API-sleutel";
 "onboarding.provider.model" = "Model";
 "onboarding.provider.base_url" = "Basis-URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Haal je sleutel op via console.anthropic.com";
 "onboarding.provider.hint.openai" = "Haal je sleutel op via platform.openai.com";
 "onboarding.provider.hint.ollama" = "Zorg dat Ollama lokaal draait (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-tools gebruiken hun eigen authenticatie. Voer de tool eenmalig uit in de Terminal om het in te stellen.";
+"onboarding.provider.cli.detected" = "Gedetecteerde CLI-tools:";
+"onboarding.provider.cli.none_found" = "Geen ondersteunde CLI-tools gevonden. Installeer Claude Code of Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Selecteer tool";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-synchronisatie";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Weergave";
+"settings.general.appearance.theme" = "Thema";
+"settings.general.appearance.theme.system" = "Systeem";
+"settings.general.appearance.theme.light" = "Licht";
+"settings.general.appearance.theme.dark" = "Donker";
 "settings.general.appearance.opacity" = "Transparantie popup";
 "settings.general.appearance.width" = "Breedte popup";
 "settings.general.appearance.height" = "Hoogte popup";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Opslaan";
 "settings.providers.cancel" = "Annuleren";
 "settings.providers.add_button" = "Toevoegen";
+"settings.providers.name_optional" = "Naam (optioneel)";
+"settings.providers.fetch_models" = "Beschikbare modellen ophalen";
+"settings.providers.add_first" = "Eerste provider toevoegen";
+"settings.providers.cli.tool" = "CLI-tool";
+"settings.providers.cli.binary_path" = "Pad naar bestand";
+"settings.providers.cli.redetect" = "Opnieuw detecteren";
+"settings.providers.cli.available" = "Beschikbaar";
+"settings.providers.cli.not_found" = "Niet gevonden — tool is mogelijk verwijderd";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Selecteer een prompt om te bewerken";

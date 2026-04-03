@@ -5,6 +5,7 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
     case openAI
     case ollama
     case openAICompatible
+    case cliTool
 
     var id: String { rawValue }
 
@@ -14,12 +15,13 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
         case .openAI: "OpenAI (GPT)"
         case .ollama: "Ollama (Local)"
         case .openAICompatible: "OpenAI Compatible"
+        case .cliTool: "CLI Tool"
         }
     }
 
     var requiresAPIKey: Bool {
         switch self {
-        case .ollama: false
+        case .ollama, .cliTool: false
         default: true
         }
     }
@@ -30,6 +32,7 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
         case .openAI: Constants.OpenAI.baseURL
         case .ollama: Constants.Ollama.baseURL
         case .openAICompatible: ""
+        case .cliTool: ""
         }
     }
 
@@ -39,6 +42,7 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
         case .openAI: Constants.OpenAI.defaultModel
         case .ollama: Constants.Ollama.defaultModel
         case .openAICompatible: ""
+        case .cliTool: ""
         }
     }
 

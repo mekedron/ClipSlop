@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "ШІ-провайдер";
-"onboarding.provider.subtitle" = "Оберіть ШІ-провайдера та введіть API-ключ.";
+"onboarding.provider.subtitle" = "Налаштуйте хоча б одного AI-провайдера для початку.";
+"onboarding.provider.configured" = "Провайдер за замовчуванням налаштований";
+"onboarding.provider.not_configured" = "Провайдер за замовчуванням не налаштований";
+"onboarding.provider.not_configured_hint" = "Додайте хоча б одного провайдера для обробки тексту.";
+"onboarding.provider.configure" = "Налаштувати провайдерів";
 "onboarding.provider.api_key" = "API-ключ";
 "onboarding.provider.model" = "Модель";
 "onboarding.provider.base_url" = "Базова URL-адреса";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Отримайте ключ на console.anthropic.com";
 "onboarding.provider.hint.openai" = "Отримайте ключ на platform.openai.com";
 "onboarding.provider.hint.ollama" = "Переконайтеся, що Ollama запущена локально (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-інструменти використовують власну автентифікацію. Запустіть інструмент один раз у Терміналі для налаштування.";
+"onboarding.provider.cli.detected" = "Виявлені CLI-інструменти:";
+"onboarding.provider.cli.none_found" = "Підтримувані CLI-інструменти не знайдені. Встановіть Claude Code або Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Обрати інструмент";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "Синхронізація iCloud";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Вигляд";
+"settings.general.appearance.theme" = "Тема";
+"settings.general.appearance.theme.system" = "Системна";
+"settings.general.appearance.theme.light" = "Світла";
+"settings.general.appearance.theme.dark" = "Темна";
 "settings.general.appearance.opacity" = "Прозорість спливного вікна";
 "settings.general.appearance.width" = "Ширина спливного вікна";
 "settings.general.appearance.height" = "Висота спливного вікна";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Зберегти";
 "settings.providers.cancel" = "Скасувати";
 "settings.providers.add_button" = "Додати";
+"settings.providers.name_optional" = "Назва (необов'язково)";
+"settings.providers.fetch_models" = "Завантажити доступні моделі";
+"settings.providers.add_first" = "Додати першого провайдера";
+"settings.providers.cli.tool" = "CLI-інструмент";
+"settings.providers.cli.binary_path" = "Шлях до файлу";
+"settings.providers.cli.redetect" = "Виявити знову";
+"settings.providers.cli.available" = "Доступний";
+"settings.providers.cli.not_found" = "Не знайдено — інструмент міг бути видалений";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Оберіть промпт для редагування";

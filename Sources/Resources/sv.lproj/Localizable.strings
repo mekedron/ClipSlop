@@ -31,7 +31,11 @@
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-leverantör";
-"onboarding.provider.subtitle" = "Välj din AI-leverantör och ange din API-nyckel.";
+"onboarding.provider.subtitle" = "Konfigurera minst en AI-leverantör för att komma igång.";
+"onboarding.provider.configured" = "Standardleverantör konfigurerad";
+"onboarding.provider.not_configured" = "Ingen standardleverantör konfigurerad";
+"onboarding.provider.not_configured_hint" = "Lägg till minst en leverantör för att bearbeta text.";
+"onboarding.provider.configure" = "Konfigurera leverantörer";
 "onboarding.provider.api_key" = "API-nyckel";
 "onboarding.provider.model" = "Modell";
 "onboarding.provider.base_url" = "Bas-URL";
@@ -43,6 +47,10 @@
 "onboarding.provider.hint.anthropic" = "Hämta din nyckel på console.anthropic.com";
 "onboarding.provider.hint.openai" = "Hämta din nyckel på platform.openai.com";
 "onboarding.provider.hint.ollama" = "Se till att Ollama körs lokalt (ollama serve)";
+"onboarding.provider.hint.cli_tool" = "CLI-verktyg använder sin egen autentisering. Kör verktyget en gång i Terminalen för att konfigurera det.";
+"onboarding.provider.cli.detected" = "Upptäckta CLI-verktyg:";
+"onboarding.provider.cli.none_found" = "Inga stödda CLI-verktyg hittades. Installera Claude Code eller Codex CLI.";
+"onboarding.provider.cli.select_tool" = "Välj verktyg";
 
 /* Onboarding - iCloud */
 "onboarding.icloud.title" = "iCloud-synk";
@@ -113,6 +121,10 @@
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Utseende";
+"settings.general.appearance.theme" = "Tema";
+"settings.general.appearance.theme.system" = "System";
+"settings.general.appearance.theme.light" = "Ljust";
+"settings.general.appearance.theme.dark" = "Mörkt";
 "settings.general.appearance.opacity" = "Popupens opacitet";
 "settings.general.appearance.width" = "Popupens bredd";
 "settings.general.appearance.height" = "Popupens höjd";
@@ -145,6 +157,14 @@
 "settings.providers.save" = "Spara";
 "settings.providers.cancel" = "Avbryt";
 "settings.providers.add_button" = "Lägg till";
+"settings.providers.name_optional" = "Namn (valfritt)";
+"settings.providers.fetch_models" = "Hämta tillgängliga modeller";
+"settings.providers.add_first" = "Lägg till första leverantören";
+"settings.providers.cli.tool" = "CLI-verktyg";
+"settings.providers.cli.binary_path" = "Sökväg";
+"settings.providers.cli.redetect" = "Sök igen";
+"settings.providers.cli.available" = "Tillgängligt";
+"settings.providers.cli.not_found" = "Hittades inte — verktyget kan ha avinstallerats";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Välj en prompt att redigera";

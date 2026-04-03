@@ -22,19 +22,30 @@ struct PromptsSettingsView: View {
 
                 Divider()
 
-                HStack(spacing: 6) {
-                    Menu {
-                        Button(loc.t("settings.prompts.new_prompt")) {
-                            addNode(type: .prompt, parentID: selectedFolderID)
-                        }
-                        Button(loc.t("settings.prompts.new_folder")) {
-                            addNode(type: .folder, parentID: selectedFolderID)
-                        }
+                HStack(spacing: 0) {
+                    Button {
+                        addNode(type: .prompt, parentID: selectedFolderID)
                     } label: {
-                        Image(systemName: "plus")
+                        Image(systemName: "doc.badge.plus")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
                     }
-                    .menuStyle(.borderlessButton)
-                    .fixedSize()
+                    .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
+                    .help(loc.t("settings.prompts.new_prompt"))
+
+                    Button {
+                        addNode(type: .folder, parentID: selectedFolderID)
+                    } label: {
+                        Image(systemName: "folder.badge.plus")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
+                    .help(loc.t("settings.prompts.new_folder"))
+
+                    Divider().frame(height: 16)
 
                     Button {
                         if let id = selectedNodeID,
@@ -42,34 +53,77 @@ struct PromptsSettingsView: View {
                             confirmDelete(node)
                         }
                     } label: {
-                        Image(systemName: "minus")
+                        Image(systemName: "trash")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
                     .disabled(selectedNodeID == nil)
+
+                    Divider().frame(height: 16)
+
+                    Button {
+                        if let id = selectedNodeID {
+                            promptStore.moveNode(id: id, direction: .up)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
+                    .disabled(selectedNodeID == nil)
+                    .help(loc.t("settings.prompts.move_up"))
+
+                    Button {
+                        if let id = selectedNodeID {
+                            promptStore.moveNode(id: id, direction: .down)
+                        }
+                    } label: {
+                        Image(systemName: "arrow.down")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
+                    .disabled(selectedNodeID == nil)
+                    .help(loc.t("settings.prompts.move_down"))
 
                     Spacer()
 
                     Button { importPrompts() } label: {
                         Image(systemName: "square.and.arrow.down")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
                     .help(loc.t("settings.prompts.import"))
 
                     Button { exportPrompts() } label: {
                         Image(systemName: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
                     .help(loc.t("settings.prompts.export"))
 
                     Button { showRestoreDefaults = true } label: {
                         Image(systemName: "arrow.counterclockwise")
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.borderless)
+                    .frame(width: 32, height: 28)
                     .help(loc.t("settings.prompts.restore"))
                 }
-                .padding(8)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
             }
-            .frame(minWidth: 200, maxWidth: 250)
+            .frame(minWidth: 250, maxWidth: 320)
 
             // Editor
             if let node = findNode(id: selectedNodeID, in: promptStore.prompts) {

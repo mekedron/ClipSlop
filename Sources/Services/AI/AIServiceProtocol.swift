@@ -13,6 +13,9 @@ enum AIServiceError: LocalizedError {
     case networkError(Error)
     case emptyResponse
     case cancelled
+    case cliToolNotFound(String)
+    case cliToolFailed(exitCode: Int32, stderr: String)
+    case cliToolTimeout
 
     var errorDescription: String? {
         switch self {
@@ -35,6 +38,12 @@ enum AIServiceError: LocalizedError {
             "The AI returned an empty response. Try rephrasing your text."
         case .cancelled:
             "Request was cancelled"
+        case .cliToolNotFound(let name):
+            "CLI tool '\(name)' not found. Please reinstall it."
+        case .cliToolFailed(_, let stderr):
+            "CLI tool error: \(stderr.isEmpty ? "unknown error" : stderr)"
+        case .cliToolTimeout:
+            "CLI tool timed out. The request may be too large."
         }
     }
 }
@@ -44,6 +53,8 @@ enum AIServiceFactory {
         switch providerType {
         case .anthropic:
             AnthropicService()
+        case .cliTool:
+            CLIToolService()
         case .openAI, .ollama, .openAICompatible:
             OpenAICompatibleService()
         }

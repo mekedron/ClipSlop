@@ -25,6 +25,9 @@ final class AppState {
     var isEditing = false
     var editingText = ""
 
+    // Settings navigation
+    var settingsSelectedTab = 0
+
     // Window references — not observed by views, excluded from @Observable tracking
     @ObservationIgnored private var popupWindow: PopupWindow?
     @ObservationIgnored private var settingsWindow: NSWindow?
@@ -103,7 +106,7 @@ final class AppState {
     func openSettings() {
         if settingsWindow == nil {
             let window = NSWindow(
-                contentRect: NSRect(x: 0, y: 0, width: 650, height: 800),
+                contentRect: NSRect(x: 0, y: 0, width: 780, height: 800),
                 styleMask: [.titled, .closable, .resizable, .miniaturizable],
                 backing: .buffered,
                 defer: false
@@ -111,7 +114,7 @@ final class AppState {
             window.title = Loc.shared.t("window.settings")
             window.contentView = NSHostingView(rootView: SettingsView(appState: self))
             window.isReleasedWhenClosed = false
-            window.minSize = NSSize(width: 600, height: 400)
+            window.minSize = NSSize(width: 700, height: 400)
             window.center()
             settingsWindow = window
         }
@@ -120,12 +123,20 @@ final class AppState {
         // from within view updates" — setActivationPolicy and activate() trigger
         // notifications that can fire during the current SwiftUI update cycle.
         let window = settingsWindow
+        let hideDock = settings.hideDockIcon
         DispatchQueue.main.async {
             window?.level = .floating
-            NSApplication.shared.setActivationPolicy(.regular)
+            if !hideDock {
+                NSApplication.shared.setActivationPolicy(.regular)
+            }
             window?.makeKeyAndOrderFront(nil)
             NSApplication.shared.activate(ignoringOtherApps: true)
         }
+    }
+
+    func openSettingsToProviders() {
+        settingsSelectedTab = 1
+        openSettings()
     }
 
     func showAbout() {
@@ -282,9 +293,12 @@ final class AppState {
     // MARK: - Processing
 
     func applyPrompt(name: String, systemPrompt: String) {
-        guard let session = currentSession,
-              let provider = providerStore.defaultProvider
-        else { return }
+        guard let session = currentSession else { return }
+
+        guard let provider = providerStore.defaultProvider else {
+            openSettingsToProviders()
+            return
+        }
 
 
         isProcessing = true
