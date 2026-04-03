@@ -16,6 +16,14 @@
 
 ---
 
+## Why?
+
+Because copy-pasting text into ChatGPT for the 47th time today to translate / rewrite / summarize the same kind of stuff is not a workflow — it's a punishment. Open browser, find the tab, type the same prompt you typed yesterday, copy the result, switch back, paste. Repeat until insane.
+
+ClipSlop exists so you never do that again. Select text, press a shortcut, pick a saved prompt, done. No browser. No "please make this shorter". No copy-paste Olympics.
+
+---
+
 <p align="center">
   <img src="docs/screenshot.png" width="680" alt="ClipSlop — translating Finnish text to English with history sidebar, prompt cards, and keyboard shortcuts">
 </p>
@@ -115,6 +123,7 @@ ClipSlop is built with these open-source libraries:
 
 - [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) by Sindre Sorhus — customizable global keyboard shortcuts
 - [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin-Modern) by Sindre Sorhus — launch at login support
+- [Sparkle](https://github.com/sparkle-project/Sparkle) — software update framework for macOS
 
 ## License
 
