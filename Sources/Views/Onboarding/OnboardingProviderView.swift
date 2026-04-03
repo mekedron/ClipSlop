@@ -12,6 +12,7 @@ struct OnboardingProviderView: View {
     @State private var testResult: TestResult?
     @State private var configuredProviderIDs: Set<UUID> = []
 
+    private let loc = Loc.shared
     private var providerStore: ProviderStore { appState.providerStore }
 
     enum TestResult {
@@ -27,15 +28,15 @@ struct OnboardingProviderView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.blue)
 
-            Text("AI Provider")
+            Text(loc.t("onboarding.provider.title"))
                 .font(.title.bold())
 
-            Text("Choose your AI provider and enter your API key.")
+            Text(loc.t("onboarding.provider.subtitle"))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             // Provider picker
-            Picker("Provider", selection: $selectedType) {
+            Picker(loc.t("settings.providers.provider"), selection: $selectedType) {
                 ForEach(AIProviderType.allCases) { type in
                     Text(type.displayName).tag(type)
                 }
@@ -52,30 +53,30 @@ struct OnboardingProviderView: View {
                 switch selectedType {
                 case .anthropic:
                     apiKeyField(placeholder: "sk-ant-...")
-                    providerHint("Get your key at console.anthropic.com")
+                    providerHint(loc.t("onboarding.provider.hint.anthropic"))
 
                 case .openAI:
                     apiKeyField(placeholder: "sk-...")
-                    providerHint("Get your key at platform.openai.com")
+                    providerHint(loc.t("onboarding.provider.hint.openai"))
 
                 case .ollama:
                     HStack {
-                        Text("Model")
+                        Text(loc.t("onboarding.provider.model"))
                             .frame(width: 80, alignment: .trailing)
                         TextField("llama3.2", text: $ollamaModel)
                             .textFieldStyle(.roundedBorder)
                     }
-                    providerHint("Make sure Ollama is running locally (ollama serve)")
+                    providerHint(loc.t("onboarding.provider.hint.ollama"))
 
                 case .openAICompatible:
                     HStack {
-                        Text("Base URL")
+                        Text(loc.t("onboarding.provider.base_url"))
                             .frame(width: 80, alignment: .trailing)
                         TextField("https://api.example.com", text: $customBaseURL)
                             .textFieldStyle(.roundedBorder)
                     }
                     HStack {
-                        Text("Model")
+                        Text(loc.t("onboarding.provider.model"))
                             .frame(width: 80, alignment: .trailing)
                         TextField("model-name", text: $customModel)
                             .textFieldStyle(.roundedBorder)
@@ -95,13 +96,13 @@ struct OnboardingProviderView: View {
                             ProgressView()
                                 .controlSize(.small)
                         }
-                        Text(isTesting ? "Testing..." : "Test Connection")
+                        Text(isTesting ? loc.t("onboarding.provider.testing") : loc.t("onboarding.provider.test_connection"))
                     }
                 }
                 .buttonStyle(.bordered)
                 .disabled(isTesting || !canTest)
 
-                Button("Save Provider") {
+                Button(loc.t("onboarding.provider.save")) {
                     saveProvider()
                     refocusOnboarding()
                 }
@@ -112,7 +113,7 @@ struct OnboardingProviderView: View {
                 if let result = testResult {
                     switch result {
                     case .success:
-                        Label("Connected!", systemImage: "checkmark.circle.fill")
+                        Label(loc.t("onboarding.provider.connected"), systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
                     case .error(let msg):
@@ -128,7 +129,7 @@ struct OnboardingProviderView: View {
             let configured = providerStore.providers.filter { configuredProviderIDs.contains($0.id) }
             if !configured.isEmpty {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Default provider for processing:")
+                    Text(loc.t("onboarding.provider.default_label"))
                         .font(.caption.bold())
                         .foregroundStyle(.secondary)
 
@@ -171,7 +172,7 @@ struct OnboardingProviderView: View {
 
     private func apiKeyField(placeholder: String) -> some View {
         HStack {
-            Text("API Key")
+            Text(loc.t("onboarding.provider.api_key"))
                 .frame(width: 80, alignment: .trailing)
             SecureField(placeholder, text: $apiKey)
                 .textFieldStyle(.roundedBorder)
@@ -280,7 +281,7 @@ struct OnboardingProviderView: View {
         saveProvider()
 
         guard let provider = providerStore.providers.first(where: { $0.providerType == selectedType }) else {
-            testResult = .error("Provider not found")
+            testResult = .error(loc.t("error.provider_not_found"))
             return
         }
 
@@ -296,7 +297,7 @@ struct OnboardingProviderView: View {
                     systemPrompt: "Respond with exactly one word.",
                     config: provider
                 )
-                testResult = result.isEmpty ? .error("Empty response") : .success
+                testResult = result.isEmpty ? .error(loc.t("error.empty_response")) : .success
             } catch {
                 testResult = .error(error.localizedDescription)
             }

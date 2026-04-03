@@ -9,6 +9,7 @@ struct PromptsSettingsView: View {
     @State private var showRestoreDefaults = false
     @State private var statusMessage: String?
 
+    private let loc = Loc.shared
     private var promptStore: PromptStore { appState.promptStore }
 
     var body: some View {
@@ -23,10 +24,10 @@ struct PromptsSettingsView: View {
 
                 HStack(spacing: 6) {
                     Menu {
-                        Button("New Prompt") {
+                        Button(loc.t("settings.prompts.new_prompt")) {
                             addNode(type: .prompt, parentID: selectedFolderID)
                         }
-                        Button("New Folder") {
+                        Button(loc.t("settings.prompts.new_folder")) {
                             addNode(type: .folder, parentID: selectedFolderID)
                         }
                     } label: {
@@ -52,19 +53,19 @@ struct PromptsSettingsView: View {
                         Image(systemName: "square.and.arrow.down")
                     }
                     .buttonStyle(.borderless)
-                    .help("Import prompts")
+                    .help(loc.t("settings.prompts.import"))
 
                     Button { exportPrompts() } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .buttonStyle(.borderless)
-                    .help("Export prompts")
+                    .help(loc.t("settings.prompts.export"))
 
                     Button { showRestoreDefaults = true } label: {
                         Image(systemName: "arrow.counterclockwise")
                     }
                     .buttonStyle(.borderless)
-                    .help("Restore defaults")
+                    .help(loc.t("settings.prompts.restore"))
                 }
                 .padding(8)
             }
@@ -83,18 +84,18 @@ struct PromptsSettingsView: View {
                     Image(systemName: "text.bubble")
                         .font(.system(size: 32))
                         .foregroundStyle(.tertiary)
-                    Text("Select a prompt to edit")
+                    Text(loc.t("settings.prompts.select"))
                         .foregroundStyle(.secondary)
-                    Text("Double-click a folder to expand it")
+                    Text(loc.t("settings.prompts.expand_hint"))
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .alert("Delete \"\(deleteTarget?.name ?? "")\"?", isPresented: $showDeleteConfirmation) {
-            Button("Cancel", role: .cancel) { deleteTarget = nil }
-            Button("Delete", role: .destructive) {
+        .alert(loc.t("settings.prompts.delete_title", deleteTarget?.name ?? ""), isPresented: $showDeleteConfirmation) {
+            Button(loc.t("settings.prompts.cancel"), role: .cancel) { deleteTarget = nil }
+            Button(loc.t("settings.prompts.delete"), role: .destructive) {
                 if let node = deleteTarget {
                     promptStore.removeNode(withID: node.id)
                     if selectedNodeID == node.id { selectedNodeID = nil }
@@ -104,9 +105,9 @@ struct PromptsSettingsView: View {
         } message: {
             if let node = deleteTarget, node.isFolder {
                 let count = countChildren(node)
-                Text("This folder contains \(count) item\(count == 1 ? "" : "s"). Everything inside will be permanently deleted.")
+                Text(loc.t("settings.prompts.delete_folder_message", count))
             } else {
-                Text("This prompt will be permanently deleted.")
+                Text(loc.t("settings.prompts.delete_prompt_message"))
             }
         }
         .sheet(isPresented: $showRestoreDefaults) {
@@ -213,13 +214,13 @@ struct PromptsSettingsView: View {
             Button {
                 addNode(type: .prompt, parentID: node.id)
             } label: {
-                Label("New Prompt Here", systemImage: "plus.circle")
+                Label(loc.t("settings.prompts.new_prompt_here"), systemImage: "plus.circle")
             }
 
             Button {
                 addNode(type: .folder, parentID: node.id)
             } label: {
-                Label("New Subfolder", systemImage: "folder.badge.plus")
+                Label(loc.t("settings.prompts.new_subfolder"), systemImage: "folder.badge.plus")
             }
 
             Divider()
@@ -228,13 +229,13 @@ struct PromptsSettingsView: View {
         Button {
             promptStore.moveNode(id: node.id, direction: .up)
         } label: {
-            Label("Move Up", systemImage: "arrow.up")
+            Label(loc.t("settings.prompts.move_up"), systemImage: "arrow.up")
         }
 
         Button {
             promptStore.moveNode(id: node.id, direction: .down)
         } label: {
-            Label("Move Down", systemImage: "arrow.down")
+            Label(loc.t("settings.prompts.move_down"), systemImage: "arrow.down")
         }
 
         Divider()
@@ -242,7 +243,7 @@ struct PromptsSettingsView: View {
         Button(role: .destructive) {
             confirmDelete(node)
         } label: {
-            Label("Delete", systemImage: "trash")
+            Label(loc.t("settings.prompts.delete"), systemImage: "trash")
         }
     }
 
@@ -258,7 +259,7 @@ struct PromptsSettingsView: View {
 
     private func addNode(type: PromptNode.NodeType, parentID: UUID?) {
         let node = PromptNode(
-            name: type == .folder ? "New Folder" : "New Prompt",
+            name: type == .folder ? loc.t("settings.prompts.new_folder") : loc.t("settings.prompts.new_prompt"),
             mnemonicKey: "?",
             nodeType: type,
             systemPrompt: type == .prompt ? "Enter your prompt here..." : nil,
@@ -296,17 +297,19 @@ struct PromptEditorView: View {
     @State private var aiDescription = ""
     @State private var isGenerating = false
 
+    private let loc = Loc.shared
+
     var body: some View {
         Form {
-            Section("General") {
-                TextField("Name", text: $node.name)
+            Section(loc.t("settings.prompts.editor.general")) {
+                TextField(loc.t("settings.prompts.editor.name"), text: $node.name)
                     .onChange(of: node.name) { autoSave() }
 
-                TextField("Mnemonic Key", text: $node.mnemonicKey)
+                TextField(loc.t("settings.prompts.editor.mnemonic"), text: $node.mnemonicKey)
                     .onChange(of: node.mnemonicKey) { autoSave() }
 
                 HStack(spacing: 12) {
-                    Text("Modifiers")
+                    Text(loc.t("settings.prompts.editor.modifiers"))
                     Spacer()
                     modifierToggle("⇧", flag: .shift)
                     modifierToggle("⌃", flag: .control)
@@ -316,10 +319,10 @@ struct PromptEditorView: View {
                 .onChange(of: node.mnemonicModifiers) { autoSave() }
 
                 HStack {
-                    Text("Type")
+                    Text(loc.t("settings.prompts.editor.type"))
                     Spacer()
                     Label(
-                        node.isFolder ? "Folder" : "Prompt",
+                        node.isFolder ? loc.t("settings.prompts.editor.folder") : loc.t("settings.prompts.editor.prompt"),
                         systemImage: node.isFolder ? "folder" : "text.bubble"
                     )
                     .foregroundStyle(.secondary)
@@ -327,7 +330,7 @@ struct PromptEditorView: View {
             }
 
             if node.isPrompt {
-                Section("System Prompt") {
+                Section(loc.t("settings.prompts.editor.system_prompt")) {
                     TextEditor(text: Binding(
                         get: { node.systemPrompt ?? "" },
                         set: { node.systemPrompt = $0 }
@@ -337,13 +340,13 @@ struct PromptEditorView: View {
                     .onChange(of: node.systemPrompt) { autoSave() }
                 }
 
-                Section("Generate with AI") {
+                Section(loc.t("settings.prompts.editor.generate_section")) {
                     TextEditor(text: $aiDescription)
                         .font(.system(.body))
                         .frame(height: 50)
                         .overlay(alignment: .topLeading) {
                             if aiDescription.isEmpty {
-                                Text("Describe what this prompt should do...")
+                                Text(loc.t("settings.prompts.editor.generate_placeholder"))
                                     .foregroundStyle(.tertiary)
                                     .padding(.top, 8)
                                     .padding(.leading, 5)
@@ -360,13 +363,13 @@ struct PromptEditorView: View {
                                     ProgressView()
                                         .controlSize(.small)
                                 }
-                                Text(isGenerating ? "Generating..." : "Generate Prompt")
+                                Text(isGenerating ? loc.t("settings.prompts.editor.generating") : loc.t("settings.prompts.editor.generate_button"))
                             }
                         }
                         .buttonStyle(.bordered)
                         .disabled(aiDescription.isEmpty || isGenerating)
 
-                        Text("Uses your default AI provider")
+                        Text(loc.t("settings.prompts.editor.ai_hint"))
                             .font(.caption)
                             .foregroundStyle(.tertiary)
                     }
@@ -429,16 +432,18 @@ struct RestoreDefaultsSheet: View {
     let promptStore: PromptStore
     @Binding var isPresented: Bool
 
+    private let loc = Loc.shared
+
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "arrow.counterclockwise")
                 .font(.system(size: 28))
                 .foregroundStyle(.orange)
 
-            Text("Restore Default Prompts?")
+            Text(loc.t("settings.prompts.restore_title"))
                 .font(.headline)
 
-            Text("This will replace all your current prompts with the defaults below. This cannot be undone.")
+            Text(loc.t("settings.prompts.restore_message"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -475,9 +480,9 @@ struct RestoreDefaultsSheet: View {
             .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
 
             HStack {
-                Button("Cancel") { isPresented = false }
+                Button(loc.t("settings.prompts.cancel")) { isPresented = false }
                 Spacer()
-                Button("Restore Defaults") {
+                Button(loc.t("settings.prompts.restore_button")) {
                     promptStore.restoreDefaults()
                     isPresented = false
                 }

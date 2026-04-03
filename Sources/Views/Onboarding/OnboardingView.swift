@@ -7,19 +7,21 @@ struct OnboardingView: View {
     @State private var accessibilityGranted = false
     @State private var screenRecordingGranted = false
 
-    private let totalSteps = 6
+    private let loc = Loc.shared
+    private let totalSteps = 7
 
     var body: some View {
         VStack(spacing: 0) {
             // Content
             Group {
                 switch currentStep {
-                case 0: welcomeStep
-                case 1: permissionsStep
-                case 2: shortcutsStep
-                case 3: providerStep
-                case 4: iCloudStep
-                case 5: demoStep
+                case 0: OnboardingLanguageView()
+                case 1: welcomeStep
+                case 2: permissionsStep
+                case 3: shortcutsStep
+                case 4: providerStep
+                case 5: iCloudStep
+                case 6: demoStep
                 default: EmptyView()
                 }
             }
@@ -41,18 +43,18 @@ struct OnboardingView: View {
                 Spacer()
 
                 if currentStep > 0 {
-                    Button("Back") {
+                    Button(loc.t("onboarding.back")) {
                         withAnimation { currentStep -= 1 }
                     }
                 }
 
                 if currentStep < totalSteps - 1 {
-                    Button("Continue") {
+                    Button(loc.t("onboarding.continue")) {
                         withAnimation { currentStep += 1 }
                     }
                     .buttonStyle(AlwaysProminentButtonStyle())
                 } else {
-                    Button("Get Started") {
+                    Button(loc.t("onboarding.get_started")) {
                         appState.completeOnboarding()
                     }
                     .buttonStyle(AlwaysProminentButtonStyle())
@@ -67,7 +69,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 1: Welcome
+    // MARK: - Step 2: Welcome
 
     private var welcomeStep: some View {
         VStack(spacing: 20) {
@@ -77,20 +79,20 @@ struct OnboardingView: View {
                 .font(.system(size: 64))
                 .foregroundStyle(.blue)
 
-            Text("Welcome to ClipSlop")
+            Text(loc.t("onboarding.welcome.title"))
                 .font(.largeTitle.bold())
 
-            Text("Transform any text with AI — translate, reformat, analyze.\nJust select text, press a shortcut, and pick a prompt.")
+            Text(loc.t("onboarding.welcome.subtitle"))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 400)
 
             VStack(alignment: .leading, spacing: 8) {
-                featureRow(icon: "text.cursor", text: "Grab selected text from any app")
-                featureRow(icon: "camera.viewfinder", text: "OCR — scan text from screen")
-                featureRow(icon: "brain", text: "Claude, GPT, Ollama — any AI provider")
-                featureRow(icon: "folder", text: "Organize prompts in nested folders")
-                featureRow(icon: "clock.arrow.circlepath", text: "Full transformation history with undo")
+                featureRow(icon: "text.cursor", text: loc.t("onboarding.welcome.feature.grab"))
+                featureRow(icon: "camera.viewfinder", text: loc.t("onboarding.welcome.feature.ocr"))
+                featureRow(icon: "brain", text: loc.t("onboarding.welcome.feature.providers"))
+                featureRow(icon: "folder", text: loc.t("onboarding.welcome.feature.folders"))
+                featureRow(icon: "clock.arrow.circlepath", text: loc.t("onboarding.welcome.feature.history"))
             }
             .padding(.top, 8)
 
@@ -109,7 +111,7 @@ struct OnboardingView: View {
         }
     }
 
-    // MARK: - Step 2: Permissions
+    // MARK: - Step 3: Permissions
 
     private var permissionsStep: some View {
         VStack(spacing: 20) {
@@ -119,28 +121,30 @@ struct OnboardingView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.blue)
 
-            Text("Permissions")
+            Text(loc.t("onboarding.permissions.title"))
                 .font(.title.bold())
 
-            Text("ClipSlop needs a couple of permissions to work.")
+            Text(loc.t("onboarding.permissions.subtitle"))
                 .foregroundStyle(.secondary)
 
             VStack(spacing: 12) {
                 PermissionCard(
-                    title: "Accessibility",
-                    description: "Required to capture selected text from other apps",
+                    title: loc.t("onboarding.permissions.accessibility"),
+                    description: loc.t("onboarding.permissions.accessibility.desc"),
                     icon: "hand.raised",
                     isGranted: accessibilityGranted,
+                    grantLabel: loc.t("onboarding.permissions.grant"),
                     onRequest: {
                         TextCaptureService.requestAccessibility()
                     }
                 )
 
                 PermissionCard(
-                    title: "Screen Recording",
-                    description: "Required for OCR — scanning text from screen regions",
+                    title: loc.t("onboarding.permissions.screen_recording"),
+                    description: loc.t("onboarding.permissions.screen_recording.desc"),
                     icon: "rectangle.dashed.badge.record",
                     isGranted: screenRecordingGranted,
+                    grantLabel: loc.t("onboarding.permissions.grant"),
                     onRequest: {
                         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
                             NSWorkspace.shared.open(url)
@@ -150,7 +154,7 @@ struct OnboardingView: View {
             }
             .frame(maxWidth: 420)
 
-            Text("You can always change these later in System Settings → Privacy & Security")
+            Text(loc.t("onboarding.permissions.hint"))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -160,7 +164,7 @@ struct OnboardingView: View {
         .padding(32)
     }
 
-    // MARK: - Step 3: Shortcuts
+    // MARK: - Step 4: Shortcuts
 
     private var shortcutsStep: some View {
         VStack(spacing: 20) {
@@ -170,28 +174,28 @@ struct OnboardingView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.blue)
 
-            Text("Keyboard Shortcuts")
+            Text(loc.t("onboarding.shortcuts.title"))
                 .font(.title.bold())
 
-            Text("These are your global shortcuts. Customize them anytime in Settings.")
+            Text(loc.t("onboarding.shortcuts.subtitle"))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             VStack(spacing: 16) {
                 ShortcutRow(
-                    label: "Trigger ClipSlop",
+                    label: loc.t("onboarding.shortcuts.trigger"),
                     name: .triggerClipSlop
                 )
                 ShortcutRow(
-                    label: "From clipboard",
+                    label: loc.t("onboarding.shortcuts.clipboard"),
                     name: .triggerFromClipboard
                 )
                 ShortcutRow(
-                    label: "Blank editor",
+                    label: loc.t("onboarding.shortcuts.blank"),
                     name: .triggerBlankEditor
                 )
                 ShortcutRow(
-                    label: "Screen capture (OCR)",
+                    label: loc.t("onboarding.shortcuts.ocr"),
                     name: .triggerScreenCapture
                 )
             }
@@ -202,19 +206,19 @@ struct OnboardingView: View {
         .padding(32)
     }
 
-    // MARK: - Step 4: Provider Setup
+    // MARK: - Step 5: Provider Setup
 
     private var providerStep: some View {
         OnboardingProviderView(appState: appState)
     }
 
-    // MARK: - Step 5: iCloud Sync
+    // MARK: - Step 6: iCloud Sync
 
     private var iCloudStep: some View {
         OnboardingICloudView(appState: appState)
     }
 
-    // MARK: - Step 6: Demo
+    // MARK: - Step 7: Demo
 
     private var demoStep: some View {
         OnboardingDemoView(appState: appState)
@@ -235,6 +239,7 @@ struct PermissionCard: View {
     let description: String
     let icon: String
     let isGranted: Bool
+    var grantLabel: String = "Grant"
     let onRequest: () -> Void
 
     var body: some View {
@@ -259,7 +264,7 @@ struct PermissionCard: View {
                     .foregroundStyle(.green)
                     .font(.title3)
             } else {
-                Button("Grant") {
+                Button(grantLabel) {
                     onRequest()
                 }
                 .buttonStyle(.bordered)

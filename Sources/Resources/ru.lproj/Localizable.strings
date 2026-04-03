@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Выберите язык";
+"onboarding.language.subtitle" = "Выберите язык интерфейса ClipSlop.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Добро пожаловать в ClipSlop";
+"onboarding.welcome.subtitle" = "Трансформируйте любой текст с помощью ИИ — переводите, форматируйте, анализируйте.\nВыделите текст, нажмите сочетание клавиш и выберите промпт.";
+"onboarding.welcome.feature.grab" = "Захват выделенного текста из любого приложения";
+"onboarding.welcome.feature.ocr" = "OCR — сканирование текста с экрана";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — любой ИИ-провайдер";
+"onboarding.welcome.feature.folders" = "Организация промптов во вложенных папках";
+"onboarding.welcome.feature.history" = "Полная история трансформаций с отменой";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Разрешения";
+"onboarding.permissions.subtitle" = "ClipSlop необходимы некоторые разрешения для работы.";
+"onboarding.permissions.accessibility" = "Универсальный доступ";
+"onboarding.permissions.accessibility.desc" = "Необходимо для захвата выделенного текста из других приложений";
+"onboarding.permissions.screen_recording" = "Запись экрана";
+"onboarding.permissions.screen_recording.desc" = "Необходимо для OCR — сканирования текста с областей экрана";
+"onboarding.permissions.hint" = "Вы всегда можете изменить это в Системных настройках → Конфиденциальность и безопасность";
+"onboarding.permissions.grant" = "Разрешить";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Сочетания клавиш";
+"onboarding.shortcuts.subtitle" = "Это ваши глобальные сочетания клавиш. Настройте их в любое время в Настройках.";
+"onboarding.shortcuts.trigger" = "Вызвать ClipSlop";
+"onboarding.shortcuts.clipboard" = "Из буфера обмена";
+"onboarding.shortcuts.blank" = "Пустой редактор";
+"onboarding.shortcuts.ocr" = "Снимок экрана (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "ИИ-провайдер";
+"onboarding.provider.subtitle" = "Выберите провайдера ИИ и введите API-ключ.";
+"onboarding.provider.api_key" = "API-ключ";
+"onboarding.provider.model" = "Модель";
+"onboarding.provider.base_url" = "Базовый URL";
+"onboarding.provider.test_connection" = "Проверить соединение";
+"onboarding.provider.testing" = "Проверка...";
+"onboarding.provider.save" = "Сохранить провайдера";
+"onboarding.provider.connected" = "Подключено!";
+"onboarding.provider.default_label" = "Провайдер по умолчанию для обработки:";
+"onboarding.provider.hint.anthropic" = "Получите ключ на console.anthropic.com";
+"onboarding.provider.hint.openai" = "Получите ключ на platform.openai.com";
+"onboarding.provider.hint.ollama" = "Убедитесь, что Ollama запущена локально (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "Синхронизация iCloud";
+"onboarding.icloud.subtitle" = "Синхронизируйте промпты на всех ваших Mac.\nИзменения на одном устройстве появляются везде автоматически.";
+"onboarding.icloud.toggle" = "Синхронизировать промпты через iCloud";
+"onboarding.icloud.change_later" = "Вы можете изменить это позже в Настройках.";
+"onboarding.icloud.unavailable" = "iCloud недоступен. Войдите в iCloud в Системных настройках.";
+"onboarding.icloud.synced" = "Синхронизировано";
+"onboarding.icloud.syncing" = "Синхронизация...";
+"onboarding.icloud.conflict.title" = "Найдены существующие промпты в iCloud";
+"onboarding.icloud.conflict.message" = "Другой Mac уже синхронизировал промпты с iCloud. Хотите использовать их или загрузить свои текущие промпты?";
+"onboarding.icloud.conflict.use_cloud" = "Использовать iCloud";
+"onboarding.icloud.conflict.upload_local" = "Загрузить локальные";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Попробуйте!";
+"onboarding.demo.subtitle" = "Выделите текст ниже, затем вызовите ClipSlop для обработки.";
+"onboarding.demo.sample_text" = "Съешь же ещё этих мягких французских булок да выпей чаю. Это предложение содержит все буквы русского алфавита и часто используется для тестирования. Выделите его и вызовите ClipSlop!";
+"onboarding.demo.select_all" = "Выделить всё";
+"onboarding.demo.selected_hint" = "Текст выделен — теперь используйте сочетание клавиш!";
+"onboarding.demo.trigger_heading" = "Теперь вызовите ClipSlop:";
+"onboarding.demo.selected_text" = "Выделенный текст";
+"onboarding.demo.from_clipboard" = "Из буфера обмена";
+"onboarding.demo.or" = "или";
+"onboarding.demo.trigger" = "Вызвать";
+"onboarding.demo.manual" = "Вручную";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Назад";
+"onboarding.continue" = "Далее";
+"onboarding.get_started" = "Начать";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Основные";
+"settings.tab.providers" = "Провайдеры";
+"settings.tab.prompts" = "Промпты";
+"settings.tab.about" = "О программе";
+
+/* Settings - General - Language */
+"settings.general.language" = "Язык";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Синхронизировать промпты через iCloud";
+"settings.general.icloud.sign_in" = "Войдите в iCloud в Системных настройках для активации синхронизации.";
+"settings.general.icloud.unavailable" = "iCloud недоступен";
+"settings.general.icloud.synced" = "Синхронизировано";
+"settings.general.icloud.syncing" = "Синхронизация...";
+"settings.general.icloud.sync_error" = "Ошибка синхронизации";
+"settings.general.icloud.conflict.title" = "Найдены существующие промпты в iCloud";
+"settings.general.icloud.conflict.message" = "Хотите использовать промпты из iCloud или загрузить свои текущие промпты?";
+"settings.general.icloud.conflict.use_cloud" = "Использовать iCloud";
+"settings.general.icloud.conflict.upload_local" = "Загрузить локальные";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Сочетания клавиш";
+"settings.general.shortcuts.trigger" = "Вызвать ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Из буфера обмена:";
+"settings.general.shortcuts.blank" = "Пустой редактор:";
+"settings.general.shortcuts.ocr" = "Снимок экрана (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Поведение";
+"settings.general.behavior.streaming" = "Потоковые ответы";
+"settings.general.behavior.launch_login" = "Запускать при входе";
+"settings.general.behavior.keycodes" = "Использовать коды клавиш (независимые от раскладки)";
+"settings.general.behavior.keycodes_help" = "Привязка к физическому положению клавиш — мнемоники работают с любой раскладкой";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Оформление";
+"settings.general.appearance.opacity" = "Прозрачность окна";
+"settings.general.appearance.width" = "Ширина окна";
+"settings.general.appearance.height" = "Высота окна";
+"settings.general.appearance.hide_menubar" = "Скрыть значок в строке меню";
+"settings.general.appearance.hide_dock" = "Скрыть значок в Dock";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Разрешения";
+"settings.general.permissions.accessibility" = "Универсальный доступ";
+"settings.general.permissions.accessibility_detail" = "Захват выделенного текста из других приложений";
+"settings.general.permissions.screen_recording" = "Запись экрана";
+"settings.general.permissions.screen_recording_detail" = "OCR-снимок экрана";
+"settings.general.permissions.open_settings" = "Открыть настройки";
+"settings.general.permissions.grant" = "Разрешить";
+
+/* Settings - Providers */
+"settings.providers.select" = "Выберите провайдера";
+"settings.providers.add" = "Добавить провайдера";
+"settings.providers.name" = "Имя";
+"settings.providers.type" = "Тип";
+"settings.providers.provider" = "Провайдер";
+"settings.providers.connection" = "Подключение";
+"settings.providers.base_url" = "Базовый URL";
+"settings.providers.model_id" = "ID модели";
+"settings.providers.max_tokens" = "Макс. токенов";
+"settings.providers.authentication" = "Аутентификация";
+"settings.providers.api_key" = "API-ключ";
+"settings.providers.set_default" = "Сделать по умолчанию";
+"settings.providers.default_label" = "Провайдер по умолчанию";
+"settings.providers.save" = "Сохранить";
+"settings.providers.cancel" = "Отмена";
+"settings.providers.add_button" = "Добавить";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Выберите промпт для редактирования";
+"settings.prompts.expand_hint" = "Дважды кликните на папку, чтобы развернуть её";
+"settings.prompts.new_prompt" = "Новый промпт";
+"settings.prompts.new_folder" = "Новая папка";
+"settings.prompts.new_prompt_here" = "Новый промпт здесь";
+"settings.prompts.new_subfolder" = "Новая подпапка";
+"settings.prompts.move_up" = "Переместить вверх";
+"settings.prompts.move_down" = "Переместить вниз";
+"settings.prompts.delete" = "Удалить";
+"settings.prompts.cancel" = "Отмена";
+"settings.prompts.import" = "Импортировать промпты";
+"settings.prompts.export" = "Экспортировать промпты";
+"settings.prompts.restore" = "Восстановить по умолчанию";
+"settings.prompts.delete_title" = "Удалить \"%@\"?";
+"settings.prompts.delete_folder_message" = "Эта папка содержит %d элемент(ов). Всё содержимое будет удалено навсегда.";
+"settings.prompts.delete_prompt_message" = "Этот промпт будет удалён навсегда.";
+"settings.prompts.restore_title" = "Восстановить промпты по умолчанию?";
+"settings.prompts.restore_message" = "Это заменит все ваши текущие промпты на стандартные, показанные ниже. Это действие нельзя отменить.";
+"settings.prompts.restore_button" = "Восстановить";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Основные";
+"settings.prompts.editor.name" = "Имя";
+"settings.prompts.editor.mnemonic" = "Мнемоническая клавиша";
+"settings.prompts.editor.modifiers" = "Модификаторы";
+"settings.prompts.editor.type" = "Тип";
+"settings.prompts.editor.folder" = "Папка";
+"settings.prompts.editor.prompt" = "Промпт";
+"settings.prompts.editor.system_prompt" = "Системный промпт";
+"settings.prompts.editor.generate_section" = "Генерация с ИИ";
+"settings.prompts.editor.generate_placeholder" = "Опишите, что должен делать этот промпт...";
+"settings.prompts.editor.generate_button" = "Сгенерировать промпт";
+"settings.prompts.editor.generating" = "Генерация...";
+"settings.prompts.editor.ai_hint" = "Использует вашего ИИ-провайдера по умолчанию";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Структура промптов по умолчанию";
+"settings.samples.actions" = "Действия";
+"settings.samples.restore" = "Восстановить по умолчанию...";
+"settings.samples.export" = "Экспортировать промпты...";
+"settings.samples.import" = "Импортировать промпты...";
+"settings.samples.restore_title" = "Восстановить по умолчанию?";
+"settings.samples.restore_message" = "Это заменит все ваши текущие промпты на стандартный набор. Это действие нельзя отменить.";
+"settings.samples.restore_button" = "Восстановить";
+"settings.samples.defaults_restored" = "Стандартные промпты восстановлены!";
+"settings.samples.exported" = "Промпты экспортированы!";
+"settings.samples.imported" = "Промпты импортированы!";
+"settings.samples.import_failed" = "Ошибка импорта: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "ИИ-обработчик буфера обмена";
+"about.version" = "Версия %@";
+"about.github" = "Репозиторий GitHub";
+"about.coffee" = "Угостить кофе";
+"about.updates" = "Проверить обновления";
+"about.libraries" = "Сторонние библиотеки";
+"about.libraries.intro" = "ClipSlop использует следующие библиотеки с открытым исходным кодом:";
+"about.libraries.license" = "Все библиотеки используются на условиях соответствующих открытых лицензий.";
+"about.done" = "Готово";
+
+/* Popup */
+"popup.prompts" = "Промпты";
+"popup.back" = "Назад";
+"popup.select_all" = "Выделить всё";
+"popup.copy" = "Копировать";
+"popup.edit" = "Редактировать";
+"popup.open" = "Открыть";
+"popup.save" = "Сохранить";
+"popup.copied" = "Скопировано!";
+"popup.editing" = "Редактирование";
+"popup.done" = "Готово";
+"popup.cancel" = "Отмена";
+"popup.dismiss" = "Закрыть";
+"popup.try_again" = "Попробовать снова";
+"popup.mnemonic_hint" = "Нажмите клавишу для выбора промпта";
+"popup.hint.history" = "История";
+"popup.hint.scroll" = "Прокрутка";
+"popup.hint.page_down" = "Стр. ↓";
+"popup.hint.page_up" = "Стр. ↑";
+"popup.hint.back" = "Назад";
+"popup.hint.close" = "Закрыть";
+"popup.processing" = "Обработка...";
+"popup.receiving" = "Получение ответа...";
+
+/* Popup - History */
+"popup.history.original" = "Оригинал";
+"popup.history.delete" = "Удалить";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Нажмите клавишу для выбора";
+"popup.navigator.back" = "Назад";
+"popup.navigator.close" = "Закрыть";
+
+/* Menu Bar */
+"menu.trigger" = "Вызвать";
+"menu.clipboard" = "Из буфера обмена";
+"menu.blank" = "Пустой редактор";
+"menu.ocr" = "Снимок экрана (OCR)";
+"menu.provider" = "Провайдер: %@";
+"menu.model" = "Модель: %@";
+"menu.settings" = "Настройки...";
+"menu.onboarding" = "Показать введение...";
+"menu.coffee" = "Угостить кофе ☕";
+"menu.updates" = "Проверить обновления...";
+"menu.about" = "О программе";
+"menu.quit" = "Выход";
+
+/* Errors */
+"error.no_text" = "Нет выделенного текста или буфер обмена пуст";
+"error.clipboard_empty" = "Буфер обмена пуст";
+"error.provider_not_found" = "Провайдер не найден";
+"error.empty_response" = "Пустой ответ";
+
+/* Window titles */
+"window.settings" = "Настройки ClipSlop";
+"window.about" = "О ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Ручное редактирование";

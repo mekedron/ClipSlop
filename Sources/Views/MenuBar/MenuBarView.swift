@@ -4,61 +4,62 @@ import KeyboardShortcuts
 struct MenuBarView: View {
     let appState: AppState
     let updater: SparkleUpdater
+    private let loc = Loc.shared
 
     var body: some View {
-        menuButton("Trigger", shortcut: .triggerClipSlop) {
+        menuButton(loc.t("menu.trigger"), shortcut: .triggerClipSlop) {
             appState.triggerFromSelection()
         }
 
-        menuButton("From Clipboard", shortcut: .triggerFromClipboard) {
+        menuButton(loc.t("menu.clipboard"), shortcut: .triggerFromClipboard) {
             appState.triggerFromClipboard()
         }
 
-        menuButton("Blank Editor", shortcut: .triggerBlankEditor) {
+        menuButton(loc.t("menu.blank"), shortcut: .triggerBlankEditor) {
             appState.triggerBlankEditor()
         }
 
-        menuButton("Screen Capture (OCR)", shortcut: .triggerScreenCapture) {
+        menuButton(loc.t("menu.ocr"), shortcut: .triggerScreenCapture) {
             appState.triggerFromScreenCapture()
         }
 
         Divider()
 
         if let provider = appState.providerStore.defaultProvider {
-            Text("Provider: \(provider.name)")
+            Text(loc.t("menu.provider", provider.name))
                 .font(.caption)
-            Text("Model: \(provider.modelID)")
+            Text(loc.t("menu.model", provider.modelID))
                 .font(.caption)
         }
 
         Divider()
 
-        Button("Settings...") {
+        Button(loc.t("menu.settings")) {
             appState.openSettings()
         }
         .keyboardShortcut(",", modifiers: .command)
 
-        Button("Show Onboarding...") {
+        Button(loc.t("menu.onboarding")) {
             appState.showOnboarding()
         }
 
         Divider()
 
-        Button("Buy Me a Coffee ☕") {
+        Button(loc.t("menu.coffee")) {
             NSWorkspace.shared.open(URL(string: "https://buymeacoffee.com/mekedron")!)
         }
 
-        Button("Check for Updates...") {
+        Button(loc.t("menu.updates")) {
             updater.checkForUpdates()
         }
 
-        Button("About") {
+        Button(loc.t("menu.about")) {
             appState.showAbout()
         }
 
         Divider()
 
-        Button("Quit") {
+        Button(loc.t("menu.quit")) {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q")

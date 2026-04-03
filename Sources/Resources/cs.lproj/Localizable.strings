@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Vyberte jazyk";
+"onboarding.language.subtitle" = "Zvolte jazyk rozhraní ClipSlop.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Vítejte v ClipSlop";
+"onboarding.welcome.subtitle" = "Transformujte jakýkoli text pomocí AI — přeložte, přeformátujte, analyzujte.\nStačí vybrat text, stisknout zkratku a zvolit prompt.";
+"onboarding.welcome.feature.grab" = "Zachytí vybraný text z libovolné aplikace";
+"onboarding.welcome.feature.ocr" = "OCR — rozpoznání textu z obrazovky";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — jakýkoli AI poskytovatel";
+"onboarding.welcome.feature.folders" = "Organizace promptů ve vnořených složkách";
+"onboarding.welcome.feature.history" = "Kompletní historie transformací se zpětným krokem";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Oprávnění";
+"onboarding.permissions.subtitle" = "ClipSlop potřebuje pár oprávnění, aby mohl fungovat.";
+"onboarding.permissions.accessibility" = "Přístupnost";
+"onboarding.permissions.accessibility.desc" = "Potřeba k zachycení vybraného textu z jiných aplikací";
+"onboarding.permissions.screen_recording" = "Záznam obrazovky";
+"onboarding.permissions.screen_recording.desc" = "Potřeba pro OCR — rozpoznání textu z oblasti obrazovky";
+"onboarding.permissions.hint" = "Toto můžete kdykoli změnit v Nastavení systému → Soukromí a zabezpečení";
+"onboarding.permissions.grant" = "Povolit";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Klávesové zkratky";
+"onboarding.shortcuts.subtitle" = "Toto jsou vaše globální zkratky. Můžete je kdykoli upravit v Nastavení.";
+"onboarding.shortcuts.trigger" = "Spustit ClipSlop";
+"onboarding.shortcuts.clipboard" = "Ze schránky";
+"onboarding.shortcuts.blank" = "Prázdný editor";
+"onboarding.shortcuts.ocr" = "Snímek obrazovky (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "AI poskytovatel";
+"onboarding.provider.subtitle" = "Vyberte svého AI poskytovatele a zadejte API klíč.";
+"onboarding.provider.api_key" = "API klíč";
+"onboarding.provider.model" = "Model";
+"onboarding.provider.base_url" = "Základní URL";
+"onboarding.provider.test_connection" = "Otestovat spojení";
+"onboarding.provider.testing" = "Testuji...";
+"onboarding.provider.save" = "Uložit poskytovatele";
+"onboarding.provider.connected" = "Připojeno!";
+"onboarding.provider.default_label" = "Výchozí poskytovatel pro zpracování:";
+"onboarding.provider.hint.anthropic" = "Klíč získáte na console.anthropic.com";
+"onboarding.provider.hint.openai" = "Klíč získáte na platform.openai.com";
+"onboarding.provider.hint.ollama" = "Ujistěte se, že Ollama běží lokálně (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "Synchronizace iCloud";
+"onboarding.icloud.subtitle" = "Udržujte své prompty synchronizované na všech Macích.\nZměny na jednom zařízení se automaticky projeví všude.";
+"onboarding.icloud.toggle" = "Synchronizovat prompty přes iCloud";
+"onboarding.icloud.change_later" = "Toto můžete kdykoli změnit v Nastavení.";
+"onboarding.icloud.unavailable" = "iCloud není dostupný. Přihlaste se k iCloudu v Nastavení systému.";
+"onboarding.icloud.synced" = "Synchronizováno";
+"onboarding.icloud.syncing" = "Synchronizuji...";
+"onboarding.icloud.conflict.title" = "V iCloudu byly nalezeny existující prompty";
+"onboarding.icloud.conflict.message" = "Jiný Mac už synchronizoval prompty do iCloudu. Chcete použít ty, nebo nahrát své aktuální prompty?";
+"onboarding.icloud.conflict.use_cloud" = "Použít iCloud";
+"onboarding.icloud.conflict.upload_local" = "Nahrát lokální";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Vyzkoušejte to!";
+"onboarding.demo.subtitle" = "Vyberte text níže a spusťte ClipSlop pro jeho zpracování.";
+"onboarding.demo.sample_text" = "Příliš žluťoučký kůň úpěl ďábelské ódy. Tato věta obsahuje všechna písmena české abecedy s diakritikou a běžně se používá pro testování. Zkuste ji vybrat a spustit ClipSlop!";
+"onboarding.demo.select_all" = "Vybrat vše";
+"onboarding.demo.selected_hint" = "Text vybrán — teď použijte svou zkratku!";
+"onboarding.demo.trigger_heading" = "Teď spusťte ClipSlop:";
+"onboarding.demo.selected_text" = "Vybraný text";
+"onboarding.demo.from_clipboard" = "Ze schránky";
+"onboarding.demo.or" = "nebo";
+"onboarding.demo.trigger" = "Spustit";
+"onboarding.demo.manual" = "Ručně";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Zpět";
+"onboarding.continue" = "Pokračovat";
+"onboarding.get_started" = "Začít";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Obecné";
+"settings.tab.providers" = "Poskytovatelé";
+"settings.tab.prompts" = "Prompty";
+"settings.tab.about" = "O aplikaci";
+
+/* Settings - General - Language */
+"settings.general.language" = "Jazyk";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Synchronizovat prompty přes iCloud";
+"settings.general.icloud.sign_in" = "Přihlaste se k iCloudu v Nastavení systému pro zapnutí synchronizace.";
+"settings.general.icloud.unavailable" = "iCloud není dostupný";
+"settings.general.icloud.synced" = "Synchronizováno";
+"settings.general.icloud.syncing" = "Synchronizuji...";
+"settings.general.icloud.sync_error" = "Chyba synchronizace";
+"settings.general.icloud.conflict.title" = "V iCloudu byly nalezeny existující prompty";
+"settings.general.icloud.conflict.message" = "Chcete použít prompty z iCloudu, nebo nahrát své aktuální prompty?";
+"settings.general.icloud.conflict.use_cloud" = "Použít iCloud";
+"settings.general.icloud.conflict.upload_local" = "Nahrát lokální";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Klávesové zkratky";
+"settings.general.shortcuts.trigger" = "Spustit ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Ze schránky:";
+"settings.general.shortcuts.blank" = "Prázdný editor:";
+"settings.general.shortcuts.ocr" = "Snímek obrazovky (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Chování";
+"settings.general.behavior.streaming" = "Povolit streamování odpovědí";
+"settings.general.behavior.launch_login" = "Spustit při přihlášení";
+"settings.general.behavior.keycodes" = "Používat kódy kláves (zkratky nezávislé na rozložení)";
+"settings.general.behavior.keycodes_help" = "Shoda podle fyzické pozice klávesy — mnemoniky fungují s libovolným rozložením klávesnice";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Vzhled";
+"settings.general.appearance.opacity" = "Průhlednost vyskakovacího okna";
+"settings.general.appearance.width" = "Šířka vyskakovacího okna";
+"settings.general.appearance.height" = "Výška vyskakovacího okna";
+"settings.general.appearance.hide_menubar" = "Skrýt ikonu v menu baru";
+"settings.general.appearance.hide_dock" = "Skrýt ikonu v Docku";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Oprávnění";
+"settings.general.permissions.accessibility" = "Přístupnost";
+"settings.general.permissions.accessibility_detail" = "Zachycení vybraného textu z jiných aplikací";
+"settings.general.permissions.screen_recording" = "Záznam obrazovky";
+"settings.general.permissions.screen_recording_detail" = "OCR snímek obrazovky";
+"settings.general.permissions.open_settings" = "Otevřít Nastavení";
+"settings.general.permissions.grant" = "Povolit";
+
+/* Settings - Providers */
+"settings.providers.select" = "Vyberte poskytovatele";
+"settings.providers.add" = "Přidat poskytovatele";
+"settings.providers.name" = "Název";
+"settings.providers.type" = "Typ";
+"settings.providers.provider" = "Poskytovatel";
+"settings.providers.connection" = "Připojení";
+"settings.providers.base_url" = "Základní URL";
+"settings.providers.model_id" = "ID modelu";
+"settings.providers.max_tokens" = "Max tokenů";
+"settings.providers.authentication" = "Ověření";
+"settings.providers.api_key" = "API klíč";
+"settings.providers.set_default" = "Nastavit jako výchozí";
+"settings.providers.default_label" = "Výchozí poskytovatel";
+"settings.providers.save" = "Uložit";
+"settings.providers.cancel" = "Zrušit";
+"settings.providers.add_button" = "Přidat";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Vyberte prompt k úpravě";
+"settings.prompts.expand_hint" = "Dvojklikem na složku ji rozbalíte";
+"settings.prompts.new_prompt" = "Nový prompt";
+"settings.prompts.new_folder" = "Nová složka";
+"settings.prompts.new_prompt_here" = "Nový prompt zde";
+"settings.prompts.new_subfolder" = "Nová podsložka";
+"settings.prompts.move_up" = "Posunout výš";
+"settings.prompts.move_down" = "Posunout níž";
+"settings.prompts.delete" = "Smazat";
+"settings.prompts.cancel" = "Zrušit";
+"settings.prompts.import" = "Importovat prompty";
+"settings.prompts.export" = "Exportovat prompty";
+"settings.prompts.restore" = "Obnovit výchozí";
+"settings.prompts.delete_title" = "Smazat \"%@\"?";
+"settings.prompts.delete_folder_message" = "Tato složka obsahuje %d položek. Vše uvnitř bude trvale smazáno.";
+"settings.prompts.delete_prompt_message" = "Tento prompt bude trvale smazán.";
+"settings.prompts.restore_title" = "Obnovit výchozí prompty?";
+"settings.prompts.restore_message" = "Tím se všechny vaše aktuální prompty nahradí výchozími uvedenými níže. Tuto akci nelze vrátit.";
+"settings.prompts.restore_button" = "Obnovit výchozí";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Obecné";
+"settings.prompts.editor.name" = "Název";
+"settings.prompts.editor.mnemonic" = "Mnemotechnická klávesa";
+"settings.prompts.editor.modifiers" = "Modifikátory";
+"settings.prompts.editor.type" = "Typ";
+"settings.prompts.editor.folder" = "Složka";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Systémový prompt";
+"settings.prompts.editor.generate_section" = "Vygenerovat pomocí AI";
+"settings.prompts.editor.generate_placeholder" = "Popište, co má tento prompt dělat...";
+"settings.prompts.editor.generate_button" = "Vygenerovat prompt";
+"settings.prompts.editor.generating" = "Generuji...";
+"settings.prompts.editor.ai_hint" = "Používá vašeho výchozího AI poskytovatele";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Výchozí struktura promptů";
+"settings.samples.actions" = "Akce";
+"settings.samples.restore" = "Obnovit výchozí...";
+"settings.samples.export" = "Exportovat prompty...";
+"settings.samples.import" = "Importovat prompty...";
+"settings.samples.restore_title" = "Obnovit výchozí?";
+"settings.samples.restore_message" = "Tím se všechny vaše aktuální prompty nahradí výchozí sadou. Tuto akci nelze vrátit.";
+"settings.samples.restore_button" = "Obnovit";
+"settings.samples.defaults_restored" = "Výchozí obnoveny!";
+"settings.samples.exported" = "Prompty exportovány!";
+"settings.samples.imported" = "Prompty importovány!";
+"settings.samples.import_failed" = "Import selhal: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "Zpracování schránky pomocí AI";
+"about.version" = "Verze %@";
+"about.github" = "GitHub repozitář";
+"about.coffee" = "Kupte mi kafe";
+"about.updates" = "Zkontrolovat aktualizace";
+"about.libraries" = "Knihovny třetích stran";
+"about.libraries.intro" = "ClipSlop používá následující open-source knihovny:";
+"about.libraries.license" = "Všechny knihovny jsou použity pod příslušnými open-source licencemi.";
+"about.done" = "Hotovo";
+
+/* Popup */
+"popup.prompts" = "Prompty";
+"popup.back" = "Zpět";
+"popup.select_all" = "Vybrat vše";
+"popup.copy" = "Kopírovat";
+"popup.edit" = "Upravit";
+"popup.open" = "Otevřít";
+"popup.save" = "Uložit";
+"popup.copied" = "Zkopírováno!";
+"popup.editing" = "Úpravy";
+"popup.done" = "Hotovo";
+"popup.cancel" = "Zrušit";
+"popup.dismiss" = "Zavřít";
+"popup.try_again" = "Zkusit znovu";
+"popup.mnemonic_hint" = "Stiskněte písmeno pro výběr promptu";
+"popup.hint.history" = "Historie";
+"popup.hint.scroll" = "Posun";
+"popup.hint.page_down" = "Strana ↓";
+"popup.hint.page_up" = "Strana ↑";
+"popup.hint.back" = "Zpět";
+"popup.hint.close" = "Zavřít";
+"popup.processing" = "Zpracovávám...";
+"popup.receiving" = "Přijímám odpověď...";
+
+/* Popup - History */
+"popup.history.original" = "Originál";
+"popup.history.delete" = "Smazat";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Stiskněte klávesu pro výběr";
+"popup.navigator.back" = "Zpět";
+"popup.navigator.close" = "Zavřít";
+
+/* Menu Bar */
+"menu.trigger" = "Spustit";
+"menu.clipboard" = "Ze schránky";
+"menu.blank" = "Prázdný editor";
+"menu.ocr" = "Snímek obrazovky (OCR)";
+"menu.provider" = "Poskytovatel: %@";
+"menu.model" = "Model: %@";
+"menu.settings" = "Nastavení...";
+"menu.onboarding" = "Zobrazit průvodce...";
+"menu.coffee" = "Kupte mi kafe ☕";
+"menu.updates" = "Zkontrolovat aktualizace...";
+"menu.about" = "O aplikaci";
+"menu.quit" = "Ukončit";
+
+/* Errors */
+"error.no_text" = "Žádný text nebyl vybrán ani není ve schránce";
+"error.clipboard_empty" = "Schránka je prázdná";
+"error.provider_not_found" = "Poskytovatel nenalezen";
+"error.empty_response" = "Prázdná odpověď";
+
+/* Window titles */
+"window.settings" = "Nastavení ClipSlop";
+"window.about" = "O aplikaci ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Ruční úprava";

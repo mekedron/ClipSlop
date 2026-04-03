@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HistorySidebarView: View {
     let appState: AppState
+    private let loc = Loc.shared
 
     var body: some View {
         ScrollView {
@@ -21,7 +22,7 @@ struct HistorySidebarView: View {
                     // Original text at the bottom
                     historyItem(
                         index: -1,
-                        label: "Original",
+                        label: loc.t("popup.history.original"),
                         icon: "doc.text",
                         preview: session.originalText,
                         isSelected: appState.selectedHistoryStepIndex == -1
@@ -81,7 +82,7 @@ struct HistorySidebarView: View {
                 Button(role: .destructive) {
                     appState.removeHistoryStep(at: index)
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label(loc.t("popup.history.delete"), systemImage: "trash")
                 }
             }
         }

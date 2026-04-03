@@ -2,6 +2,7 @@ import SwiftUI
 
 struct OnboardingICloudView: View {
     let appState: AppState
+    private let loc = Loc.shared
 
     var body: some View {
         @Bindable var settings = appState.settings
@@ -13,17 +14,17 @@ struct OnboardingICloudView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.blue)
 
-            Text("iCloud Sync")
+            Text(loc.t("onboarding.icloud.title"))
                 .font(.title.bold())
 
-            Text("Keep your prompts in sync across all your Macs.\nChanges on one device appear everywhere automatically.")
+            Text(loc.t("onboarding.icloud.subtitle"))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: 400)
 
             // Toggle
             VStack(spacing: 12) {
-                Toggle("Sync prompts via iCloud", isOn: $settings.iCloudSyncEnabled)
+                Toggle(loc.t("onboarding.icloud.toggle"), isOn: $settings.iCloudSyncEnabled)
                     .toggleStyle(.switch)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 12)
@@ -52,7 +53,7 @@ struct OnboardingICloudView: View {
                     .frame(maxWidth: 420)
             }
 
-            Text("You can change this later in Settings.")
+            Text(loc.t("onboarding.icloud.change_later"))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -65,17 +66,17 @@ struct OnboardingICloudView: View {
     private var syncStatusRow: some View {
         switch appState.syncService.status {
         case .unavailable:
-            Label("iCloud is not available. Sign in to iCloud in System Settings.", systemImage: "exclamationmark.icloud")
+            Label(loc.t("onboarding.icloud.unavailable"), systemImage: "exclamationmark.icloud")
                 .font(.caption)
                 .foregroundStyle(.orange)
         case .current:
-            Label("Synced", systemImage: "checkmark.icloud")
+            Label(loc.t("onboarding.icloud.synced"), systemImage: "checkmark.icloud")
                 .font(.caption)
                 .foregroundStyle(.green)
         case .syncing:
             HStack(spacing: 6) {
                 ProgressView().controlSize(.small)
-                Text("Syncing...").font(.caption).foregroundStyle(.secondary)
+                Text(loc.t("onboarding.icloud.syncing")).font(.caption).foregroundStyle(.secondary)
             }
         case .error(let message):
             Label(message, systemImage: "xmark.icloud")
@@ -88,10 +89,10 @@ struct OnboardingICloudView: View {
 
     private var conflictCard: some View {
         VStack(spacing: 12) {
-            Label("Existing prompts found in iCloud", systemImage: "icloud.and.arrow.down")
+            Label(loc.t("onboarding.icloud.conflict.title"), systemImage: "icloud.and.arrow.down")
                 .font(.subheadline.weight(.medium))
 
-            Text("Another Mac has already synced prompts to iCloud. Would you like to use those or upload your current prompts?")
+            Text(loc.t("onboarding.icloud.conflict.message"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -100,14 +101,14 @@ struct OnboardingICloudView: View {
                 Button {
                     appState.syncService.resolveUseCloud()
                 } label: {
-                    Label("Use iCloud", systemImage: "icloud.and.arrow.down")
+                    Label(loc.t("onboarding.icloud.conflict.use_cloud"), systemImage: "icloud.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
 
                 Button {
                     appState.syncService.resolveUseLocal()
                 } label: {
-                    Label("Upload Local", systemImage: "icloud.and.arrow.up")
+                    Label(loc.t("onboarding.icloud.conflict.upload_local"), systemImage: "icloud.and.arrow.up")
                 }
                 .buttonStyle(.bordered)
             }

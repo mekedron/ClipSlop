@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Valg af sprog";
+"onboarding.language.subtitle" = "Vælg sproget til ClipSlops brugerflade.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Velkommen til ClipSlop";
+"onboarding.welcome.subtitle" = "Omform enhver tekst med AI — oversæt, reformater, analyser.\nMarkér blot tekst, tryk på en genvej, og vælg en prompt.";
+"onboarding.welcome.feature.grab" = "Hent markeret tekst fra enhver app";
+"onboarding.welcome.feature.ocr" = "OCR — scan tekst fra skærmen";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — enhver AI-udbyder";
+"onboarding.welcome.feature.folders" = "Organiser prompts i indlejrede mapper";
+"onboarding.welcome.feature.history" = "Fuld transformationshistorik med fortryd";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Tilladelser";
+"onboarding.permissions.subtitle" = "ClipSlop har brug for et par tilladelser for at fungere.";
+"onboarding.permissions.accessibility" = "Tilgængelighed";
+"onboarding.permissions.accessibility.desc" = "Nødvendig for at hente markeret tekst fra andre apps";
+"onboarding.permissions.screen_recording" = "Skærmoptagelse";
+"onboarding.permissions.screen_recording.desc" = "Nødvendig til OCR — scanning af tekst fra skærmområder";
+"onboarding.permissions.hint" = "Du kan altid ændre disse senere i Systemindstillinger → Anonymitet & sikkerhed";
+"onboarding.permissions.grant" = "Tillad";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Tastaturgenveje";
+"onboarding.shortcuts.subtitle" = "Dette er dine globale genveje. Tilpas dem når som helst i Indstillinger.";
+"onboarding.shortcuts.trigger" = "Aktiver ClipSlop";
+"onboarding.shortcuts.clipboard" = "Fra udklipsholder";
+"onboarding.shortcuts.blank" = "Tom editor";
+"onboarding.shortcuts.ocr" = "Skærmoptagelse (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "AI-udbyder";
+"onboarding.provider.subtitle" = "Vælg din AI-udbyder, og indtast din API-nøgle.";
+"onboarding.provider.api_key" = "API-nøgle";
+"onboarding.provider.model" = "Model";
+"onboarding.provider.base_url" = "Basis-URL";
+"onboarding.provider.test_connection" = "Test forbindelse";
+"onboarding.provider.testing" = "Tester...";
+"onboarding.provider.save" = "Gem udbyder";
+"onboarding.provider.connected" = "Forbundet!";
+"onboarding.provider.default_label" = "Standardudbyder til behandling:";
+"onboarding.provider.hint.anthropic" = "Hent din nøgle på console.anthropic.com";
+"onboarding.provider.hint.openai" = "Hent din nøgle på platform.openai.com";
+"onboarding.provider.hint.ollama" = "Sørg for at Ollama kører lokalt (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "iCloud-synkronisering";
+"onboarding.icloud.subtitle" = "Hold dine prompts synkroniseret på tværs af alle dine Mac'er.\nÆndringer på én enhed vises automatisk overalt.";
+"onboarding.icloud.toggle" = "Synkroniser prompts via iCloud";
+"onboarding.icloud.change_later" = "Du kan ændre dette senere i Indstillinger.";
+"onboarding.icloud.unavailable" = "iCloud er ikke tilgængelig. Log ind på iCloud i Systemindstillinger.";
+"onboarding.icloud.synced" = "Synkroniseret";
+"onboarding.icloud.syncing" = "Synkroniserer...";
+"onboarding.icloud.conflict.title" = "Eksisterende prompts fundet i iCloud";
+"onboarding.icloud.conflict.message" = "En anden Mac har allerede synkroniseret prompts til iCloud. Vil du bruge dem eller uploade dine nuværende prompts?";
+"onboarding.icloud.conflict.use_cloud" = "Brug iCloud";
+"onboarding.icloud.conflict.upload_local" = "Upload lokale";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Prøv det!";
+"onboarding.demo.subtitle" = "Markér teksten nedenfor, og aktiver derefter ClipSlop for at behandle den.";
+"onboarding.demo.sample_text" = "Quizdeltagerne spiste jordbær med fløde, mens cirkusklovnen Walther spillede på xylofon. Denne sætning indeholder alle bogstaver i det danske alfabet og bruges ofte til test. Prøv at markere den og aktivere ClipSlop!";
+"onboarding.demo.select_all" = "Markér alt";
+"onboarding.demo.selected_hint" = "Tekst markeret — brug nu din genvej!";
+"onboarding.demo.trigger_heading" = "Aktiver nu ClipSlop:";
+"onboarding.demo.selected_text" = "Markeret tekst";
+"onboarding.demo.from_clipboard" = "Fra udklipsholder";
+"onboarding.demo.or" = "eller";
+"onboarding.demo.trigger" = "Aktiver";
+"onboarding.demo.manual" = "Manuel";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Tilbage";
+"onboarding.continue" = "Fortsæt";
+"onboarding.get_started" = "Kom i gang";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Generelt";
+"settings.tab.providers" = "Udbydere";
+"settings.tab.prompts" = "Prompts";
+"settings.tab.about" = "Om";
+
+/* Settings - General - Language */
+"settings.general.language" = "Sprog";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Synkroniser prompts via iCloud";
+"settings.general.icloud.sign_in" = "Log ind på iCloud i Systemindstillinger for at aktivere synkronisering.";
+"settings.general.icloud.unavailable" = "iCloud er ikke tilgængelig";
+"settings.general.icloud.synced" = "Synkroniseret";
+"settings.general.icloud.syncing" = "Synkroniserer...";
+"settings.general.icloud.sync_error" = "Synkroniseringsfejl";
+"settings.general.icloud.conflict.title" = "Eksisterende prompts fundet i iCloud";
+"settings.general.icloud.conflict.message" = "Vil du bruge prompts fra iCloud eller uploade dine nuværende prompts?";
+"settings.general.icloud.conflict.use_cloud" = "Brug iCloud";
+"settings.general.icloud.conflict.upload_local" = "Upload lokale";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Tastaturgenveje";
+"settings.general.shortcuts.trigger" = "Aktiver ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Fra udklipsholder:";
+"settings.general.shortcuts.blank" = "Tom editor:";
+"settings.general.shortcuts.ocr" = "Skærmoptagelse (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Adfærd";
+"settings.general.behavior.streaming" = "Aktiver streamingsvar";
+"settings.general.behavior.launch_login" = "Start ved login";
+"settings.general.behavior.keycodes" = "Brug tastekoder (layoutuafhængige genveje)";
+"settings.general.behavior.keycodes_help" = "Match efter fysisk tasteposition — mnemonics virker med ethvert tastaturlayout";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Udseende";
+"settings.general.appearance.opacity" = "Popup-gennemsigtighed";
+"settings.general.appearance.width" = "Popup-bredde";
+"settings.general.appearance.height" = "Popup-højde";
+"settings.general.appearance.hide_menubar" = "Skjul menulinjeikon";
+"settings.general.appearance.hide_dock" = "Skjul Dock-ikon";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Tilladelser";
+"settings.general.permissions.accessibility" = "Tilgængelighed";
+"settings.general.permissions.accessibility_detail" = "Hent markeret tekst fra andre apps";
+"settings.general.permissions.screen_recording" = "Skærmoptagelse";
+"settings.general.permissions.screen_recording_detail" = "OCR-skærmoptagelse";
+"settings.general.permissions.open_settings" = "Åbn Indstillinger";
+"settings.general.permissions.grant" = "Tillad";
+
+/* Settings - Providers */
+"settings.providers.select" = "Vælg en udbyder";
+"settings.providers.add" = "Tilføj udbyder";
+"settings.providers.name" = "Navn";
+"settings.providers.type" = "Type";
+"settings.providers.provider" = "Udbyder";
+"settings.providers.connection" = "Forbindelse";
+"settings.providers.base_url" = "Basis-URL";
+"settings.providers.model_id" = "Model-ID";
+"settings.providers.max_tokens" = "Maks. tokens";
+"settings.providers.authentication" = "Godkendelse";
+"settings.providers.api_key" = "API-nøgle";
+"settings.providers.set_default" = "Angiv som standard";
+"settings.providers.default_label" = "Standardudbyder";
+"settings.providers.save" = "Gem";
+"settings.providers.cancel" = "Annuller";
+"settings.providers.add_button" = "Tilføj";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Vælg en prompt at redigere";
+"settings.prompts.expand_hint" = "Dobbeltklik på en mappe for at udvide den";
+"settings.prompts.new_prompt" = "Ny prompt";
+"settings.prompts.new_folder" = "Ny mappe";
+"settings.prompts.new_prompt_here" = "Ny prompt her";
+"settings.prompts.new_subfolder" = "Ny undermappe";
+"settings.prompts.move_up" = "Flyt op";
+"settings.prompts.move_down" = "Flyt ned";
+"settings.prompts.delete" = "Slet";
+"settings.prompts.cancel" = "Annuller";
+"settings.prompts.import" = "Importer prompts";
+"settings.prompts.export" = "Eksporter prompts";
+"settings.prompts.restore" = "Gendan standarder";
+"settings.prompts.delete_title" = "Slet \"%@\"?";
+"settings.prompts.delete_folder_message" = "Denne mappe indeholder %d element(er). Alt indeni vil blive slettet permanent.";
+"settings.prompts.delete_prompt_message" = "Denne prompt vil blive slettet permanent.";
+"settings.prompts.restore_title" = "Gendan standardprompts?";
+"settings.prompts.restore_message" = "Dette erstatter alle dine nuværende prompts med standarderne nedenfor. Dette kan ikke fortrydes.";
+"settings.prompts.restore_button" = "Gendan standarder";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Generelt";
+"settings.prompts.editor.name" = "Navn";
+"settings.prompts.editor.mnemonic" = "Mnemonisk tast";
+"settings.prompts.editor.modifiers" = "Modifikatorer";
+"settings.prompts.editor.type" = "Type";
+"settings.prompts.editor.folder" = "Mappe";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Systemprompt";
+"settings.prompts.editor.generate_section" = "Generer med AI";
+"settings.prompts.editor.generate_placeholder" = "Beskriv hvad denne prompt skal gøre...";
+"settings.prompts.editor.generate_button" = "Generer prompt";
+"settings.prompts.editor.generating" = "Genererer...";
+"settings.prompts.editor.ai_hint" = "Bruger din standard-AI-udbyder";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Standard promptstruktur";
+"settings.samples.actions" = "Handlinger";
+"settings.samples.restore" = "Gendan standarder...";
+"settings.samples.export" = "Eksporter prompts...";
+"settings.samples.import" = "Importer prompts...";
+"settings.samples.restore_title" = "Gendan standarder?";
+"settings.samples.restore_message" = "Dette erstatter alle dine nuværende prompts med standardsættet. Dette kan ikke fortrydes.";
+"settings.samples.restore_button" = "Gendan";
+"settings.samples.defaults_restored" = "Standarder gendannet!";
+"settings.samples.exported" = "Prompts eksporteret!";
+"settings.samples.imported" = "Prompts importeret!";
+"settings.samples.import_failed" = "Import mislykkedes: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "AI-drevet udklipsholderbehandler";
+"about.version" = "Version %@";
+"about.github" = "GitHub-repository";
+"about.coffee" = "Køb mig en kaffe";
+"about.updates" = "Søg efter opdateringer";
+"about.libraries" = "Tredjepartsbiblioteker";
+"about.libraries.intro" = "ClipSlop bruger følgende open source-biblioteker:";
+"about.libraries.license" = "Alle biblioteker bruges under deres respektive open source-licenser.";
+"about.done" = "Færdig";
+
+/* Popup */
+"popup.prompts" = "Prompts";
+"popup.back" = "Tilbage";
+"popup.select_all" = "Markér alt";
+"popup.copy" = "Kopier";
+"popup.edit" = "Rediger";
+"popup.open" = "Åbn";
+"popup.save" = "Gem";
+"popup.copied" = "Kopieret!";
+"popup.editing" = "Redigerer";
+"popup.done" = "Færdig";
+"popup.cancel" = "Annuller";
+"popup.dismiss" = "Luk";
+"popup.try_again" = "Prøv igen";
+"popup.mnemonic_hint" = "Tryk på et bogstav for at vælge en prompt";
+"popup.hint.history" = "Historik";
+"popup.hint.scroll" = "Rul";
+"popup.hint.page_down" = "Side ned";
+"popup.hint.page_up" = "Side op";
+"popup.hint.back" = "Tilbage";
+"popup.hint.close" = "Luk";
+"popup.processing" = "Behandler...";
+"popup.receiving" = "Modtager svar...";
+
+/* Popup - History */
+"popup.history.original" = "Original";
+"popup.history.delete" = "Slet";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Tryk på en tast for at vælge";
+"popup.navigator.back" = "Tilbage";
+"popup.navigator.close" = "Luk";
+
+/* Menu Bar */
+"menu.trigger" = "Aktiver";
+"menu.clipboard" = "Fra udklipsholder";
+"menu.blank" = "Tom editor";
+"menu.ocr" = "Skærmoptagelse (OCR)";
+"menu.provider" = "Udbyder: %@";
+"menu.model" = "Model: %@";
+"menu.settings" = "Indstillinger...";
+"menu.onboarding" = "Vis introduktion...";
+"menu.coffee" = "Køb mig en kaffe";
+"menu.updates" = "Søg efter opdateringer...";
+"menu.about" = "Om";
+"menu.quit" = "Afslut";
+
+/* Errors */
+"error.no_text" = "Ingen tekst markeret eller i udklipsholder";
+"error.clipboard_empty" = "Udklipsholder er tom";
+"error.provider_not_found" = "Udbyder ikke fundet";
+"error.empty_response" = "Tomt svar";
+
+/* Window titles */
+"window.settings" = "ClipSlop-indstillinger";
+"window.about" = "Om ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Manuel redigering";

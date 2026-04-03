@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Alegeți limba";
+"onboarding.language.subtitle" = "Selectați limba pentru interfața ClipSlop.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Bun venit în ClipSlop";
+"onboarding.welcome.subtitle" = "Transformă orice text cu AI — traduce, reformatează, analizează.\nSelectează textul, apasă o scurtătură și alege un prompt.";
+"onboarding.welcome.feature.grab" = "Captează textul selectat din orice aplicație";
+"onboarding.welcome.feature.ocr" = "OCR — scanează text de pe ecran";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — orice furnizor AI";
+"onboarding.welcome.feature.folders" = "Organizează prompt-urile în dosare imbricate";
+"onboarding.welcome.feature.history" = "Istoric complet al transformărilor cu anulare";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Permisiuni";
+"onboarding.permissions.subtitle" = "ClipSlop are nevoie de câteva permisiuni pentru a funcționa.";
+"onboarding.permissions.accessibility" = "Accesibilitate";
+"onboarding.permissions.accessibility.desc" = "Necesară pentru a captura textul selectat din alte aplicații";
+"onboarding.permissions.screen_recording" = "Înregistrare ecran";
+"onboarding.permissions.screen_recording.desc" = "Necesară pentru OCR — scanarea textului de pe regiuni ale ecranului";
+"onboarding.permissions.hint" = "Puteți modifica oricând aceste setări din Setări Sistem → Confidențialitate și securitate";
+"onboarding.permissions.grant" = "Acordă";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Scurtături de tastatură";
+"onboarding.shortcuts.subtitle" = "Acestea sunt scurtăturile tale globale. Le poți personaliza oricând din Setări.";
+"onboarding.shortcuts.trigger" = "Activează ClipSlop";
+"onboarding.shortcuts.clipboard" = "Din clipboard";
+"onboarding.shortcuts.blank" = "Editor gol";
+"onboarding.shortcuts.ocr" = "Captură ecran (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "Furnizor AI";
+"onboarding.provider.subtitle" = "Alege furnizorul AI și introdu cheia API.";
+"onboarding.provider.api_key" = "Cheie API";
+"onboarding.provider.model" = "Model";
+"onboarding.provider.base_url" = "URL de bază";
+"onboarding.provider.test_connection" = "Testează conexiunea";
+"onboarding.provider.testing" = "Se testează...";
+"onboarding.provider.save" = "Salvează furnizorul";
+"onboarding.provider.connected" = "Conectat!";
+"onboarding.provider.default_label" = "Furnizor implicit pentru procesare:";
+"onboarding.provider.hint.anthropic" = "Obține cheia de la console.anthropic.com";
+"onboarding.provider.hint.openai" = "Obține cheia de la platform.openai.com";
+"onboarding.provider.hint.ollama" = "Asigură-te că Ollama rulează local (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "Sincronizare iCloud";
+"onboarding.icloud.subtitle" = "Păstrează prompt-urile sincronizate pe toate Mac-urile tale.\nModificările de pe un dispozitiv apar automat peste tot.";
+"onboarding.icloud.toggle" = "Sincronizează prompt-urile prin iCloud";
+"onboarding.icloud.change_later" = "Poți modifica aceasta mai târziu din Setări.";
+"onboarding.icloud.unavailable" = "iCloud nu este disponibil. Conectează-te la iCloud din Setări Sistem.";
+"onboarding.icloud.synced" = "Sincronizat";
+"onboarding.icloud.syncing" = "Se sincronizează...";
+"onboarding.icloud.conflict.title" = "Prompt-uri existente găsite în iCloud";
+"onboarding.icloud.conflict.message" = "Un alt Mac a sincronizat deja prompt-uri în iCloud. Dorești să le folosești pe acelea sau să încarci prompt-urile tale curente?";
+"onboarding.icloud.conflict.use_cloud" = "Folosește iCloud";
+"onboarding.icloud.conflict.upload_local" = "Încarcă locale";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Încearcă!";
+"onboarding.demo.subtitle" = "Selectează textul de mai jos, apoi activează ClipSlop pentru a-l procesa.";
+"onboarding.demo.sample_text" = "Muzicologul și farmacistul își beau jețul whisky. Această propoziție conține toate literele alfabetului românesc și este folosită frecvent pentru teste. Încearcă să o selectezi și să activezi ClipSlop!";
+"onboarding.demo.select_all" = "Selectează tot";
+"onboarding.demo.selected_hint" = "Text selectat — acum folosește scurtătura!";
+"onboarding.demo.trigger_heading" = "Acum activează ClipSlop:";
+"onboarding.demo.selected_text" = "Text selectat";
+"onboarding.demo.from_clipboard" = "Din clipboard";
+"onboarding.demo.or" = "sau";
+"onboarding.demo.trigger" = "Activează";
+"onboarding.demo.manual" = "Manual";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Înapoi";
+"onboarding.continue" = "Continuă";
+"onboarding.get_started" = "Să începem";
+
+/* Settings - Tabs */
+"settings.tab.general" = "General";
+"settings.tab.providers" = "Furnizori";
+"settings.tab.prompts" = "Prompt-uri";
+"settings.tab.about" = "Despre";
+
+/* Settings - General - Language */
+"settings.general.language" = "Limbă";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Sincronizează prompt-urile prin iCloud";
+"settings.general.icloud.sign_in" = "Conectează-te la iCloud din Setări Sistem pentru a activa sincronizarea.";
+"settings.general.icloud.unavailable" = "iCloud nu este disponibil";
+"settings.general.icloud.synced" = "Sincronizat";
+"settings.general.icloud.syncing" = "Se sincronizează...";
+"settings.general.icloud.sync_error" = "Eroare de sincronizare";
+"settings.general.icloud.conflict.title" = "Prompt-uri existente găsite în iCloud";
+"settings.general.icloud.conflict.message" = "Dorești să folosești prompt-urile din iCloud sau să le încarci pe cele curente?";
+"settings.general.icloud.conflict.use_cloud" = "Folosește iCloud";
+"settings.general.icloud.conflict.upload_local" = "Încarcă locale";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Scurtături de tastatură";
+"settings.general.shortcuts.trigger" = "Activează ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Din clipboard:";
+"settings.general.shortcuts.blank" = "Editor gol:";
+"settings.general.shortcuts.ocr" = "Captură ecran (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Comportament";
+"settings.general.behavior.streaming" = "Activează răspunsurile în flux";
+"settings.general.behavior.launch_login" = "Pornește la autentificare";
+"settings.general.behavior.keycodes" = "Folosește coduri de taste (scurtături independente de aspect)";
+"settings.general.behavior.keycodes_help" = "Potrivire după poziția fizică a tastei — mnemonicile funcționează cu orice aspect de tastatură";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Aspect";
+"settings.general.appearance.opacity" = "Opacitate popup";
+"settings.general.appearance.width" = "Lățime popup";
+"settings.general.appearance.height" = "Înălțime popup";
+"settings.general.appearance.hide_menubar" = "Ascunde pictograma din bara de meniu";
+"settings.general.appearance.hide_dock" = "Ascunde pictograma din Dock";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Permisiuni";
+"settings.general.permissions.accessibility" = "Accesibilitate";
+"settings.general.permissions.accessibility_detail" = "Captează textul selectat din alte aplicații";
+"settings.general.permissions.screen_recording" = "Înregistrare ecran";
+"settings.general.permissions.screen_recording_detail" = "Captură ecran OCR";
+"settings.general.permissions.open_settings" = "Deschide Setări";
+"settings.general.permissions.grant" = "Acordă";
+
+/* Settings - Providers */
+"settings.providers.select" = "Selectează un furnizor";
+"settings.providers.add" = "Adaugă furnizor";
+"settings.providers.name" = "Nume";
+"settings.providers.type" = "Tip";
+"settings.providers.provider" = "Furnizor";
+"settings.providers.connection" = "Conexiune";
+"settings.providers.base_url" = "URL de bază";
+"settings.providers.model_id" = "ID model";
+"settings.providers.max_tokens" = "Tokeni maximi";
+"settings.providers.authentication" = "Autentificare";
+"settings.providers.api_key" = "Cheie API";
+"settings.providers.set_default" = "Setează ca implicit";
+"settings.providers.default_label" = "Furnizor implicit";
+"settings.providers.save" = "Salvează";
+"settings.providers.cancel" = "Anulează";
+"settings.providers.add_button" = "Adaugă";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Selectează un prompt pentru editare";
+"settings.prompts.expand_hint" = "Dublu clic pe un dosar pentru a-l extinde";
+"settings.prompts.new_prompt" = "Prompt nou";
+"settings.prompts.new_folder" = "Dosar nou";
+"settings.prompts.new_prompt_here" = "Prompt nou aici";
+"settings.prompts.new_subfolder" = "Subdosar nou";
+"settings.prompts.move_up" = "Mută sus";
+"settings.prompts.move_down" = "Mută jos";
+"settings.prompts.delete" = "Șterge";
+"settings.prompts.cancel" = "Anulează";
+"settings.prompts.import" = "Importă prompt-uri";
+"settings.prompts.export" = "Exportă prompt-uri";
+"settings.prompts.restore" = "Restaurează valorile implicite";
+"settings.prompts.delete_title" = "Ștergi „%@"?";
+"settings.prompts.delete_folder_message" = "Acest dosar conține %d element(e). Tot conținutul va fi șters permanent.";
+"settings.prompts.delete_prompt_message" = "Acest prompt va fi șters permanent.";
+"settings.prompts.restore_title" = "Restaurezi prompt-urile implicite?";
+"settings.prompts.restore_message" = "Aceasta va înlocui toate prompt-urile curente cu valorile implicite de mai jos. Această acțiune nu poate fi anulată.";
+"settings.prompts.restore_button" = "Restaurează valorile implicite";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "General";
+"settings.prompts.editor.name" = "Nume";
+"settings.prompts.editor.mnemonic" = "Tastă mnemonică";
+"settings.prompts.editor.modifiers" = "Modificatori";
+"settings.prompts.editor.type" = "Tip";
+"settings.prompts.editor.folder" = "Dosar";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Prompt de sistem";
+"settings.prompts.editor.generate_section" = "Generează cu AI";
+"settings.prompts.editor.generate_placeholder" = "Descrie ce ar trebui să facă acest prompt...";
+"settings.prompts.editor.generate_button" = "Generează prompt";
+"settings.prompts.editor.generating" = "Se generează...";
+"settings.prompts.editor.ai_hint" = "Folosește furnizorul AI implicit";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Structura implicită a prompt-urilor";
+"settings.samples.actions" = "Acțiuni";
+"settings.samples.restore" = "Restaurează valorile implicite...";
+"settings.samples.export" = "Exportă prompt-uri...";
+"settings.samples.import" = "Importă prompt-uri...";
+"settings.samples.restore_title" = "Restaurezi valorile implicite?";
+"settings.samples.restore_message" = "Aceasta va înlocui toate prompt-urile curente cu setul implicit. Această acțiune nu poate fi anulată.";
+"settings.samples.restore_button" = "Restaurează";
+"settings.samples.defaults_restored" = "Valorile implicite au fost restaurate!";
+"settings.samples.exported" = "Prompt-uri exportate!";
+"settings.samples.imported" = "Prompt-uri importate!";
+"settings.samples.import_failed" = "Importul a eșuat: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "Procesor de clipboard cu AI";
+"about.version" = "Versiunea %@";
+"about.github" = "Depozit GitHub";
+"about.coffee" = "Cumpără-mi o cafea";
+"about.updates" = "Verifică actualizări";
+"about.libraries" = "Biblioteci terțe";
+"about.libraries.intro" = "ClipSlop folosește următoarele biblioteci open-source:";
+"about.libraries.license" = "Toate bibliotecile sunt utilizate conform licențelor lor open-source respective.";
+"about.done" = "Gata";
+
+/* Popup */
+"popup.prompts" = "Prompt-uri";
+"popup.back" = "Înapoi";
+"popup.select_all" = "Selectează tot";
+"popup.copy" = "Copiază";
+"popup.edit" = "Editează";
+"popup.open" = "Deschide";
+"popup.save" = "Salvează";
+"popup.copied" = "Copiat!";
+"popup.editing" = "Editare";
+"popup.done" = "Gata";
+"popup.cancel" = "Anulează";
+"popup.dismiss" = "Închide";
+"popup.try_again" = "Încearcă din nou";
+"popup.mnemonic_hint" = "Apasă o literă pentru a alege un prompt";
+"popup.hint.history" = "Istoric";
+"popup.hint.scroll" = "Derulare";
+"popup.hint.page_down" = "Pagina ↓";
+"popup.hint.page_up" = "Pagina ↑";
+"popup.hint.back" = "Înapoi";
+"popup.hint.close" = "Închide";
+"popup.processing" = "Se procesează...";
+"popup.receiving" = "Se primește răspunsul...";
+
+/* Popup - History */
+"popup.history.original" = "Original";
+"popup.history.delete" = "Șterge";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Apasă o tastă pentru a selecta";
+"popup.navigator.back" = "Înapoi";
+"popup.navigator.close" = "Închide";
+
+/* Menu Bar */
+"menu.trigger" = "Activează";
+"menu.clipboard" = "Din clipboard";
+"menu.blank" = "Editor gol";
+"menu.ocr" = "Captură ecran (OCR)";
+"menu.provider" = "Furnizor: %@";
+"menu.model" = "Model: %@";
+"menu.settings" = "Setări...";
+"menu.onboarding" = "Afișează ghidul de inițializare...";
+"menu.coffee" = "Cumpără-mi o cafea ☕";
+"menu.updates" = "Verifică actualizări...";
+"menu.about" = "Despre";
+"menu.quit" = "Ieșire";
+
+/* Errors */
+"error.no_text" = "Niciun text selectat sau în clipboard";
+"error.clipboard_empty" = "Clipboard-ul este gol";
+"error.provider_not_found" = "Furnizorul nu a fost găsit";
+"error.empty_response" = "Răspuns gol";
+
+/* Window titles */
+"window.settings" = "Setări ClipSlop";
+"window.about" = "Despre ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Editare manuală";

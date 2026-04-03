@@ -5,11 +5,12 @@ struct SamplesView: View {
     @State private var showRestoreConfirmation = false
     @State private var statusMessage: String?
 
+    private let loc = Loc.shared
     private var promptStore: PromptStore { appState.promptStore }
 
     var body: some View {
         Form {
-            Section("Default Prompt Structure") {
+            Section(loc.t("settings.samples.default_structure")) {
                 let flat = flattenTree(loadDefaultPrompts(), indent: 0)
                 ForEach(flat) { item in
                     HStack(spacing: 8) {
@@ -34,14 +35,14 @@ struct SamplesView: View {
                 }
             }
 
-            Section("Actions") {
-                Button("Restore Defaults...") {
+            Section(loc.t("settings.samples.actions")) {
+                Button(loc.t("settings.samples.restore")) {
                     showRestoreConfirmation = true
                 }
 
-                Button("Export Prompts...") { exportPrompts() }
+                Button(loc.t("settings.samples.export")) { exportPrompts() }
 
-                Button("Import Prompts...") { importPrompts() }
+                Button(loc.t("settings.samples.import")) { importPrompts() }
 
                 if let msg = statusMessage {
                     Label(msg, systemImage: "checkmark.circle.fill")
@@ -51,14 +52,14 @@ struct SamplesView: View {
             }
         }
         .formStyle(.grouped)
-        .alert("Restore Defaults?", isPresented: $showRestoreConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Restore", role: .destructive) {
+        .alert(loc.t("settings.samples.restore_title"), isPresented: $showRestoreConfirmation) {
+            Button(loc.t("settings.prompts.cancel"), role: .cancel) {}
+            Button(loc.t("settings.samples.restore_button"), role: .destructive) {
                 promptStore.restoreDefaults()
-                statusMessage = "Defaults restored!"
+                statusMessage = loc.t("settings.samples.defaults_restored")
             }
         } message: {
-            Text("This will replace all your current prompts with the default set. This cannot be undone.")
+            Text(loc.t("settings.samples.restore_message"))
         }
     }
 
@@ -95,7 +96,7 @@ struct SamplesView: View {
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
             try? data.write(to: url)
-            statusMessage = "Prompts exported!"
+            statusMessage = loc.t("settings.samples.exported")
         }
     }
 
@@ -108,9 +109,9 @@ struct SamplesView: View {
             else { return }
             do {
                 try promptStore.importJSON(from: data)
-                statusMessage = "Prompts imported!"
+                statusMessage = loc.t("settings.samples.imported")
             } catch {
-                statusMessage = "Import failed: \(error.localizedDescription)"
+                statusMessage = loc.t("settings.samples.import_failed", error.localizedDescription)
             }
         }
     }

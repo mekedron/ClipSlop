@@ -4,26 +4,30 @@ struct SettingsView: View {
     let appState: AppState
     @State private var selectedTab = 0
 
-    private let tabs: [(String, String)] = [
-        ("General", "gear"),
-        ("Providers", "brain"),
-        ("Prompts", "text.bubble"),
-        ("About", "info.circle"),
-    ]
+    private let loc = Loc.shared
+
+    private let tabIcons = ["gear", "brain", "text.bubble", "info.circle"]
 
     var body: some View {
+        let tabNames = [
+            loc.t("settings.tab.general"),
+            loc.t("settings.tab.providers"),
+            loc.t("settings.tab.prompts"),
+            loc.t("settings.tab.about"),
+        ]
+
         VStack(spacing: 0) {
             // Tab bar
             HStack(spacing: 2) {
-                ForEach(Array(tabs.enumerated()), id: \.offset) { index, tab in
+                ForEach(Array(tabNames.enumerated()), id: \.offset) { index, name in
                     Button {
                         selectedTab = index
                     } label: {
                         VStack(spacing: 5) {
-                            Image(systemName: tab.1)
+                            Image(systemName: tabIcons[index])
                                 .symbolRenderingMode(.hierarchical)
                                 .font(.system(size: 18, weight: .medium))
-                            Text(tab.0)
+                            Text(name)
                                 .font(.caption2).fontWeight(.medium)
                         }
                         .foregroundStyle(selectedTab == index ? .primary : .tertiary)

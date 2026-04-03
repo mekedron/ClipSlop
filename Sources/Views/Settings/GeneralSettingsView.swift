@@ -8,13 +8,24 @@ struct GeneralSettingsView: View {
     @State private var accessibilityGranted = AXIsProcessTrusted()
     @State private var screenCaptureGranted = CGPreflightScreenCaptureAccess()
 
+    private let loc = Loc.shared
+
     var body: some View {
         @Bindable var settings = appState.settings
+        @Bindable var locBinding = Loc.shared
 
         Form {
-            Section("iCloud") {
+            Section(loc.t("settings.general.language")) {
+                Picker(loc.t("settings.general.language"), selection: $locBinding.language) {
+                    ForEach(AppLanguage.allCases) { lang in
+                        Text("\(lang.flag) \(lang.nativeName)").tag(lang)
+                    }
+                }
+            }
+
+            Section(loc.t("settings.general.icloud")) {
                 HStack {
-                    Toggle("Sync prompts via iCloud", isOn: $settings.iCloudSyncEnabled)
+                    Toggle(loc.t("settings.general.icloud.toggle"), isOn: $settings.iCloudSyncEnabled)
                         .onChange(of: settings.iCloudSyncEnabled) {
                             if settings.iCloudSyncEnabled {
                                 appState.syncService.start(promptStore: appState.promptStore)
@@ -29,7 +40,7 @@ struct GeneralSettingsView: View {
                 }
 
                 if case .unavailable = appState.syncService.status {
-                    Text("Sign in to iCloud in System Settings to enable sync.")
+                    Text(loc.t("settings.general.icloud.sign_in"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -43,60 +54,60 @@ struct GeneralSettingsView: View {
                 }
             }
 
-            Section("Keyboard Shortcuts") {
-                KeyboardShortcuts.Recorder("Trigger ClipSlop:", name: .triggerClipSlop)
-                KeyboardShortcuts.Recorder("From clipboard:", name: .triggerFromClipboard)
-                KeyboardShortcuts.Recorder("Blank editor:", name: .triggerBlankEditor)
-                KeyboardShortcuts.Recorder("Screen capture (OCR):", name: .triggerScreenCapture)
+            Section(loc.t("settings.general.shortcuts")) {
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.trigger"), name: .triggerClipSlop)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.clipboard"), name: .triggerFromClipboard)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.blank"), name: .triggerBlankEditor)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr"), name: .triggerScreenCapture)
             }
 
-            Section("Behavior") {
-                Toggle("Enable streaming responses", isOn: $settings.streamingEnabled)
-                LaunchAtLogin.Toggle("Launch at login")
-                Toggle("Use key codes (layout-independent shortcuts)", isOn: $settings.useKeyCodes)
-                    .help("Match by physical key position — mnemonics work with any keyboard layout")
+            Section(loc.t("settings.general.behavior")) {
+                Toggle(loc.t("settings.general.behavior.streaming"), isOn: $settings.streamingEnabled)
+                LaunchAtLogin.Toggle(loc.t("settings.general.behavior.launch_login"))
+                Toggle(loc.t("settings.general.behavior.keycodes"), isOn: $settings.useKeyCodes)
+                    .help(loc.t("settings.general.behavior.keycodes_help"))
             }
 
-            Section("Appearance") {
-                LabeledContent("Popup opacity") {
+            Section(loc.t("settings.general.appearance")) {
+                LabeledContent(loc.t("settings.general.appearance.opacity")) {
                     Text("\(Int(settings.popupOpacity * 100))%")
                         .monospacedDigit().foregroundStyle(.secondary)
                 }
                 Slider(value: $settings.popupOpacity, in: 0.3...1.0, step: 0.05)
 
-                LabeledContent("Popup width") {
+                LabeledContent(loc.t("settings.general.appearance.width")) {
                     Text("\(Int(settings.popupWidth))px")
                         .monospacedDigit().foregroundStyle(.secondary)
                 }
                 Slider(value: $settings.popupWidth, in: 500...1200, step: 10)
 
-                LabeledContent("Popup height") {
+                LabeledContent(loc.t("settings.general.appearance.height")) {
                     Text("\(Int(settings.popupHeight))px")
                         .monospacedDigit().foregroundStyle(.secondary)
                 }
                 Slider(value: $settings.popupHeight, in: 350...900, step: 10)
 
-                Toggle("Hide menu bar icon", isOn: $settings.hideMenuBarIcon)
+                Toggle(loc.t("settings.general.appearance.hide_menubar"), isOn: $settings.hideMenuBarIcon)
                     .onChange(of: settings.hideMenuBarIcon) {
                         NotificationCenter.default.post(name: .menuBarVisibilityChanged, object: nil)
                     }
 
-                Toggle("Hide Dock icon", isOn: $settings.hideDockIcon)
+                Toggle(loc.t("settings.general.appearance.hide_dock"), isOn: $settings.hideDockIcon)
                     .onChange(of: settings.hideDockIcon) {
                         NSApplication.shared.setActivationPolicy(settings.hideDockIcon ? .accessory : .regular)
                     }
             }
 
-            Section("Permissions") {
+            Section(loc.t("settings.general.permissions")) {
                 permissionRow(
-                    title: "Accessibility",
-                    detail: "Capture selected text from other apps",
+                    title: loc.t("settings.general.permissions.accessibility"),
+                    detail: loc.t("settings.general.permissions.accessibility_detail"),
                     isGranted: accessibilityGranted,
                     settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
                 )
                 permissionRow(
-                    title: "Screen Recording",
-                    detail: "OCR screen capture",
+                    title: loc.t("settings.general.permissions.screen_recording"),
+                    detail: loc.t("settings.general.permissions.screen_recording_detail"),
                     isGranted: screenCaptureGranted,
                     settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
                 )
@@ -123,7 +134,7 @@ struct GeneralSettingsView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 }
-                Button(isGranted ? "Open Settings" : "Grant") {
+                Button(isGranted ? loc.t("settings.general.permissions.open_settings") : loc.t("settings.general.permissions.grant")) {
                     if let url = URL(string: settingsURL) {
                         NSWorkspace.shared.open(url)
                     }
@@ -151,31 +162,31 @@ struct GeneralSettingsView: View {
         case .unavailable:
             Image(systemName: "exclamationmark.icloud")
                 .foregroundStyle(.orange)
-                .help("iCloud is not available")
+                .help(loc.t("settings.general.icloud.unavailable"))
         case .current:
             Image(systemName: "checkmark.icloud")
                 .foregroundStyle(.green)
-                .help("Synced")
+                .help(loc.t("settings.general.icloud.synced"))
         case .syncing:
             ProgressView()
                 .controlSize(.small)
-                .help("Syncing...")
+                .help(loc.t("settings.general.icloud.syncing"))
         case .pendingConflict:
             Image(systemName: "questionmark.app.dashed")
                 .foregroundStyle(.orange)
         case .error:
             Image(systemName: "xmark.icloud")
                 .foregroundStyle(.red)
-                .help("Sync error")
+                .help(loc.t("settings.general.icloud.sync_error"))
         }
     }
 
     private var iCloudConflictView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Label("Existing prompts found in iCloud", systemImage: "icloud.and.arrow.down")
+            Label(loc.t("settings.general.icloud.conflict.title"), systemImage: "icloud.and.arrow.down")
                 .font(.subheadline.weight(.medium))
 
-            Text("Would you like to use the prompts from iCloud or upload your current prompts?")
+            Text(loc.t("settings.general.icloud.conflict.message"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
@@ -183,14 +194,14 @@ struct GeneralSettingsView: View {
                 Button {
                     appState.syncService.resolveUseCloud()
                 } label: {
-                    Label("Use iCloud", systemImage: "icloud.and.arrow.down")
+                    Label(loc.t("settings.general.icloud.conflict.use_cloud"), systemImage: "icloud.and.arrow.down")
                 }
                 .buttonStyle(.borderedProminent)
 
                 Button {
                     appState.syncService.resolveUseLocal()
                 } label: {
-                    Label("Upload Local", systemImage: "icloud.and.arrow.up")
+                    Label(loc.t("settings.general.icloud.conflict.upload_local"), systemImage: "icloud.and.arrow.up")
                 }
                 .buttonStyle(.bordered)
             }

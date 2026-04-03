@@ -108,7 +108,7 @@ final class AppState {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "ClipSlop Settings"
+            window.title = Loc.shared.t("window.settings")
             window.contentView = NSHostingView(rootView: SettingsView(appState: self))
             window.isReleasedWhenClosed = false
             window.minSize = NSSize(width: 600, height: 400)
@@ -136,7 +136,7 @@ final class AppState {
                 backing: .buffered,
                 defer: false
             )
-            window.title = "About ClipSlop"
+            window.title = Loc.shared.t("window.about")
             window.titlebarAppearsTransparent = true
             window.contentView = NSHostingView(rootView: AboutView())
             window.isReleasedWhenClosed = false
@@ -194,7 +194,7 @@ final class AppState {
                 // Clipboard didn't change — use whatever is there
                 self?.startSession(text: text, source: .clipboard)
             } else {
-                self?.showError("No text selected or in clipboard")
+                self?.showError(Loc.shared.t("error.no_text"))
             }
         }
     }
@@ -213,7 +213,7 @@ final class AppState {
 
     func triggerFromClipboard() {
         guard let text = ClipboardService.getText(), !text.isEmpty else {
-            showError("Clipboard is empty")
+            showError(Loc.shared.t("error.clipboard_empty"))
             return
         }
         startSession(text: text, source: .clipboard)
@@ -396,7 +396,7 @@ final class AppState {
         if session.originalText.isEmpty {
             currentSession = TransformationSession(originalText: text, inputSource: session.inputSource)
         } else if text != currentDisplayText {
-            currentSession = session.addingStep(promptName: "Manual Edit", outputText: text)
+            currentSession = session.addingStep(promptName: Loc.shared.t("misc.manual_edit"), outputText: text)
         }
         selectedHistoryStepIndex = nil
         isEditing = false

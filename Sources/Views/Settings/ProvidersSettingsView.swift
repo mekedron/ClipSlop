@@ -5,6 +5,7 @@ struct ProvidersSettingsView: View {
     @State private var selectedProviderID: UUID?
     @State private var showAddProvider = false
 
+    private let loc = Loc.shared
     private var providerStore: ProviderStore { appState.providerStore }
 
     var body: some View {
@@ -59,7 +60,7 @@ struct ProvidersSettingsView: View {
                     .id(provider.id)
             } else {
                 VStack {
-                    Text("Select a provider").foregroundStyle(.secondary)
+                    Text(loc.t("settings.providers.select")).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -80,38 +81,40 @@ struct ProviderDetailView: View {
     @State private var maxTokens: Int = 4096
     @State private var apiKey: String = ""
 
+    private let loc = Loc.shared
+
     var body: some View {
         Form {
-            Section("Provider") {
-                TextField("Name", text: $name)
-                LabeledContent("Type", value: provider.providerType.displayName)
+            Section(loc.t("settings.providers.provider")) {
+                TextField(loc.t("settings.providers.name"), text: $name)
+                LabeledContent(loc.t("settings.providers.type"), value: provider.providerType.displayName)
             }
 
-            Section("Connection") {
-                TextField("Base URL", text: $baseURL)
-                TextField("Model ID", text: $modelID)
-                TextField("Max Tokens", value: $maxTokens, format: .number)
+            Section(loc.t("settings.providers.connection")) {
+                TextField(loc.t("settings.providers.base_url"), text: $baseURL)
+                TextField(loc.t("settings.providers.model_id"), text: $modelID)
+                TextField(loc.t("settings.providers.max_tokens"), value: $maxTokens, format: .number)
             }
 
             if provider.providerType.requiresAPIKey {
-                Section("Authentication") {
-                    SecureField("API Key", text: $apiKey)
+                Section(loc.t("settings.providers.authentication")) {
+                    SecureField(loc.t("settings.providers.api_key"), text: $apiKey)
                 }
             }
 
             Section {
                 HStack {
                     if !provider.isDefault {
-                        Button("Set as Default") {
+                        Button(loc.t("settings.providers.set_default")) {
                             providerStore.setDefault(id: provider.id)
                         }
                     } else {
-                        Label("Default Provider", systemImage: "checkmark.circle.fill")
+                        Label(loc.t("settings.providers.default_label"), systemImage: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .font(.caption)
                     }
                     Spacer()
-                    Button("Save") { save() }
+                    Button(loc.t("settings.providers.save")) { save() }
                         .buttonStyle(.borderedProminent)
                 }
             }
@@ -145,23 +148,25 @@ struct AddProviderSheet: View {
     @State private var selectedType: AIProviderType = .openAICompatible
     @State private var name: String = ""
 
+    private let loc = Loc.shared
+
     var body: some View {
         VStack(spacing: 16) {
-            Text("Add Provider").font(.headline)
+            Text(loc.t("settings.providers.add")).font(.headline)
 
-            Picker("Type", selection: $selectedType) {
+            Picker(loc.t("settings.providers.type"), selection: $selectedType) {
                 ForEach(AIProviderType.allCases) { type in
                     Text(type.displayName).tag(type)
                 }
             }
 
-            TextField("Name", text: $name)
+            TextField(loc.t("settings.providers.name"), text: $name)
                 .textFieldStyle(.roundedBorder)
 
             HStack {
-                Button("Cancel") { isPresented = false }
+                Button(loc.t("settings.providers.cancel")) { isPresented = false }
                 Spacer()
-                Button("Add") {
+                Button(loc.t("settings.providers.add_button")) {
                     let config = AIProviderConfig(
                         name: name.isEmpty ? selectedType.displayName : name,
                         providerType: selectedType

@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Valitse kieli";
+"onboarding.language.subtitle" = "Valitse ClipSlop-käyttöliittymän kieli.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Tervetuloa ClipSlopiin";
+"onboarding.welcome.subtitle" = "Muunna mikä tahansa teksti tekoälyllä — käännä, muotoile, analysoi.\nValitse teksti, paina pikanäppäintä ja valitse kehote.";
+"onboarding.welcome.feature.grab" = "Poimi valittu teksti mistä tahansa sovelluksesta";
+"onboarding.welcome.feature.ocr" = "OCR — tunnista teksti näytöltä";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — mikä tahansa tekoälypalvelu";
+"onboarding.welcome.feature.folders" = "Järjestä kehotteet sisäkkäisiin kansioihin";
+"onboarding.welcome.feature.history" = "Täydellinen muunnoshistoria ja kumous";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Käyttöoikeudet";
+"onboarding.permissions.subtitle" = "ClipSlop tarvitsee muutaman käyttöoikeuden toimiakseen.";
+"onboarding.permissions.accessibility" = "Saavutettavuus";
+"onboarding.permissions.accessibility.desc" = "Tarvitaan valitun tekstin poimimiseen muista sovelluksista";
+"onboarding.permissions.screen_recording" = "Näytön tallennus";
+"onboarding.permissions.screen_recording.desc" = "Tarvitaan OCR-toimintoon — tekstin tunnistamiseen näytöltä";
+"onboarding.permissions.hint" = "Voit muuttaa näitä myöhemmin kohdassa Järjestelmäasetukset → Tietosuoja ja turvallisuus";
+"onboarding.permissions.grant" = "Myönnä";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Pikanäppäimet";
+"onboarding.shortcuts.subtitle" = "Nämä ovat yleiset pikanäppäimesi. Voit muokata niitä milloin tahansa asetuksissa.";
+"onboarding.shortcuts.trigger" = "Käynnistä ClipSlop";
+"onboarding.shortcuts.clipboard" = "Leikepöydältä";
+"onboarding.shortcuts.blank" = "Tyhjä editori";
+"onboarding.shortcuts.ocr" = "Näytön kaappaus (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "Tekoälypalvelu";
+"onboarding.provider.subtitle" = "Valitse tekoälypalvelu ja syötä API-avaimesi.";
+"onboarding.provider.api_key" = "API-avain";
+"onboarding.provider.model" = "Malli";
+"onboarding.provider.base_url" = "Perus-URL";
+"onboarding.provider.test_connection" = "Testaa yhteys";
+"onboarding.provider.testing" = "Testataan...";
+"onboarding.provider.save" = "Tallenna palvelu";
+"onboarding.provider.connected" = "Yhdistetty!";
+"onboarding.provider.default_label" = "Oletuspalvelu käsittelyyn:";
+"onboarding.provider.hint.anthropic" = "Hae avaimesi osoitteesta console.anthropic.com";
+"onboarding.provider.hint.openai" = "Hae avaimesi osoitteesta platform.openai.com";
+"onboarding.provider.hint.ollama" = "Varmista, että Ollama on käynnissä paikallisesti (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "iCloud-synkronointi";
+"onboarding.icloud.subtitle" = "Pidä kehotteet synkronoituna kaikilla Mac-tietokoneillasi.\nYhden laitteen muutokset näkyvät kaikkialla automaattisesti.";
+"onboarding.icloud.toggle" = "Synkronoi kehotteet iCloudin kautta";
+"onboarding.icloud.change_later" = "Voit muuttaa tämän myöhemmin asetuksissa.";
+"onboarding.icloud.unavailable" = "iCloud ei ole käytettävissä. Kirjaudu iCloudiin Järjestelmäasetuksissa.";
+"onboarding.icloud.synced" = "Synkronoitu";
+"onboarding.icloud.syncing" = "Synkronoidaan...";
+"onboarding.icloud.conflict.title" = "iCloudista löytyi olemassa olevia kehotteita";
+"onboarding.icloud.conflict.message" = "Toinen Mac on jo synkronoinut kehotteita iCloudiin. Haluatko käyttää niitä vai ladata nykyiset kehotteesi?";
+"onboarding.icloud.conflict.use_cloud" = "Käytä iCloudia";
+"onboarding.icloud.conflict.upload_local" = "Lataa paikalliset";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Kokeile!";
+"onboarding.demo.subtitle" = "Valitse alla oleva teksti ja käynnistä sitten ClipSlop käsittelemään se.";
+"onboarding.demo.sample_text" = "Törkylansenansenansenansen — tämä on suomalainen testilause. Viekas kettu loikkasi laiskan koiran yli puutarhassa. Kokeile valita tämä teksti ja käynnistää ClipSlop!";
+"onboarding.demo.select_all" = "Valitse kaikki";
+"onboarding.demo.selected_hint" = "Teksti valittu — käytä nyt pikanäppäintäsi!";
+"onboarding.demo.trigger_heading" = "Käynnistä nyt ClipSlop:";
+"onboarding.demo.selected_text" = "Valittu teksti";
+"onboarding.demo.from_clipboard" = "Leikepöydältä";
+"onboarding.demo.or" = "tai";
+"onboarding.demo.trigger" = "Käynnistä";
+"onboarding.demo.manual" = "Manuaalinen";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Takaisin";
+"onboarding.continue" = "Jatka";
+"onboarding.get_started" = "Aloitetaan";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Yleiset";
+"settings.tab.providers" = "Palvelut";
+"settings.tab.prompts" = "Kehotteet";
+"settings.tab.about" = "Tietoja";
+
+/* Settings - General - Language */
+"settings.general.language" = "Kieli";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Synkronoi kehotteet iCloudin kautta";
+"settings.general.icloud.sign_in" = "Kirjaudu iCloudiin Järjestelmäasetuksissa ottaaksesi synkronoinnin käyttöön.";
+"settings.general.icloud.unavailable" = "iCloud ei ole käytettävissä";
+"settings.general.icloud.synced" = "Synkronoitu";
+"settings.general.icloud.syncing" = "Synkronoidaan...";
+"settings.general.icloud.sync_error" = "Synkronointivirhe";
+"settings.general.icloud.conflict.title" = "iCloudista löytyi olemassa olevia kehotteita";
+"settings.general.icloud.conflict.message" = "Haluatko käyttää iCloudin kehotteita vai ladata nykyiset kehotteesi?";
+"settings.general.icloud.conflict.use_cloud" = "Käytä iCloudia";
+"settings.general.icloud.conflict.upload_local" = "Lataa paikalliset";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Pikanäppäimet";
+"settings.general.shortcuts.trigger" = "Käynnistä ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Leikepöydältä:";
+"settings.general.shortcuts.blank" = "Tyhjä editori:";
+"settings.general.shortcuts.ocr" = "Näytön kaappaus (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Toiminta";
+"settings.general.behavior.streaming" = "Ota suoratoistovastaukset käyttöön";
+"settings.general.behavior.launch_login" = "Käynnistä kirjautumisen yhteydessä";
+"settings.general.behavior.keycodes" = "Käytä näppäinkoodeja (asettelusta riippumattomat pikanäppäimet)";
+"settings.general.behavior.keycodes_help" = "Tunnistaa fyysisen näppäimen sijainnin — muistisäännöt toimivat millä tahansa näppäinasettelulla";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Ulkoasu";
+"settings.general.appearance.opacity" = "Ponnahdusikkunan läpinäkyvyys";
+"settings.general.appearance.width" = "Ponnahdusikkunan leveys";
+"settings.general.appearance.height" = "Ponnahdusikkunan korkeus";
+"settings.general.appearance.hide_menubar" = "Piilota valikkorivin kuvake";
+"settings.general.appearance.hide_dock" = "Piilota Dock-kuvake";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Käyttöoikeudet";
+"settings.general.permissions.accessibility" = "Saavutettavuus";
+"settings.general.permissions.accessibility_detail" = "Poimi valittu teksti muista sovelluksista";
+"settings.general.permissions.screen_recording" = "Näytön tallennus";
+"settings.general.permissions.screen_recording_detail" = "OCR-näytönkaappaus";
+"settings.general.permissions.open_settings" = "Avaa asetukset";
+"settings.general.permissions.grant" = "Myönnä";
+
+/* Settings - Providers */
+"settings.providers.select" = "Valitse palvelu";
+"settings.providers.add" = "Lisää palvelu";
+"settings.providers.name" = "Nimi";
+"settings.providers.type" = "Tyyppi";
+"settings.providers.provider" = "Palvelu";
+"settings.providers.connection" = "Yhteys";
+"settings.providers.base_url" = "Perus-URL";
+"settings.providers.model_id" = "Mallin tunniste";
+"settings.providers.max_tokens" = "Enimmäistokenit";
+"settings.providers.authentication" = "Tunnistautuminen";
+"settings.providers.api_key" = "API-avain";
+"settings.providers.set_default" = "Aseta oletukseksi";
+"settings.providers.default_label" = "Oletuspalvelu";
+"settings.providers.save" = "Tallenna";
+"settings.providers.cancel" = "Peruuta";
+"settings.providers.add_button" = "Lisää";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Valitse muokattava kehote";
+"settings.prompts.expand_hint" = "Kaksoisnapsauta kansiota laajentaaksesi sen";
+"settings.prompts.new_prompt" = "Uusi kehote";
+"settings.prompts.new_folder" = "Uusi kansio";
+"settings.prompts.new_prompt_here" = "Uusi kehote tähän";
+"settings.prompts.new_subfolder" = "Uusi alikansio";
+"settings.prompts.move_up" = "Siirrä ylös";
+"settings.prompts.move_down" = "Siirrä alas";
+"settings.prompts.delete" = "Poista";
+"settings.prompts.cancel" = "Peruuta";
+"settings.prompts.import" = "Tuo kehotteet";
+"settings.prompts.export" = "Vie kehotteet";
+"settings.prompts.restore" = "Palauta oletukset";
+"settings.prompts.delete_title" = "Poistetaanko \"%@\"?";
+"settings.prompts.delete_folder_message" = "Tämä kansio sisältää %d kohdetta. Kaikki sisältö poistetaan pysyvästi.";
+"settings.prompts.delete_prompt_message" = "Tämä kehote poistetaan pysyvästi.";
+"settings.prompts.restore_title" = "Palautetaanko oletuskehotteet?";
+"settings.prompts.restore_message" = "Tämä korvaa kaikki nykyiset kehotteesi alla olevilla oletuksilla. Tätä ei voi kumota.";
+"settings.prompts.restore_button" = "Palauta oletukset";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Yleiset";
+"settings.prompts.editor.name" = "Nimi";
+"settings.prompts.editor.mnemonic" = "Muistinäppäin";
+"settings.prompts.editor.modifiers" = "Muokkausnäppäimet";
+"settings.prompts.editor.type" = "Tyyppi";
+"settings.prompts.editor.folder" = "Kansio";
+"settings.prompts.editor.prompt" = "Kehote";
+"settings.prompts.editor.system_prompt" = "Järjestelmäkehote";
+"settings.prompts.editor.generate_section" = "Luo tekoälyllä";
+"settings.prompts.editor.generate_placeholder" = "Kuvaile, mitä tämän kehotteen tulisi tehdä...";
+"settings.prompts.editor.generate_button" = "Luo kehote";
+"settings.prompts.editor.generating" = "Luodaan...";
+"settings.prompts.editor.ai_hint" = "Käyttää oletuspalveluasi";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Oletuskehoterakenne";
+"settings.samples.actions" = "Toiminnot";
+"settings.samples.restore" = "Palauta oletukset...";
+"settings.samples.export" = "Vie kehotteet...";
+"settings.samples.import" = "Tuo kehotteet...";
+"settings.samples.restore_title" = "Palautetaanko oletukset?";
+"settings.samples.restore_message" = "Tämä korvaa kaikki nykyiset kehotteesi oletusjoukolla. Tätä ei voi kumota.";
+"settings.samples.restore_button" = "Palauta";
+"settings.samples.defaults_restored" = "Oletukset palautettu!";
+"settings.samples.exported" = "Kehotteet viety!";
+"settings.samples.imported" = "Kehotteet tuotu!";
+"settings.samples.import_failed" = "Tuonti epäonnistui: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "Tekoälypohjainen leikepöydän käsittelijä";
+"about.version" = "Versio %@";
+"about.github" = "GitHub-arkisto";
+"about.coffee" = "Tarjoa kahvit";
+"about.updates" = "Tarkista päivitykset";
+"about.libraries" = "Kolmannen osapuolen kirjastot";
+"about.libraries.intro" = "ClipSlop käyttää seuraavia avoimen lähdekoodin kirjastoja:";
+"about.libraries.license" = "Kaikkia kirjastoja käytetään niiden avoimen lähdekoodin lisenssien mukaisesti.";
+"about.done" = "Valmis";
+
+/* Popup */
+"popup.prompts" = "Kehotteet";
+"popup.back" = "Takaisin";
+"popup.select_all" = "Valitse kaikki";
+"popup.copy" = "Kopioi";
+"popup.edit" = "Muokkaa";
+"popup.open" = "Avaa";
+"popup.save" = "Tallenna";
+"popup.copied" = "Kopioitu!";
+"popup.editing" = "Muokataan";
+"popup.done" = "Valmis";
+"popup.cancel" = "Peruuta";
+"popup.dismiss" = "Sulje";
+"popup.try_again" = "Yritä uudelleen";
+"popup.mnemonic_hint" = "Paina kirjainta valitaksesi kehotteen";
+"popup.hint.history" = "Historia";
+"popup.hint.scroll" = "Vieritä";
+"popup.hint.page_down" = "Sivu ↓";
+"popup.hint.page_up" = "Sivu ↑";
+"popup.hint.back" = "Takaisin";
+"popup.hint.close" = "Sulje";
+"popup.processing" = "Käsitellään...";
+"popup.receiving" = "Vastaanotetaan vastausta...";
+
+/* Popup - History */
+"popup.history.original" = "Alkuperäinen";
+"popup.history.delete" = "Poista";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Paina näppäintä valitaksesi";
+"popup.navigator.back" = "Takaisin";
+"popup.navigator.close" = "Sulje";
+
+/* Menu Bar */
+"menu.trigger" = "Käynnistä";
+"menu.clipboard" = "Leikepöydältä";
+"menu.blank" = "Tyhjä editori";
+"menu.ocr" = "Näytön kaappaus (OCR)";
+"menu.provider" = "Palvelu: %@";
+"menu.model" = "Malli: %@";
+"menu.settings" = "Asetukset...";
+"menu.onboarding" = "Näytä perehdytys...";
+"menu.coffee" = "Tarjoa kahvit ☕";
+"menu.updates" = "Tarkista päivitykset...";
+"menu.about" = "Tietoja";
+"menu.quit" = "Lopeta";
+
+/* Errors */
+"error.no_text" = "Tekstiä ei ole valittu eikä leikepöydällä";
+"error.clipboard_empty" = "Leikepöytä on tyhjä";
+"error.provider_not_found" = "Palvelua ei löytynyt";
+"error.empty_response" = "Tyhjä vastaus";
+
+/* Window titles */
+"window.settings" = "ClipSlop-asetukset";
+"window.about" = "Tietoja ClipSlopista";
+
+/* Misc */
+"misc.manual_edit" = "Manuaalinen muokkaus";

@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Nyelv kiválasztása";
+"onboarding.language.subtitle" = "Válaszd ki a ClipSlop felület nyelvét.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Üdvözöl a ClipSlop";
+"onboarding.welcome.subtitle" = "Alakíts át bármilyen szöveget MI-vel — fordíts, formázz, elemezz.\nJelöld ki a szöveget, nyomj egy billentyűkombinációt, és válassz egy promptot.";
+"onboarding.welcome.feature.grab" = "Kijelölt szöveg átvétele bármely alkalmazásból";
+"onboarding.welcome.feature.ocr" = "OCR — szöveg beolvasása a képernyőről";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — bármilyen MI-szolgáltató";
+"onboarding.welcome.feature.folders" = "Promptok rendezése beágyazott mappákba";
+"onboarding.welcome.feature.history" = "Teljes átalakítási előzmények visszavonással";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Engedélyek";
+"onboarding.permissions.subtitle" = "A ClipSlopnak néhány engedélyre van szüksége a működéshez.";
+"onboarding.permissions.accessibility" = "Kisegítő lehetőségek";
+"onboarding.permissions.accessibility.desc" = "A kijelölt szöveg rögzítéséhez szükséges más alkalmazásokból";
+"onboarding.permissions.screen_recording" = "Képernyőfelvétel";
+"onboarding.permissions.screen_recording.desc" = "Az OCR-hez szükséges — szöveg beolvasása a képernyőről";
+"onboarding.permissions.hint" = "Ezt később bármikor módosíthatod a Rendszerbeállítások → Adatvédelem és biztonság menüben";
+"onboarding.permissions.grant" = "Engedélyezés";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Billentyűkombinációk";
+"onboarding.shortcuts.subtitle" = "Ezek a globális billentyűkombinációid. Bármikor testreszabhatod a Beállításokban.";
+"onboarding.shortcuts.trigger" = "ClipSlop indítása";
+"onboarding.shortcuts.clipboard" = "Vágólapról";
+"onboarding.shortcuts.blank" = "Üres szerkesztő";
+"onboarding.shortcuts.ocr" = "Képernyőfotó (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "MI-szolgáltató";
+"onboarding.provider.subtitle" = "Válaszd ki az MI-szolgáltatódat és add meg az API-kulcsot.";
+"onboarding.provider.api_key" = "API-kulcs";
+"onboarding.provider.model" = "Modell";
+"onboarding.provider.base_url" = "Alap URL";
+"onboarding.provider.test_connection" = "Kapcsolat tesztelése";
+"onboarding.provider.testing" = "Tesztelés...";
+"onboarding.provider.save" = "Szolgáltató mentése";
+"onboarding.provider.connected" = "Csatlakozva!";
+"onboarding.provider.default_label" = "Alapértelmezett szolgáltató a feldolgozáshoz:";
+"onboarding.provider.hint.anthropic" = "Kulcs igénylése: console.anthropic.com";
+"onboarding.provider.hint.openai" = "Kulcs igénylése: platform.openai.com";
+"onboarding.provider.hint.ollama" = "Győződj meg róla, hogy az Ollama fut helyileg (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "iCloud-szinkronizálás";
+"onboarding.icloud.subtitle" = "Tartsd szinkronban a promptjaidat az összes Mac-eden.\nAz egyik eszközön végzett módosítások automatikusan megjelennek mindenhol.";
+"onboarding.icloud.toggle" = "Promptok szinkronizálása iCloudon keresztül";
+"onboarding.icloud.change_later" = "Ezt később módosíthatod a Beállításokban.";
+"onboarding.icloud.unavailable" = "Az iCloud nem érhető el. Jelentkezz be az iCloudba a Rendszerbeállításokban.";
+"onboarding.icloud.synced" = "Szinkronizálva";
+"onboarding.icloud.syncing" = "Szinkronizálás...";
+"onboarding.icloud.conflict.title" = "Meglévő promptok találhatók az iCloudban";
+"onboarding.icloud.conflict.message" = "Egy másik Mac már szinkronizált promptokat az iCloudba. Szeretnéd azokat használni, vagy feltölteni a jelenlegieket?";
+"onboarding.icloud.conflict.use_cloud" = "iCloud használata";
+"onboarding.icloud.conflict.upload_local" = "Helyi feltöltése";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Próbáld ki!";
+"onboarding.demo.subtitle" = "Jelöld ki az alábbi szöveget, majd indítsd el a ClipSlopot a feldolgozáshoz.";
+"onboarding.demo.sample_text" = "Jó foxim és don Quijote húszat pöfékelt lyukas szsjébe. Ez a mondat a magyar ábécé összes betűjét tartalmazza, és gyakran használják tesztelésre. Próbáld ki: jelöld ki és indítsd el a ClipSlopot!";
+"onboarding.demo.select_all" = "Összes kijelölése";
+"onboarding.demo.selected_hint" = "Szöveg kijelölve — most használd a billentyűkombinációt!";
+"onboarding.demo.trigger_heading" = "Most indítsd el a ClipSlopot:";
+"onboarding.demo.selected_text" = "Kijelölt szöveg";
+"onboarding.demo.from_clipboard" = "Vágólapról";
+"onboarding.demo.or" = "vagy";
+"onboarding.demo.trigger" = "Indítás";
+"onboarding.demo.manual" = "Kézi";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Vissza";
+"onboarding.continue" = "Tovább";
+"onboarding.get_started" = "Kezdjük";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Általános";
+"settings.tab.providers" = "Szolgáltatók";
+"settings.tab.prompts" = "Promptok";
+"settings.tab.about" = "Névjegy";
+
+/* Settings - General - Language */
+"settings.general.language" = "Nyelv";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Promptok szinkronizálása iCloudon keresztül";
+"settings.general.icloud.sign_in" = "A szinkronizáláshoz jelentkezz be az iCloudba a Rendszerbeállításokban.";
+"settings.general.icloud.unavailable" = "Az iCloud nem érhető el";
+"settings.general.icloud.synced" = "Szinkronizálva";
+"settings.general.icloud.syncing" = "Szinkronizálás...";
+"settings.general.icloud.sync_error" = "Szinkronizálási hiba";
+"settings.general.icloud.conflict.title" = "Meglévő promptok találhatók az iCloudban";
+"settings.general.icloud.conflict.message" = "Szeretnéd az iCloudban lévő promptokat használni, vagy feltölteni a jelenlegieket?";
+"settings.general.icloud.conflict.use_cloud" = "iCloud használata";
+"settings.general.icloud.conflict.upload_local" = "Helyi feltöltése";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Billentyűkombinációk";
+"settings.general.shortcuts.trigger" = "ClipSlop indítása:";
+"settings.general.shortcuts.clipboard" = "Vágólapról:";
+"settings.general.shortcuts.blank" = "Üres szerkesztő:";
+"settings.general.shortcuts.ocr" = "Képernyőfotó (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Viselkedés";
+"settings.general.behavior.streaming" = "Streamelt válaszok engedélyezése";
+"settings.general.behavior.launch_login" = "Indítás bejelentkezéskor";
+"settings.general.behavior.keycodes" = "Billentyűkódok használata (elrendezésfüggetlen gyorsbillentyűk)";
+"settings.general.behavior.keycodes_help" = "Fizikai billentyűpozíció alapján — a mnemonikák bármilyen billentyűkiosztással működnek";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Megjelenés";
+"settings.general.appearance.opacity" = "Felugró ablak átlátszósága";
+"settings.general.appearance.width" = "Felugró ablak szélessége";
+"settings.general.appearance.height" = "Felugró ablak magassága";
+"settings.general.appearance.hide_menubar" = "Menüsor ikon elrejtése";
+"settings.general.appearance.hide_dock" = "Dock ikon elrejtése";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Engedélyek";
+"settings.general.permissions.accessibility" = "Kisegítő lehetőségek";
+"settings.general.permissions.accessibility_detail" = "Kijelölt szöveg rögzítése más alkalmazásokból";
+"settings.general.permissions.screen_recording" = "Képernyőfelvétel";
+"settings.general.permissions.screen_recording_detail" = "OCR képernyőfotó";
+"settings.general.permissions.open_settings" = "Beállítások megnyitása";
+"settings.general.permissions.grant" = "Engedélyezés";
+
+/* Settings - Providers */
+"settings.providers.select" = "Válassz szolgáltatót";
+"settings.providers.add" = "Szolgáltató hozzáadása";
+"settings.providers.name" = "Név";
+"settings.providers.type" = "Típus";
+"settings.providers.provider" = "Szolgáltató";
+"settings.providers.connection" = "Kapcsolat";
+"settings.providers.base_url" = "Alap URL";
+"settings.providers.model_id" = "Modell-azonosító";
+"settings.providers.max_tokens" = "Max tokenek";
+"settings.providers.authentication" = "Hitelesítés";
+"settings.providers.api_key" = "API-kulcs";
+"settings.providers.set_default" = "Beállítás alapértelmezettként";
+"settings.providers.default_label" = "Alapértelmezett szolgáltató";
+"settings.providers.save" = "Mentés";
+"settings.providers.cancel" = "Mégse";
+"settings.providers.add_button" = "Hozzáadás";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Válassz promptot a szerkesztéshez";
+"settings.prompts.expand_hint" = "Dupla kattintás a mappa kibontásához";
+"settings.prompts.new_prompt" = "Új prompt";
+"settings.prompts.new_folder" = "Új mappa";
+"settings.prompts.new_prompt_here" = "Új prompt ide";
+"settings.prompts.new_subfolder" = "Új almappa";
+"settings.prompts.move_up" = "Mozgatás felfelé";
+"settings.prompts.move_down" = "Mozgatás lefelé";
+"settings.prompts.delete" = "Törlés";
+"settings.prompts.cancel" = "Mégse";
+"settings.prompts.import" = "Promptok importálása";
+"settings.prompts.export" = "Promptok exportálása";
+"settings.prompts.restore" = "Alapértelmezések visszaállítása";
+"settings.prompts.delete_title" = "Törlöd: „%@"?";
+"settings.prompts.delete_folder_message" = "Ez a mappa %d elemet tartalmaz. Minden benne lévő véglegesen törlődik.";
+"settings.prompts.delete_prompt_message" = "Ez a prompt véglegesen törlődik.";
+"settings.prompts.restore_title" = "Alapértelmezett promptok visszaállítása?";
+"settings.prompts.restore_message" = "Ez az összes jelenlegi promptodat az alábbi alapértelmezettekre cseréli. Ez nem vonható vissza.";
+"settings.prompts.restore_button" = "Visszaállítás";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Általános";
+"settings.prompts.editor.name" = "Név";
+"settings.prompts.editor.mnemonic" = "Mnemonikus billentyű";
+"settings.prompts.editor.modifiers" = "Módosítók";
+"settings.prompts.editor.type" = "Típus";
+"settings.prompts.editor.folder" = "Mappa";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Rendszer-prompt";
+"settings.prompts.editor.generate_section" = "Generálás MI-vel";
+"settings.prompts.editor.generate_placeholder" = "Írd le, mit csináljon ez a prompt...";
+"settings.prompts.editor.generate_button" = "Prompt generálása";
+"settings.prompts.editor.generating" = "Generálás...";
+"settings.prompts.editor.ai_hint" = "Az alapértelmezett MI-szolgáltatót használja";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Alapértelmezett promptszerkezet";
+"settings.samples.actions" = "Műveletek";
+"settings.samples.restore" = "Alapértelmezések visszaállítása...";
+"settings.samples.export" = "Promptok exportálása...";
+"settings.samples.import" = "Promptok importálása...";
+"settings.samples.restore_title" = "Visszaállítás?";
+"settings.samples.restore_message" = "Ez az összes jelenlegi promptodat az alapértelmezett készletre cseréli. Ez nem vonható vissza.";
+"settings.samples.restore_button" = "Visszaállítás";
+"settings.samples.defaults_restored" = "Alapértelmezések visszaállítva!";
+"settings.samples.exported" = "Promptok exportálva!";
+"settings.samples.imported" = "Promptok importálva!";
+"settings.samples.import_failed" = "Importálás sikertelen: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "MI-alapú vágólap-feldolgozó";
+"about.version" = "Verzió: %@";
+"about.github" = "GitHub adattár";
+"about.coffee" = "Kávé meghívás";
+"about.updates" = "Frissítések keresése";
+"about.libraries" = "Harmadik féltől származó könyvtárak";
+"about.libraries.intro" = "A ClipSlop a következő nyílt forráskódú könyvtárakat használja:";
+"about.libraries.license" = "Minden könyvtár a saját nyílt forráskódú licence alatt áll.";
+"about.done" = "Kész";
+
+/* Popup */
+"popup.prompts" = "Promptok";
+"popup.back" = "Vissza";
+"popup.select_all" = "Összes kijelölése";
+"popup.copy" = "Másolás";
+"popup.edit" = "Szerkesztés";
+"popup.open" = "Megnyitás";
+"popup.save" = "Mentés";
+"popup.copied" = "Másolva!";
+"popup.editing" = "Szerkesztés";
+"popup.done" = "Kész";
+"popup.cancel" = "Mégse";
+"popup.dismiss" = "Elvetés";
+"popup.try_again" = "Újrapróbálás";
+"popup.mnemonic_hint" = "Nyomj egy betűt a prompt kiválasztásához";
+"popup.hint.history" = "Előzmények";
+"popup.hint.scroll" = "Görgetés";
+"popup.hint.page_down" = "Oldal ↓";
+"popup.hint.page_up" = "Oldal ↑";
+"popup.hint.back" = "Vissza";
+"popup.hint.close" = "Bezárás";
+"popup.processing" = "Feldolgozás...";
+"popup.receiving" = "Válasz fogadása...";
+
+/* Popup - History */
+"popup.history.original" = "Eredeti";
+"popup.history.delete" = "Törlés";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Nyomj egy billentyűt a kiválasztáshoz";
+"popup.navigator.back" = "Vissza";
+"popup.navigator.close" = "Bezárás";
+
+/* Menu Bar */
+"menu.trigger" = "Indítás";
+"menu.clipboard" = "Vágólapról";
+"menu.blank" = "Üres szerkesztő";
+"menu.ocr" = "Képernyőfotó (OCR)";
+"menu.provider" = "Szolgáltató: %@";
+"menu.model" = "Modell: %@";
+"menu.settings" = "Beállítások...";
+"menu.onboarding" = "Bemutató megjelenítése...";
+"menu.coffee" = "Kávé meghívás ☕";
+"menu.updates" = "Frissítések keresése...";
+"menu.about" = "Névjegy";
+"menu.quit" = "Kilépés";
+
+/* Errors */
+"error.no_text" = "Nincs kijelölt szöveg vagy vágólaptartalom";
+"error.clipboard_empty" = "A vágólap üres";
+"error.provider_not_found" = "A szolgáltató nem található";
+"error.empty_response" = "Üres válasz";
+
+/* Window titles */
+"window.settings" = "ClipSlop beállítások";
+"window.about" = "A ClipSlop névjegye";
+
+/* Misc */
+"misc.manual_edit" = "Kézi szerkesztés";

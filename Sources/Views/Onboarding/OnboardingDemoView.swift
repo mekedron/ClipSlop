@@ -3,8 +3,15 @@ import KeyboardShortcuts
 
 struct OnboardingDemoView: View {
     let appState: AppState
-    @State private var sampleText = "The quick brown fox jumps over the lazy dog. This sentence contains every letter of the English alphabet and is commonly used for testing. Try selecting it and triggering ClipSlop!"
+    @State private var sampleText: String
     @State private var isAllSelected = false
+
+    private let loc = Loc.shared
+
+    init(appState: AppState) {
+        self.appState = appState
+        self._sampleText = State(initialValue: Loc.shared.t("onboarding.demo.sample_text"))
+    }
 
     var body: some View {
         VStack(spacing: 20) {
@@ -14,10 +21,10 @@ struct OnboardingDemoView: View {
                 .font(.system(size: 48))
                 .foregroundStyle(.blue)
 
-            Text("Try it out!")
+            Text(loc.t("onboarding.demo.title"))
                 .font(.title.bold())
 
-            Text("Select the text below, then trigger ClipSlop to process it.")
+            Text(loc.t("onboarding.demo.subtitle"))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
@@ -32,14 +39,14 @@ struct OnboardingDemoView: View {
                 Divider()
 
                 HStack {
-                    Button("Select All") {
+                    Button(loc.t("onboarding.demo.select_all")) {
                         selectAllInEditor()
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
 
                     if isAllSelected {
-                        Label("Text selected — now use your shortcut!", systemImage: "checkmark")
+                        Label(loc.t("onboarding.demo.selected_hint"), systemImage: "checkmark")
                             .font(.caption)
                             .foregroundStyle(.green)
                     }
@@ -58,7 +65,7 @@ struct OnboardingDemoView: View {
 
             // Trigger hint
             VStack(spacing: 8) {
-                Text("Now trigger ClipSlop:")
+                Text(loc.t("onboarding.demo.trigger_heading"))
                     .font(.headline)
 
                 HStack(spacing: 16) {
@@ -66,28 +73,28 @@ struct OnboardingDemoView: View {
                     VStack(spacing: 4) {
                         KeyboardShortcuts.Recorder(for: .triggerClipSlop)
                             .disabled(true)
-                        Text("Selected text")
+                        Text(loc.t("onboarding.demo.selected_text"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("or")
+                    Text(loc.t("onboarding.demo.or"))
                         .foregroundStyle(.tertiary)
 
                     VStack(spacing: 4) {
                         KeyboardShortcuts.Recorder(for: .triggerFromClipboard)
                             .disabled(true)
-                        Text("From clipboard")
+                        Text(loc.t("onboarding.demo.from_clipboard"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
 
-                    Text("or")
+                    Text(loc.t("onboarding.demo.or"))
                         .foregroundStyle(.tertiary)
 
                     // Manual button
                     VStack(spacing: 4) {
-                        Button("Trigger") {
+                        Button(loc.t("onboarding.demo.trigger")) {
                             // Select all text in the editor for visual feedback
                             selectAllInEditor()
                             // Put sample text on clipboard and trigger
@@ -96,7 +103,7 @@ struct OnboardingDemoView: View {
                         }
                         .buttonStyle(AlwaysProminentButtonStyle())
 
-                        Text("Manual")
+                        Text(loc.t("onboarding.demo.manual"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     }
@@ -114,6 +121,9 @@ struct OnboardingDemoView: View {
             Spacer()
         }
         .padding(16)
+        .onChange(of: loc.language) {
+            sampleText = loc.t("onboarding.demo.sample_text")
+        }
     }
 
     private func selectAllInEditor() {

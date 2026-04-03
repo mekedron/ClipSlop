@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Choisissez votre langue";
+"onboarding.language.subtitle" = "Sélectionnez la langue de l'interface ClipSlop.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Bienvenue dans ClipSlop";
+"onboarding.welcome.subtitle" = "Transformez n'importe quel texte avec l'IA — traduisez, reformatez, analysez.\nSélectionnez du texte, appuyez sur un raccourci et choisissez un prompt.";
+"onboarding.welcome.feature.grab" = "Capturer le texte sélectionné depuis n'importe quelle app";
+"onboarding.welcome.feature.ocr" = "OCR — scanner du texte depuis l'écran";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — tout fournisseur d'IA";
+"onboarding.welcome.feature.folders" = "Organiser les prompts dans des dossiers imbriqués";
+"onboarding.welcome.feature.history" = "Historique complet des transformations avec annulation";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Autorisations";
+"onboarding.permissions.subtitle" = "ClipSlop a besoin de quelques autorisations pour fonctionner.";
+"onboarding.permissions.accessibility" = "Accessibilité";
+"onboarding.permissions.accessibility.desc" = "Nécessaire pour capturer le texte sélectionné depuis d'autres apps";
+"onboarding.permissions.screen_recording" = "Enregistrement d'écran";
+"onboarding.permissions.screen_recording.desc" = "Nécessaire pour l'OCR — scanner du texte depuis des zones de l'écran";
+"onboarding.permissions.hint" = "Vous pouvez toujours modifier cela dans Réglages Système → Confidentialité et sécurité";
+"onboarding.permissions.grant" = "Autoriser";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Raccourcis clavier";
+"onboarding.shortcuts.subtitle" = "Voici vos raccourcis globaux. Personnalisez-les à tout moment dans les Réglages.";
+"onboarding.shortcuts.trigger" = "Déclencher ClipSlop";
+"onboarding.shortcuts.clipboard" = "Depuis le presse-papiers";
+"onboarding.shortcuts.blank" = "Éditeur vide";
+"onboarding.shortcuts.ocr" = "Capture d'écran (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "Fournisseur d'IA";
+"onboarding.provider.subtitle" = "Choisissez votre fournisseur d'IA et entrez votre clé API.";
+"onboarding.provider.api_key" = "Clé API";
+"onboarding.provider.model" = "Modèle";
+"onboarding.provider.base_url" = "URL de base";
+"onboarding.provider.test_connection" = "Tester la connexion";
+"onboarding.provider.testing" = "Test en cours...";
+"onboarding.provider.save" = "Enregistrer le fournisseur";
+"onboarding.provider.connected" = "Connecté !";
+"onboarding.provider.default_label" = "Fournisseur par défaut pour le traitement :";
+"onboarding.provider.hint.anthropic" = "Obtenez votre clé sur console.anthropic.com";
+"onboarding.provider.hint.openai" = "Obtenez votre clé sur platform.openai.com";
+"onboarding.provider.hint.ollama" = "Assurez-vous qu'Ollama est en cours d'exécution localement (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "Synchronisation iCloud";
+"onboarding.icloud.subtitle" = "Gardez vos prompts synchronisés sur tous vos Mac.\nLes modifications sur un appareil apparaissent partout automatiquement.";
+"onboarding.icloud.toggle" = "Synchroniser les prompts via iCloud";
+"onboarding.icloud.change_later" = "Vous pouvez modifier cela plus tard dans les Réglages.";
+"onboarding.icloud.unavailable" = "iCloud n'est pas disponible. Connectez-vous à iCloud dans les Réglages Système.";
+"onboarding.icloud.synced" = "Synchronisé";
+"onboarding.icloud.syncing" = "Synchronisation...";
+"onboarding.icloud.conflict.title" = "Prompts existants trouvés dans iCloud";
+"onboarding.icloud.conflict.message" = "Un autre Mac a déjà synchronisé des prompts avec iCloud. Souhaitez-vous les utiliser ou télécharger vos prompts actuels ?";
+"onboarding.icloud.conflict.use_cloud" = "Utiliser iCloud";
+"onboarding.icloud.conflict.upload_local" = "Télécharger locaux";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Essayez !";
+"onboarding.demo.subtitle" = "Sélectionnez le texte ci-dessous, puis déclenchez ClipSlop pour le traiter.";
+"onboarding.demo.sample_text" = "Portez ce vieux whisky au juge blond qui fume. Cette phrase contient toutes les lettres de l'alphabet français et est couramment utilisée pour les tests. Sélectionnez-la et déclenchez ClipSlop !";
+"onboarding.demo.select_all" = "Tout sélectionner";
+"onboarding.demo.selected_hint" = "Texte sélectionné — utilisez maintenant votre raccourci !";
+"onboarding.demo.trigger_heading" = "Maintenant, déclenchez ClipSlop :";
+"onboarding.demo.selected_text" = "Texte sélectionné";
+"onboarding.demo.from_clipboard" = "Depuis le presse-papiers";
+"onboarding.demo.or" = "ou";
+"onboarding.demo.trigger" = "Déclencher";
+"onboarding.demo.manual" = "Manuel";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Retour";
+"onboarding.continue" = "Continuer";
+"onboarding.get_started" = "Commencer";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Général";
+"settings.tab.providers" = "Fournisseurs";
+"settings.tab.prompts" = "Prompts";
+"settings.tab.about" = "À propos";
+
+/* Settings - General - Language */
+"settings.general.language" = "Langue";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Synchroniser les prompts via iCloud";
+"settings.general.icloud.sign_in" = "Connectez-vous à iCloud dans les Réglages Système pour activer la synchronisation.";
+"settings.general.icloud.unavailable" = "iCloud n'est pas disponible";
+"settings.general.icloud.synced" = "Synchronisé";
+"settings.general.icloud.syncing" = "Synchronisation...";
+"settings.general.icloud.sync_error" = "Erreur de synchronisation";
+"settings.general.icloud.conflict.title" = "Prompts existants trouvés dans iCloud";
+"settings.general.icloud.conflict.message" = "Souhaitez-vous utiliser les prompts d'iCloud ou télécharger vos prompts actuels ?";
+"settings.general.icloud.conflict.use_cloud" = "Utiliser iCloud";
+"settings.general.icloud.conflict.upload_local" = "Télécharger locaux";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Raccourcis clavier";
+"settings.general.shortcuts.trigger" = "Déclencher ClipSlop :";
+"settings.general.shortcuts.clipboard" = "Depuis le presse-papiers :";
+"settings.general.shortcuts.blank" = "Éditeur vide :";
+"settings.general.shortcuts.ocr" = "Capture d'écran (OCR) :";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Comportement";
+"settings.general.behavior.streaming" = "Activer les réponses en streaming";
+"settings.general.behavior.launch_login" = "Lancer au démarrage";
+"settings.general.behavior.keycodes" = "Utiliser les codes de touches (raccourcis indépendants de la disposition)";
+"settings.general.behavior.keycodes_help" = "Associer par position physique — les mnémoniques fonctionnent avec toute disposition de clavier";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Apparence";
+"settings.general.appearance.opacity" = "Opacité du popup";
+"settings.general.appearance.width" = "Largeur du popup";
+"settings.general.appearance.height" = "Hauteur du popup";
+"settings.general.appearance.hide_menubar" = "Masquer l'icône de la barre de menus";
+"settings.general.appearance.hide_dock" = "Masquer l'icône du Dock";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Autorisations";
+"settings.general.permissions.accessibility" = "Accessibilité";
+"settings.general.permissions.accessibility_detail" = "Capturer le texte sélectionné depuis d'autres apps";
+"settings.general.permissions.screen_recording" = "Enregistrement d'écran";
+"settings.general.permissions.screen_recording_detail" = "Capture d'écran OCR";
+"settings.general.permissions.open_settings" = "Ouvrir les réglages";
+"settings.general.permissions.grant" = "Autoriser";
+
+/* Settings - Providers */
+"settings.providers.select" = "Sélectionnez un fournisseur";
+"settings.providers.add" = "Ajouter un fournisseur";
+"settings.providers.name" = "Nom";
+"settings.providers.type" = "Type";
+"settings.providers.provider" = "Fournisseur";
+"settings.providers.connection" = "Connexion";
+"settings.providers.base_url" = "URL de base";
+"settings.providers.model_id" = "ID du modèle";
+"settings.providers.max_tokens" = "Tokens max";
+"settings.providers.authentication" = "Authentification";
+"settings.providers.api_key" = "Clé API";
+"settings.providers.set_default" = "Définir par défaut";
+"settings.providers.default_label" = "Fournisseur par défaut";
+"settings.providers.save" = "Enregistrer";
+"settings.providers.cancel" = "Annuler";
+"settings.providers.add_button" = "Ajouter";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Sélectionnez un prompt à modifier";
+"settings.prompts.expand_hint" = "Double-cliquez sur un dossier pour le développer";
+"settings.prompts.new_prompt" = "Nouveau prompt";
+"settings.prompts.new_folder" = "Nouveau dossier";
+"settings.prompts.new_prompt_here" = "Nouveau prompt ici";
+"settings.prompts.new_subfolder" = "Nouveau sous-dossier";
+"settings.prompts.move_up" = "Déplacer vers le haut";
+"settings.prompts.move_down" = "Déplacer vers le bas";
+"settings.prompts.delete" = "Supprimer";
+"settings.prompts.cancel" = "Annuler";
+"settings.prompts.import" = "Importer des prompts";
+"settings.prompts.export" = "Exporter des prompts";
+"settings.prompts.restore" = "Restaurer les valeurs par défaut";
+"settings.prompts.delete_title" = "Supprimer « %@ » ?";
+"settings.prompts.delete_folder_message" = "Ce dossier contient %d élément(s). Tout son contenu sera définitivement supprimé.";
+"settings.prompts.delete_prompt_message" = "Ce prompt sera définitivement supprimé.";
+"settings.prompts.restore_title" = "Restaurer les prompts par défaut ?";
+"settings.prompts.restore_message" = "Cela remplacera tous vos prompts actuels par les valeurs par défaut ci-dessous. Cette action est irréversible.";
+"settings.prompts.restore_button" = "Restaurer les valeurs par défaut";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Général";
+"settings.prompts.editor.name" = "Nom";
+"settings.prompts.editor.mnemonic" = "Touche mnémonique";
+"settings.prompts.editor.modifiers" = "Modificateurs";
+"settings.prompts.editor.type" = "Type";
+"settings.prompts.editor.folder" = "Dossier";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Prompt système";
+"settings.prompts.editor.generate_section" = "Générer avec l'IA";
+"settings.prompts.editor.generate_placeholder" = "Décrivez ce que ce prompt doit faire...";
+"settings.prompts.editor.generate_button" = "Générer le prompt";
+"settings.prompts.editor.generating" = "Génération...";
+"settings.prompts.editor.ai_hint" = "Utilise votre fournisseur d'IA par défaut";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Structure des prompts par défaut";
+"settings.samples.actions" = "Actions";
+"settings.samples.restore" = "Restaurer les valeurs par défaut...";
+"settings.samples.export" = "Exporter les prompts...";
+"settings.samples.import" = "Importer des prompts...";
+"settings.samples.restore_title" = "Restaurer les valeurs par défaut ?";
+"settings.samples.restore_message" = "Cela remplacera tous vos prompts actuels par le jeu par défaut. Cette action est irréversible.";
+"settings.samples.restore_button" = "Restaurer";
+"settings.samples.defaults_restored" = "Valeurs par défaut restaurées !";
+"settings.samples.exported" = "Prompts exportés !";
+"settings.samples.imported" = "Prompts importés !";
+"settings.samples.import_failed" = "Échec de l'import : %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "Processeur de presse-papiers alimenté par l'IA";
+"about.version" = "Version %@";
+"about.github" = "Dépôt GitHub";
+"about.coffee" = "Offrir un café";
+"about.updates" = "Vérifier les mises à jour";
+"about.libraries" = "Bibliothèques tierces";
+"about.libraries.intro" = "ClipSlop utilise les bibliothèques open source suivantes :";
+"about.libraries.license" = "Toutes les bibliothèques sont utilisées sous leurs licences open source respectives.";
+"about.done" = "Terminé";
+
+/* Popup */
+"popup.prompts" = "Prompts";
+"popup.back" = "Retour";
+"popup.select_all" = "Tout sélectionner";
+"popup.copy" = "Copier";
+"popup.edit" = "Modifier";
+"popup.open" = "Ouvrir";
+"popup.save" = "Enregistrer";
+"popup.copied" = "Copié !";
+"popup.editing" = "Modification";
+"popup.done" = "Terminé";
+"popup.cancel" = "Annuler";
+"popup.dismiss" = "Fermer";
+"popup.try_again" = "Réessayer";
+"popup.mnemonic_hint" = "Appuyez sur une touche pour choisir un prompt";
+"popup.hint.history" = "Historique";
+"popup.hint.scroll" = "Défiler";
+"popup.hint.page_down" = "Page ↓";
+"popup.hint.page_up" = "Page ↑";
+"popup.hint.back" = "Retour";
+"popup.hint.close" = "Fermer";
+"popup.processing" = "Traitement...";
+"popup.receiving" = "Réception de la réponse...";
+
+/* Popup - History */
+"popup.history.original" = "Original";
+"popup.history.delete" = "Supprimer";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Appuyez sur une touche pour sélectionner";
+"popup.navigator.back" = "Retour";
+"popup.navigator.close" = "Fermer";
+
+/* Menu Bar */
+"menu.trigger" = "Déclencher";
+"menu.clipboard" = "Depuis le presse-papiers";
+"menu.blank" = "Éditeur vide";
+"menu.ocr" = "Capture d'écran (OCR)";
+"menu.provider" = "Fournisseur : %@";
+"menu.model" = "Modèle : %@";
+"menu.settings" = "Réglages...";
+"menu.onboarding" = "Afficher l'introduction...";
+"menu.coffee" = "Offrir un café ☕";
+"menu.updates" = "Vérifier les mises à jour...";
+"menu.about" = "À propos";
+"menu.quit" = "Quitter";
+
+/* Errors */
+"error.no_text" = "Aucun texte sélectionné ou dans le presse-papiers";
+"error.clipboard_empty" = "Le presse-papiers est vide";
+"error.provider_not_found" = "Fournisseur introuvable";
+"error.empty_response" = "Réponse vide";
+
+/* Window titles */
+"window.settings" = "Réglages ClipSlop";
+"window.about" = "À propos de ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Modification manuelle";

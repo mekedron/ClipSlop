@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Välj ditt språk";
+"onboarding.language.subtitle" = "Välj språk för ClipSlops gränssnitt.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Välkommen till ClipSlop";
+"onboarding.welcome.subtitle" = "Omvandla valfri text med AI — översätt, formatera, analysera.\nMarkera text, tryck en genväg och välj en prompt.";
+"onboarding.welcome.feature.grab" = "Hämta markerad text från valfri app";
+"onboarding.welcome.feature.ocr" = "OCR — läs av text från skärmen";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — valfri AI-leverantör";
+"onboarding.welcome.feature.folders" = "Ordna prompter i kapslade mappar";
+"onboarding.welcome.feature.history" = "Fullständig historik med ångra-funktion";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Behörigheter";
+"onboarding.permissions.subtitle" = "ClipSlop behöver ett par behörigheter för att fungera.";
+"onboarding.permissions.accessibility" = "Hjälpmedel";
+"onboarding.permissions.accessibility.desc" = "Krävs för att hämta markerad text från andra appar";
+"onboarding.permissions.screen_recording" = "Skärminspelning";
+"onboarding.permissions.screen_recording.desc" = "Krävs för OCR — avläsning av text från skärmområden";
+"onboarding.permissions.hint" = "Du kan alltid ändra detta senare i Systeminställningar → Integritet och säkerhet";
+"onboarding.permissions.grant" = "Tillåt";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Kortkommandon";
+"onboarding.shortcuts.subtitle" = "Detta är dina globala genvägar. Anpassa dem när som helst i Inställningar.";
+"onboarding.shortcuts.trigger" = "Aktivera ClipSlop";
+"onboarding.shortcuts.clipboard" = "Från urklipp";
+"onboarding.shortcuts.blank" = "Tom redigerare";
+"onboarding.shortcuts.ocr" = "Skärmdump (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "AI-leverantör";
+"onboarding.provider.subtitle" = "Välj din AI-leverantör och ange din API-nyckel.";
+"onboarding.provider.api_key" = "API-nyckel";
+"onboarding.provider.model" = "Modell";
+"onboarding.provider.base_url" = "Bas-URL";
+"onboarding.provider.test_connection" = "Testa anslutning";
+"onboarding.provider.testing" = "Testar...";
+"onboarding.provider.save" = "Spara leverantör";
+"onboarding.provider.connected" = "Ansluten!";
+"onboarding.provider.default_label" = "Standardleverantör för bearbetning:";
+"onboarding.provider.hint.anthropic" = "Hämta din nyckel på console.anthropic.com";
+"onboarding.provider.hint.openai" = "Hämta din nyckel på platform.openai.com";
+"onboarding.provider.hint.ollama" = "Se till att Ollama körs lokalt (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "iCloud-synk";
+"onboarding.icloud.subtitle" = "Håll dina prompter synkade mellan alla dina Mac-datorer.\nÄndringar på en enhet visas överallt automatiskt.";
+"onboarding.icloud.toggle" = "Synka prompter via iCloud";
+"onboarding.icloud.change_later" = "Du kan ändra detta senare i Inställningar.";
+"onboarding.icloud.unavailable" = "iCloud är inte tillgängligt. Logga in på iCloud i Systeminställningar.";
+"onboarding.icloud.synced" = "Synkad";
+"onboarding.icloud.syncing" = "Synkar...";
+"onboarding.icloud.conflict.title" = "Befintliga prompter hittades i iCloud";
+"onboarding.icloud.conflict.message" = "En annan Mac har redan synkat prompter till iCloud. Vill du använda dessa eller ladda upp dina nuvarande prompter?";
+"onboarding.icloud.conflict.use_cloud" = "Använd iCloud";
+"onboarding.icloud.conflict.upload_local" = "Ladda upp lokala";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Testa själv!";
+"onboarding.demo.subtitle" = "Markera texten nedan och aktivera sedan ClipSlop för att bearbeta den.";
+"onboarding.demo.sample_text" = "Flygande bäckasiner söka hwila på mjuka tuvor. Den här meningen innehåller alla bokstäver i det svenska alfabetet och används ofta för testning. Prova att markera den och aktivera ClipSlop!";
+"onboarding.demo.select_all" = "Markera allt";
+"onboarding.demo.selected_hint" = "Text markerad — använd nu din genväg!";
+"onboarding.demo.trigger_heading" = "Aktivera nu ClipSlop:";
+"onboarding.demo.selected_text" = "Markerad text";
+"onboarding.demo.from_clipboard" = "Från urklipp";
+"onboarding.demo.or" = "eller";
+"onboarding.demo.trigger" = "Aktivera";
+"onboarding.demo.manual" = "Manuell";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Tillbaka";
+"onboarding.continue" = "Fortsätt";
+"onboarding.get_started" = "Kom igång";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Allmänt";
+"settings.tab.providers" = "Leverantörer";
+"settings.tab.prompts" = "Prompter";
+"settings.tab.about" = "Om";
+
+/* Settings - General - Language */
+"settings.general.language" = "Språk";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Synka prompter via iCloud";
+"settings.general.icloud.sign_in" = "Logga in på iCloud i Systeminställningar för att aktivera synk.";
+"settings.general.icloud.unavailable" = "iCloud är inte tillgängligt";
+"settings.general.icloud.synced" = "Synkad";
+"settings.general.icloud.syncing" = "Synkar...";
+"settings.general.icloud.sync_error" = "Synkfel";
+"settings.general.icloud.conflict.title" = "Befintliga prompter hittades i iCloud";
+"settings.general.icloud.conflict.message" = "Vill du använda prompterna från iCloud eller ladda upp dina nuvarande prompter?";
+"settings.general.icloud.conflict.use_cloud" = "Använd iCloud";
+"settings.general.icloud.conflict.upload_local" = "Ladda upp lokala";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Kortkommandon";
+"settings.general.shortcuts.trigger" = "Aktivera ClipSlop:";
+"settings.general.shortcuts.clipboard" = "Från urklipp:";
+"settings.general.shortcuts.blank" = "Tom redigerare:";
+"settings.general.shortcuts.ocr" = "Skärmdump (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Beteende";
+"settings.general.behavior.streaming" = "Aktivera strömmande svar";
+"settings.general.behavior.launch_login" = "Starta vid inloggning";
+"settings.general.behavior.keycodes" = "Använd tangentkoder (layoutoberoende genvägar)";
+"settings.general.behavior.keycodes_help" = "Matcha efter fysisk tangentposition — mnemoniska genvägar fungerar med alla tangentbordslayouter";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Utseende";
+"settings.general.appearance.opacity" = "Popupens opacitet";
+"settings.general.appearance.width" = "Popupens bredd";
+"settings.general.appearance.height" = "Popupens höjd";
+"settings.general.appearance.hide_menubar" = "Dölj menyradsikonen";
+"settings.general.appearance.hide_dock" = "Dölj Dock-ikonen";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Behörigheter";
+"settings.general.permissions.accessibility" = "Hjälpmedel";
+"settings.general.permissions.accessibility_detail" = "Hämta markerad text från andra appar";
+"settings.general.permissions.screen_recording" = "Skärminspelning";
+"settings.general.permissions.screen_recording_detail" = "OCR-skärmdump";
+"settings.general.permissions.open_settings" = "Öppna Inställningar";
+"settings.general.permissions.grant" = "Tillåt";
+
+/* Settings - Providers */
+"settings.providers.select" = "Välj en leverantör";
+"settings.providers.add" = "Lägg till leverantör";
+"settings.providers.name" = "Namn";
+"settings.providers.type" = "Typ";
+"settings.providers.provider" = "Leverantör";
+"settings.providers.connection" = "Anslutning";
+"settings.providers.base_url" = "Bas-URL";
+"settings.providers.model_id" = "Modell-ID";
+"settings.providers.max_tokens" = "Max tokens";
+"settings.providers.authentication" = "Autentisering";
+"settings.providers.api_key" = "API-nyckel";
+"settings.providers.set_default" = "Ange som standard";
+"settings.providers.default_label" = "Standardleverantör";
+"settings.providers.save" = "Spara";
+"settings.providers.cancel" = "Avbryt";
+"settings.providers.add_button" = "Lägg till";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Välj en prompt att redigera";
+"settings.prompts.expand_hint" = "Dubbelklicka på en mapp för att expandera den";
+"settings.prompts.new_prompt" = "Ny prompt";
+"settings.prompts.new_folder" = "Ny mapp";
+"settings.prompts.new_prompt_here" = "Ny prompt här";
+"settings.prompts.new_subfolder" = "Ny undermapp";
+"settings.prompts.move_up" = "Flytta upp";
+"settings.prompts.move_down" = "Flytta ner";
+"settings.prompts.delete" = "Radera";
+"settings.prompts.cancel" = "Avbryt";
+"settings.prompts.import" = "Importera prompter";
+"settings.prompts.export" = "Exportera prompter";
+"settings.prompts.restore" = "Återställ standardvärden";
+"settings.prompts.delete_title" = "Radera \"%@\"?";
+"settings.prompts.delete_folder_message" = "Den här mappen innehåller %d objekt. Allt inuti kommer att raderas permanent.";
+"settings.prompts.delete_prompt_message" = "Den här prompten kommer att raderas permanent.";
+"settings.prompts.restore_title" = "Återställ standardprompter?";
+"settings.prompts.restore_message" = "Detta ersätter alla dina nuvarande prompter med standardvärdena nedan. Det går inte att ångra.";
+"settings.prompts.restore_button" = "Återställ standardvärden";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Allmänt";
+"settings.prompts.editor.name" = "Namn";
+"settings.prompts.editor.mnemonic" = "Minnesknapp";
+"settings.prompts.editor.modifiers" = "Modifierare";
+"settings.prompts.editor.type" = "Typ";
+"settings.prompts.editor.folder" = "Mapp";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Systemprompt";
+"settings.prompts.editor.generate_section" = "Generera med AI";
+"settings.prompts.editor.generate_placeholder" = "Beskriv vad den här prompten ska göra...";
+"settings.prompts.editor.generate_button" = "Generera prompt";
+"settings.prompts.editor.generating" = "Genererar...";
+"settings.prompts.editor.ai_hint" = "Använder din standard-AI-leverantör";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Standardpromptstruktur";
+"settings.samples.actions" = "Åtgärder";
+"settings.samples.restore" = "Återställ standardvärden...";
+"settings.samples.export" = "Exportera prompter...";
+"settings.samples.import" = "Importera prompter...";
+"settings.samples.restore_title" = "Återställ standardvärden?";
+"settings.samples.restore_message" = "Detta ersätter alla dina nuvarande prompter med standarduppsättningen. Det går inte att ångra.";
+"settings.samples.restore_button" = "Återställ";
+"settings.samples.defaults_restored" = "Standardvärden återställda!";
+"settings.samples.exported" = "Prompter exporterade!";
+"settings.samples.imported" = "Prompter importerade!";
+"settings.samples.import_failed" = "Import misslyckades: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "AI-driven urklippsbearbetare";
+"about.version" = "Version %@";
+"about.github" = "GitHub-förråd";
+"about.coffee" = "Bjud mig på en kaffe";
+"about.updates" = "Sök efter uppdateringar";
+"about.libraries" = "Tredjepartsbibliotek";
+"about.libraries.intro" = "ClipSlop använder följande bibliotek med öppen källkod:";
+"about.libraries.license" = "Alla bibliotek används under sina respektive licenser för öppen källkod.";
+"about.done" = "Klar";
+
+/* Popup */
+"popup.prompts" = "Prompter";
+"popup.back" = "Tillbaka";
+"popup.select_all" = "Markera allt";
+"popup.copy" = "Kopiera";
+"popup.edit" = "Redigera";
+"popup.open" = "Öppna";
+"popup.save" = "Spara";
+"popup.copied" = "Kopierad!";
+"popup.editing" = "Redigerar";
+"popup.done" = "Klar";
+"popup.cancel" = "Avbryt";
+"popup.dismiss" = "Stäng";
+"popup.try_again" = "Försök igen";
+"popup.mnemonic_hint" = "Tryck en bokstav för att välja en prompt";
+"popup.hint.history" = "Historik";
+"popup.hint.scroll" = "Scrolla";
+"popup.hint.page_down" = "Sida ↓";
+"popup.hint.page_up" = "Sida ↑";
+"popup.hint.back" = "Tillbaka";
+"popup.hint.close" = "Stäng";
+"popup.processing" = "Bearbetar...";
+"popup.receiving" = "Tar emot svar...";
+
+/* Popup - History */
+"popup.history.original" = "Original";
+"popup.history.delete" = "Radera";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Tryck en tangent för att välja";
+"popup.navigator.back" = "Tillbaka";
+"popup.navigator.close" = "Stäng";
+
+/* Menu Bar */
+"menu.trigger" = "Aktivera";
+"menu.clipboard" = "Från urklipp";
+"menu.blank" = "Tom redigerare";
+"menu.ocr" = "Skärmdump (OCR)";
+"menu.provider" = "Leverantör: %@";
+"menu.model" = "Modell: %@";
+"menu.settings" = "Inställningar...";
+"menu.onboarding" = "Visa introduktion...";
+"menu.coffee" = "Bjud mig på en kaffe ☕";
+"menu.updates" = "Sök efter uppdateringar...";
+"menu.about" = "Om";
+"menu.quit" = "Avsluta";
+
+/* Errors */
+"error.no_text" = "Ingen text markerad eller i urklipp";
+"error.clipboard_empty" = "Urklippet är tomt";
+"error.provider_not_found" = "Leverantören hittades inte";
+"error.empty_response" = "Tomt svar";
+
+/* Window titles */
+"window.settings" = "ClipSlop-inställningar";
+"window.about" = "Om ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Manuell redigering";

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PopupContentView: View {
     let appState: AppState
+    private let loc = Loc.shared
 
     var body: some View {
         HStack(spacing: 0) {
@@ -52,13 +53,13 @@ struct PopupContentView: View {
                     .foregroundStyle(.tertiary)
 
                 if appState.navigationPath.isEmpty {
-                    Text("Prompts")
+                    Text(loc.t("popup.prompts"))
                         .font(.caption.bold())
                 } else {
                     Button {
                         appState.navigateToRoot()
                     } label: {
-                        Text("Prompts")
+                        Text(loc.t("popup.prompts"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -92,7 +93,7 @@ struct PopupContentView: View {
                     } label: {
                         HStack(spacing: 2) {
                             Image(systemName: "chevron.left")
-                            Text("Back")
+                            Text(loc.t("popup.back"))
                         }
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -153,7 +154,7 @@ struct PopupContentView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle")
-                        Text("Done")
+                        Text(loc.t("popup.done"))
                         Text("⌘↩").foregroundStyle(.white.opacity(0.6))
                     }
                     .font(.caption)
@@ -165,7 +166,7 @@ struct PopupContentView: View {
                 } label: {
                     HStack(spacing: 4) {
                         Image(systemName: "xmark.circle")
-                        Text("Cancel")
+                        Text(loc.t("popup.cancel"))
                         Text("Esc").foregroundStyle(.tertiary)
                     }
                     .font(.caption)
@@ -174,7 +175,7 @@ struct PopupContentView: View {
 
                 Spacer()
 
-                Label("Editing", systemImage: "pencil")
+                Label(loc.t("popup.editing"), systemImage: "pencil")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -187,32 +188,32 @@ struct PopupContentView: View {
 
     private var actionsBar: some View {
         HStack(spacing: 10) {
-            actionButton("Select All", icon: "selection.pin.in.out", shortcut: "⌘A") {
+            actionButton(loc.t("popup.select_all"), icon: "selection.pin.in.out", shortcut: "⌘A") {
                 appState.selectAllText()
             }
 
-            actionButton("Copy", icon: "doc.on.doc", shortcut: "⌘C") {
+            actionButton(loc.t("popup.copy"), icon: "doc.on.doc", shortcut: "⌘C") {
                 appState.copyCurrentText()
             }
 
             Divider().frame(height: 16)
 
-            actionButton("Edit", icon: "pencil", shortcut: "⌘E") {
+            actionButton(loc.t("popup.edit"), icon: "pencil", shortcut: "⌘E") {
                 appState.startEditing()
             }
 
-            actionButton("Open", icon: "square.and.arrow.up", shortcut: "⌘O") {
+            actionButton(loc.t("popup.open"), icon: "square.and.arrow.up", shortcut: "⌘O") {
                 appState.openInTextEdit()
             }
 
-            actionButton("Save", icon: "square.and.arrow.down", shortcut: "⌘S") {
+            actionButton(loc.t("popup.save"), icon: "square.and.arrow.down", shortcut: "⌘S") {
                 appState.saveToFile()
             }
 
             Spacer()
 
             if appState.showCopiedFeedback {
-                Label("Copied!", systemImage: "checkmark.circle.fill")
+                Label(loc.t("popup.copied"), systemImage: "checkmark.circle.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
                     .transition(.opacity)
@@ -227,21 +228,21 @@ struct PopupContentView: View {
 
     private var shortcutsHint: some View {
         HStack(spacing: 16) {
-            shortcutHint("←→", "History")
-            shortcutHint("↑↓", "Scroll")
-            shortcutHint("Space", "Page ↓")
-            shortcutHint("⇧Space", "Page ↑")
+            shortcutHint("←→", loc.t("popup.hint.history"))
+            shortcutHint("↑↓", loc.t("popup.hint.scroll"))
+            shortcutHint("Space", loc.t("popup.hint.page_down"))
+            shortcutHint("⇧Space", loc.t("popup.hint.page_up"))
 
             if !appState.navigationPath.isEmpty {
-                shortcutHint("⌫", "Back")
+                shortcutHint("⌫", loc.t("popup.hint.back"))
             }
 
-            shortcutHint("Esc", "Close")
+            shortcutHint("Esc", loc.t("popup.hint.close"))
 
             Spacer()
 
             // Mnemonic hint
-            Text("Press a letter to pick a prompt")
+            Text(loc.t("popup.mnemonic_hint"))
                 .foregroundStyle(.tertiary)
         }
         .font(.caption2)
@@ -291,11 +292,11 @@ struct PopupContentView: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button("Dismiss") {
+                Button(loc.t("popup.dismiss")) {
                     appState.clearError()
                     appState.dismissPopup()
                 }
-                Button("Try Again") {
+                Button(loc.t("popup.try_again")) {
                     appState.clearError()
                 }
                 .buttonStyle(.borderedProminent)
@@ -380,12 +381,10 @@ struct KeyEventHandler: NSViewRepresentable {
 
             // --- Edit mode ---
             if appState.isEditing {
-                // Cmd+Enter — Done editing
                 if hasCmd && code == KeyCode.enter {
                     appState.saveEdit()
                     return true
                 }
-                // Cmd+, — Open Settings (works in all modes)
                 if hasCmd && code == KeyCode.comma {
                     appState.openSettings()
                     return true
@@ -399,7 +398,6 @@ struct KeyEventHandler: NSViewRepresentable {
 
             // --- Normal mode ---
 
-            // Escape
             if code == KeyCode.escape {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
@@ -409,37 +407,31 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
-            // Cmd+E — Edit mode
             if hasCmd && code == KeyCode.e {
                 appState.startEditing()
                 return true
             }
 
-            // Cmd+O — Open in TextEdit
             if hasCmd && code == KeyCode.o {
                 appState.openInTextEdit()
                 return true
             }
 
-            // Cmd+S — Save to file
             if hasCmd && code == KeyCode.s {
                 appState.saveToFile()
                 return true
             }
 
-            // Cmd+, — Open Settings
             if hasCmd && code == KeyCode.comma {
                 appState.openSettings()
                 return true
             }
 
-            // Cmd+A — Select All
             if hasCmd && code == KeyCode.a {
                 appState.selectAllText()
                 return true
             }
 
-            // Cmd+C — Copy
             if hasCmd && code == KeyCode.c {
                 if let textView = self.window?.firstResponder as? NSTextView,
                    textView.selectedRange().length > 0 {
@@ -449,7 +441,6 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
-            // Cmd+V — Paste
             if hasCmd && code == KeyCode.v {
                 appState.pasteCurrentText()
                 return true
@@ -462,7 +453,6 @@ struct KeyEventHandler: NSViewRepresentable {
             let hasShift = event.modifierFlags.contains(.shift)
             let isSpace = code == KeyCode.space
 
-            // ← / → — navigate history (← = newer, → = older)
             if isArrowLeft {
                 appState.navigateHistoryNewer()
                 return true
@@ -472,8 +462,6 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
-            // ↑ / ↓ — scroll text (Shift = page)
-            // Space = page down, Shift+Space = page up
             if isArrowUp || isArrowDown || isSpace {
                 let isUp = isArrowUp || (isSpace && hasShift)
                 let pageScroll = isSpace || hasShift
@@ -482,7 +470,6 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
-            // Delete/Backspace — go back in navigation
             if code == KeyCode.delete || code == KeyCode.forwardDelete {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
@@ -507,7 +494,6 @@ struct KeyEventHandler: NSViewRepresentable {
         }
 
         private func scrollTextArea(up: Bool, by amount: CGFloat) {
-            // Find the first (topmost) scroll view — that's the text area
             guard let scrollView = findFirstScrollView(in: self.window?.contentView) else { return }
             let clipView = scrollView.contentView
             let maxY = scrollView.documentView?.frame.height ?? 0
@@ -520,10 +506,8 @@ struct KeyEventHandler: NSViewRepresentable {
             clipView.setBoundsOrigin(origin)
         }
 
-        /// Find the first NSScrollView that contains text (skip sidebar scroll views)
         private func findFirstScrollView(in view: NSView?) -> NSScrollView? {
             guard let view else { return nil }
-            // BFS to find scroll views in order — first one in the main content area
             var queue: [NSView] = [view]
             var scrollViews: [NSScrollView] = []
             while !queue.isEmpty {
@@ -533,7 +517,6 @@ struct KeyEventHandler: NSViewRepresentable {
                 }
                 queue.append(contentsOf: current.subviews)
             }
-            // Return the largest scroll view (likely the text area, not sidebar or prompt grid)
             return scrollViews.max(by: { $0.frame.width < $1.frame.width })
         }
     }

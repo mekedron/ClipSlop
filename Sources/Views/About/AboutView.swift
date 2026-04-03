@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AboutView: View {
     @State private var showLibraries = false
+    private let loc = Loc.shared
 
     var body: some View {
         VStack(spacing: 20) {
@@ -11,13 +12,13 @@ struct AboutView: View {
                 .font(.system(size: 56))
                 .foregroundStyle(.blue)
 
-            Text("ClipSlop")
+            Text(loc.t("about.title"))
                 .font(.largeTitle).fontWeight(.bold)
 
-            Text("AI-powered clipboard processor")
+            Text(loc.t("about.subtitle"))
                 .foregroundStyle(.secondary)
 
-            Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev")")
+            Text(loc.t("about.version", Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
 
@@ -25,10 +26,10 @@ struct AboutView: View {
                 .frame(width: 200)
 
             VStack(spacing: 12) {
-                aboutLink("GitHub Repository", icon: "chevron.left.forwardslash.chevron.right",
+                aboutLink(loc.t("about.github"), icon: "chevron.left.forwardslash.chevron.right",
                           url: "https://github.com/mekedron/ClipSlop")
 
-                aboutLink("Buy Me a Coffee", icon: "cup.and.saucer",
+                aboutLink(loc.t("about.coffee"), icon: "cup.and.saucer",
                           url: "https://buymeacoffee.com/mekedron",
                           tint: .orange)
 
@@ -38,7 +39,7 @@ struct AboutView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.triangle.2.circlepath")
                             .frame(width: 20)
-                        Text("Check for Updates")
+                        Text(loc.t("about.updates"))
                         Spacer()
                     }
                     .frame(maxWidth: .infinity)
@@ -54,7 +55,7 @@ struct AboutView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "books.vertical")
                             .frame(width: 20)
-                        Text("Third-Party Libraries")
+                        Text(loc.t("about.libraries"))
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.caption)
@@ -106,6 +107,7 @@ struct AboutView: View {
 
 struct ThirdPartyLibrariesView: View {
     @Environment(\.dismiss) private var dismiss
+    private let loc = Loc.shared
 
     private let libraries: [(name: String, author: String, description: String, url: String)] = [
         (
@@ -131,14 +133,14 @@ struct ThirdPartyLibrariesView: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                Text("Third-Party Libraries")
+                Text(loc.t("about.libraries"))
                     .font(.headline)
                 Spacer()
-                Button("Done") { dismiss() }
+                Button(loc.t("about.done")) { dismiss() }
                     .keyboardShortcut(.defaultAction)
             }
 
-            Text("ClipSlop uses the following open-source libraries:")
+            Text(loc.t("about.libraries.intro"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -172,7 +174,7 @@ struct ThirdPartyLibrariesView: View {
 
             Spacer()
 
-            Text("All libraries are used under their respective open-source licenses.")
+            Text(loc.t("about.libraries.license"))
                 .font(.caption2)
                 .foregroundStyle(.quaternary)
                 .multilineTextAlignment(.center)

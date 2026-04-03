@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PromptNavigatorView: View {
     let appState: AppState
+    private let loc = Loc.shared
 
     var body: some View {
         VStack(spacing: 0) {
@@ -30,16 +31,16 @@ struct PromptNavigatorView: View {
 
             // Bottom hints
             HStack {
-                Text("Press a key to select")
+                Text(loc.t("popup.navigator.press_key"))
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                 Spacer()
                 if !appState.navigationPath.isEmpty {
-                    Text("⌫ Back")
+                    Text("⌫ \(loc.t("popup.navigator.back"))")
                         .font(.caption)
                         .foregroundStyle(.tertiary)
                 }
-                Text("Esc Close")
+                Text("Esc \(loc.t("popup.navigator.close"))")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }

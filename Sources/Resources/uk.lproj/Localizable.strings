@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Оберіть мову";
+"onboarding.language.subtitle" = "Оберіть мову інтерфейсу ClipSlop.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Ласкаво просимо до ClipSlop";
+"onboarding.welcome.subtitle" = "Перетворюйте будь-який текст за допомогою ШІ — перекладайте, форматуйте, аналізуйте.\nПросто виділіть текст, натисніть комбінацію клавіш і виберіть промпт.";
+"onboarding.welcome.feature.grab" = "Захоплення виділеного тексту з будь-якого застосунку";
+"onboarding.welcome.feature.ocr" = "OCR — розпізнавання тексту з екрана";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — будь-який ШІ-провайдер";
+"onboarding.welcome.feature.folders" = "Організація промптів у вкладених теках";
+"onboarding.welcome.feature.history" = "Повна історія перетворень зі скасуванням";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Дозволи";
+"onboarding.permissions.subtitle" = "ClipSlop потребує кілька дозволів для роботи.";
+"onboarding.permissions.accessibility" = "Доступність";
+"onboarding.permissions.accessibility.desc" = "Потрібен для захоплення виділеного тексту з інших застосунків";
+"onboarding.permissions.screen_recording" = "Запис екрана";
+"onboarding.permissions.screen_recording.desc" = "Потрібен для OCR — розпізнавання тексту з ділянок екрана";
+"onboarding.permissions.hint" = "Ви завжди можете змінити це пізніше в Системних параметрах → Конфіденційність і безпека";
+"onboarding.permissions.grant" = "Надати";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Комбінації клавіш";
+"onboarding.shortcuts.subtitle" = "Це ваші глобальні комбінації клавіш. Налаштуйте їх будь-коли в Параметрах.";
+"onboarding.shortcuts.trigger" = "Запустити ClipSlop";
+"onboarding.shortcuts.clipboard" = "З буфера обміну";
+"onboarding.shortcuts.blank" = "Порожній редактор";
+"onboarding.shortcuts.ocr" = "Знімок екрана (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "ШІ-провайдер";
+"onboarding.provider.subtitle" = "Оберіть ШІ-провайдера та введіть API-ключ.";
+"onboarding.provider.api_key" = "API-ключ";
+"onboarding.provider.model" = "Модель";
+"onboarding.provider.base_url" = "Базова URL-адреса";
+"onboarding.provider.test_connection" = "Перевірити з'єднання";
+"onboarding.provider.testing" = "Перевірка...";
+"onboarding.provider.save" = "Зберегти провайдера";
+"onboarding.provider.connected" = "Підключено!";
+"onboarding.provider.default_label" = "Типовий провайдер для обробки:";
+"onboarding.provider.hint.anthropic" = "Отримайте ключ на console.anthropic.com";
+"onboarding.provider.hint.openai" = "Отримайте ключ на platform.openai.com";
+"onboarding.provider.hint.ollama" = "Переконайтеся, що Ollama запущена локально (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "Синхронізація iCloud";
+"onboarding.icloud.subtitle" = "Тримайте промпти синхронізованими на всіх ваших Mac.\nЗміни на одному пристрої зʼявляються скрізь автоматично.";
+"onboarding.icloud.toggle" = "Синхронізувати промпти через iCloud";
+"onboarding.icloud.change_later" = "Ви можете змінити це пізніше в Параметрах.";
+"onboarding.icloud.unavailable" = "iCloud недоступний. Увійдіть до iCloud у Системних параметрах.";
+"onboarding.icloud.synced" = "Синхронізовано";
+"onboarding.icloud.syncing" = "Синхронізація...";
+"onboarding.icloud.conflict.title" = "В iCloud знайдено наявні промпти";
+"onboarding.icloud.conflict.message" = "Інший Mac вже синхронізував промпти з iCloud. Бажаєте використати їх чи завантажити поточні?";
+"onboarding.icloud.conflict.use_cloud" = "Використати iCloud";
+"onboarding.icloud.conflict.upload_local" = "Завантажити локальні";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Спробуйте!";
+"onboarding.demo.subtitle" = "Виділіть текст нижче, потім запустіть ClipSlop для його обробки.";
+"onboarding.demo.sample_text" = "Жебракують філософи при ґанку церкви в Гадячі, ще й шатро їхнє знялось. Це речення містить кожну літеру української абетки і часто використовується для тестування. Спробуйте виділити його та запустити ClipSlop!";
+"onboarding.demo.select_all" = "Виділити все";
+"onboarding.demo.selected_hint" = "Текст виділено — тепер використайте комбінацію клавіш!";
+"onboarding.demo.trigger_heading" = "Тепер запустіть ClipSlop:";
+"onboarding.demo.selected_text" = "Виділений текст";
+"onboarding.demo.from_clipboard" = "З буфера обміну";
+"onboarding.demo.or" = "або";
+"onboarding.demo.trigger" = "Запустити";
+"onboarding.demo.manual" = "Вручну";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Назад";
+"onboarding.continue" = "Продовжити";
+"onboarding.get_started" = "Розпочати";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Загальне";
+"settings.tab.providers" = "Провайдери";
+"settings.tab.prompts" = "Промпти";
+"settings.tab.about" = "Про програму";
+
+/* Settings - General - Language */
+"settings.general.language" = "Мова";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Синхронізувати промпти через iCloud";
+"settings.general.icloud.sign_in" = "Увійдіть до iCloud у Системних параметрах, щоб увімкнути синхронізацію.";
+"settings.general.icloud.unavailable" = "iCloud недоступний";
+"settings.general.icloud.synced" = "Синхронізовано";
+"settings.general.icloud.syncing" = "Синхронізація...";
+"settings.general.icloud.sync_error" = "Помилка синхронізації";
+"settings.general.icloud.conflict.title" = "В iCloud знайдено наявні промпти";
+"settings.general.icloud.conflict.message" = "Бажаєте використати промпти з iCloud чи завантажити поточні?";
+"settings.general.icloud.conflict.use_cloud" = "Використати iCloud";
+"settings.general.icloud.conflict.upload_local" = "Завантажити локальні";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Комбінації клавіш";
+"settings.general.shortcuts.trigger" = "Запустити ClipSlop:";
+"settings.general.shortcuts.clipboard" = "З буфера обміну:";
+"settings.general.shortcuts.blank" = "Порожній редактор:";
+"settings.general.shortcuts.ocr" = "Знімок екрана (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Поведінка";
+"settings.general.behavior.streaming" = "Увімкнути потокові відповіді";
+"settings.general.behavior.launch_login" = "Запускати при вході в систему";
+"settings.general.behavior.keycodes" = "Використовувати коди клавіш (незалежні від розкладки комбінації)";
+"settings.general.behavior.keycodes_help" = "Відповідність за фізичним розташуванням клавіш — мнемоніки працюють з будь-якою розкладкою";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Вигляд";
+"settings.general.appearance.opacity" = "Прозорість спливного вікна";
+"settings.general.appearance.width" = "Ширина спливного вікна";
+"settings.general.appearance.height" = "Висота спливного вікна";
+"settings.general.appearance.hide_menubar" = "Сховати іконку в панелі меню";
+"settings.general.appearance.hide_dock" = "Сховати іконку в Dock";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Дозволи";
+"settings.general.permissions.accessibility" = "Доступність";
+"settings.general.permissions.accessibility_detail" = "Захоплення виділеного тексту з інших застосунків";
+"settings.general.permissions.screen_recording" = "Запис екрана";
+"settings.general.permissions.screen_recording_detail" = "Знімок екрана OCR";
+"settings.general.permissions.open_settings" = "Відкрити параметри";
+"settings.general.permissions.grant" = "Надати";
+
+/* Settings - Providers */
+"settings.providers.select" = "Оберіть провайдера";
+"settings.providers.add" = "Додати провайдера";
+"settings.providers.name" = "Назва";
+"settings.providers.type" = "Тип";
+"settings.providers.provider" = "Провайдер";
+"settings.providers.connection" = "Зʼєднання";
+"settings.providers.base_url" = "Базова URL-адреса";
+"settings.providers.model_id" = "ID моделі";
+"settings.providers.max_tokens" = "Макс. токенів";
+"settings.providers.authentication" = "Автентифікація";
+"settings.providers.api_key" = "API-ключ";
+"settings.providers.set_default" = "Встановити типовим";
+"settings.providers.default_label" = "Типовий провайдер";
+"settings.providers.save" = "Зберегти";
+"settings.providers.cancel" = "Скасувати";
+"settings.providers.add_button" = "Додати";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Оберіть промпт для редагування";
+"settings.prompts.expand_hint" = "Двічі клацніть теку, щоб розгорнути її";
+"settings.prompts.new_prompt" = "Новий промпт";
+"settings.prompts.new_folder" = "Нова тека";
+"settings.prompts.new_prompt_here" = "Новий промпт тут";
+"settings.prompts.new_subfolder" = "Нова підтека";
+"settings.prompts.move_up" = "Вгору";
+"settings.prompts.move_down" = "Вниз";
+"settings.prompts.delete" = "Видалити";
+"settings.prompts.cancel" = "Скасувати";
+"settings.prompts.import" = "Імпортувати промпти";
+"settings.prompts.export" = "Експортувати промпти";
+"settings.prompts.restore" = "Відновити типові";
+"settings.prompts.delete_title" = "Видалити \"%@\"?";
+"settings.prompts.delete_folder_message" = "Ця тека містить %d елемент(ів). Усе всередині буде безповоротно видалено.";
+"settings.prompts.delete_prompt_message" = "Цей промпт буде безповоротно видалено.";
+"settings.prompts.restore_title" = "Відновити типові промпти?";
+"settings.prompts.restore_message" = "Це замінить усі ваші поточні промпти на типові, наведені нижче. Цю дію неможливо скасувати.";
+"settings.prompts.restore_button" = "Відновити типові";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Загальне";
+"settings.prompts.editor.name" = "Назва";
+"settings.prompts.editor.mnemonic" = "Мнемонічна клавіша";
+"settings.prompts.editor.modifiers" = "Модифікатори";
+"settings.prompts.editor.type" = "Тип";
+"settings.prompts.editor.folder" = "Тека";
+"settings.prompts.editor.prompt" = "Промпт";
+"settings.prompts.editor.system_prompt" = "Системний промпт";
+"settings.prompts.editor.generate_section" = "Згенерувати за допомогою ШІ";
+"settings.prompts.editor.generate_placeholder" = "Опишіть, що має робити цей промпт...";
+"settings.prompts.editor.generate_button" = "Згенерувати промпт";
+"settings.prompts.editor.generating" = "Генерація...";
+"settings.prompts.editor.ai_hint" = "Використовує ваш типовий ШІ-провайдер";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Типова структура промптів";
+"settings.samples.actions" = "Дії";
+"settings.samples.restore" = "Відновити типові...";
+"settings.samples.export" = "Експортувати промпти...";
+"settings.samples.import" = "Імпортувати промпти...";
+"settings.samples.restore_title" = "Відновити типові?";
+"settings.samples.restore_message" = "Це замінить усі ваші поточні промпти на типовий набір. Цю дію неможливо скасувати.";
+"settings.samples.restore_button" = "Відновити";
+"settings.samples.defaults_restored" = "Типові відновлено!";
+"settings.samples.exported" = "Промпти експортовано!";
+"settings.samples.imported" = "Промпти імпортовано!";
+"settings.samples.import_failed" = "Помилка імпорту: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "Обробка буфера обміну на базі ШІ";
+"about.version" = "Версія %@";
+"about.github" = "Репозиторій GitHub";
+"about.coffee" = "Купити мені каву";
+"about.updates" = "Перевірити оновлення";
+"about.libraries" = "Сторонні бібліотеки";
+"about.libraries.intro" = "ClipSlop використовує такі бібліотеки з відкритим кодом:";
+"about.libraries.license" = "Усі бібліотеки використовуються відповідно до їхніх ліцензій з відкритим кодом.";
+"about.done" = "Готово";
+
+/* Popup */
+"popup.prompts" = "Промпти";
+"popup.back" = "Назад";
+"popup.select_all" = "Виділити все";
+"popup.copy" = "Копіювати";
+"popup.edit" = "Редагувати";
+"popup.open" = "Відкрити";
+"popup.save" = "Зберегти";
+"popup.copied" = "Скопійовано!";
+"popup.editing" = "Редагування";
+"popup.done" = "Готово";
+"popup.cancel" = "Скасувати";
+"popup.dismiss" = "Закрити";
+"popup.try_again" = "Спробувати ще";
+"popup.mnemonic_hint" = "Натисніть літеру, щоб обрати промпт";
+"popup.hint.history" = "Історія";
+"popup.hint.scroll" = "Прокрутка";
+"popup.hint.page_down" = "Стор. ↓";
+"popup.hint.page_up" = "Стор. ↑";
+"popup.hint.back" = "Назад";
+"popup.hint.close" = "Закрити";
+"popup.processing" = "Обробка...";
+"popup.receiving" = "Отримання відповіді...";
+
+/* Popup - History */
+"popup.history.original" = "Оригінал";
+"popup.history.delete" = "Видалити";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Натисніть клавішу для вибору";
+"popup.navigator.back" = "Назад";
+"popup.navigator.close" = "Закрити";
+
+/* Menu Bar */
+"menu.trigger" = "Запустити";
+"menu.clipboard" = "З буфера обміну";
+"menu.blank" = "Порожній редактор";
+"menu.ocr" = "Знімок екрана (OCR)";
+"menu.provider" = "Провайдер: %@";
+"menu.model" = "Модель: %@";
+"menu.settings" = "Параметри...";
+"menu.onboarding" = "Показати ознайомлення...";
+"menu.coffee" = "Купити мені каву ☕";
+"menu.updates" = "Перевірити оновлення...";
+"menu.about" = "Про програму";
+"menu.quit" = "Вийти";
+
+/* Errors */
+"error.no_text" = "Немає виділеного тексту або тексту в буфері обміну";
+"error.clipboard_empty" = "Буфер обміну порожній";
+"error.provider_not_found" = "Провайдера не знайдено";
+"error.empty_response" = "Порожня відповідь";
+
+/* Window titles */
+"window.settings" = "Параметри ClipSlop";
+"window.about" = "Про ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Ручне редагування";

@@ -4,6 +4,7 @@ import Combine
 struct ProcessingView: View {
     let appState: AppState
     @State private var scrollTrigger = false
+    private let loc = Loc.shared
 
     var body: some View {
         VStack(spacing: 16) {
@@ -13,7 +14,7 @@ struct ProcessingView: View {
                 ProgressView()
                     .controlSize(.large)
 
-                Text("Processing...")
+                Text(loc.t("popup.processing"))
                     .font(.headline)
                     .foregroundStyle(.secondary)
 
@@ -47,11 +48,11 @@ struct ProcessingView: View {
             HStack {
                 ProgressView()
                     .controlSize(.small)
-                Text("Receiving response...")
+                Text(loc.t("popup.receiving"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                Button("Cancel") {
+                Button(loc.t("popup.cancel")) {
                     appState.cancelProcessing()
                 }
             }

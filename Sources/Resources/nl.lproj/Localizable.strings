@@ -1,0 +1,269 @@
+/* Onboarding - Language */
+"onboarding.language.title" = "Kies je taal";
+"onboarding.language.subtitle" = "Selecteer de taal voor de ClipSlop-interface.";
+
+/* Onboarding - Welcome */
+"onboarding.welcome.title" = "Welkom bij ClipSlop";
+"onboarding.welcome.subtitle" = "Verwerk tekst met AI — vertaal, herformatteer, analyseer.\nSelecteer tekst, druk op een sneltoets en kies een prompt.";
+"onboarding.welcome.feature.grab" = "Geselecteerde tekst ophalen uit elke app";
+"onboarding.welcome.feature.ocr" = "OCR — tekst scannen vanaf het scherm";
+"onboarding.welcome.feature.providers" = "Claude, GPT, Ollama — elke AI-provider";
+"onboarding.welcome.feature.folders" = "Prompts organiseren in geneste mappen";
+"onboarding.welcome.feature.history" = "Volledige verwerkingsgeschiedenis met ongedaan maken";
+
+/* Onboarding - Permissions */
+"onboarding.permissions.title" = "Machtigingen";
+"onboarding.permissions.subtitle" = "ClipSlop heeft een paar machtigingen nodig om te werken.";
+"onboarding.permissions.accessibility" = "Toegankelijkheid";
+"onboarding.permissions.accessibility.desc" = "Vereist om geselecteerde tekst uit andere apps vast te leggen";
+"onboarding.permissions.screen_recording" = "Schermopname";
+"onboarding.permissions.screen_recording.desc" = "Vereist voor OCR — tekst scannen van schermgebieden";
+"onboarding.permissions.hint" = "Je kunt dit later altijd wijzigen in Systeeminstellingen → Privacy en beveiliging";
+"onboarding.permissions.grant" = "Toestaan";
+
+/* Onboarding - Shortcuts */
+"onboarding.shortcuts.title" = "Sneltoetsen";
+"onboarding.shortcuts.subtitle" = "Dit zijn je globale sneltoetsen. Pas ze op elk moment aan in Instellingen.";
+"onboarding.shortcuts.trigger" = "ClipSlop activeren";
+"onboarding.shortcuts.clipboard" = "Vanuit klembord";
+"onboarding.shortcuts.blank" = "Lege editor";
+"onboarding.shortcuts.ocr" = "Schermopname (OCR)";
+
+/* Onboarding - Provider */
+"onboarding.provider.title" = "AI-provider";
+"onboarding.provider.subtitle" = "Kies je AI-provider en voer je API-sleutel in.";
+"onboarding.provider.api_key" = "API-sleutel";
+"onboarding.provider.model" = "Model";
+"onboarding.provider.base_url" = "Basis-URL";
+"onboarding.provider.test_connection" = "Verbinding testen";
+"onboarding.provider.testing" = "Testen...";
+"onboarding.provider.save" = "Provider opslaan";
+"onboarding.provider.connected" = "Verbonden!";
+"onboarding.provider.default_label" = "Standaardprovider voor verwerking:";
+"onboarding.provider.hint.anthropic" = "Haal je sleutel op via console.anthropic.com";
+"onboarding.provider.hint.openai" = "Haal je sleutel op via platform.openai.com";
+"onboarding.provider.hint.ollama" = "Zorg dat Ollama lokaal draait (ollama serve)";
+
+/* Onboarding - iCloud */
+"onboarding.icloud.title" = "iCloud-synchronisatie";
+"onboarding.icloud.subtitle" = "Houd je prompts gesynchroniseerd op al je Macs.\nWijzigingen op het ene apparaat verschijnen automatisch overal.";
+"onboarding.icloud.toggle" = "Prompts synchroniseren via iCloud";
+"onboarding.icloud.change_later" = "Je kunt dit later wijzigen in Instellingen.";
+"onboarding.icloud.unavailable" = "iCloud is niet beschikbaar. Log in bij iCloud in Systeeminstellingen.";
+"onboarding.icloud.synced" = "Gesynchroniseerd";
+"onboarding.icloud.syncing" = "Synchroniseren...";
+"onboarding.icloud.conflict.title" = "Bestaande prompts gevonden in iCloud";
+"onboarding.icloud.conflict.message" = "Een andere Mac heeft al prompts naar iCloud gesynchroniseerd. Wil je die gebruiken of je huidige prompts uploaden?";
+"onboarding.icloud.conflict.use_cloud" = "Gebruik iCloud";
+"onboarding.icloud.conflict.upload_local" = "Lokale uploaden";
+
+/* Onboarding - Demo */
+"onboarding.demo.title" = "Probeer het uit!";
+"onboarding.demo.subtitle" = "Selecteer de tekst hieronder en activeer ClipSlop om deze te verwerken.";
+"onboarding.demo.sample_text" = "Pa's wijze lynx bezag vroom het fikse aquaduct. Deze zin bevat elke letter van het Nederlandse alfabet en wordt vaak gebruikt om tekst te testen. Probeer deze te selecteren en ClipSlop te activeren!";
+"onboarding.demo.select_all" = "Alles selecteren";
+"onboarding.demo.selected_hint" = "Tekst geselecteerd — gebruik nu je sneltoets!";
+"onboarding.demo.trigger_heading" = "Activeer nu ClipSlop:";
+"onboarding.demo.selected_text" = "Geselecteerde tekst";
+"onboarding.demo.from_clipboard" = "Vanuit klembord";
+"onboarding.demo.or" = "of";
+"onboarding.demo.trigger" = "Activeren";
+"onboarding.demo.manual" = "Handmatig";
+
+/* Onboarding - Navigation */
+"onboarding.back" = "Terug";
+"onboarding.continue" = "Doorgaan";
+"onboarding.get_started" = "Aan de slag";
+
+/* Settings - Tabs */
+"settings.tab.general" = "Algemeen";
+"settings.tab.providers" = "Providers";
+"settings.tab.prompts" = "Prompts";
+"settings.tab.about" = "Over";
+
+/* Settings - General - Language */
+"settings.general.language" = "Taal";
+
+/* Settings - General - iCloud */
+"settings.general.icloud" = "iCloud";
+"settings.general.icloud.toggle" = "Prompts synchroniseren via iCloud";
+"settings.general.icloud.sign_in" = "Log in bij iCloud in Systeeminstellingen om synchronisatie in te schakelen.";
+"settings.general.icloud.unavailable" = "iCloud is niet beschikbaar";
+"settings.general.icloud.synced" = "Gesynchroniseerd";
+"settings.general.icloud.syncing" = "Synchroniseren...";
+"settings.general.icloud.sync_error" = "Synchronisatiefout";
+"settings.general.icloud.conflict.title" = "Bestaande prompts gevonden in iCloud";
+"settings.general.icloud.conflict.message" = "Wil je de prompts uit iCloud gebruiken of je huidige prompts uploaden?";
+"settings.general.icloud.conflict.use_cloud" = "Gebruik iCloud";
+"settings.general.icloud.conflict.upload_local" = "Lokale uploaden";
+
+/* Settings - General - Shortcuts */
+"settings.general.shortcuts" = "Sneltoetsen";
+"settings.general.shortcuts.trigger" = "ClipSlop activeren:";
+"settings.general.shortcuts.clipboard" = "Vanuit klembord:";
+"settings.general.shortcuts.blank" = "Lege editor:";
+"settings.general.shortcuts.ocr" = "Schermopname (OCR):";
+
+/* Settings - General - Behavior */
+"settings.general.behavior" = "Gedrag";
+"settings.general.behavior.streaming" = "Streaming-antwoorden inschakelen";
+"settings.general.behavior.launch_login" = "Starten bij inloggen";
+"settings.general.behavior.keycodes" = "Toetscodes gebruiken (lay-outonafhankelijke sneltoetsen)";
+"settings.general.behavior.keycodes_help" = "Herken op fysieke toetspositie — geheugensteuntjes werken met elke toetsenbordindeling";
+
+/* Settings - General - Appearance */
+"settings.general.appearance" = "Weergave";
+"settings.general.appearance.opacity" = "Transparantie popup";
+"settings.general.appearance.width" = "Breedte popup";
+"settings.general.appearance.height" = "Hoogte popup";
+"settings.general.appearance.hide_menubar" = "Menubalksymbool verbergen";
+"settings.general.appearance.hide_dock" = "Dock-symbool verbergen";
+
+/* Settings - General - Permissions */
+"settings.general.permissions" = "Machtigingen";
+"settings.general.permissions.accessibility" = "Toegankelijkheid";
+"settings.general.permissions.accessibility_detail" = "Geselecteerde tekst uit andere apps vastleggen";
+"settings.general.permissions.screen_recording" = "Schermopname";
+"settings.general.permissions.screen_recording_detail" = "OCR-schermopname";
+"settings.general.permissions.open_settings" = "Open Instellingen";
+"settings.general.permissions.grant" = "Toestaan";
+
+/* Settings - Providers */
+"settings.providers.select" = "Selecteer een provider";
+"settings.providers.add" = "Provider toevoegen";
+"settings.providers.name" = "Naam";
+"settings.providers.type" = "Type";
+"settings.providers.provider" = "Provider";
+"settings.providers.connection" = "Verbinding";
+"settings.providers.base_url" = "Basis-URL";
+"settings.providers.model_id" = "Model-ID";
+"settings.providers.max_tokens" = "Max tokens";
+"settings.providers.authentication" = "Authenticatie";
+"settings.providers.api_key" = "API-sleutel";
+"settings.providers.set_default" = "Als standaard instellen";
+"settings.providers.default_label" = "Standaardprovider";
+"settings.providers.save" = "Opslaan";
+"settings.providers.cancel" = "Annuleren";
+"settings.providers.add_button" = "Toevoegen";
+
+/* Settings - Prompts */
+"settings.prompts.select" = "Selecteer een prompt om te bewerken";
+"settings.prompts.expand_hint" = "Dubbelklik op een map om deze te openen";
+"settings.prompts.new_prompt" = "Nieuwe prompt";
+"settings.prompts.new_folder" = "Nieuwe map";
+"settings.prompts.new_prompt_here" = "Nieuwe prompt hier";
+"settings.prompts.new_subfolder" = "Nieuwe submap";
+"settings.prompts.move_up" = "Omhoog";
+"settings.prompts.move_down" = "Omlaag";
+"settings.prompts.delete" = "Verwijderen";
+"settings.prompts.cancel" = "Annuleren";
+"settings.prompts.import" = "Prompts importeren";
+"settings.prompts.export" = "Prompts exporteren";
+"settings.prompts.restore" = "Standaardwaarden herstellen";
+"settings.prompts.delete_title" = "\"%@\" verwijderen?";
+"settings.prompts.delete_folder_message" = "Deze map bevat %d item(s). Alles erin wordt permanent verwijderd.";
+"settings.prompts.delete_prompt_message" = "Deze prompt wordt permanent verwijderd.";
+"settings.prompts.restore_title" = "Standaardprompts herstellen?";
+"settings.prompts.restore_message" = "Dit vervangt al je huidige prompts door de onderstaande standaardwaarden. Dit kan niet ongedaan worden gemaakt.";
+"settings.prompts.restore_button" = "Standaardwaarden herstellen";
+
+/* Settings - Prompt Editor */
+"settings.prompts.editor.general" = "Algemeen";
+"settings.prompts.editor.name" = "Naam";
+"settings.prompts.editor.mnemonic" = "Geheugensteuntoets";
+"settings.prompts.editor.modifiers" = "Toetsmodificaties";
+"settings.prompts.editor.type" = "Type";
+"settings.prompts.editor.folder" = "Map";
+"settings.prompts.editor.prompt" = "Prompt";
+"settings.prompts.editor.system_prompt" = "Systeemprompt";
+"settings.prompts.editor.generate_section" = "Genereren met AI";
+"settings.prompts.editor.generate_placeholder" = "Beschrijf wat deze prompt moet doen...";
+"settings.prompts.editor.generate_button" = "Prompt genereren";
+"settings.prompts.editor.generating" = "Genereren...";
+"settings.prompts.editor.ai_hint" = "Gebruikt je standaard AI-provider";
+
+/* Settings - Samples */
+"settings.samples.default_structure" = "Standaard promptstructuur";
+"settings.samples.actions" = "Acties";
+"settings.samples.restore" = "Standaardwaarden herstellen...";
+"settings.samples.export" = "Prompts exporteren...";
+"settings.samples.import" = "Prompts importeren...";
+"settings.samples.restore_title" = "Standaardwaarden herstellen?";
+"settings.samples.restore_message" = "Dit vervangt al je huidige prompts door de standaardset. Dit kan niet ongedaan worden gemaakt.";
+"settings.samples.restore_button" = "Herstellen";
+"settings.samples.defaults_restored" = "Standaardwaarden hersteld!";
+"settings.samples.exported" = "Prompts geëxporteerd!";
+"settings.samples.imported" = "Prompts geïmporteerd!";
+"settings.samples.import_failed" = "Importeren mislukt: %@";
+
+/* About */
+"about.title" = "ClipSlop";
+"about.subtitle" = "AI-gestuurde klembordverwerker";
+"about.version" = "Versie %@";
+"about.github" = "GitHub-repository";
+"about.coffee" = "Koop een koffie voor me";
+"about.updates" = "Controleren op updates";
+"about.libraries" = "Bibliotheken van derden";
+"about.libraries.intro" = "ClipSlop maakt gebruik van de volgende opensourcebibliotheken:";
+"about.libraries.license" = "Alle bibliotheken worden gebruikt onder hun respectieve opensourcelicenties.";
+"about.done" = "Gereed";
+
+/* Popup */
+"popup.prompts" = "Prompts";
+"popup.back" = "Terug";
+"popup.select_all" = "Alles selecteren";
+"popup.copy" = "Kopiëren";
+"popup.edit" = "Bewerken";
+"popup.open" = "Openen";
+"popup.save" = "Opslaan";
+"popup.copied" = "Gekopieerd!";
+"popup.editing" = "Bewerken";
+"popup.done" = "Gereed";
+"popup.cancel" = "Annuleren";
+"popup.dismiss" = "Sluiten";
+"popup.try_again" = "Opnieuw proberen";
+"popup.mnemonic_hint" = "Druk op een letter om een prompt te kiezen";
+"popup.hint.history" = "Geschiedenis";
+"popup.hint.scroll" = "Scrollen";
+"popup.hint.page_down" = "Pagina omlaag";
+"popup.hint.page_up" = "Pagina omhoog";
+"popup.hint.back" = "Terug";
+"popup.hint.close" = "Sluiten";
+"popup.processing" = "Verwerken...";
+"popup.receiving" = "Antwoord ontvangen...";
+
+/* Popup - History */
+"popup.history.original" = "Origineel";
+"popup.history.delete" = "Verwijderen";
+
+/* Popup - Navigator */
+"popup.navigator.press_key" = "Druk op een toets om te selecteren";
+"popup.navigator.back" = "Terug";
+"popup.navigator.close" = "Sluiten";
+
+/* Menu Bar */
+"menu.trigger" = "Activeren";
+"menu.clipboard" = "Vanuit klembord";
+"menu.blank" = "Lege editor";
+"menu.ocr" = "Schermopname (OCR)";
+"menu.provider" = "Provider: %@";
+"menu.model" = "Model: %@";
+"menu.settings" = "Instellingen...";
+"menu.onboarding" = "Introductie tonen...";
+"menu.coffee" = "Koop een koffie voor me";
+"menu.updates" = "Controleren op updates...";
+"menu.about" = "Over";
+"menu.quit" = "Stop";
+
+/* Errors */
+"error.no_text" = "Geen tekst geselecteerd of op het klembord";
+"error.clipboard_empty" = "Klembord is leeg";
+"error.provider_not_found" = "Provider niet gevonden";
+"error.empty_response" = "Leeg antwoord";
+
+/* Window titles */
+"window.settings" = "ClipSlop-instellingen";
+"window.about" = "Over ClipSlop";
+
+/* Misc */
+"misc.manual_edit" = "Handmatig bewerken";
