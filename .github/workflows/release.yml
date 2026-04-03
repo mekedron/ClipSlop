@@ -1,0 +1,83 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  build:
+    runs-on: macos-15
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Build
+        run: swift build -c release
+
+      - name: Create .app bundle
+        run: |
+          APP_NAME="ClipSlop"
+          APP_DIR="release/${APP_NAME}.app/Contents"
+
+          mkdir -p "${APP_DIR}/MacOS"
+          mkdir -p "${APP_DIR}/Resources"
+
+          # Copy binary
+          cp .build/release/${APP_NAME} "${APP_DIR}/MacOS/${APP_NAME}"
+
+          # Copy Info.plist
+          cp SupportingFiles/Info.plist "${APP_DIR}/Info.plist"
+
+          # Update version from tag
+          TAG="${GITHUB_REF_NAME#v}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${TAG}" "${APP_DIR}/Info.plist"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${GITHUB_RUN_NUMBER}" "${APP_DIR}/Info.plist"
+
+          # Copy resources bundle if it exists
+          RESOURCES=$(find .build/release -name "ClipSlop_ClipSlop.bundle" -type d 2>/dev/null | head -1)
+          if [ -n "$RESOURCES" ]; then
+            cp -R "$RESOURCES" "${APP_DIR}/Resources/"
+          fi
+
+          # Ad-hoc sign (no Apple Developer account needed)
+          codesign --force --deep --sign - "release/${APP_NAME}.app"
+
+          echo "✅ App bundle created at release/${APP_NAME}.app"
+
+      - name: Create DMG
+        run: |
+          APP_NAME="ClipSlop"
+          TAG="${GITHUB_REF_NAME#v}"
+          DMG_NAME="${APP_NAME}-${TAG}-macOS.dmg"
+
+          # Create DMG with Applications symlink
+          mkdir -p dmg_contents
+          cp -R "release/${APP_NAME}.app" dmg_contents/
+          ln -s /Applications dmg_contents/Applications
+
+          hdiutil create -volname "${APP_NAME}" \
+            -srcfolder dmg_contents \
+            -ov -format UDZO \
+            "release/${DMG_NAME}"
+
+          echo "DMG_NAME=${DMG_NAME}" >> $GITHUB_ENV
+          echo "✅ DMG created at release/${DMG_NAME}"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/${{ env.DMG_NAME }}
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

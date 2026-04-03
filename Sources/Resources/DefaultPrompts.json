@@ -118,6 +118,13 @@
         "mnemonicKey": "E",
         "nodeType": "prompt",
         "systemPrompt": "You are a helpful explainer. Take the following text and explain it in simple, easy-to-understand language. Break down complex concepts, avoid jargon, and use everyday words. Preserve the original language. Return only the explanation. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "00000000-0003-0003-0000-000000000001",
+        "name": "TL;DR",
+        "mnemonicKey": "T",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a concise editor. Condense the following text down to only the most essential information — the absolute key takeaways. Remove all filler, examples, and elaboration. Aim for 2-4 sentences maximum. Preserve the original language. Return only the condensed text. Do not ask any questions or add any commentary."
       }
     ]
   }
