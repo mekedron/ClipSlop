@@ -2,6 +2,8 @@ import Sparkle
 
 @MainActor
 final class SparkleUpdater {
+    private(set) static var shared: SparkleUpdater?
+
     private var controller: SPUStandardUpdaterController?
 
     func start() {
@@ -12,6 +14,7 @@ final class SparkleUpdater {
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
+        SparkleUpdater.shared = self
     }
 
     func checkForUpdates() {

@@ -33,6 +33,22 @@ struct AboutView: View {
                           tint: .orange)
 
                 Button {
+                    SparkleUpdater.shared?.checkForUpdates()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .frame(width: 20)
+                        Text("Check for Updates")
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
+                Button {
                     showLibraries = true
                 } label: {
                     HStack(spacing: 8) {
