@@ -47,37 +47,7 @@ struct PopupContentView: View {
             .frame(minHeight: 80)
 
             // Resize handle — between text area and breadcrumbs
-            Rectangle()
-                .fill(Color.clear)
-                .frame(height: 8)
-                .frame(maxWidth: .infinity)
-                .contentShape(Rectangle())
-                .onHover { inside in
-                    if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-                }
-                .highPriorityGesture(
-                    DragGesture(minimumDistance: 1)
-                        .onChanged { value in
-                            if dragStartHeight == 0 {
-                                dragStartHeight = promptGridHeight
-                            }
-                            promptGridHeight = max(80, min(400, dragStartHeight - value.translation.height))
-                        }
-                        .onEnded { _ in
-                            UserDefaults.standard.set(promptGridHeight, forKey: "promptGridHeight")
-                            dragStartHeight = 0
-                        }
-                )
-                .overlay {
-                    VStack(spacing: 1) {
-                        RoundedRectangle(cornerRadius: 0.5)
-                            .fill(Color.secondary.opacity(0.25))
-                            .frame(height: 1)
-                        RoundedRectangle(cornerRadius: 1)
-                            .fill(Color.secondary.opacity(0.35))
-                            .frame(width: 36, height: 3)
-                    }
-                }
+            ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
 
             // Breadcrumb (always visible)
             HStack(spacing: 4) {
@@ -552,5 +522,110 @@ struct KeyEventHandler: NSViewRepresentable {
             }
             return scrollViews.max(by: { $0.frame.width < $1.frame.width })
         }
+    }
+}
+
+// MARK: - Resize Handle (AppKit-based to block window dragging)
+
+struct ResizeHandle: NSViewRepresentable {
+    @Binding var height: Double
+    @Binding var dragStartHeight: Double
+
+    func makeNSView(context: Context) -> ResizeHandleNSView {
+        let view = ResizeHandleNSView()
+        view.onDrag = { delta in
+            if dragStartHeight == 0 { dragStartHeight = height }
+            height = max(80, min(400, dragStartHeight - delta))
+        }
+        view.onDragEnd = {
+            UserDefaults.standard.set(height, forKey: "promptGridHeight")
+            dragStartHeight = 0
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: ResizeHandleNSView, context: Context) {
+        nsView.onDrag = { delta in
+            if dragStartHeight == 0 { dragStartHeight = height }
+            height = max(80, min(400, dragStartHeight - delta))
+        }
+        nsView.onDragEnd = {
+            UserDefaults.standard.set(height, forKey: "promptGridHeight")
+            dragStartHeight = 0
+        }
+    }
+}
+
+final class ResizeHandleNSView: NSView {
+    override var mouseDownCanMoveWindow: Bool { false }
+
+    var onDrag: ((Double) -> Void)?
+    var onDragEnd: (() -> Void)?
+
+    private var dragOriginY: CGFloat = 0
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: 8)
+    }
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        setupTrackingArea()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupTrackingArea()
+    }
+
+    private func setupTrackingArea() {
+        let area = NSTrackingArea(
+            rect: .zero,
+            options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect],
+            owner: self
+        )
+        addTrackingArea(area)
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        // Separator line
+        let linePath = NSBezierPath(rect: NSRect(x: 0, y: bounds.midY + 2, width: bounds.width, height: 0.5))
+        NSColor.separatorColor.setFill()
+        linePath.fill()
+
+        // Grab handle
+        let handleWidth: CGFloat = 36
+        let handleRect = NSRect(
+            x: (bounds.width - handleWidth) / 2,
+            y: bounds.midY - 1.5,
+            width: handleWidth,
+            height: 3
+        )
+        let handle = NSBezierPath(roundedRect: handleRect, xRadius: 1.5, yRadius: 1.5)
+        NSColor.tertiaryLabelColor.setFill()
+        handle.fill()
+    }
+
+    override func mouseEntered(with event: NSEvent) {
+        NSCursor.resizeUpDown.push()
+    }
+
+    override func mouseExited(with event: NSEvent) {
+        NSCursor.pop()
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        dragOriginY = event.locationInWindow.y
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        let delta = Double(event.locationInWindow.y - dragOriginY)
+        onDrag?(delta)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        onDragEnd?()
     }
 }
