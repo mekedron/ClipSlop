@@ -54,10 +54,12 @@ struct PopupContentView: View {
                 }
                 .frame(maxHeight: .infinity)
 
-                // Resize handle + divider — between text area and breadcrumbs
-                ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
-                    .frame(height: 8)
-                Divider()
+                // Resize handle centered on divider
+                ZStack {
+                    Divider()
+                    ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
+                        .frame(height: 4)
+                }
 
                 // Breadcrumb (always visible)
                 HStack(spacing: 4) {
@@ -577,7 +579,7 @@ final class ResizeHandleNSView: NSView {
     private var dragOriginY: CGFloat = 0
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: 8)
+        NSSize(width: NSView.noIntrinsicMetric, height: 4)
     }
 
     override init(frame: NSRect) {
