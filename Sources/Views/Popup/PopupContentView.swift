@@ -113,7 +113,7 @@ struct PopupContentView: View {
             .padding(.vertical, 6)
 
             // Prompt navigator
-            ScrollView(.vertical, showsIndicators: false) {
+            ScrollView(.vertical, showsIndicators: true) {
                 LazyVGrid(
                     columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
                     spacing: 6
