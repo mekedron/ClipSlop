@@ -23,7 +23,7 @@ final class PopupWindow: NSPanel {
         isMovableByWindowBackground = true
         level = .floating
         isOpaque = false
-        backgroundColor = .clear
+        backgroundColor = .windowBackgroundColor
         hasShadow = true
         minSize = NSSize(width: 500, height: 350)
 
