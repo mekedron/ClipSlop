@@ -19,7 +19,7 @@ final class PopupWindow: NSPanel {
         )
 
         title = "ClipSlop"
-        titlebarAppearsTransparent = true
+        titlebarAppearsTransparent = false
         isMovableByWindowBackground = true
         level = .floating
         isOpaque = false

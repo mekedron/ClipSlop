@@ -35,24 +35,27 @@ struct PopupContentView: View {
     // MARK: - Main Content Area
 
     private var mainContentArea: some View {
-        VStack(spacing: 0) {
-            // Text display — takes all remaining vertical space
-            ScrollView(.vertical, showsIndicators: false) {
-                Text(appState.currentDisplayText)
-                    .font(.system(.body, design: .monospaced))
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-            }
-            .frame(minHeight: 80, maxHeight: .infinity)
-            .layoutPriority(1)
+        GeometryReader { geo in
+            let maxPromptHeight = max(80, geo.size.height - 200)
+            let clampedHeight = min(promptGridHeight, maxPromptHeight)
 
-            // Resize handle — between text area and breadcrumbs
-            ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
-                .frame(height: 8)
+            VStack(spacing: 0) {
+                // Text display — takes all remaining vertical space
+                ScrollView(.vertical, showsIndicators: false) {
+                    Text(appState.currentDisplayText)
+                        .font(.system(.body, design: .monospaced))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                }
+                .frame(maxHeight: .infinity)
 
-            // Breadcrumb (always visible)
-            HStack(spacing: 4) {
+                // Resize handle — between text area and breadcrumbs
+                ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
+                    .frame(height: 8)
+
+                // Breadcrumb (always visible)
+                HStack(spacing: 4) {
                 Image(systemName: "folder")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
@@ -123,13 +126,14 @@ struct PopupContentView: View {
                 }
                 .padding(12)
             }
-            .frame(height: promptGridHeight)
+            .frame(height: clampedHeight)
 
             Divider()
 
             actionsBar
 
             shortcutsHint
+            }
         }
     }
 
