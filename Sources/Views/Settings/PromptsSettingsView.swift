@@ -360,7 +360,12 @@ struct PromptEditorView: View {
                     .onChange(of: node.name) { autoSave() }
 
                 TextField(loc.t("settings.prompts.editor.mnemonic"), text: $node.mnemonicKey)
-                    .onChange(of: node.mnemonicKey) { autoSave() }
+                    .onChange(of: node.mnemonicKey) {
+                        if node.mnemonicKey.count > 1 {
+                            node.mnemonicKey = String(node.mnemonicKey.suffix(1))
+                        }
+                        autoSave()
+                    }
 
                 HStack(spacing: 12) {
                     Text(loc.t("settings.prompts.editor.modifiers"))
