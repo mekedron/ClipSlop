@@ -601,24 +601,21 @@ final class ResizeHandleNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        let dividerColor = NSColor.separatorColor
-
-        // Separator line — same as SwiftUI Divider()
-        let lineY = bounds.maxY - 0.5
-        let linePath = NSBezierPath(rect: NSRect(x: 0, y: lineY, width: bounds.width, height: 0.5))
-        dividerColor.setFill()
+        // Separator line at the bottom — matches SwiftUI Divider()
+        let linePath = NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 0.5))
+        NSColor.separatorColor.setFill()
         linePath.fill()
 
-        // Grab handle — same color as dividers
+        // Grab handle — above the separator line
         let handleWidth: CGFloat = 36
         let handleRect = NSRect(
             x: (bounds.width - handleWidth) / 2,
-            y: bounds.midY - 1.5,
+            y: 3,
             width: handleWidth,
             height: 3
         )
         let handle = NSBezierPath(roundedRect: handleRect, xRadius: 1.5, yRadius: 1.5)
-        dividerColor.setFill()
+        NSColor.separatorColor.setFill()
         handle.fill()
     }
 
