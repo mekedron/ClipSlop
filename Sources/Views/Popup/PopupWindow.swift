@@ -13,7 +13,7 @@ final class PopupWindow: NSPanel {
 
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: w, height: h),
-            styleMask: [.nonactivatingPanel, .titled, .closable, .resizable],
+            styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -23,7 +23,7 @@ final class PopupWindow: NSPanel {
         isMovableByWindowBackground = true
         level = .floating
         isOpaque = false
-        backgroundColor = .windowBackgroundColor
+        backgroundColor = .clear
         hasShadow = true
         minSize = NSSize(width: 500, height: 350)
 
