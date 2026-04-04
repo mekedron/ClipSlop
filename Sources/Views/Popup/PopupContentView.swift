@@ -48,6 +48,7 @@ struct PopupContentView: View {
 
             // Resize handle — between text area and breadcrumbs
             ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
+                .frame(height: 8)
 
             // Breadcrumb (always visible)
             HStack(spacing: 4) {
@@ -535,7 +536,8 @@ struct ResizeHandle: NSViewRepresentable {
         let view = ResizeHandleNSView()
         view.onDrag = { delta in
             if dragStartHeight == 0 { dragStartHeight = height }
-            height = max(80, min(400, dragStartHeight - delta))
+            // NSView y-axis is bottom-up: positive delta = mouse moved up = grow prompts
+            height = max(80, min(400, dragStartHeight + delta))
         }
         view.onDragEnd = {
             UserDefaults.standard.set(height, forKey: "promptGridHeight")
@@ -547,7 +549,7 @@ struct ResizeHandle: NSViewRepresentable {
     func updateNSView(_ nsView: ResizeHandleNSView, context: Context) {
         nsView.onDrag = { delta in
             if dragStartHeight == 0 { dragStartHeight = height }
-            height = max(80, min(400, dragStartHeight - delta))
+            height = max(80, min(400, dragStartHeight + delta))
         }
         nsView.onDragEnd = {
             UserDefaults.standard.set(height, forKey: "promptGridHeight")
@@ -591,8 +593,8 @@ final class ResizeHandleNSView: NSView {
         super.draw(dirtyRect)
 
         // Separator line
-        let linePath = NSBezierPath(rect: NSRect(x: 0, y: bounds.midY + 2, width: bounds.width, height: 0.5))
-        NSColor.separatorColor.setFill()
+        let linePath = NSBezierPath(rect: NSRect(x: 0, y: bounds.midY + 2, width: bounds.width, height: 1))
+        NSColor.quaternaryLabelColor.setFill()
         linePath.fill()
 
         // Grab handle
