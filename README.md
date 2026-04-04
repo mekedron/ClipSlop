@@ -107,6 +107,17 @@ To open ClipSlop:
 
 You only need to do this once. After that, the app opens normally.
 
+#### After updating to a new version
+
+Because the app is unsigned, macOS may change its internal bundle identifier between versions. When this happens, previously granted permissions (Accessibility, Screen Recording) stop working. To fix this:
+
+1. Open **System Settings → Privacy & Security → Accessibility**
+2. Find ClipSlop in the list and **remove it** (select → click "−")
+3. Click "+" and **re-add** `ClipSlop.app` from your Applications folder
+4. Do the same for **Screen Recording** if you use the OCR feature
+
+This is an unfortunate side effect of not having a signed app. Your prompts, providers, and settings are not affected.
+
 ### Build from source
 
 ```bash
