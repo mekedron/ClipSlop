@@ -13,13 +13,13 @@ final class PopupWindow: NSPanel {
 
         super.init(
             contentRect: NSRect(x: 0, y: 0, width: w, height: h),
-            styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .resizable],
+            styleMask: [.nonactivatingPanel, .titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
 
         title = "ClipSlop"
-        titlebarAppearsTransparent = false
+        titlebarAppearsTransparent = true
         isMovableByWindowBackground = true
         level = .floating
         isOpaque = false
