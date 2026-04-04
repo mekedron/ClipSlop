@@ -46,7 +46,38 @@ struct PopupContentView: View {
             }
             .frame(minHeight: 80)
 
-            Divider()
+            // Resize handle — between text area and breadcrumbs
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 8)
+                .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onHover { inside in
+                    if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+                }
+                .highPriorityGesture(
+                    DragGesture(minimumDistance: 1)
+                        .onChanged { value in
+                            if dragStartHeight == 0 {
+                                dragStartHeight = promptGridHeight
+                            }
+                            promptGridHeight = max(80, min(400, dragStartHeight - value.translation.height))
+                        }
+                        .onEnded { _ in
+                            UserDefaults.standard.set(promptGridHeight, forKey: "promptGridHeight")
+                            dragStartHeight = 0
+                        }
+                )
+                .overlay {
+                    VStack(spacing: 1) {
+                        RoundedRectangle(cornerRadius: 0.5)
+                            .fill(Color.secondary.opacity(0.25))
+                            .frame(height: 1)
+                        RoundedRectangle(cornerRadius: 1)
+                            .fill(Color.secondary.opacity(0.35))
+                            .frame(width: 36, height: 3)
+                    }
+                }
 
             // Breadcrumb (always visible)
             HStack(spacing: 4) {
@@ -105,40 +136,6 @@ struct PopupContentView: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-
-            // Resize handle (upper edge of prompt grid)
-            Rectangle()
-                .fill(Color.clear)
-                .frame(height: 6)
-                .contentShape(Rectangle())
-                .onHover { inside in
-                    if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
-                }
-                .gesture(
-                    DragGesture(minimumDistance: 1)
-                        .onChanged { value in
-                            if dragStartHeight == 0 {
-                                dragStartHeight = promptGridHeight
-                                // Disable window dragging while resizing
-                                if let w = NSApp.windows.first(where: { $0 is PopupWindow }) {
-                                    w.isMovableByWindowBackground = false
-                                }
-                            }
-                            promptGridHeight = max(80, min(400, dragStartHeight - value.translation.height))
-                        }
-                        .onEnded { _ in
-                            UserDefaults.standard.set(promptGridHeight, forKey: "promptGridHeight")
-                            dragStartHeight = 0
-                            if let w = NSApp.windows.first(where: { $0 is PopupWindow }) {
-                                w.isMovableByWindowBackground = true
-                            }
-                        }
-                )
-                .overlay {
-                    RoundedRectangle(cornerRadius: 1)
-                        .fill(Color.secondary.opacity(0.3))
-                        .frame(width: 36, height: 3)
-                }
 
             // Prompt navigator
             ScrollView(.vertical, showsIndicators: false) {
