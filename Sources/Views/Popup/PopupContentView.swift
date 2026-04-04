@@ -36,7 +36,7 @@ struct PopupContentView: View {
 
     private var mainContentArea: some View {
         VStack(spacing: 0) {
-            // Text display
+            // Text display — takes all remaining vertical space
             ScrollView(.vertical, showsIndicators: false) {
                 Text(appState.currentDisplayText)
                     .font(.system(.body, design: .monospaced))
@@ -44,7 +44,8 @@ struct PopupContentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(16)
             }
-            .frame(minHeight: 80)
+            .frame(minHeight: 80, maxHeight: .infinity)
+            .layoutPriority(1)
 
             // Resize handle — between text area and breadcrumbs
             ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
@@ -592,16 +593,17 @@ final class ResizeHandleNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        // Separator line
-        let linePath = NSBezierPath(rect: NSRect(x: 0, y: bounds.midY + 2, width: bounds.width, height: 1))
-        NSColor.quaternaryLabelColor.setFill()
+        // Separator line — match SwiftUI Divider() appearance
+        let lineY = bounds.maxY - 1
+        let linePath = NSBezierPath(rect: NSRect(x: 0, y: lineY, width: bounds.width, height: 1))
+        (NSColor.gray.withAlphaComponent(0.4)).setFill()
         linePath.fill()
 
         // Grab handle
         let handleWidth: CGFloat = 36
         let handleRect = NSRect(
             x: (bounds.width - handleWidth) / 2,
-            y: bounds.midY - 1.5,
+            y: bounds.midY - 2,
             width: handleWidth,
             height: 3
         )
