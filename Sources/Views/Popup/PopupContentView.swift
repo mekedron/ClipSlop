@@ -27,7 +27,10 @@ struct PopupContentView: View {
                 }
             }
         }
-        .padding(.top, 12) // keep content below titlebar
+        .padding(.top, 1) // minimal gap below titlebar
+        .overlay(alignment: .top) {
+            Divider()
+        }
         .frame(minWidth: 560, minHeight: 400)
         .background(.ultraThinMaterial.opacity(appState.settings.popupOpacity))
         .background(KeyEventHandler(appState: appState))
