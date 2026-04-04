@@ -107,7 +107,6 @@ struct PopupContentView: View {
             .padding(.vertical, 6)
 
             // Resize handle (upper edge of prompt grid)
-            Divider()
             Rectangle()
                 .fill(Color.clear)
                 .frame(height: 6)
@@ -156,6 +155,8 @@ struct PopupContentView: View {
                 .padding(12)
             }
             .frame(height: promptGridHeight)
+
+            Divider()
 
             actionsBar
 
