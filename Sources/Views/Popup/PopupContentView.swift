@@ -58,7 +58,7 @@ struct PopupContentView: View {
                 ZStack {
                     Divider()
                     ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
-                        .frame(height: 4)
+                        .frame(height: 8)
                 }
 
                 // Breadcrumb (always visible)
@@ -579,7 +579,7 @@ final class ResizeHandleNSView: NSView {
     private var dragOriginY: CGFloat = 0
 
     override var intrinsicContentSize: NSSize {
-        NSSize(width: NSView.noIntrinsicMetric, height: 4)
+        NSSize(width: NSView.noIntrinsicMetric, height: 8)
     }
 
     override init(frame: NSRect) {
