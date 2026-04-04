@@ -6,15 +6,15 @@
     <description>ClipSlop updates</description>
     <language>en</language>
     <item>
-      <title>Version 1.0.0</title>
-      <sparkle:version>10</sparkle:version>
-      <sparkle:shortVersionString>1.0.0</sparkle:shortVersionString>
+      <title>Version 1.0.1</title>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <pubDate>Fri, 03 Apr 2026 23:31:29 +0000</pubDate>
+      <pubDate>Sat, 04 Apr 2026 00:41:44 +0000</pubDate>
       <enclosure
-        url="https://github.com/mekedron/clipslop/releases/download/v1.0.0/ClipSlop-1.0.0-macOS.dmg"
-        sparkle:edSignature="zDk9kYhbVDhXfweV852jI8IMZUHFQLtBDZ+wzGqRK+4kLRkSPof6VAk0kzYZnMeWrfQyuyyih+p+aMYWacZvAg=="
-        length="3944013"
+        url="https://github.com/mekedron/clipslop/releases/download/v1.0.1/ClipSlop-1.0.1-macOS.dmg"
+        sparkle:edSignature="TY0nykpB8K8AeHF1/+se/ous854A+1uQkQln1YqQsEp36ak/4caK8Ttbw/YtehwDxH0QKBJZFw8k5a8SAkVkCQ=="
+        length="3968559"
         type="application/octet-stream"/>
     </item>
   </channel>
