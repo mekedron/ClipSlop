@@ -602,17 +602,7 @@ final class ResizeHandleNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        // Grab handle only — divider line is a SwiftUI Divider() placed separately
-        let handleWidth: CGFloat = 36
-        let handleRect = NSRect(
-            x: (bounds.width - handleWidth) / 2,
-            y: bounds.midY - 1.5,
-            width: handleWidth,
-            height: 3
-        )
-        let handle = NSBezierPath(roundedRect: handleRect, xRadius: 1.5, yRadius: 1.5)
-        NSColor.separatorColor.setFill()
-        handle.fill()
+        // No visual indicator — cursor change on hover is enough
     }
 
     override func mouseEntered(with event: NSEvent) {
