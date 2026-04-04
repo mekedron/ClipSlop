@@ -2,6 +2,7 @@ import SwiftUI
 
 struct PopupContentView: View {
     let appState: AppState
+    @State private var promptGridHeight: Double = UserDefaults.standard.object(forKey: "promptGridHeight") as? Double ?? 200
     private let loc = Loc.shared
 
     var body: some View {
@@ -118,7 +119,31 @@ struct PopupContentView: View {
                 }
                 .padding(12)
             }
-            .frame(maxHeight: 200)
+            .frame(height: promptGridHeight)
+
+            // Resize handle
+            Rectangle()
+                .fill(Color.clear)
+                .frame(height: 6)
+                .contentShape(Rectangle())
+                .onHover { inside in
+                    if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() }
+                }
+                .gesture(
+                    DragGesture(minimumDistance: 1)
+                        .onChanged { value in
+                            let newHeight = promptGridHeight + value.translation.height
+                            promptGridHeight = max(44, min(400, newHeight))
+                        }
+                        .onEnded { _ in
+                            UserDefaults.standard.set(promptGridHeight, forKey: "promptGridHeight")
+                        }
+                )
+                .overlay {
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(Color.secondary.opacity(0.3))
+                        .frame(width: 36, height: 3)
+                }
 
             Divider()
 
