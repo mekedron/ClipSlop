@@ -27,7 +27,7 @@ struct PopupContentView: View {
                 }
             }
         }
-        .padding(.top, 28) // keep content below titlebar
+        .padding(.top, 12) // keep content below titlebar
         .frame(minWidth: 560, minHeight: 400)
         .background(.ultraThinMaterial.opacity(appState.settings.popupOpacity))
         .background(KeyEventHandler(appState: appState))
@@ -598,22 +598,24 @@ final class ResizeHandleNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        // Separator line — match SwiftUI Divider() appearance
-        let lineY = bounds.maxY - 1
-        let linePath = NSBezierPath(rect: NSRect(x: 0, y: lineY, width: bounds.width, height: 1))
-        (NSColor.gray.withAlphaComponent(0.4)).setFill()
+        let dividerColor = NSColor.separatorColor
+
+        // Separator line — same as SwiftUI Divider()
+        let lineY = bounds.maxY - 0.5
+        let linePath = NSBezierPath(rect: NSRect(x: 0, y: lineY, width: bounds.width, height: 0.5))
+        dividerColor.setFill()
         linePath.fill()
 
-        // Grab handle
+        // Grab handle — same color as dividers
         let handleWidth: CGFloat = 36
         let handleRect = NSRect(
             x: (bounds.width - handleWidth) / 2,
-            y: bounds.midY - 2,
+            y: bounds.midY - 1.5,
             width: handleWidth,
             height: 3
         )
         let handle = NSBezierPath(roundedRect: handleRect, xRadius: 1.5, yRadius: 1.5)
-        NSColor.tertiaryLabelColor.setFill()
+        dividerColor.setFill()
         handle.fill()
     }
 
