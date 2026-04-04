@@ -10,7 +10,7 @@ final class ProviderStore {
     }
 
     init() {
-        providers = loadFromDisk() ?? Self.buildDefaultProviders()
+        providers = loadFromDisk() ?? []
     }
 
     func save() {
@@ -68,23 +68,6 @@ final class ProviderStore {
     }
 
     // MARK: - Private
-
-    private static func buildDefaultProviders() -> [AIProviderConfig] {
-        var defaults: [AIProviderConfig] = [
-            .builtInAnthropic,
-            .builtInOpenAI,
-            .builtInOllama,
-        ]
-        for result in CLIToolDetector.detectAll() {
-            defaults.append(AIProviderConfig(
-                name: result.definition.displayName,
-                providerType: .cliTool,
-                baseURL: result.binaryPath,
-                modelID: result.definition.id
-            ))
-        }
-        return defaults
-    }
 
     private func loadFromDisk() -> [AIProviderConfig]? {
         guard FileManager.default.fileExists(atPath: Constants.providersFileURL.path),
