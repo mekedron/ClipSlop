@@ -54,9 +54,10 @@ struct PopupContentView: View {
                 }
                 .frame(maxHeight: .infinity)
 
-                // Resize handle — between text area and breadcrumbs
+                // Resize handle + divider — between text area and breadcrumbs
                 ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
                     .frame(height: 8)
+                Divider()
 
                 // Breadcrumb (always visible)
                 HStack(spacing: 4) {
@@ -601,16 +602,11 @@ final class ResizeHandleNSView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
 
-        // Separator line at the bottom — matches SwiftUI Divider()
-        let linePath = NSBezierPath(rect: NSRect(x: 0, y: 0, width: bounds.width, height: 0.5))
-        NSColor.separatorColor.setFill()
-        linePath.fill()
-
-        // Grab handle — above the separator line
+        // Grab handle only — divider line is a SwiftUI Divider() placed separately
         let handleWidth: CGFloat = 36
         let handleRect = NSRect(
             x: (bounds.width - handleWidth) / 2,
-            y: 3,
+            y: bounds.midY - 1.5,
             width: handleWidth,
             height: 3
         )
