@@ -6,6 +6,11 @@ struct PopupContentView: View {
     @State private var dragStartHeight: Double = 0
     private let loc = Loc.shared
 
+    /// Cached HTML conversion of markdown for search mode.
+    private var markdownAsHTML: String {
+        MarkdownConverter.html(from: appState.currentDisplayText)
+    }
+
     private var isViewingOriginal: Bool {
         guard let session = appState.currentSession else { return false }
         if appState.selectedHistoryStepIndex == -1 { return true }
@@ -51,26 +56,45 @@ struct PopupContentView: View {
             let clampedHeight = min(promptGridHeight, maxPromptHeight)
 
             VStack(spacing: 0) {
+                // Find bar
+                if appState.findBarState.isVisible {
+                    FindBarView(findBarState: appState.findBarState)
+                    Divider()
+                }
+
                 // Text display — takes all remaining vertical space
                 Group {
                     switch appState.activeEditorMode {
                     case .markdown:
-                        MarkdownPreviewView(markdown: appState.currentDisplayText)
-                            .id(appState.currentDisplayText)
-                    case .html:
-                        HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false)
-                            .id(appState.currentDisplayText)
-                    case .plainText:
-                        ScrollView(.vertical, showsIndicators: false) {
-                            Text(appState.currentDisplayText)
-                                .font(.system(.body, design: .monospaced))
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(16)
+                        if appState.findBarState.isVisible {
+                            // Markdown uses native StructuredText (no WebView) — swap to
+                            // HTML rendering so JS-based search highlighting works.
+                            HTMLEditorView(
+                                text: .constant(markdownAsHTML),
+                                isEditable: false,
+                                findBarState: appState.findBarState
+                            )
+                            .id("md-search")
+                        } else {
+                            MarkdownPreviewView(markdown: appState.currentDisplayText)
+                                .id(appState.currentDisplayText)
                         }
+                    case .html:
+                        HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false, findBarState: appState.findBarState)
+                            .id("html-view")
+                    case .plainText:
+                        SearchableTextView(
+                            text: appState.currentDisplayText,
+                            findBarState: appState.findBarState
+                        )
                     }
                 }
                 .frame(maxHeight: .infinity)
+                .onChange(of: appState.activeEditorMode) {
+                    // Clear search highlights when switching display modes to prevent
+                    // highlight HTML from leaking between renderers.
+                    appState.findBarState.clearAndReSearch()
+                }
 
                 // Resize handle centered on divider
                 ZStack {
@@ -162,20 +186,24 @@ struct PopupContentView: View {
         }
     }
 
+    @State private var plainTextEditorContext = MarkdownEditorContext()
+
     private var editView: some View {
         VStack(spacing: 0) {
+            // Find bar in edit mode
+            if appState.findBarState.isVisible {
+                FindBarView(findBarState: appState.findBarState)
+                Divider()
+            }
+
             Group {
                 switch appState.activeEditorMode {
                 case .markdown:
-                    MarkdownEditorView(text: Bindable(appState).editingText)
+                    MarkdownEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .html:
-                    HTMLEditorView(text: Bindable(appState).editingText)
+                    HTMLEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .plainText:
-                    TextEditor(text: Bindable(appState).editingText)
-                        .font(.system(.body, design: .monospaced))
-                        .scrollContentBackground(.hidden)
-                        .scrollIndicators(.hidden)
-                        .padding(12)
+                    MarkdownTextView(text: Bindable(appState).editingText, editorContext: plainTextEditorContext, findBarState: appState.findBarState)
                 }
             }
             .onAppear {
@@ -241,8 +269,6 @@ struct PopupContentView: View {
         HStack(spacing: 10) {
             copyButton
 
-            Divider().frame(height: 16)
-
             actionButton(loc.t("popup.edit"), icon: "pencil", shortcut: "⌘E") {
                 appState.startEditing()
             }
@@ -253,6 +279,10 @@ struct PopupContentView: View {
 
             actionButton(loc.t("popup.save"), icon: "square.and.arrow.down", shortcut: "⌘S") {
                 appState.saveToFile()
+            }
+
+            actionButton(loc.t("popup.hint.find"), icon: "magnifyingglass", shortcut: "⌘F") {
+                appState.findBarState.show()
             }
 
             Spacer()
@@ -454,6 +484,8 @@ struct KeyEventHandler: NSViewRepresentable {
             static let o: UInt16 = 31
             static let n: UInt16 = 45
             static let z: UInt16 = 6
+            static let f: UInt16 = 3
+            static let g: UInt16 = 5
             static let comma: UInt16 = 43
             static let escape: UInt16 = 53
             static let enter: UInt16 = 36
@@ -470,6 +502,28 @@ struct KeyEventHandler: NSViewRepresentable {
         private func handleKey(_ event: NSEvent, appState: AppState) -> Bool {
             let code = event.keyCode
             let hasCmd = event.modifierFlags.contains(.command)
+
+            // --- Find bar shortcuts (both modes) ---
+            if hasCmd && code == KeyCode.f {
+                appState.findBarState.show()
+                return true
+            }
+
+            if hasCmd && code == KeyCode.g && appState.findBarState.isVisible {
+                let hasShift = event.modifierFlags.contains(.shift)
+                if hasShift {
+                    appState.findBarState.previousMatch()
+                } else {
+                    appState.findBarState.nextMatch()
+                }
+                return true
+            }
+
+            // Esc closes find bar first
+            if code == KeyCode.escape && appState.findBarState.isVisible {
+                appState.findBarState.dismiss()
+                return true
+            }
 
             // --- Edit mode ---
             if appState.isEditing {
@@ -587,6 +641,11 @@ struct KeyEventHandler: NSViewRepresentable {
                     appState.navigateBack()
                     return true
                 }
+                return false
+            }
+
+            // Don't process mnemonic keys when find bar has focus
+            if appState.findBarState.isVisible {
                 return false
             }
 

@@ -76,7 +76,7 @@ enum ClipboardService {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(markdown, forType: .string)
-        if let htmlData = MarkdownConverter.html(from: markdown).data(using: .utf8) {
+        if let htmlData = MarkdownConverter.styledHTML(from: markdown).data(using: .utf8) {
             pb.setData(htmlData, forType: .html)
         }
         if let rtfData = MarkdownConverter.rtfData(from: markdown) {

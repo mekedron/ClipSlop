@@ -9,6 +9,7 @@ final class AppState {
     let hotkeyService = HotkeyService()
     let settings = AppSettings.shared
     let syncService = CloudSyncService()
+    let findBarState = FindBarState()
 
     // Session state
     var currentSession: TransformationSession?
@@ -631,6 +632,7 @@ final class AppState {
     }
 
     func dismissPopup() {
+        findBarState.dismiss()
         popupWindow?.close()
         isPopupVisible = false
         cancelProcessing()

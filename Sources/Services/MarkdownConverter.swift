@@ -9,7 +9,12 @@ enum MarkdownConverter {
     static func html(from markdown: String) -> String {
         let document = Document(parsing: markdown)
         var visitor = HTMLVisitor()
-        let body = visitor.visit(document)
+        return visitor.visit(document)
+    }
+
+    /// Full HTML document with embedded styles — for clipboard RTF export.
+    static func styledHTML(from markdown: String) -> String {
+        let body = html(from: markdown)
         return """
         <html><head><style>
         body { font-family: -apple-system, Helvetica Neue, sans-serif; font-size: 13px; line-height: 1.5; color: #1d1d1f; }
@@ -24,7 +29,7 @@ enum MarkdownConverter {
 
     /// HTML-based conversion (for clipboard RTF/HTML export only).
     static func rtfData(from markdown: String) -> Data? {
-        let htmlString = html(from: markdown)
+        let htmlString = styledHTML(from: markdown)
         guard let data = htmlString.data(using: .utf8),
               let attrStr = NSAttributedString(html: data, documentAttributes: nil)
         else { return nil }

@@ -43,6 +43,7 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
     @Binding var html: String
     @ObservedObject var toolbarState: HTMLToolbarState
     var isEditable: Bool
+    var findBarState: FindBarState?
 
     func makeNSView(context: Context) -> ClippingEditorContainer {
         let container = ClippingEditorContainer()
@@ -83,16 +84,23 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
         if !context.coordinator.isUpdating && editor.html != html {
             editor.html = html
         }
+        // Register as search backend when findBarState is provided
+        if let findBarState {
+            context.coordinator.findBarState = findBarState
+            findBarState.activeBackend = context.coordinator
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
     @MainActor
-    final class Coordinator: NSObject, @preconcurrency RichHTMLEditorViewDelegate {
+    final class Coordinator: NSObject, @preconcurrency RichHTMLEditorViewDelegate, SearchableContent {
         let parent: ConstrainedRichHTMLEditor
         weak var editor: RichHTMLEditorView?
+        weak var findBarState: FindBarState?
         var isUpdating = false
         private var cssInjected = false
+        private var searchJSInjected = false
 
         init(parent: ConstrainedRichHTMLEditor) {
             self.parent = parent
@@ -100,8 +108,12 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
         }
 
         func richHTMLEditorViewDidLoad(_ richHTMLEditorView: RichHTMLEditorView) {
+            // Make WKWebView background transparent so it blends with the app theme
+            richHTMLEditorView.webView.setValue(false, forKey: "drawsBackground")
+
             if !cssInjected {
                 richHTMLEditorView.injectAdditionalCSS(HTMLStyles.shared)
+                richHTMLEditorView.injectAdditionalCSS(HTMLStyles.searchCSS)
                 if !parent.isEditable {
                     richHTMLEditorView.injectAdditionalCSS("body { user-select: text; }")
                 }
@@ -112,7 +124,20 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
                     "document.getElementById('swift-rich-html-editor').contentEditable = false"
                 )
             }
+            // Inject search JS
+            if !searchJSInjected {
+                richHTMLEditorView.webView.evaluateJavaScript(HTMLStyles.searchJS)
+                searchJSInjected = true
+            }
             parent.toolbarState.editor = richHTMLEditorView
+
+            // Register as search backend and re-execute if needed
+            if let findBarState {
+                findBarState.activeBackend = self
+                if findBarState.isVisible, !findBarState.searchQuery.isEmpty {
+                    findBarState.executeSearchImmediately()
+                }
+            }
         }
 
         func richHTMLEditorViewDidChange(_ richHTMLEditorView: RichHTMLEditorView) {
@@ -142,6 +167,35 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
         func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, caretPositionDidChange caretPosition: CGRect) {}
         func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, javascriptFunctionDidFail error: any Error, whileExecutingFunction function: String) {}
         func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, shouldHandleLink link: URL) -> Bool { false }
+
+        // MARK: - SearchableContent
+
+        func performSearch(query: String) async -> Int {
+            guard let editor, !query.isEmpty else {
+                clearSearch()
+                return 0
+            }
+            let escaped = query
+                .replacingOccurrences(of: "\\", with: "\\\\")
+                .replacingOccurrences(of: "'", with: "\\'")
+                .replacingOccurrences(of: "\n", with: "\\n")
+            do {
+                let value = try await editor.webView.evaluateJavaScript("csSearch('\(escaped)')")
+                return (value as? Int) ?? 0
+            } catch {
+                return 0
+            }
+        }
+
+        func highlightMatch(at index: Int) {
+            guard let editor else { return }
+            editor.webView.evaluateJavaScript("csHighlight(\(index))")
+        }
+
+        func clearSearch() {
+            guard let editor else { return }
+            editor.webView.evaluateJavaScript("csClearSearch()")
+        }
     }
 }
 
@@ -166,6 +220,70 @@ enum HTMLStyles {
         pre { background: #1e1e1e; }
         td, th { border-color: #444; }
         blockquote { border-left-color: #555; color: #aaa; }
+    }
+    """
+
+    static let searchCSS = """
+    .cs-find-highlight {
+        background-color: rgba(255, 214, 0, 0.4);
+        border-radius: 2px;
+    }
+    .cs-find-current {
+        background-color: rgba(255, 140, 0, 0.6);
+        border-radius: 2px;
+    }
+    """
+
+    static let searchJS = """
+    var _csMarks = [];
+    function csSearch(query) {
+        csClearSearch();
+        if (!query) return 0;
+        var root = document.getElementById('swift-rich-html-editor') || document.body;
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null, false);
+        var textNodes = [];
+        while (walker.nextNode()) textNodes.push(walker.currentNode);
+        var lowerQ = query.toLowerCase();
+        for (var i = 0; i < textNodes.length; i++) {
+            var node = textNodes[i];
+            var text = node.textContent;
+            var lowerText = text.toLowerCase();
+            var idx = 0;
+            while ((idx = lowerText.indexOf(lowerQ, idx)) !== -1) {
+                var range = document.createRange();
+                range.setStart(node, idx);
+                range.setEnd(node, idx + query.length);
+                var mark = document.createElement('mark');
+                mark.className = 'cs-find-highlight';
+                range.surroundContents(mark);
+                _csMarks.push(mark);
+                // After wrapping, the walker's text node is split; advance past the mark
+                node = mark.nextSibling;
+                if (!node) break;
+                text = node.textContent;
+                lowerText = text.toLowerCase();
+                idx = 0;
+            }
+        }
+        return _csMarks.length;
+    }
+    function csHighlight(index) {
+        for (var i = 0; i < _csMarks.length; i++) {
+            _csMarks[i].className = (i === index) ? 'cs-find-current' : 'cs-find-highlight';
+        }
+        if (_csMarks[index]) _csMarks[index].scrollIntoView({block:'center',behavior:'smooth'});
+    }
+    function csClearSearch() {
+        for (var i = 0; i < _csMarks.length; i++) {
+            var mark = _csMarks[i];
+            var parent = mark.parentNode;
+            if (parent) {
+                while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+                parent.removeChild(mark);
+                parent.normalize();
+            }
+        }
+        _csMarks = [];
     }
     """
 }
@@ -247,6 +365,7 @@ final class MarkdownEditorContext {
 
 struct MarkdownEditorView: View {
     @Binding var text: String
+    var findBarState: FindBarState?
     @State private var showPreview = false
     @State private var showImagePicker = false
     @State private var editorContext = MarkdownEditorContext()
@@ -257,10 +376,24 @@ struct MarkdownEditorView: View {
             Divider()
 
             if showPreview {
-                MarkdownPreviewView(markdown: text)
+                if findBarState?.isVisible == true {
+                    // Preview uses native StructuredText — swap to HTML for JS search
+                    ConstrainedRichHTMLEditor(
+                        html: .constant(MarkdownConverter.html(from: text)),
+                        toolbarState: HTMLToolbarState(),
+                        isEditable: false,
+                        findBarState: findBarState
+                    )
+                    .id("md-editor-preview-search")
+                } else {
+                    MarkdownPreviewView(markdown: text)
+                }
             } else {
-                MarkdownTextView(text: $text, editorContext: editorContext)
+                MarkdownTextView(text: $text, editorContext: editorContext, findBarState: findBarState)
             }
+        }
+        .onChange(of: showPreview) {
+            findBarState?.clearAndReSearch()
         }
         .background(MarkdownShortcutHandler(editorContext: editorContext, showPreview: $showPreview, showImagePicker: $showImagePicker))
         .fileImporter(
@@ -425,6 +558,7 @@ struct MarkdownEditorView: View {
 struct MarkdownTextView: NSViewRepresentable {
     @Binding var text: String
     let editorContext: MarkdownEditorContext
+    var findBarState: FindBarState?
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -458,6 +592,15 @@ struct MarkdownTextView: NSViewRepresentable {
 
         scrollView.documentView = textView
         editorContext.textView = textView
+        context.coordinator.textView = textView
+
+        // Register as search backend
+        if let findBarState {
+            findBarState.activeBackend = context.coordinator
+            if findBarState.isVisible, !findBarState.searchQuery.isEmpty {
+                findBarState.executeSearchImmediately()
+            }
+        }
 
         return scrollView
     }
@@ -470,6 +613,11 @@ struct MarkdownTextView: NSViewRepresentable {
         }
         context.coordinator.isUpdating = false
         editorContext.textView = textView
+        context.coordinator.textView = textView
+
+        if let findBarState {
+            findBarState.activeBackend = context.coordinator
+        }
     }
 
     func makeCoordinator() -> Coordinator {
@@ -477,9 +625,11 @@ struct MarkdownTextView: NSViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator: NSObject, NSTextViewDelegate {
+    final class Coordinator: NSObject, NSTextViewDelegate, SearchableContent {
         var parent: MarkdownTextView
         var isUpdating = false
+        weak var textView: NSTextView?
+        private var matchRanges: [NSRange] = []
 
         init(parent: MarkdownTextView) {
             self.parent = parent
@@ -490,6 +640,77 @@ struct MarkdownTextView: NSViewRepresentable {
             guard !isUpdating else { return }
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
+        }
+
+        // MARK: - SearchableContent
+
+        func performSearch(query: String) async -> Int {
+            guard let textView, !query.isEmpty else {
+                clearSearch()
+                return 0
+            }
+
+            clearHighlights()
+            matchRanges = []
+
+            let content = textView.string as NSString
+            var searchRange = NSRange(location: 0, length: content.length)
+
+            while searchRange.location < content.length {
+                let range = content.range(
+                    of: query,
+                    options: [.caseInsensitive, .diacriticInsensitive],
+                    range: searchRange
+                )
+                guard range.location != NSNotFound else { break }
+                matchRanges.append(range)
+                searchRange.location = range.location + range.length
+                searchRange.length = content.length - searchRange.location
+            }
+
+            let layoutManager = textView.layoutManager
+            for range in matchRanges {
+                layoutManager?.addTemporaryAttribute(
+                    .backgroundColor,
+                    value: NSColor.systemYellow.withAlphaComponent(0.4),
+                    forCharacterRange: range
+                )
+            }
+
+            return matchRanges.count
+        }
+
+        func highlightMatch(at index: Int) {
+            guard let textView, index >= 0, index < matchRanges.count else { return }
+            let layoutManager = textView.layoutManager
+
+            for range in matchRanges {
+                layoutManager?.addTemporaryAttribute(
+                    .backgroundColor,
+                    value: NSColor.systemYellow.withAlphaComponent(0.4),
+                    forCharacterRange: range
+                )
+            }
+
+            let currentRange = matchRanges[index]
+            layoutManager?.addTemporaryAttribute(
+                .backgroundColor,
+                value: NSColor.systemOrange.withAlphaComponent(0.6),
+                forCharacterRange: currentRange
+            )
+
+            textView.scrollRangeToVisible(currentRange)
+        }
+
+        func clearSearch() {
+            clearHighlights()
+            matchRanges = []
+        }
+
+        private func clearHighlights() {
+            guard let textView, let layoutManager = textView.layoutManager else { return }
+            let fullRange = NSRange(location: 0, length: (textView.string as NSString).length)
+            layoutManager.removeTemporaryAttribute(.backgroundColor, forCharacterRange: fullRange)
         }
     }
 }
@@ -585,14 +806,22 @@ struct MarkdownShortcutHandler: NSViewRepresentable {
 
 struct MarkdownPreviewView: View {
     let markdown: String
+    var showImages: Bool = AppSettings.shared.showImagesInMarkdown
 
     var body: some View {
         ScrollView {
-            StructuredText(markdown: markdown)
-                .textual.imageAttachmentLoader(.image())
-                .textSelection(.enabled)
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            if showImages {
+                StructuredText(markdown: markdown)
+                    .textual.imageAttachmentLoader(.image())
+                    .textSelection(.enabled)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                StructuredText(markdown: markdown)
+                    .textSelection(.enabled)
+                    .padding(16)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
         }
     }
 }
@@ -604,6 +833,7 @@ import InfomaniakRichHTMLEditor
 struct HTMLEditorView: View {
     @Binding var text: String
     var isEditable: Bool = true
+    var findBarState: FindBarState?
     @State private var showSource = false
     @StateObject private var toolbarState = HTMLToolbarState()
 
@@ -620,12 +850,13 @@ struct HTMLEditorView: View {
             }
 
             if showSource && isEditable {
-                MarkdownTextView(text: $text, editorContext: MarkdownEditorContext())
+                MarkdownTextView(text: $text, editorContext: MarkdownEditorContext(), findBarState: findBarState)
             } else {
                 ConstrainedRichHTMLEditor(
                     html: $text,
                     toolbarState: toolbarState,
-                    isEditable: isEditable
+                    isEditable: isEditable,
+                    findBarState: findBarState
                 )
             }
         }
