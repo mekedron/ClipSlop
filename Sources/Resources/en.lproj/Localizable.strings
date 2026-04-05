@@ -210,6 +210,8 @@
 "settings.prompts.editor.mnemonic" = "Mnemonic Key";
 "settings.prompts.editor.modifiers" = "Modifiers";
 "settings.prompts.editor.type" = "Type";
+"settings.prompts.editor.provider" = "AI Provider";
+"settings.prompts.editor.provider_default" = "Use default";
 "settings.prompts.editor.folder" = "Folder";
 "settings.prompts.editor.prompt" = "Prompt";
 "settings.prompts.editor.system_prompt" = "System Prompt";

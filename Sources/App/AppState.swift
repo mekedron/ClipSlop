@@ -365,7 +365,7 @@ final class AppState {
         if node.isFolder {
             navigationPath.append(node)
         } else if node.isPrompt, let prompt = node.systemPrompt {
-            applyPrompt(name: node.name, systemPrompt: prompt)
+            applyPrompt(name: node.name, systemPrompt: prompt, providerID: node.providerID)
         }
     }
 
@@ -393,10 +393,17 @@ final class AppState {
 
     // MARK: - Processing
 
-    func applyPrompt(name: String, systemPrompt: String) {
+    func applyPrompt(name: String, systemPrompt: String, providerID: UUID? = nil) {
         guard var session = currentSession else { return }
 
-        guard let provider = providerStore.defaultProvider else {
+        // Use prompt-specific provider if set, otherwise fall back to default
+        let provider: AIProviderConfig
+        if let id = providerID,
+           let specific = providerStore.providers.first(where: { $0.id == id }) {
+            provider = specific
+        } else if let defaultProvider = providerStore.defaultProvider {
+            provider = defaultProvider
+        } else {
             openSettingsToProviders()
             return
         }

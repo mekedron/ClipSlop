@@ -58,7 +58,7 @@ struct PopupContentView: View {
                         MarkdownPreviewView(markdown: appState.currentDisplayText)
                             .id(appState.currentDisplayText)
                     case .html:
-                        HTMLReadOnlyView(html: appState.currentDisplayText)
+                        HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false)
                             .id(appState.currentDisplayText)
                     case .plainText:
                         ScrollView(.vertical, showsIndicators: false) {
@@ -178,7 +178,11 @@ struct PopupContentView: View {
                         .padding(12)
                 }
             }
-            .onAppear { focusEditor() }
+            .onAppear {
+                if appState.activeEditorMode != .html {
+                    focusEditor()
+                }
+            }
 
             Divider()
 

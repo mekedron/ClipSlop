@@ -143,7 +143,7 @@ final class AppSettings {
         editorMode = defaults.string(forKey: "editorMode")
             .flatMap(EditorMode.init(rawValue:)) ?? .markdown
         richTextMode = defaults.string(forKey: "richTextMode")
-            .flatMap(RichTextMode.init(rawValue:)) ?? .markdownAI
+            .flatMap(RichTextMode.init(rawValue:)) ?? .markdown
         markdownAIOnlyRichText = defaults.object(forKey: "markdownAIOnlyRichText") as? Bool ?? true
         useCustomConversionPrompt = defaults.bool(forKey: "useCustomConversionPrompt")
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt

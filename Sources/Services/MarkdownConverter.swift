@@ -195,6 +195,24 @@ enum MarkdownConverter {
         // Links and images
         case "a":
             let href = element.attribute(forName: "href")?.stringValue ?? ""
+            // If the link wraps only an image, output image + link separately
+            // ([![]()]() nesting doesn't render in most Markdown viewers)
+            let childElements = (element.children ?? []).compactMap { $0 as? XMLElement }
+            if let img = childElements.first,
+               childElements.count == 1,
+               img.localName?.lowercased() == "img" {
+                let imgSrc = img.attribute(forName: "src")?.stringValue ?? ""
+                let imgAlt = img.attribute(forName: "alt")?.stringValue ?? ""
+                // Delegate to img handler which handles dimensions
+                let image = convertNode(img)
+                // If link points to the same or similar URL as the image, just show the image
+                let imgFilename = imgSrc.components(separatedBy: "/").last ?? "___"
+                if href == imgSrc || href.contains(imgFilename) {
+                    return image
+                }
+                // Otherwise show image with a link below
+                return "\(image)\n[\(imgAlt.isEmpty ? "Link" : imgAlt)](\(href))"
+            }
             let content = convertChildren(element).trimmed
             if href.isEmpty || content.isEmpty { return content }
             return "[\(content)](\(href))"
@@ -323,6 +341,15 @@ enum MarkdownConverter {
     // MARK: - Cleanup
 
     /// Extract programming language from CSS class like "language-swift", "hljs language-python"
+    /// Extract a CSS property value from an inline style string.
+    private static func extractStyleValue(_ style: String, property: String) -> String? {
+        guard let range = style.range(of: "\(property):", options: .caseInsensitive) else { return nil }
+        let afterProperty = style[range.upperBound...].trimmingCharacters(in: .whitespaces)
+        let value = afterProperty.prefix(while: { $0 != ";" && $0 != "\"" })
+        let trimmed = value.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     private static func extractLanguage(from className: String) -> String {
         className.components(separatedBy: .whitespaces)
             .compactMap { component -> String? in

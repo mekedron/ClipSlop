@@ -432,6 +432,18 @@ struct PromptEditorView: View {
                     )
                     .foregroundStyle(.secondary)
                 }
+
+                if node.isPrompt {
+                    Picker(loc.t("settings.prompts.editor.provider"), selection: $node.providerID) {
+                        Text(loc.t("settings.prompts.editor.provider_default"))
+                            .tag(UUID?.none)
+                        Divider()
+                        ForEach(appState.providerStore.providers) { provider in
+                            Text(provider.name).tag(UUID?.some(provider.id))
+                        }
+                    }
+                    .onChange(of: node.providerID) { autoSave() }
+                }
             }
 
             if node.isPrompt {

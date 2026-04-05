@@ -308,3 +308,5 @@
 "settings.general.behavior.rich_text_mode.plain" = "Plain text";
 "settings.prompts.move_to" = "Move to...";
 "settings.prompts.root" = "Root (top level)";
+"settings.prompts.editor.provider" = "AI Provider";
+"settings.prompts.editor.provider_default" = "Use default";

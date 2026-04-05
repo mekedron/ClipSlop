@@ -2,6 +2,172 @@ import SwiftUI
 import Textual
 import UniformTypeIdentifiers
 
+// MARK: - Constrained RichHTMLEditor (overrides intrinsicContentSize to prevent expansion)
+
+/// NSView container that suppresses the editor's intrinsicContentSize,
+/// forcing it to fit within the parent instead of expanding to content height.
+final class ClippingEditorContainer: NSView {
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: NSView.noIntrinsicMetric)
+    }
+}
+
+@MainActor
+final class HTMLToolbarState: ObservableObject {
+    @Published var hasBold = false
+    @Published var hasItalic = false
+    @Published var hasUnderline = false
+    @Published var hasStrikethrough = false
+    @Published var hasOrderedList = false
+    @Published var hasUnorderedList = false
+    @Published var hasLink = false
+    @Published var foregroundColor: Color?
+    @Published var backgroundColor: Color?
+    weak var editor: RichHTMLEditorView?
+
+    func bold() { editor?.bold() }
+    func italic() { editor?.italic() }
+    func underline() { editor?.underline() }
+    func strikethrough() { editor?.strikethrough() }
+    func orderedList() { editor?.orderedList() }
+    func unorderedList() { editor?.unorderedList() }
+    func addLink(url: URL, text: String? = nil) { editor?.addLink(url: url, text: text) }
+    func unlink() { editor?.unlink() }
+    func setForegroundColor(_ color: NSColor) { editor?.setForegroundColor(color) }
+    func setBackgroundColor(_ color: NSColor) { editor?.setBackgroundColor(color) }
+}
+
+struct ConstrainedRichHTMLEditor: NSViewRepresentable {
+    @Binding var html: String
+    @ObservedObject var toolbarState: HTMLToolbarState
+    var isEditable: Bool
+
+    func makeNSView(context: Context) -> ClippingEditorContainer {
+        let container = ClippingEditorContainer()
+        container.wantsLayer = true
+        container.layer?.masksToBounds = true
+
+        let editor = RichHTMLEditorView()
+        editor.delegate = context.coordinator
+        editor.html = html
+        context.coordinator.editor = editor
+
+        // Prevent the editor from expanding beyond container
+        editor.setContentCompressionResistancePriority(NSLayoutConstraint.Priority(1), for: .vertical)
+        editor.setContentHuggingPriority(NSLayoutConstraint.Priority(1), for: .vertical)
+
+        editor.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(editor)
+        NSLayoutConstraint.activate([
+            editor.topAnchor.constraint(equalTo: container.topAnchor),
+            editor.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            editor.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            editor.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+
+        return container
+    }
+
+    // Tell SwiftUI to use the proposed size, not the content size
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: ClippingEditorContainer, context: Context) -> CGSize? {
+        CGSize(
+            width: proposal.width ?? 500,
+            height: proposal.height ?? 300
+        )
+    }
+
+    func updateNSView(_ container: ClippingEditorContainer, context: Context) {
+        guard let editor = context.coordinator.editor else { return }
+        if !context.coordinator.isUpdating && editor.html != html {
+            editor.html = html
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    @MainActor
+    final class Coordinator: NSObject, @preconcurrency RichHTMLEditorViewDelegate {
+        let parent: ConstrainedRichHTMLEditor
+        weak var editor: RichHTMLEditorView?
+        var isUpdating = false
+        private var cssInjected = false
+
+        init(parent: ConstrainedRichHTMLEditor) {
+            self.parent = parent
+            super.init()
+        }
+
+        func richHTMLEditorViewDidLoad(_ richHTMLEditorView: RichHTMLEditorView) {
+            if !cssInjected {
+                richHTMLEditorView.injectAdditionalCSS(HTMLStyles.shared)
+                if !parent.isEditable {
+                    richHTMLEditorView.injectAdditionalCSS("body { user-select: text; }")
+                }
+                cssInjected = true
+            }
+            if !parent.isEditable {
+                richHTMLEditorView.webView.evaluateJavaScript(
+                    "document.getElementById('swift-rich-html-editor').contentEditable = false"
+                )
+            }
+            parent.toolbarState.editor = richHTMLEditorView
+        }
+
+        func richHTMLEditorViewDidChange(_ richHTMLEditorView: RichHTMLEditorView) {
+            guard !isUpdating else { return }
+            isUpdating = true
+            parent.html = richHTMLEditorView.html
+            isUpdating = false
+        }
+
+        func richHTMLEditorView(
+            _ richHTMLEditorView: RichHTMLEditorView,
+            selectedTextAttributesDidChange uiAttrs: UITextAttributes
+        ) {
+            let state = parent.toolbarState
+            state.editor = richHTMLEditorView
+            state.hasBold = uiAttrs.hasBold
+            state.hasItalic = uiAttrs.hasItalic
+            state.hasUnderline = uiAttrs.hasUnderline
+            state.hasStrikethrough = uiAttrs.hasStrikeThrough
+            state.hasOrderedList = uiAttrs.hasOrderedList
+            state.hasUnorderedList = uiAttrs.hasUnorderedList
+            state.hasLink = uiAttrs.hasLink
+            state.foregroundColor = uiAttrs.foregroundColor.map { Color($0) }
+            state.backgroundColor = uiAttrs.backgroundColor.map { Color($0) }
+        }
+
+        func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, caretPositionDidChange caretPosition: CGRect) {}
+        func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, javascriptFunctionDidFail error: any Error, whileExecutingFunction function: String) {}
+        func richHTMLEditorView(_ richHTMLEditorView: RichHTMLEditorView, shouldHandleLink link: URL) -> Bool { false }
+    }
+}
+
+// MARK: - Shared HTML styles for editor and preview
+
+enum HTMLStyles {
+    static let shared = """
+    body {
+        font-family: -apple-system, Helvetica Neue, sans-serif;
+        font-size: 13px; line-height: 1.5;
+        color-scheme: light dark;
+        background: transparent;
+        padding: 12px; margin: 0;
+    }
+    img { max-width: 100%; }
+    table { border-collapse: collapse; }
+    td, th { padding: 4px 8px; border: 1px solid #ddd; }
+    pre { background: #f0f0f0; padding: 10px; border-radius: 6px; overflow-x: auto; }
+    code { font-family: Menlo, monospace; font-size: 12px; }
+    blockquote { border-left: 3px solid #ccc; margin-left: 0; padding-left: 12px; color: #555; }
+    @media (prefers-color-scheme: dark) {
+        pre { background: #1e1e1e; }
+        td, th { border-color: #444; }
+        blockquote { border-left-color: #555; color: #aaa; }
+    }
+    """
+}
+
 // MARK: - Editor Context (bridge between SwiftUI toolbar and NSTextView)
 
 @MainActor
@@ -145,12 +311,12 @@ struct MarkdownEditorView: View {
                 Text("H")
                     .font(.system(.body, design: .default))
                     .fontWeight(.semibold)
-                    .frame(width: 28, height: 24)
+                    .frame(width: 28, height: 28)
             }
             .menuStyle(.button)
             .buttonStyle(.bordered)
             .controlSize(.small)
-            .fixedSize()
+            .frame(height: 28)
             .disabled(showPreview)
 
             toolbarSeparator
@@ -337,8 +503,9 @@ import InfomaniakRichHTMLEditor
 
 struct HTMLEditorView: View {
     @Binding var text: String
+    var isEditable: Bool = true
     @State private var showSource = false
-    @StateObject private var textAttributes = TextAttributes()
+    @StateObject private var toolbarState = HTMLToolbarState()
 
     @State private var showLinkSheet = false
     @State private var linkURL = ""
@@ -346,22 +513,31 @@ struct HTMLEditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            htmlToolbar
-                .fixedSize(horizontal: false, vertical: true)
-            Divider()
+            if isEditable {
+                htmlToolbar
+                    .fixedSize(horizontal: false, vertical: true)
+                Divider()
+            }
 
-            if showSource {
+            if showSource && isEditable {
                 MarkdownTextView(text: $text, editorContext: MarkdownEditorContext())
             } else {
-                RichHTMLEditor(html: $text, textAttributes: textAttributes)
-                    .introspectEditor { editor in
-                        editor.enclosingScrollView?.hasVerticalScroller = true
-                    }
+                ConstrainedRichHTMLEditor(
+                    html: $text,
+                    toolbarState: toolbarState,
+                    isEditable: isEditable
+                )
             }
         }
         .clipped()
         .sheet(isPresented: $showLinkSheet) {
             linkSheet
+        }
+        .onDisappear {
+            // Close the system color panel when leaving the editor
+            if NSColorPanel.shared.isVisible {
+                NSColorPanel.shared.close()
+            }
         }
     }
 
@@ -379,7 +555,7 @@ struct HTMLEditorView: View {
                 Button("Insert") {
                     if let url = URL(string: linkURL), !linkURL.isEmpty {
                         let label = linkText.isEmpty ? nil : linkText
-                        textAttributes.addLink(url: url, text: label)
+                        toolbarState.addLink(url: url, text: label)
                     }
                     linkURL = ""
                     linkText = ""
@@ -393,36 +569,58 @@ struct HTMLEditorView: View {
         .frame(width: 350)
     }
 
+    @State private var showImagePicker = false
+
+
     private var htmlToolbar: some View {
         HStack(spacing: 2) {
             // Text formatting
-            htmlToolbarButton("bold", active: textAttributes.hasBold) {
-                textAttributes.bold()
+            htmlToolbarButton("bold", active: toolbarState.hasBold) {
+                toolbarState.bold()
             }
-            htmlToolbarButton("italic", active: textAttributes.hasItalic) {
-                textAttributes.italic()
+            htmlToolbarButton("italic", active: toolbarState.hasItalic) {
+                toolbarState.italic()
             }
-            htmlToolbarButton("underline", active: textAttributes.hasUnderline) {
-                textAttributes.underline()
+            htmlToolbarButton("underline", active: toolbarState.hasUnderline) {
+                toolbarState.underline()
             }
-            htmlToolbarButton("strikethrough", active: textAttributes.hasStrikethrough) {
-                textAttributes.strikethrough()
+            htmlToolbarButton("strikethrough", active: toolbarState.hasStrikethrough) {
+                toolbarState.strikethrough()
+            }
+
+            Divider().frame(height: 16).padding(.horizontal, 4)
+
+            // Text & background color — styled as toolbar buttons with color dot
+            colorButton(icon: "textformat", color: toolbarState.foregroundColor ?? .primary, help: "Text color") { color in
+                toolbarState.setForegroundColor(NSColor(color))
+            }
+            colorButton(icon: "highlighter", color: toolbarState.backgroundColor ?? .yellow, help: "Highlight") { color in
+                toolbarState.setBackgroundColor(NSColor(color))
             }
 
             Divider().frame(height: 16).padding(.horizontal, 4)
 
             // Lists
-            htmlToolbarButton("list.bullet", active: textAttributes.hasUnorderedList) {
-                textAttributes.unorderedList()
+            htmlToolbarButton("list.bullet", active: toolbarState.hasUnorderedList) {
+                toolbarState.unorderedList()
             }
 
             Divider().frame(height: 16).padding(.horizontal, 4)
 
-            // Insert
-            htmlToolbarButton("link", active: false) {
-                linkURL = "https://"
-                linkText = ""
-                showLinkSheet = true
+            // Link
+            htmlToolbarButton("link", active: toolbarState.hasLink) {
+                if toolbarState.hasLink {
+                    toolbarState.unlink()
+                } else {
+                    linkURL = "https://"
+                    linkText = ""
+                    showLinkSheet = true
+                }
+            }
+
+            // Image
+            htmlToolbarButton("photo", active: false) {
+                showImagePicker = true
             }
 
             Divider().frame(height: 16).padding(.horizontal, 4)
@@ -431,10 +629,8 @@ struct HTMLEditorView: View {
             Button {
                 showSource.toggle()
             } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: showSource ? "eye" : "chevron.left.forwardslash.chevron.right")
-                }
-                .frame(width: 28, height: 24)
+                Image(systemName: showSource ? "eye" : "chevron.left.forwardslash.chevron.right")
+                    .frame(width: 28, height: 24)
             }
             .buttonStyle(.bordered)
             .controlSize(.small)
@@ -448,6 +644,26 @@ struct HTMLEditorView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
+        .fileImporter(isPresented: $showImagePicker, allowedContentTypes: [.image]) { result in
+            if case .success(let url) = result {
+                let granted = url.startAccessingSecurityScopedResource()
+                defer { if granted { url.stopAccessingSecurityScopedResource() } }
+                // Read image data and embed as base64 in HTML
+                if let data = try? Data(contentsOf: url) {
+                    let ext = url.pathExtension.lowercased()
+                    let mime = switch ext {
+                        case "png": "image/png"
+                        case "jpg", "jpeg": "image/jpeg"
+                        case "gif": "image/gif"
+                        case "webp": "image/webp"
+                        default: "image/png"
+                    }
+                    let base64 = data.base64EncodedString()
+                    let imgTag = "<img src=\"data:\(mime);base64,\(base64)\" style=\"max-width:100%\">"
+                    text += imgTag
+                }
+            }
+        }
     }
 
     private func htmlToolbarButton(_ icon: String, active: Bool, action: @escaping () -> Void) -> some View {
@@ -460,48 +676,28 @@ struct HTMLEditorView: View {
         .tint(active ? .accentColor : nil)
         .disabled(showSource)
     }
+
+    private func colorButton(icon: String, color: Color, help: String, apply: @escaping (Color) -> Void) -> some View {
+        ColorPicker(selection: Binding(
+            get: { color },
+            set: { apply($0) }
+        ), supportsOpacity: false) {
+            Image(systemName: icon)
+                .frame(width: 28, height: 24)
+                .overlay(alignment: .bottom) {
+                    RoundedRectangle(cornerRadius: 1)
+                        .fill(color)
+                        .frame(width: 16, height: 3)
+                        .offset(y: -3)
+                }
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
+        .labelsHidden()
+        .help(help)
+        .disabled(showSource)
+    }
 }
 
 // MARK: - HTML Read-Only View (WKWebView, scrollable, non-editable)
 
-import WebKit
-
-struct HTMLReadOnlyView: NSViewRepresentable {
-    let html: String
-
-    func makeNSView(context: Context) -> WKWebView {
-        let config = WKWebViewConfiguration()
-        let webView = WKWebView(frame: .zero, configuration: config)
-        webView.setValue(false, forKey: "drawsBackground")
-        loadContent(in: webView)
-        return webView
-    }
-
-    func updateNSView(_ webView: WKWebView, context: Context) {
-        loadContent(in: webView)
-    }
-
-    private func loadContent(in webView: WKWebView) {
-        let wrapped = """
-        <!DOCTYPE html>
-        <html><head>
-        <meta charset="utf-8">
-        <style>
-        body {
-            font-family: -apple-system, Helvetica Neue, sans-serif;
-            font-size: 13px; line-height: 1.5;
-            padding: 12px; margin: 0;
-            color-scheme: light dark;
-        }
-        img { max-width: 100%; }
-        table { border-collapse: collapse; }
-        td, th { padding: 4px 8px; border: 1px solid #ddd; }
-        pre { background: #f0f0f0; padding: 10px; border-radius: 6px; overflow-x: auto; }
-        code { font-family: Menlo, monospace; font-size: 12px; }
-        blockquote { border-left: 3px solid #ccc; margin-left: 0; padding-left: 12px; color: #555; }
-        </style>
-        </head><body>\(html)</body></html>
-        """
-        webView.loadHTMLString(wrapped, baseURL: nil)
-    }
-}
