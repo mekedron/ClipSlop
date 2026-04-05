@@ -25,7 +25,7 @@ ClipSlop exists so you never do that again. Select text, press a shortcut, pick 
 ---
 
 <p align="center">
-  <img src="docs/screenshot.png" width="680" alt="ClipSlop — translating Finnish text to English with history sidebar, prompt cards, and keyboard shortcuts">
+  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI-powered clipboard text processing with history, prompt cards, and search">
 </p>
 
 ## What it does
