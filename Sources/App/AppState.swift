@@ -293,12 +293,12 @@ final class AppState {
     }
 
     func triggerBlankEditor() {
+        // Reset all state before showing popup to prevent stale session flash
+        resetSessionState()
         currentSession = TransformationSession(originalText: "", inputSource: .clipboard)
-        navigationPath = []
-        selectedHistoryStepIndex = nil
-        errorMessage = nil
-        streamingText = ""
-        isProcessing = false
+        cachedOriginalMarkdown = nil
+        cachedOriginalMarkdownAI = nil
+        activeEditorMode = settings.editorMode
         isEditing = true
         editingText = ""
         showPopup()
@@ -636,6 +636,17 @@ final class AppState {
         popupWindow?.close()
         isPopupVisible = false
         cancelProcessing()
+        resetSessionState()
+    }
+
+    private func resetSessionState() {
+        navigationPath = []
+        selectedHistoryStepIndex = nil
+        errorMessage = nil
+        streamingText = ""
+        isProcessing = false
+        isEditing = false
+        editingText = ""
     }
 
     // MARK: - Error

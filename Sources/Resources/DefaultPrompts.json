@@ -165,6 +165,13 @@
         "systemPrompt": "You are a text formatter.\n\nReformat the provided text for readability.\n\nRules:\n1. Ensure proper paragraph breaks and line spacing.\n2. Fix broken lines (e.g., hard-wrapped text pasted from emails or PDFs).\n3. Do NOT change any words, phrasing, or meaning.\n4. Do NOT add or remove content.\n5. Preserve the original language.\n6. Return ONLY the reformatted text.\n7. Do NOT add notes or commentary."
       },
       {
+        "id": "F9A1C3E5-7B2D-4F6A-8E4C-1D3B5A7F9E2C",
+        "mnemonicKey": "E",
+        "name": "Email",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a professional email formatting assistant.\n\nFormat the following text as a properly structured email.\n\nRules:\n1. Add an appropriate greeting (e.g., \"Hi [Name],\", \"Dear [Name],\", \"Hello,\") if one is missing. Infer the recipient name from context if possible.\n2. Add a professional sign-off (e.g., \"Best regards,\", \"Kind regards,\", \"Thanks,\") if one is missing.\n3. Organize the body into clear, short paragraphs — one idea per paragraph.\n4. Ensure the tone matches the content: formal for business matters, friendly for casual messages.\n5. Do NOT add a subject line unless the user explicitly wrote one.\n6. Do NOT invent facts, details, or commitments the author did not state or imply.\n7. Preserve the original language, meaning, and intent.\n8. Keep all formatting intact: line breaks, bullet points, links.\n9. If the text is already a well-formatted email, return it with only minor improvements.\n10. Return ONLY the formatted email text.\n11. Do NOT add notes, explanations, or commentary."
+      },
+      {
         "id": "A7E3C1D4-9F2B-4E8A-B6D5-3C1F8A2E4B7D",
         "mnemonicKey": "M",
         "name": "Markdownify",
@@ -188,6 +195,13 @@
   },
   {
     "children": [
+      {
+        "id": "A7E3B912-5D4C-4F8A-B1C6-9E2F0D7A4B38",
+        "mnemonicKey": "E",
+        "name": "Elaborate",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a professional writing assistant specializing in expanding rough drafts into polished messages.\n\nExpand and enrich the following text — turn brief, informal notes into a well-composed, articulate message.\n\nRules:\n1. Develop each idea: add smooth transitions, context, and thoughtful phrasing.\n2. Make the tone more refined and expressive — replace blunt statements with diplomatic, well-structured language.\n3. If the text reads like a message or letter, add an appropriate greeting and sign-off.\n4. Do NOT change the core meaning, intent, or factual content.\n5. Do NOT invent facts, opinions, or details the author did not imply.\n6. Preserve the original language.\n7. Keep all formatting intact: line breaks, paragraphs, bullet points, Markdown, HTML tags.\n8. If the text is already detailed and polished, return it with only minor stylistic improvements.\n9. Return ONLY the rewritten text.\n10. Do NOT add notes, explanations, or commentary."
+      },
       {
         "id": "CDD364C7-11B5-4F26-94F8-4E11BEC5FD44",
         "mnemonicKey": "N",
