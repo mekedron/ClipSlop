@@ -25,7 +25,7 @@ enum AppColorScheme: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
-enum EditorMode: String, CaseIterable, Identifiable, Sendable {
+enum EditorMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case plainText
     case html
     case markdown

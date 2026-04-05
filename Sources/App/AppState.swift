@@ -366,6 +366,10 @@ final class AppState {
             navigationPath.append(node)
         } else if node.isPrompt, let prompt = node.systemPrompt {
             applyPrompt(name: node.name, systemPrompt: prompt, providerID: node.providerID)
+            // Switch display mode if prompt specifies one
+            if let mode = node.displayMode {
+                activeEditorMode = mode
+            }
         }
     }
 

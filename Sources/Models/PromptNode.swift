@@ -9,6 +9,7 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
     var children: [PromptNode]?
     var mnemonicModifiers: MnemonicModifiers?
     var providerID: UUID?
+    var displayMode: EditorMode?
 
     enum NodeType: String, Codable, Sendable {
         case folder
@@ -23,7 +24,8 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
         systemPrompt: String? = nil,
         children: [PromptNode]? = nil,
         mnemonicModifiers: MnemonicModifiers? = nil,
-        providerID: UUID? = nil
+        providerID: UUID? = nil,
+        displayMode: EditorMode? = nil
     ) {
         self.id = id
         self.name = name
@@ -33,6 +35,7 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
         self.children = children
         self.mnemonicModifiers = mnemonicModifiers
         self.providerID = providerID
+        self.displayMode = displayMode
     }
 
     /// Display string for the mnemonic badge, e.g. "⇧F" or "T".

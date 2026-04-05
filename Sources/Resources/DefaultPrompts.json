@@ -154,6 +154,7 @@
         "mnemonicKey": "B",
         "name": "Beautify Code",
         "nodeType": "prompt",
+        "displayMode": "plainText",
         "systemPrompt": "You are a code formatter. Reformat the provided source code with proper indentation, consistent spacing, and clean structure. Auto-detect the programming language. Do not change logic, variable names, or functionality. Return only the beautified code. Do not ask any questions or add any commentary."
       },
       {
@@ -162,6 +163,14 @@
         "name": "Reformat",
         "nodeType": "prompt",
         "systemPrompt": "You are a text formatter. Reformat the provided text to ensure proper paragraphs and line breaks, without altering the content. Preserve the original meaning and coherence. Return only the reformatted text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id": "A7E3C1D4-9F2B-4E8A-B6D5-3C1F8A2E4B7D",
+        "mnemonicKey": "M",
+        "name": "Markdownify",
+        "nodeType": "prompt",
+        "displayMode": "markdown",
+        "systemPrompt": "You are a Markdown formatting expert. Take the provided text and format it as clean, well-structured Markdown.\n\nRules:\n1. Add appropriate headings (# ## ###) based on the text structure and hierarchy.\n2. Use **bold** for key terms, important concepts, names, and emphasis.\n3. Use *italic* for subtle emphasis, titles, or foreign words.\n4. Use `inline code` for technical terms, commands, file names, and code references.\n5. Use fenced code blocks (```) for code snippets — detect the language.\n6. Use bullet lists (- ) or numbered lists (1. ) where content is naturally a list.\n7. Use > blockquotes for quotes, citations, or callouts.\n8. Use [links](url) if URLs are present in the text.\n9. Use --- for thematic breaks between major sections.\n10. Preserve the ENTIRE content — do not remove, summarize, or shorten anything.\n11. Preserve the original language.\n12. Do not add any commentary or explanations.\n\nReturn only the Markdown-formatted text."
       }
     ],
     "id": "4D997C02-0740-4808-877F-864664CF7A55",
@@ -248,6 +257,7 @@
         "mnemonicKey": "M",
         "name": "Markdown",
         "nodeType": "prompt",
+        "displayMode": "markdown",
         "systemPrompt": "You are a Markdown converter. Convert the input text from either HTML or plain text to Markdown format. Preserve the original meaning and content. Preserve the original language. Return only the formatted Markdown text. Do not ask any questions or add any commentary."
       },
       {
@@ -255,6 +265,7 @@
         "mnemonicKey": "H",
         "name": "HTML",
         "nodeType": "prompt",
+        "displayMode": "html",
         "systemPrompt": "You are a Markdown and text-to-HTML converter. Convert text or Markdown input into HTML format. Preserve the original language. Return only the HTML output. Do not ask any questions or add any commentary."
       }
     ],
@@ -268,6 +279,6 @@
     "mnemonicKey": "/",
     "name": "// Your prompt",
     "nodeType": "prompt",
-    "systemPrompt": "You are a text transformation assistant. Identify and execute actions marked with two slashes (//) in the user text. Preserve the original language of the message. Return only the transformed text as specified by the action. Retain all other parts of the original message under any circumstances. Do not ask any questions or add any commentary."
+    "systemPrompt": "You are a text transformation assistant.\n\nRules:\n1. Find ALL comments marked with // in the user text.\n2. Execute ONLY the instruction written in each // comment.\n3. Replace the // comment with the result of that instruction.\n4. RETURN THE ENTIRE TEXT — every single word, line, and paragraph.\n5. Everything that is NOT a // comment MUST remain EXACTLY as-is, character for character. Do not fix, rephrase, reformat, or change ANY other part of the text.\n6. Preserve the original language of the surrounding text.\n7. Do not add any commentary, explanations, or notes.\n\nExample:\nInput: \"Hello! // translate to French\"\nOutput: \"Bonjour !\"\n\nInput: \"Meeting at 3pm.\n// add a polite reminder about bringing laptops\nSee you there.\"\nOutput: \"Meeting at 3pm.\nPlease remember to bring your laptops.\nSee you there.\""
   }
 ]

@@ -443,6 +443,16 @@ struct PromptEditorView: View {
                         }
                     }
                     .onChange(of: node.providerID) { autoSave() }
+
+                    Picker(loc.t("settings.prompts.editor.display_mode"), selection: $node.displayMode) {
+                        Text(loc.t("settings.prompts.editor.display_mode_default"))
+                            .tag(EditorMode?.none)
+                        Divider()
+                        Text("Plain text").tag(EditorMode?.some(.plainText))
+                        Text("HTML").tag(EditorMode?.some(.html))
+                        Text("Markdown").tag(EditorMode?.some(.markdown))
+                    }
+                    .onChange(of: node.displayMode) { autoSave() }
                 }
             }
 

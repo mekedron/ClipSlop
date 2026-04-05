@@ -313,3 +313,5 @@
 "settings.general.behavior.keep_open_on_escape" = "Keep window open on Escape";
 "settings.general.behavior.keep_open_on_escape_help" = "Prevent accidental closing — Escape will only navigate back, not close the window";
 "popup.hint.display" = "Display";
+"settings.prompts.editor.display_mode" = "Display mode";
+"settings.prompts.editor.display_mode_default" = "Use default";
