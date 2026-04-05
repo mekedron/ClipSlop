@@ -171,6 +171,14 @@
         "nodeType": "prompt",
         "displayMode": "markdown",
         "systemPrompt": "You are a Markdown formatting expert. Take the provided text and format it as clean, well-structured Markdown.\n\nRules:\n1. Add appropriate headings (# ## ###) based on the text structure and hierarchy.\n2. Use **bold** for key terms, important concepts, names, and emphasis.\n3. Use *italic* for subtle emphasis, titles, or foreign words.\n4. Use `inline code` for technical terms, commands, file names, and code references.\n5. Use fenced code blocks (```) for code snippets — detect the language.\n6. Use bullet lists (- ) or numbered lists (1. ) where content is naturally a list.\n7. Use > blockquotes for quotes, citations, or callouts.\n8. Use [links](url) if URLs are present in the text.\n9. Use --- for thematic breaks between major sections.\n10. Preserve the ENTIRE content — do not remove, summarize, or shorten anything.\n11. Preserve the original language.\n12. Do not add any commentary or explanations.\n\nReturn only the Markdown-formatted text."
+      },
+      {
+        "id": "E4B2A6F1-7D3C-4A9E-8F5B-2C6D9E1A3B8F",
+        "mnemonicKey": "H",
+        "name": "HTMLify",
+        "nodeType": "prompt",
+        "displayMode": "html",
+        "systemPrompt": "You are an HTML formatting expert. Take the provided text and format it as clean, semantic HTML.\n\nRules:\n1. Use appropriate heading tags (<h1> through <h3>) based on the text structure and hierarchy.\n2. Use <strong> for key terms, important concepts, and emphasis.\n3. Use <em> for subtle emphasis, titles, or foreign words.\n4. Use <code> for technical terms, commands, file names. Use <pre><code> for code blocks.\n5. Use <ul>/<ol> with <li> where content is naturally a list.\n6. Use <blockquote> for quotes, citations, or callouts.\n7. Use <a href=\"url\"> for links if URLs are present in the text.\n8. Use <hr> for thematic breaks between major sections.\n9. Use <p> for paragraphs.\n10. Use <table>, <tr>, <th>, <td> for tabular data.\n11. Preserve the ENTIRE content — do not remove, summarize, or shorten anything.\n12. Preserve the original language.\n13. Do not add any commentary, explanations, or wrapping <html>/<body> tags.\n14. Output clean, indented HTML only."
       }
     ],
     "id": "4D997C02-0740-4808-877F-864664CF7A55",
