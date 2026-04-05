@@ -49,9 +49,9 @@ final class AppState {
 
     var currentPrompts: [PromptNode] {
         if let last = navigationPath.last {
-            return last.sortedChildren
+            return last.children ?? []
         }
-        return promptStore.prompts.sorted { $0.mnemonicKey < $1.mnemonicKey }
+        return promptStore.prompts
     }
 
     var breadcrumb: [String] {
