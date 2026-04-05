@@ -806,22 +806,34 @@ struct MarkdownShortcutHandler: NSViewRepresentable {
 
 struct MarkdownPreviewView: View {
     let markdown: String
-    var showImages: Bool = AppSettings.shared.showImagesInMarkdown
+    private var settings: AppSettings { .shared }
 
     var body: some View {
-        ScrollView {
-            if showImages {
-                StructuredText(markdown: markdown)
-                    .textual.imageAttachmentLoader(.image())
-                    .textSelection(.enabled)
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                StructuredText(markdown: markdown)
-                    .textSelection(.enabled)
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        switch settings.markdownRenderer {
+        case .textual:
+            ScrollView {
+                if settings.showImagesInMarkdown {
+                    StructuredText(markdown: markdown)
+                        .textual.imageAttachmentLoader(.image())
+                        .textSelection(.enabled)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    StructuredText(markdown: markdown)
+                        .textSelection(.enabled)
+                        .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
             }
+        case .htmlEditor:
+            ConstrainedRichHTMLEditor(
+                html: .constant(MarkdownConverter.html(
+                    from: markdown,
+                    preserveImageWidths: settings.preserveImageWidths
+                )),
+                toolbarState: HTMLToolbarState(),
+                isEditable: false
+            )
         }
     }
 }

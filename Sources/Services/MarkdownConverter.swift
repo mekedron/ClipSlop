@@ -6,9 +6,9 @@ enum MarkdownConverter {
 
     // MARK: - Public API
 
-    static func html(from markdown: String) -> String {
+    static func html(from markdown: String, preserveImageWidths: Bool = false) -> String {
         let document = Document(parsing: markdown)
-        var visitor = HTMLVisitor()
+        var visitor = HTMLVisitor(preserveImageWidths: preserveImageWidths)
         return visitor.visit(document)
     }
 
@@ -224,6 +224,17 @@ enum MarkdownConverter {
         case "img":
             let src = element.attribute(forName: "src")?.stringValue ?? ""
             let alt = element.attribute(forName: "alt")?.stringValue ?? ""
+            // Preserve as raw HTML only when using HTML renderer (Textual can't render HTML tags)
+            if AppSettings.shared.preserveImageWidths && AppSettings.shared.markdownRenderer == .htmlEditor {
+                let width = element.attribute(forName: "width")?.stringValue
+                let height = element.attribute(forName: "height")?.stringValue
+                let style = element.attribute(forName: "style")?.stringValue ?? ""
+                let hasDimensions = width != nil || height != nil
+                    || style.contains("width") || style.contains("max-width")
+                if hasDimensions {
+                    return element.xmlString
+                }
+            }
             return "![\(alt)](\(src))"
 
         // Lists
@@ -410,6 +421,11 @@ private extension String {
 
 private struct HTMLVisitor: MarkupVisitor {
     typealias Result = String
+    let preserveImageWidths: Bool
+
+    init(preserveImageWidths: Bool = false) {
+        self.preserveImageWidths = preserveImageWidths
+    }
 
     mutating func defaultVisit(_ markup: any Markup) -> String {
         markup.children.map { visit($0) }.joined()
@@ -487,6 +503,19 @@ private struct HTMLVisitor: MarkupVisitor {
         let href = link.destination ?? ""
         let content = link.children.map { visit($0) }.joined()
         return "<a href=\"\(escapeHTML(href))\">\(content)</a>"
+    }
+
+    mutating func visitHTMLBlock(_ html: HTMLBlock) -> String {
+        let raw = html.rawHTML
+        if preserveImageWidths { return raw }
+        // Strip width/style from img tags when not preserving
+        return raw
+    }
+
+    mutating func visitInlineHTML(_ html: InlineHTML) -> String {
+        let raw = html.rawHTML
+        if preserveImageWidths { return raw }
+        return raw
     }
 
     mutating func visitImage(_ image: Markdown.Image) -> String {

@@ -547,7 +547,7 @@ struct KeyEventHandler: NSViewRepresentable {
             if code == KeyCode.escape {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
-                } else if !appState.settings.keepOpenOnEscape {
+                } else if appState.settings.closeOnEscape {
                     appState.dismissPopup()
                 }
                 return true

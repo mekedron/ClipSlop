@@ -66,10 +66,28 @@ struct GeneralSettingsView: View {
                 LaunchAtLogin.Toggle(loc.t("settings.general.behavior.launch_login"))
                 Toggle(loc.t("settings.general.behavior.keycodes"), isOn: $settings.useKeyCodes)
                     .help(loc.t("settings.general.behavior.keycodes_help"))
-                Toggle(loc.t("settings.general.behavior.keep_open_on_escape"), isOn: $settings.keepOpenOnEscape)
-                    .help(loc.t("settings.general.behavior.keep_open_on_escape_help"))
-                Toggle(loc.t("settings.general.behavior.show_images_markdown"), isOn: $settings.showImagesInMarkdown)
-                    .help(loc.t("settings.general.behavior.show_images_markdown_help"))
+                Toggle(loc.t("settings.general.behavior.close_on_escape"), isOn: $settings.closeOnEscape)
+                    .help(loc.t("settings.general.behavior.close_on_escape_help"))
+                LabeledContent(loc.t("settings.general.behavior.markdown_renderer")) {
+                    Picker("", selection: $settings.markdownRenderer) {
+                        ForEach(MarkdownRenderer.allCases) { renderer in
+                            Text(renderer.displayName).tag(renderer)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 200)
+                }
+                .help(loc.t("settings.general.behavior.markdown_renderer_help"))
+
+                if settings.markdownRenderer == .textual {
+                    Toggle(loc.t("settings.general.behavior.show_images_markdown"), isOn: $settings.showImagesInMarkdown)
+                        .help(loc.t("settings.general.behavior.show_images_markdown_help"))
+                }
+
+                if settings.markdownRenderer == .htmlEditor {
+                    Toggle(loc.t("settings.general.behavior.preserve_image_widths"), isOn: $settings.preserveImageWidths)
+                        .help(loc.t("settings.general.behavior.preserve_image_widths_help"))
+                }
                 LabeledContent(loc.t("settings.general.behavior.editor_mode")) {
                     Picker("", selection: $settings.editorMode) {
                         Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)

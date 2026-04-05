@@ -128,6 +128,24 @@ struct ThirdPartyLibrariesView: View {
             "A software update framework for macOS applications",
             "https://github.com/sparkle-project/Sparkle"
         ),
+        (
+            "swift-markdown",
+            "Apple / Swift Project",
+            "Swift Markdown parsing and rendering library",
+            "https://github.com/swiftlang/swift-markdown"
+        ),
+        (
+            "Textual",
+            "Guillermo Gonzalez",
+            "Render Markdown as native SwiftUI views with styling support",
+            "https://github.com/gonzalezreal/textual"
+        ),
+        (
+            "swift-rich-html-editor",
+            "Infomaniak",
+            "WYSIWYG rich HTML editor component for SwiftUI",
+            "https://github.com/Infomaniak/swift-rich-html-editor"
+        ),
     ]
 
     var body: some View {
@@ -145,34 +163,34 @@ struct ThirdPartyLibrariesView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            VStack(spacing: 8) {
-                ForEach(libraries, id: \.name) { lib in
-                    Link(destination: URL(string: lib.url)!) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(lib.name)
-                                    .font(.subheadline).fontWeight(.medium)
-                                Spacer()
-                                Image(systemName: "arrow.up.right")
-                                    .font(.caption2)
+            ScrollView {
+                VStack(spacing: 8) {
+                    ForEach(libraries, id: \.name) { lib in
+                        Link(destination: URL(string: lib.url)!) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(lib.name)
+                                        .font(.subheadline).fontWeight(.medium)
+                                    Spacer()
+                                    Image(systemName: "arrow.up.right")
+                                        .font(.caption2)
+                                        .foregroundStyle(.tertiary)
+                                }
+                                Text("by \(lib.author)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                Text(lib.description)
+                                    .font(.caption)
                                     .foregroundStyle(.tertiary)
                             }
-                            Text("by \(lib.author)")
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                            Text(lib.description)
-                                .font(.caption)
-                                .foregroundStyle(.tertiary)
+                            .padding(12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
-                        .padding(12)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
             }
-
-            Spacer()
 
             Text(loc.t("about.libraries.license"))
                 .font(.caption2)
@@ -180,6 +198,7 @@ struct ThirdPartyLibrariesView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(24)
-        .frame(width: 380, height: 420)
+        .frame(width: 380)
+        .frame(minHeight: 300, idealHeight: 500)
     }
 }

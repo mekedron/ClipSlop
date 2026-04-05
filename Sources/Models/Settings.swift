@@ -1,6 +1,20 @@
 import AppKit
 import SwiftUI
 
+enum MarkdownRenderer: String, CaseIterable, Identifiable, Sendable {
+    case textual
+    case htmlEditor
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .textual: "Textual"
+        case .htmlEditor: "HTML Editor"
+        }
+    }
+}
+
 enum AppColorScheme: String, CaseIterable, Identifiable, Sendable {
     case system
     case light
@@ -95,8 +109,16 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(showImagesInMarkdown, forKey: "showImagesInMarkdown") }
     }
 
-    var keepOpenOnEscape: Bool {
-        didSet { UserDefaults.standard.set(keepOpenOnEscape, forKey: "keepOpenOnEscape") }
+    var markdownRenderer: MarkdownRenderer {
+        didSet { UserDefaults.standard.set(markdownRenderer.rawValue, forKey: "markdownRenderer") }
+    }
+
+    var preserveImageWidths: Bool {
+        didSet { UserDefaults.standard.set(preserveImageWidths, forKey: "preserveImageWidths") }
+    }
+
+    var closeOnEscape: Bool {
+        didSet { UserDefaults.standard.set(closeOnEscape, forKey: "closeOnEscape") }
     }
 
     var appColorScheme: AppColorScheme {
@@ -147,7 +169,10 @@ final class AppSettings {
         iCloudSyncEnabled = defaults.bool(forKey: "iCloudSyncEnabled")
         useKeyCodes = defaults.bool(forKey: "useKeyCodes")
         showImagesInMarkdown = defaults.object(forKey: "showImagesInMarkdown") as? Bool ?? true
-        keepOpenOnEscape = defaults.bool(forKey: "keepOpenOnEscape")
+        markdownRenderer = defaults.string(forKey: "markdownRenderer")
+            .flatMap(MarkdownRenderer.init(rawValue:)) ?? .textual
+        preserveImageWidths = defaults.object(forKey: "preserveImageWidths") as? Bool ?? true
+        closeOnEscape = defaults.object(forKey: "closeOnEscape") as? Bool ?? true
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
         editorMode = defaults.string(forKey: "editorMode")

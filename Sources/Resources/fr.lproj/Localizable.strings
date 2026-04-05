@@ -322,10 +322,14 @@
 "settings.prompts.root" = "Root (top level)";
 "settings.prompts.editor.provider" = "AI Provider";
 "settings.prompts.editor.provider_default" = "Use default";
-"settings.general.behavior.keep_open_on_escape" = "Keep window open on Escape";
-"settings.general.behavior.keep_open_on_escape_help" = "Prevent accidental closing — Escape will only navigate back, not close the window";
+"settings.general.behavior.close_on_escape" = "Close window on Escape";
+"settings.general.behavior.close_on_escape_help" = "When enabled, pressing Escape closes the window; when disabled, Escape only navigates back";
 "popup.hint.display" = "Display";
 "settings.prompts.editor.display_mode" = "Display mode";
 "settings.prompts.editor.display_mode_default" = "Use default";
+"settings.general.behavior.markdown_renderer" = "Markdown renderer";
+"settings.general.behavior.markdown_renderer_help" = "Textual uses native rendering; HTML Editor uses a web-based renderer with richer formatting support";
 "settings.general.behavior.show_images_markdown" = "Show images in Markdown";
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
+"settings.general.behavior.preserve_image_widths" = "Preserve image widths";
+"settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";

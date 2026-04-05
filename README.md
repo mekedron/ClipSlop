@@ -151,6 +151,9 @@ ClipSlop is built with these open-source libraries:
 - [KeyboardShortcuts](https://github.com/sindresorhus/KeyboardShortcuts) by Sindre Sorhus — customizable global keyboard shortcuts
 - [LaunchAtLogin](https://github.com/sindresorhus/LaunchAtLogin-Modern) by Sindre Sorhus — launch at login support
 - [Sparkle](https://github.com/sparkle-project/Sparkle) — software update framework for macOS
+- [swift-markdown](https://github.com/swiftlang/swift-markdown) by Apple / Swift Project — Markdown parsing and rendering
+- [Textual](https://github.com/gonzalezreal/textual) by Guillermo Gonzalez — native SwiftUI Markdown rendering
+- [swift-rich-html-editor](https://github.com/Infomaniak/swift-rich-html-editor) by Infomaniak — WYSIWYG rich HTML editor
 
 ## License
 
