@@ -29,6 +29,8 @@ final class AppState {
     var originalViewMode: RichTextMode = .plainText
     // Runtime display format (independent from settings default)
     var activeEditorMode: EditorMode = .markdown
+    // Display mode for the original item — initialized from settings, updated by user
+    var originalDisplayMode: EditorMode = .markdown
     // Lazy caches for original text conversions
     @ObservationIgnored private var cachedOriginalMarkdown: String?
     @ObservationIgnored private var cachedOriginalMarkdownAI: String?
@@ -347,6 +349,7 @@ final class AppState {
         // Pre-select modes from settings (runtime copies, independent from settings)
         originalViewMode = settings.richTextMode
         activeEditorMode = settings.editorMode
+        originalDisplayMode = settings.editorMode
 
         showPopup()
 
@@ -438,10 +441,10 @@ final class AppState {
                     guard !accumulated.isEmpty else {
                         throw AIServiceError.emptyResponse
                     }
-                    currentSession = session.addingStep(promptName: name, outputText: accumulated)
+                    currentSession = session.addingStep(promptName: name, outputText: accumulated, displayMode: activeEditorMode)
                 } else {
                     let result = try await service.process(text: inputText, systemPrompt: systemPrompt, config: config)
-                    currentSession = session.addingStep(promptName: name, outputText: result)
+                    currentSession = session.addingStep(promptName: name, outputText: result, displayMode: activeEditorMode)
                 }
                 selectedHistoryStepIndex = nil
                 navigationPath = []
@@ -485,6 +488,13 @@ final class AppState {
 
     func selectHistoryStep(at index: Int) {
         selectedHistoryStepIndex = index
+        // Restore the display mode for this step
+        guard let session = currentSession else { return }
+        if index < 0 {
+            activeEditorMode = originalDisplayMode
+        } else if index < session.steps.count {
+            activeEditorMode = session.steps[index].displayMode
+        }
     }
 
     /// Move to a newer step (towards latest result). In sidebar: up direction.
@@ -528,7 +538,7 @@ final class AppState {
         if session.originalText.isEmpty {
             currentSession = TransformationSession(originalText: text, inputSource: session.inputSource)
         } else if text != currentDisplayText {
-            currentSession = session.addingStep(promptName: Loc.shared.t("misc.manual_edit"), outputText: text)
+            currentSession = session.addingStep(promptName: Loc.shared.t("misc.manual_edit"), outputText: text, displayMode: activeEditorMode)
         }
         selectedHistoryStepIndex = nil
         isEditing = false

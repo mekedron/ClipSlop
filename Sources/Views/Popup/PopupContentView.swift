@@ -284,6 +284,12 @@ struct PopupContentView: View {
                 Text("Markdown").tag(EditorMode.markdown)
             }
             .frame(width: 145)
+            .onChange(of: appState.activeEditorMode) { _, newMode in
+                // Save display mode for original item when viewing it
+                if isViewingOriginal {
+                    appState.originalDisplayMode = newMode
+                }
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)

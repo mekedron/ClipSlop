@@ -6,19 +6,22 @@ struct TransformationStep: Identifiable, Sendable {
     let inputText: String
     let outputText: String
     let timestamp: Date
+    let displayMode: EditorMode
 
     init(
         id: UUID = UUID(),
         promptName: String,
         inputText: String,
         outputText: String,
-        timestamp: Date = Date()
+        timestamp: Date = Date(),
+        displayMode: EditorMode = .markdown
     ) {
         self.id = id
         self.promptName = promptName
         self.inputText = inputText
         self.outputText = outputText
         self.timestamp = timestamp
+        self.displayMode = displayMode
     }
 }
 
@@ -56,13 +59,14 @@ struct TransformationSession: Identifiable, Sendable {
     var stepCount: Int { steps.count }
     var hasSteps: Bool { !steps.isEmpty }
 
-    func addingStep(promptName: String, outputText: String) -> TransformationSession {
+    func addingStep(promptName: String, outputText: String, displayMode: EditorMode = .markdown) -> TransformationSession {
         var copy = self
         copy.steps.append(
             TransformationStep(
                 promptName: promptName,
                 inputText: currentText,
-                outputText: outputText
+                outputText: outputText,
+                displayMode: displayMode
             )
         )
         return copy
