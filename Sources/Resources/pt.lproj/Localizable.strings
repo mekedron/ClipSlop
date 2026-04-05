@@ -165,6 +165,17 @@
 "settings.providers.cli.redetect" = "Detectar novamente";
 "settings.providers.cli.available" = "Disponível";
 "settings.providers.cli.not_found" = "Não encontrado — a ferramenta pode ter sido desinstalada";
+"settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
+"settings.providers.chatgpt.sign_out" = "Sign Out";
+"settings.providers.chatgpt.copy_url" = "Copy sign-in URL";
+"settings.providers.temperature" = "Temperature";
+"settings.providers.reasoning_effort" = "Reasoning Effort";
+"settings.providers.test" = "Test";
+"settings.providers.test_ok" = "Connection OK";
+"settings.providers.delete" = "Delete";
+"settings.providers.duplicate" = "Duplicate";
+"settings.providers.duplicate_button" = "Duplicate";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Selecione um prompt para editar";
@@ -249,6 +260,7 @@
 "popup.hint.page_up" = "Página ↑";
 "popup.hint.back" = "Voltar";
 "popup.hint.close" = "Fechar";
+"popup.hint.find" = "Buscar";
 "popup.processing" = "Processando...";
 "popup.receiving" = "Recebendo resposta...";
 
@@ -315,3 +327,5 @@
 "popup.hint.display" = "Display";
 "settings.prompts.editor.display_mode" = "Display mode";
 "settings.prompts.editor.display_mode_default" = "Use default";
+"settings.general.behavior.show_images_markdown" = "Show images in Markdown";
+"settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";

@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Launch at login";
 "settings.general.behavior.keycodes" = "Use key codes (layout-independent shortcuts)";
 "settings.general.behavior.keycodes_help" = "Match by physical key position — mnemonics work with any keyboard layout";
+"settings.general.behavior.show_images_markdown" = "Show images in Markdown";
+"settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.keep_open_on_escape" = "Keep window open on Escape";
 "settings.general.behavior.keep_open_on_escape_help" = "Prevent accidental closing — Escape will only navigate back, not close the window";
 "settings.general.behavior.editor_mode" = "Display format";
@@ -182,6 +184,17 @@
 "settings.providers.cli.redetect" = "Re-detect";
 "settings.providers.cli.available" = "Available";
 "settings.providers.cli.not_found" = "Not found — tool may have been uninstalled";
+"settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
+"settings.providers.chatgpt.sign_out" = "Sign Out";
+"settings.providers.chatgpt.copy_url" = "Copy sign-in URL";
+"settings.providers.temperature" = "Temperature";
+"settings.providers.reasoning_effort" = "Reasoning Effort";
+"settings.providers.test" = "Test";
+"settings.providers.test_ok" = "Connection OK";
+"settings.providers.delete" = "Delete";
+"settings.providers.duplicate" = "Duplicate";
+"settings.providers.duplicate_button" = "Duplicate";
 
 /* Settings - Prompts */
 "settings.prompts.select" = "Select a prompt to edit";
@@ -275,6 +288,7 @@
 "popup.hint.page_up" = "Page ↑";
 "popup.hint.back" = "Back";
 "popup.hint.close" = "Close";
+"popup.hint.find" = "Find";
 "popup.processing" = "Processing...";
 "popup.receiving" = "Receiving response...";
 

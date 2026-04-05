@@ -16,6 +16,8 @@ enum AIServiceError: LocalizedError {
     case cliToolNotFound(String)
     case cliToolFailed(exitCode: Int32, stderr: String)
     case cliToolTimeout
+    case oauthLoginRequired
+    case oauthTokenExpired
 
     var errorDescription: String? {
         switch self {
@@ -44,6 +46,10 @@ enum AIServiceError: LocalizedError {
             "CLI tool error: \(stderr.isEmpty ? "unknown error" : stderr)"
         case .cliToolTimeout:
             "CLI tool timed out. The request may be too large."
+        case .oauthLoginRequired:
+            "Please sign in with ChatGPT first in Settings."
+        case .oauthTokenExpired:
+            "ChatGPT session expired. Please sign in again in Settings."
         }
     }
 }
@@ -55,6 +61,8 @@ enum AIServiceFactory {
             AnthropicService()
         case .cliTool:
             CLIToolService()
+        case .openAIChatGPT:
+            ChatGPTService()
         case .openAI, .ollama, .openAICompatible:
             OpenAICompatibleService()
         }

@@ -8,6 +8,8 @@ enum ModelFetcher {
         switch config.providerType {
         case .openAI, .openAICompatible:
             fetched = await fetchOpenAIModels(baseURL: config.baseURL, apiKeyRef: config.apiKeyRef)
+        case .openAIChatGPT:
+            fetched = await fetchChatGPTModels(config: config)
         case .ollama:
             fetched = await fetchOpenAIModels(baseURL: config.baseURL, apiKeyRef: config.apiKeyRef)
         case .anthropic:
@@ -27,13 +29,12 @@ enum ModelFetcher {
         switch providerType {
         case .anthropic:
             [
-                "claude-opus-4-20250514",
-                "claude-sonnet-4-20250514",
-                "claude-haiku-4-5-20251001",
-                "claude-3-7-sonnet-20250219",
-                "claude-3-5-sonnet-20241022",
-                "claude-3-5-haiku-20241022",
-                "claude-3-opus-20240229",
+                "claude-opus-4",
+                "claude-sonnet-4",
+                "claude-haiku-4",
+                "claude-3-7-sonnet",
+                "claude-3-5-sonnet",
+                "claude-3-5-haiku",
             ]
         case .openAI:
             [
@@ -45,6 +46,15 @@ enum ModelFetcher {
                 "o3",
                 "o3-mini",
                 "o4-mini",
+            ]
+        case .openAIChatGPT:
+            [
+                "gpt-5.3-codex",
+                "gpt-5.4",
+                "gpt-5.2-codex",
+                "gpt-5.1-codex-max",
+                "gpt-5.2",
+                "gpt-5.1-codex-mini",
             ]
         default:
             []
@@ -74,27 +84,70 @@ enum ModelFetcher {
             .sorted()
     }
 
-    // MARK: - Anthropic
+    // MARK: - ChatGPT (OAuth)
 
-    private static func fetchAnthropicModels(baseURL: String, apiKeyRef: String) async -> [String] {
-        guard let apiKey = KeychainService.load(key: apiKeyRef), !apiKey.isEmpty,
-              let url = URL(string: baseURL + "/v1/models")
+    @MainActor
+    private static func fetchChatGPTModels(config: AIProviderConfig) async -> [String] {
+        guard let (accessToken, accountID) = try? await ChatGPTTokenManager.shared.getValidAccessToken(for: config.id),
+              let url = URL(string: config.baseURL + "/models?client_version=1.0.0")
         else { return [] }
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 10
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue(Constants.Anthropic.apiVersion, forHTTPHeaderField: "anthropic-version")
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        if let accountID, !accountID.isEmpty {
+            request.setValue(accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
+        }
 
         guard let (data, response) = try? await URLSession.shared.data(for: request),
               let http = response as? HTTPURLResponse, http.statusCode == 200,
-              let json = try? JSONDecoder().decode(AnthropicModelsResponse.self, from: data)
+              let json = try? JSONDecoder().decode(ChatGPTModelsResponse.self, from: data)
         else { return [] }
 
-        return json.data
-            .map(\.id)
-            .sorted()
+        return json.models
+            .filter { $0.visibility == "list" }
+            .sorted { $0.priority < $1.priority }
+            .map(\.slug)
+    }
+
+    // MARK: - Anthropic
+
+    private static func fetchAnthropicModels(baseURL: String, apiKeyRef: String) async -> [String] {
+        guard let apiKey = KeychainService.load(key: apiKeyRef), !apiKey.isEmpty else { return [] }
+
+        var allModels: [String] = []
+        var afterID: String?
+
+        // Paginate through all models
+        while true {
+            var urlString = baseURL + "/v1/models?limit=1000"
+            if let afterID {
+                urlString += "&after_id=\(afterID)"
+            }
+            guard let url = URL(string: urlString) else { break }
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.timeoutInterval = 10
+            request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+            request.setValue(Constants.Anthropic.apiVersion, forHTTPHeaderField: "anthropic-version")
+
+            guard let (data, response) = try? await URLSession.shared.data(for: request),
+                  let http = response as? HTTPURLResponse, http.statusCode == 200,
+                  let json = try? JSONDecoder().decode(AnthropicModelsResponse.self, from: data)
+            else { break }
+
+            allModels.append(contentsOf: json.data.map(\.id))
+
+            if json.hasMore, let lastID = json.lastID {
+                afterID = lastID
+            } else {
+                break
+            }
+        }
+
+        return allModels.sorted()
     }
 }
 
@@ -108,10 +161,28 @@ private struct OpenAIModelsResponse: Decodable {
     }
 }
 
+private struct ChatGPTModelsResponse: Decodable {
+    let models: [Model]
+
+    struct Model: Decodable {
+        let slug: String
+        let visibility: String
+        let priority: Int
+    }
+}
+
 private struct AnthropicModelsResponse: Decodable {
     let data: [Model]
+    let hasMore: Bool
+    let lastID: String?
 
     struct Model: Decodable {
         let id: String
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case data
+        case hasMore = "has_more"
+        case lastID = "last_id"
     }
 }

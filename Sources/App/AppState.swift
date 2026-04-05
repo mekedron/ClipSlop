@@ -5,6 +5,7 @@ import SwiftUI
 final class AppState {
     let promptStore = PromptStore()
     let providerStore = ProviderStore()
+    let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
     let settings = AppSettings.shared
     let syncService = CloudSyncService()

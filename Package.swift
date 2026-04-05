@@ -41,6 +41,11 @@ let package = Package(
                     "-Xlinker", "@executable_path/../Frameworks",
                 ])
             ]
+        ),
+        .testTarget(
+            name: "ClipSlopTests",
+            dependencies: ["ClipSlop"],
+            path: "Tests"
         )
     ]
 )

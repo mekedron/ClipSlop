@@ -87,6 +87,7 @@ struct AnthropicService: AIService {
         let body = AnthropicRequest(
             model: config.modelID,
             maxTokens: config.maxTokens,
+            temperature: config.temperature,
             system: systemPrompt,
             stream: stream,
             messages: [.init(role: "user", content: text)]
@@ -103,6 +104,7 @@ struct AnthropicService: AIService {
 private struct AnthropicRequest: Encodable {
     let model: String
     let maxTokens: Int
+    let temperature: Double
     let system: String
     let stream: Bool
     let messages: [Message]
@@ -113,7 +115,7 @@ private struct AnthropicRequest: Encodable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case model
+        case model, temperature
         case maxTokens = "max_tokens"
         case system, stream, messages
     }

@@ -95,6 +95,7 @@ struct OpenAICompatibleService: AIService {
                 .init(role: "user", content: text),
             ],
             maxTokens: config.maxTokens,
+            temperature: config.temperature,
             stream: stream
         )
 
@@ -109,6 +110,7 @@ private struct OpenAIRequest: Encodable {
     let model: String
     let messages: [Message]
     let maxTokens: Int
+    let temperature: Double
     let stream: Bool
 
     struct Message: Encodable {
@@ -117,7 +119,7 @@ private struct OpenAIRequest: Encodable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case model, messages, stream
+        case model, messages, temperature, stream
         case maxTokens = "max_tokens"
     }
 }

@@ -17,7 +17,7 @@ enum Constants {
     enum Anthropic {
         static let baseURL = "https://api.anthropic.com"
         static let apiVersion = "2023-06-01"
-        static let defaultModel = "claude-sonnet-4-20250514"
+        static let defaultModel = "claude-sonnet-4"
     }
 
     enum OpenAI {
@@ -30,8 +30,20 @@ enum Constants {
         static let defaultModel = "llama3.2"
     }
 
+    enum ChatGPT {
+        static let authIssuer = "https://auth.openai.com"
+        static let clientID = "app_EMoamEEZ73f0CkXaXp7hrann"
+        static let callbackPort: UInt16 = 1455
+        static let redirectURI = "http://localhost:1455/auth/callback"
+        static let tokenEndpoint = "https://auth.openai.com/oauth/token"
+        static let scopes = "openid profile email offline_access api.connectors.read api.connectors.invoke"
+        static let baseURL = "https://chatgpt.com/backend-api/codex"
+        static let defaultModel = "gpt-5.3-codex"
+    }
+
     enum Defaults {
         static let maxTokens = 4096
+        static let temperature = 1.0
         static let streamingEnabled = true
     }
 }

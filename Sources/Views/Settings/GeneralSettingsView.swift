@@ -68,6 +68,8 @@ struct GeneralSettingsView: View {
                     .help(loc.t("settings.general.behavior.keycodes_help"))
                 Toggle(loc.t("settings.general.behavior.keep_open_on_escape"), isOn: $settings.keepOpenOnEscape)
                     .help(loc.t("settings.general.behavior.keep_open_on_escape_help"))
+                Toggle(loc.t("settings.general.behavior.show_images_markdown"), isOn: $settings.showImagesInMarkdown)
+                    .help(loc.t("settings.general.behavior.show_images_markdown_help"))
                 LabeledContent(loc.t("settings.general.behavior.editor_mode")) {
                     Picker("", selection: $settings.editorMode) {
                         Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)
