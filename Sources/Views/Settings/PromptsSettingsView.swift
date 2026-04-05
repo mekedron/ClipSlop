@@ -534,12 +534,29 @@ struct PromptEditorView: View {
                 let result = try await service.process(
                     text: description,
                     systemPrompt: """
-                    You are a prompt engineer. The user will describe what they want a text transformation prompt to do. \
-                    Generate a system prompt that will be used to transform user text. \
-                    The prompt should be clear, concise, and follow this pattern:
-                    "You are a [role]. [Instruction]. Preserve the original [what to preserve]. Return only the [output]. \
-                    Do not ask any questions or add any commentary."
-                    Return ONLY the system prompt text, nothing else.
+                    You are an expert prompt engineer for a text transformation tool called ClipSlop.
+
+                    The user will describe what they want a prompt to do. Generate a system prompt that will instruct an AI to transform user text.
+
+                    The generated prompt MUST follow this structure:
+                    1. Role assignment: "You are a [specific role]."
+                    2. Task description: One clear sentence about what to do.
+                    3. Numbered rules (5-10 rules) covering:
+                       - What exactly to do and how
+                       - What to preserve (language, formatting, meaning, tone, content)
+                       - What NOT to do (don't summarize, don't add opinions, don't change X)
+                       - Edge cases (what if the input is already correct, empty, or ambiguous)
+                       - Output format: "Return ONLY the [output type]."
+                       - Final rule: "Do NOT add notes, explanations, or commentary."
+
+                    Critical guidelines:
+                    - Be SPECIFIC — vague prompts produce inconsistent results
+                    - Always include "Preserve the original language" unless translation is the goal
+                    - Always include a rule about preserving formatting (Markdown, HTML, line breaks)
+                    - Always end with "Do NOT add notes, explanations, or commentary."
+                    - The prompt should work for ANY text length (one word to many pages)
+
+                    Return ONLY the system prompt text. No explanations, no wrapper, no quotes around it.
                     """,
                     config: provider
                 )
