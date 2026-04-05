@@ -5,8 +5,9 @@
 <h1 align="center">ClipSlop</h1>
 
 <p align="center">
-  AI-powered clipboard processor for macOS.<br>
-  Select text, press a shortcut, pick a prompt — done.
+  <strong>Keyboard-first AI text pipeline for macOS.</strong><br>
+  Chain prompts, transform text, never leave your keyboard.<br>
+  Free and open-source.
 </p>
 
 <p align="center">
@@ -18,55 +19,59 @@
 
 ## Why?
 
-Because copy-pasting text into ChatGPT for the 47th time today to translate / rewrite / summarize the same kind of stuff is not a workflow — it's a punishment. Open browser, find the tab, type the same prompt you typed yesterday, copy the result, switch back, paste. Repeat until insane.
+Raycast, PopClip, and ChatGPT all let you run text through AI. But they give you one prompt at a time. You can't chain translate → fix grammar → make formal → format as email in a single keyboard-driven flow. And you definitely can't navigate back to any step and branch off.
 
-ClipSlop exists so you never do that again. Select text, press a shortcut, pick a saved prompt, done. No browser. No "please make this shorter". No copy-paste Olympics.
+ClipSlop is a full pipeline. Select text, press a shortcut, navigate a prompt tree with single-key mnemonics, chain as many transformations as you want — each step saved in history. All from the keyboard, all in a floating panel, all without touching a browser.
+
+It's also completely free, open-source, and works with any AI provider — your own API keys, ChatGPT sign-in, local Ollama, or CLI tools like Claude Code.
 
 ---
 
 <p align="center">
-  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI-powered clipboard text processing with history, prompt cards, and search">
+  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — keyboard-driven AI text pipeline with prompt tree, transformation history, and search">
 </p>
-
-## What it does
-
-ClipSlop sits in your menu bar and transforms any text through AI prompts. Grab text from anywhere — a browser, email, terminal — and run it through translation, reformatting, summarization, or your own custom prompts. All without leaving the app you're working in.
-
-## Use cases
-
-- **Translate on the fly** — Select a message, press `⌃⌘C`, pick a language. Paste the translation back.
-- **Fix grammar before sending** — Write a draft, run it through "Fix Grammar", paste the clean version.
-- **Make it professional** — Rewrite a casual message in business tone for that important email.
-- **Summarize long text** — Paste a wall of text, get a TL;DR in seconds.
-- **OCR from screen** — Capture text from images, screenshots, or non-selectable UI with `⇧⌘2`.
-- **Chain transformations** — Translate → fix grammar → make formal. Each step is tracked in history.
-- **Quick notepad** — Open a blank editor (`⌃⌘N`), write something, run it through any prompt.
 
 ## How it works
 
 ```
-Select text → ⌃⌘C → Pick a prompt → Get result → Copy / Paste back
+Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations → Copy result
 ```
 
-1. **Trigger** — Select text anywhere and press `⌃⌘C` (or use clipboard/OCR/blank editor)
-2. **Choose** — Navigate the prompt tree with keyboard mnemonics (T for Translate, F for Format...)
-3. **Process** — AI processes your text with streaming output
-4. **Use** — Copy (`⌘C`), paste back, edit (`⌘E`), or chain another transformation
-5. **History** — Every step is saved. Navigate with arrow keys, jump to any point.
+1. **Trigger** — Select text anywhere, press `⌃⌘C`. Text appears in a floating panel.
+2. **Navigate** — Prompt tree with single-key mnemonics: `T` → Translate, `R` → Rewrite, `F` → Format. Drill into folders, pick a prompt — one keypress each.
+3. **Chain** — Result becomes input for the next prompt. Translate → Elaborate → Format as Email. Each step saved.
+4. **History** — Arrow keys navigate the full transformation chain. Jump to any step, branch off.
+5. **Use** — Copy (`⌘C`), edit (`⌘E`), save (`⌘S`), or keep chaining.
+
+## What makes it different
+
+| | ClipSlop | Raycast AI | PopClip | ChatGPT |
+|---|---|---|---|---|
+| **Prompt chaining** | Chain unlimited transformations, full history | One prompt at a time | One action | Manual copy-paste |
+| **Keyboard-first** | Single-key mnemonics, no mouse needed | Menu-based | Mouse-first | Browser UI |
+| **Prompt organization** | Nested folders with mnemonics | Flat list | Flat list | Chat history |
+| **Step history** | Navigate back/forward, branch from any step | No history | No history | Scroll up |
+| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | OpenAI only | OpenAI only | OpenAI only |
+| **Price** | Free, open-source | $8/mo for AI | $30 one-time + API costs | $20/mo |
 
 ## Features
 
-- **Multi-provider AI** — Anthropic (Claude), OpenAI (GPT), Ollama (local), CLI tools (Claude Code, Codex), any OpenAI-compatible API
-- **Nested prompt tree** — Organize prompts in folders with single-key mnemonics
-- **Full history** — See every transformation step, navigate back and forth
-- **Manual editing** — Edit any result by hand (`⌘E`), saved as a history step
-- **Screen OCR** — Capture and recognize text from any screen region
-- **Configurable shortcuts** — All global hotkeys are customizable
+- **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
+- **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
+- **Multi-provider** — OpenAI (sign in with ChatGPT or API key), Anthropic, Ollama, CLI tools, any OpenAI-compatible API
+- **Nested prompt tree** — Organize prompts in folders, each with a mnemonic key
+- **Built-in prompts** — Translate (16 languages), Rewrite (6 tones), Format (7 tools), Analyze, Convert
+- **Manual editing** — Edit any result inline (`⌘E`), saved as a history step
+- **Find in text** — `⌘F` search with highlighting across all display modes
+- **Screen OCR** — Capture and recognize text from any screen region (`⇧⌘2`)
+- **Blank editor** — Open an empty editor (`⌃⌘N`), write text, run prompts on it
 - **Generate prompts with AI** — Describe what you want, AI writes the system prompt
+- **Per-prompt settings** — Override provider, display mode per prompt
 - **Import/Export** — Share prompt configurations as JSON
-- **iCloud Sync** — Prompts sync across your Macs
-- **Launch at login** — Always ready when you need it
-- **Adjustable opacity** — Semi-transparent popup so you can see what's behind
+- **iCloud Sync** — Prompts sync across Macs
+- **Temperature & reasoning** — Per-provider temperature control, reasoning effort for ChatGPT models
+- **Multiple display modes** — Plain text, Markdown (native or HTML renderer), HTML
+- **Adjustable UI** — Opacity, size, theme, launch at login
 
 ## Default shortcuts
 
@@ -77,13 +82,27 @@ Select text → ⌃⌘C → Pick a prompt → Get result → Copy / Paste back
 | `⌃⌘N` | Blank editor |
 | `⇧⌘2` | Screen capture (OCR) |
 | `⌘E` | Edit mode |
+| `⌘F` | Find in text |
 | `⌘S` | Save to file |
 | `⌘O` | Open in TextEdit |
+| `⌘D` | Cycle display mode |
 | `⌘,` | Settings |
 | `←→` | Navigate history |
 | `↑↓` | Scroll text |
 | `Space` | Page down |
 | `Esc` | Close / Back |
+
+## Default prompts
+
+```
+[T] Translate  → English, Finnish, Russian, Spanish, French, German, + 10 more
+[R] Rewrite    → Elaborate, Neutral, Polite, Business, Playful, Biblical
+[F] Format     → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
+[A] Analyze    → Summary, Explain Simply, TL;DR
+[C] Convert    → JSON, CSV
+```
+
+Fully customizable — add your own prompts, folders, and mnemonics in Settings → Prompts.
 
 ## Install
 
@@ -129,20 +148,10 @@ swift build
 
 Requires macOS 14+ and Xcode with Swift 6.0+.
 
-## Default prompts
-
-```
-[T] Translate → English, Finnish, Russian, Spanish, French, German, Chinese
-[F] Format    → Fix Grammar, Business, Polite, Playful, Biblical
-[A] Analyze   → Summary, Explain Simply, TL;DR
-```
-
-Fully customizable — add your own prompts, folders, and mnemonics in Settings → Prompts.
-
 ## Requirements
 
 - macOS 14.0+
-- An AI provider: API key (Anthropic, OpenAI), local Ollama, or a CLI tool like Claude Code or Codex
+- An AI provider: sign in with ChatGPT (free), API key (Anthropic, OpenAI), local Ollama, or CLI tools
 
 ## Acknowledgements
 
