@@ -269,6 +269,12 @@ struct PopupContentView: View {
                     if newMode == .markdownAI {
                         appState.convertOriginalWithAI()
                     }
+                    // Sync display format to match source
+                    switch newMode {
+                    case .plainText: appState.activeEditorMode = .plainText
+                    case .html: appState.activeEditorMode = .html
+                    case .markdown, .markdownAI: appState.activeEditorMode = .markdown
+                    }
                 }
             }
 
@@ -297,6 +303,7 @@ struct PopupContentView: View {
             }
 
             shortcutHint("Esc", loc.t("popup.hint.close"))
+            shortcutHint("⌘D", loc.t("popup.hint.display"))
 
             Spacer()
 
@@ -434,6 +441,7 @@ struct KeyEventHandler: NSViewRepresentable {
         private enum KeyCode {
             static let a: UInt16 = 0
             static let s: UInt16 = 1
+            static let d: UInt16 = 2
             static let c: UInt16 = 8
             static let v: UInt16 = 9
             static let e: UInt16 = 14
@@ -479,7 +487,7 @@ struct KeyEventHandler: NSViewRepresentable {
             if code == KeyCode.escape {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
-                } else {
+                } else if !appState.settings.keepOpenOnEscape {
                     appState.dismissPopup()
                 }
                 return true
@@ -487,6 +495,26 @@ struct KeyEventHandler: NSViewRepresentable {
 
             if hasCmd && code == KeyCode.e {
                 appState.startEditing()
+                return true
+            }
+
+            if hasCmd && code == KeyCode.d {
+                let hasShift = event.modifierFlags.contains(.shift)
+                if hasShift {
+                    // Cycle backward: Plain → Markdown → HTML → Plain
+                    switch appState.activeEditorMode {
+                    case .plainText: appState.activeEditorMode = .markdown
+                    case .html: appState.activeEditorMode = .plainText
+                    case .markdown: appState.activeEditorMode = .html
+                    }
+                } else {
+                    // Cycle forward: Plain → HTML → Markdown → Plain
+                    switch appState.activeEditorMode {
+                    case .plainText: appState.activeEditorMode = .html
+                    case .html: appState.activeEditorMode = .markdown
+                    case .markdown: appState.activeEditorMode = .plainText
+                    }
+                }
                 return true
             }
 

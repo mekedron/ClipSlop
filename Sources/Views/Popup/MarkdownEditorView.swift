@@ -35,6 +35,8 @@ final class HTMLToolbarState: ObservableObject {
     func unlink() { editor?.unlink() }
     func setForegroundColor(_ color: NSColor) { editor?.setForegroundColor(color) }
     func setBackgroundColor(_ color: NSColor) { editor?.setBackgroundColor(color) }
+    func undo() { editor?.undo() }
+    func redo() { editor?.redo() }
 }
 
 struct ConstrainedRichHTMLEditor: NSViewRepresentable {
@@ -260,6 +262,7 @@ struct MarkdownEditorView: View {
                 MarkdownTextView(text: $text, editorContext: editorContext)
             }
         }
+        .background(MarkdownShortcutHandler(editorContext: editorContext, showPreview: $showPreview, showImagePicker: $showImagePicker))
         .fileImporter(
             isPresented: $showImagePicker,
             allowedContentTypes: [.image]
@@ -281,22 +284,22 @@ struct MarkdownEditorView: View {
     private var toolbar: some View {
         HStack(spacing: 2) {
             // Text style
-            toolbarButton("B", icon: "bold", help: "Bold (**text**)") {
+            toolbarButton("B", icon: "bold", help: "Bold ⌘B") {
                 editorContext.wrapSelection(prefix: "**", suffix: "**")
             }
             .fontWeight(.bold)
 
-            toolbarButton("I", icon: "italic", help: "Italic (*text*)") {
+            toolbarButton("I", icon: "italic", help: "Italic ⌘I") {
                 editorContext.wrapSelection(prefix: "*", suffix: "*")
             }
             .italic()
 
-            toolbarButton("S", icon: "strikethrough", help: "Strikethrough (~~text~~)") {
+            toolbarButton("S", icon: "strikethrough", help: "Strikethrough ⇧⌘S") {
                 editorContext.wrapSelection(prefix: "~~", suffix: "~~")
             }
             .strikethrough()
 
-            toolbarButton(nil, icon: "chevron.left.forwardslash.chevron.right", help: "Inline code (`code`)") {
+            toolbarButton(nil, icon: "chevron.left.forwardslash.chevron.right", help: "Inline code ⌘`") {
                 editorContext.wrapSelection(prefix: "`", suffix: "`")
             }
 
@@ -322,35 +325,45 @@ struct MarkdownEditorView: View {
             toolbarSeparator
 
             // Structure
-            toolbarButton(nil, icon: "list.bullet", help: "Bullet list (- item)") {
+            toolbarButton(nil, icon: "list.bullet", help: "Bullet list ⇧⌘L") {
                 editorContext.insertLinePrefix("- ")
             }
 
-            toolbarButton(nil, icon: "list.number", help: "Numbered list (1. item)") {
+            toolbarButton(nil, icon: "list.number", help: "Numbered list ⇧⌘O") {
                 editorContext.insertLinePrefix("1. ")
             }
 
-            toolbarButton(nil, icon: "text.quote", help: "Blockquote (> text)") {
+            toolbarButton(nil, icon: "text.quote", help: "Blockquote ⌘'") {
                 editorContext.insertLinePrefix("> ")
             }
 
-            toolbarButton(nil, icon: "curlybraces", help: "Code block (```)") {
+            toolbarButton(nil, icon: "curlybraces", help: "Code block ⇧⌘K") {
                 editorContext.insertCodeBlock()
             }
 
             toolbarSeparator
 
             // Insert
-            toolbarButton(nil, icon: "link", help: "Insert link [text](url)") {
+            toolbarButton(nil, icon: "link", help: "Insert link ⌘K") {
                 editorContext.insertLink()
             }
 
-            toolbarButton(nil, icon: "photo", help: "Insert image") {
+            toolbarButton(nil, icon: "photo", help: "Insert image ⇧⌘I") {
                 showImagePicker = true
             }
 
-            toolbarButton(nil, icon: "minus", help: "Horizontal rule (---)") {
+            toolbarButton(nil, icon: "minus", help: "Horizontal rule ⇧⌘H") {
                 editorContext.insertHorizontalRule()
+            }
+
+            toolbarSeparator
+
+            // Undo/Redo
+            toolbarButton(nil, icon: "arrow.uturn.backward", help: "Undo ⌘Z") {
+                editorContext.textView?.undoManager?.undo()
+            }
+            toolbarButton(nil, icon: "arrow.uturn.forward", help: "Redo ⇧⌘Z") {
+                editorContext.textView?.undoManager?.redo()
             }
 
             toolbarSeparator
@@ -483,6 +496,93 @@ struct MarkdownTextView: NSViewRepresentable {
 
 // MARK: - Markdown Preview (Textual StructuredText)
 
+// MARK: - Markdown Keyboard Shortcuts
+
+struct MarkdownShortcutHandler: NSViewRepresentable {
+    let editorContext: MarkdownEditorContext
+    @Binding var showPreview: Bool
+    @Binding var showImagePicker: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let view = ShortcutView()
+        view.handler = context.coordinator
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    final class ShortcutView: NSView {
+        var handler: Coordinator?
+        private var monitor: Any?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            if window != nil, monitor == nil {
+                monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event -> NSEvent? in
+                    guard let self, let handler = self.handler else { return event }
+                    guard event.window === self.window else { return event }
+                    let code = event.keyCode
+                    let flags = event.modifierFlags
+                    let handled = MainActor.assumeIsolated {
+                        handler.handleKey(code: code, flags: flags)
+                    }
+                    return handled ? nil : event
+                }
+            }
+        }
+
+        override func removeFromSuperview() {
+            if let monitor { NSEvent.removeMonitor(monitor) }
+            monitor = nil
+            super.removeFromSuperview()
+        }
+    }
+
+    @MainActor
+    final class Coordinator {
+        let parent: MarkdownShortcutHandler
+        init(_ parent: MarkdownShortcutHandler) { self.parent = parent }
+
+        func handleKey(code: UInt16, flags: NSEvent.ModifierFlags) -> Bool {
+            let hasCmd = flags.contains(.command)
+            let hasShift = flags.contains(.shift)
+            guard hasCmd else { return false }
+
+            let ctx = parent.editorContext
+
+            switch (hasShift, code) {
+            // Cmd+B — Bold
+            case (false, 11): ctx.wrapSelection(prefix: "**", suffix: "**"); return true
+            // Cmd+I — Italic
+            case (false, 34): ctx.wrapSelection(prefix: "*", suffix: "*"); return true
+            // Cmd+` — Inline code
+            case (false, 50): ctx.wrapSelection(prefix: "`", suffix: "`"); return true
+            // Cmd+K — Link
+            case (false, 40): ctx.insertLink(); return true
+            // Cmd+' — Blockquote
+            case (false, 39): ctx.insertLinePrefix("> "); return true
+            // Cmd+Shift+S — Strikethrough
+            case (true, 1): ctx.wrapSelection(prefix: "~~", suffix: "~~"); return true
+            // Cmd+Shift+L — Bullet list
+            case (true, 37): ctx.insertLinePrefix("- "); return true
+            // Cmd+Shift+O — Numbered list
+            case (true, 31): ctx.insertLinePrefix("1. "); return true
+            // Cmd+Shift+K — Code block
+            case (true, 40): ctx.insertCodeBlock(); return true
+            // Cmd+Shift+I — Image
+            case (true, 34): parent.showImagePicker = true; return true
+            // Cmd+Shift+H — Horizontal rule
+            case (true, 4): ctx.insertHorizontalRule(); return true
+            // Cmd+P — Preview toggle
+            case (false, 35): parent.showPreview.toggle(); return true
+            default: return false
+            }
+        }
+    }
+}
+
 struct MarkdownPreviewView: View {
     let markdown: String
 
@@ -542,8 +642,9 @@ struct HTMLEditorView: View {
     }
 
     private var linkSheet: some View {
-        VStack(spacing: 12) {
-            Text("Insert Link")
+        let isEditing = toolbarState.hasLink
+        return VStack(spacing: 12) {
+            Text(isEditing ? "Edit Link" : "Insert Link")
                 .font(.headline)
             TextField("URL", text: $linkURL)
                 .textFieldStyle(.roundedBorder)
@@ -552,7 +653,18 @@ struct HTMLEditorView: View {
             HStack {
                 Button("Cancel") { showLinkSheet = false }
                     .keyboardShortcut(.cancelAction)
-                Button("Insert") {
+
+                if isEditing {
+                    Button("Remove Link") {
+                        toolbarState.unlink()
+                        showLinkSheet = false
+                    }
+                    .foregroundStyle(.red)
+                }
+
+                Spacer()
+
+                Button(isEditing ? "Update" : "Insert") {
                     if let url = URL(string: linkURL), !linkURL.isEmpty {
                         let label = linkText.isEmpty ? nil : linkText
                         toolbarState.addLink(url: url, text: label)
@@ -575,16 +687,16 @@ struct HTMLEditorView: View {
     private var htmlToolbar: some View {
         HStack(spacing: 2) {
             // Text formatting
-            htmlToolbarButton("bold", active: toolbarState.hasBold) {
+            htmlToolbarButton("bold", active: toolbarState.hasBold, help: "Bold ⌘B") {
                 toolbarState.bold()
             }
-            htmlToolbarButton("italic", active: toolbarState.hasItalic) {
+            htmlToolbarButton("italic", active: toolbarState.hasItalic, help: "Italic ⌘I") {
                 toolbarState.italic()
             }
-            htmlToolbarButton("underline", active: toolbarState.hasUnderline) {
+            htmlToolbarButton("underline", active: toolbarState.hasUnderline, help: "Underline ⌘U") {
                 toolbarState.underline()
             }
-            htmlToolbarButton("strikethrough", active: toolbarState.hasStrikethrough) {
+            htmlToolbarButton("strikethrough", active: toolbarState.hasStrikethrough, help: "Strikethrough ⇧⌘S") {
                 toolbarState.strikethrough()
             }
 
@@ -601,26 +713,32 @@ struct HTMLEditorView: View {
             Divider().frame(height: 16).padding(.horizontal, 4)
 
             // Lists
-            htmlToolbarButton("list.bullet", active: toolbarState.hasUnorderedList) {
+            htmlToolbarButton("list.bullet", active: toolbarState.hasUnorderedList, help: "Bullet list ⇧⌘L") {
                 toolbarState.unorderedList()
             }
 
             Divider().frame(height: 16).padding(.horizontal, 4)
 
             // Link
-            htmlToolbarButton("link", active: toolbarState.hasLink) {
-                if toolbarState.hasLink {
-                    toolbarState.unlink()
-                } else {
-                    linkURL = "https://"
-                    linkText = ""
-                    showLinkSheet = true
-                }
+            htmlToolbarButton("link", active: toolbarState.hasLink, help: "Link ⌘K") {
+                linkURL = "https://"
+                linkText = ""
+                showLinkSheet = true
             }
 
             // Image
-            htmlToolbarButton("photo", active: false) {
+            htmlToolbarButton("photo", active: false, help: "Insert image ⇧⌘I") {
                 showImagePicker = true
+            }
+
+            Divider().frame(height: 16).padding(.horizontal, 4)
+
+            // Undo/Redo
+            htmlToolbarButton("arrow.uturn.backward", active: false, help: "Undo ⌘Z") {
+                toolbarState.undo()
+            }
+            htmlToolbarButton("arrow.uturn.forward", active: false, help: "Redo ⇧⌘Z") {
+                toolbarState.redo()
             }
 
             Divider().frame(height: 16).padding(.horizontal, 4)
@@ -666,7 +784,7 @@ struct HTMLEditorView: View {
         }
     }
 
-    private func htmlToolbarButton(_ icon: String, active: Bool, action: @escaping () -> Void) -> some View {
+    private func htmlToolbarButton(_ icon: String, active: Bool, help: String = "", action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
                 .frame(width: 28, height: 24)
@@ -675,6 +793,7 @@ struct HTMLEditorView: View {
         .controlSize(.small)
         .tint(active ? .accentColor : nil)
         .disabled(showSource)
+        .help(help)
     }
 
     private func colorButton(icon: String, color: Color, help: String, apply: @escaping (Color) -> Void) -> some View {

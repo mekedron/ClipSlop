@@ -66,6 +66,8 @@ struct GeneralSettingsView: View {
                 LaunchAtLogin.Toggle(loc.t("settings.general.behavior.launch_login"))
                 Toggle(loc.t("settings.general.behavior.keycodes"), isOn: $settings.useKeyCodes)
                     .help(loc.t("settings.general.behavior.keycodes_help"))
+                Toggle(loc.t("settings.general.behavior.keep_open_on_escape"), isOn: $settings.keepOpenOnEscape)
+                    .help(loc.t("settings.general.behavior.keep_open_on_escape_help"))
                 LabeledContent(loc.t("settings.general.behavior.editor_mode")) {
                     Picker("", selection: $settings.editorMode) {
                         Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)
@@ -76,11 +78,15 @@ struct GeneralSettingsView: View {
                     .frame(width: 250)
                 }
                 .help(loc.t("settings.general.behavior.editor_mode_help"))
-                Picker(loc.t("settings.general.behavior.rich_text_mode"), selection: $settings.richTextMode) {
-                    Text(loc.t("settings.general.behavior.rich_text_mode.plain")).tag(RichTextMode.plainText)
-                    Text(loc.t("settings.general.behavior.rich_text_mode.html")).tag(RichTextMode.html)
-                    Text(loc.t("settings.general.behavior.rich_text_mode.markdown")).tag(RichTextMode.markdown)
-                    Text(loc.t("settings.general.behavior.rich_text_mode.markdown_ai")).tag(RichTextMode.markdownAI)
+                LabeledContent(loc.t("settings.general.behavior.rich_text_mode")) {
+                    Picker("", selection: $settings.richTextMode) {
+                        Text(loc.t("settings.general.behavior.rich_text_mode.plain")).tag(RichTextMode.plainText)
+                        Text(loc.t("settings.general.behavior.rich_text_mode.html")).tag(RichTextMode.html)
+                        Text(loc.t("settings.general.behavior.rich_text_mode.markdown")).tag(RichTextMode.markdown)
+                        Text(loc.t("settings.general.behavior.rich_text_mode.markdown_ai")).tag(RichTextMode.markdownAI)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 320)
                 }
                 .help(loc.t("settings.general.behavior.rich_text_mode_help"))
 

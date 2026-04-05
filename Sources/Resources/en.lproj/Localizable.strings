@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Launch at login";
 "settings.general.behavior.keycodes" = "Use key codes (layout-independent shortcuts)";
 "settings.general.behavior.keycodes_help" = "Match by physical key position — mnemonics work with any keyboard layout";
+"settings.general.behavior.keep_open_on_escape" = "Keep window open on Escape";
+"settings.general.behavior.keep_open_on_escape_help" = "Prevent accidental closing — Escape will only navigate back, not close the window";
 "settings.general.behavior.editor_mode" = "Display format";
 "settings.general.behavior.editor_mode_help" = "How text is displayed and edited in the popup";
 "settings.general.behavior.editor_mode.plain" = "Plain text";
@@ -261,6 +263,7 @@
 "popup.cancel" = "Cancel";
 "popup.dismiss" = "Dismiss";
 "popup.try_again" = "Try Again";
+"popup.hint.display" = "Display";
 "popup.mnemonic_hint" = "Press a letter to pick a prompt";
 "popup.source" = "Source";
 "popup.display" = "Display";

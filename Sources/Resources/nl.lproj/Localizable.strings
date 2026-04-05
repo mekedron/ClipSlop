@@ -310,3 +310,6 @@
 "settings.prompts.root" = "Root (top level)";
 "settings.prompts.editor.provider" = "AI Provider";
 "settings.prompts.editor.provider_default" = "Use default";
+"settings.general.behavior.keep_open_on_escape" = "Keep window open on Escape";
+"settings.general.behavior.keep_open_on_escape_help" = "Prevent accidental closing — Escape will only navigate back, not close the window";
+"popup.hint.display" = "Display";

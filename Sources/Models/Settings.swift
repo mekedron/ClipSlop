@@ -91,6 +91,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useKeyCodes, forKey: "useKeyCodes") }
     }
 
+    var keepOpenOnEscape: Bool {
+        didSet { UserDefaults.standard.set(keepOpenOnEscape, forKey: "keepOpenOnEscape") }
+    }
+
     var appColorScheme: AppColorScheme {
         didSet { UserDefaults.standard.set(appColorScheme.rawValue, forKey: "appColorScheme") }
     }
@@ -138,6 +142,7 @@ final class AppSettings {
         hideDockIcon = defaults.object(forKey: "hideDockIcon") as? Bool ?? true
         iCloudSyncEnabled = defaults.bool(forKey: "iCloudSyncEnabled")
         useKeyCodes = defaults.bool(forKey: "useKeyCodes")
+        keepOpenOnEscape = defaults.bool(forKey: "keepOpenOnEscape")
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
         editorMode = defaults.string(forKey: "editorMode")
