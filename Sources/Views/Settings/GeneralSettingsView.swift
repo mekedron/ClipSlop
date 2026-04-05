@@ -66,6 +66,52 @@ struct GeneralSettingsView: View {
                 LaunchAtLogin.Toggle(loc.t("settings.general.behavior.launch_login"))
                 Toggle(loc.t("settings.general.behavior.keycodes"), isOn: $settings.useKeyCodes)
                     .help(loc.t("settings.general.behavior.keycodes_help"))
+                LabeledContent(loc.t("settings.general.behavior.editor_mode")) {
+                    Picker("", selection: $settings.editorMode) {
+                        Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)
+                        Text(loc.t("settings.general.behavior.editor_mode.html")).tag(EditorMode.html)
+                        Text(loc.t("settings.general.behavior.editor_mode.markdown")).tag(EditorMode.markdown)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 250)
+                }
+                .help(loc.t("settings.general.behavior.editor_mode_help"))
+                Picker(loc.t("settings.general.behavior.rich_text_mode"), selection: $settings.richTextMode) {
+                    Text(loc.t("settings.general.behavior.rich_text_mode.plain")).tag(RichTextMode.plainText)
+                    Text(loc.t("settings.general.behavior.rich_text_mode.html")).tag(RichTextMode.html)
+                    Text(loc.t("settings.general.behavior.rich_text_mode.markdown")).tag(RichTextMode.markdown)
+                    Text(loc.t("settings.general.behavior.rich_text_mode.markdown_ai")).tag(RichTextMode.markdownAI)
+                }
+                .help(loc.t("settings.general.behavior.rich_text_mode_help"))
+
+                if settings.richTextMode == .markdownAI {
+                    Toggle(loc.t("settings.general.behavior.markdown_ai_only_rich"),
+                           isOn: $settings.markdownAIOnlyRichText)
+                        .help(loc.t("settings.general.behavior.markdown_ai_only_rich_help"))
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(loc.t("settings.general.behavior.conversion_prompt"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Button(loc.t("settings.general.behavior.reset_default")) {
+                                settings.customConversionPrompt = AppSettings.defaultConversionPrompt
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                            .disabled(settings.customConversionPrompt == AppSettings.defaultConversionPrompt)
+                        }
+                        TextEditor(text: $settings.customConversionPrompt)
+                            .font(.system(.caption, design: .monospaced))
+                            .frame(height: 80)
+                            .scrollContentBackground(.hidden)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(.quaternary)
+                            )
+                    }
+                }
             }
 
             Section(loc.t("settings.general.appearance")) {

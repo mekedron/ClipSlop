@@ -25,6 +25,14 @@ final class AppState {
     var isEditing = false
     var editingText = ""
 
+    // Original item view mode (which representation to show for the original text)
+    var originalViewMode: RichTextMode = .plainText
+    // Runtime display format (independent from settings default)
+    var activeEditorMode: EditorMode = .markdown
+    // Lazy caches for original text conversions
+    @ObservationIgnored private var cachedOriginalMarkdown: String?
+    @ObservationIgnored private var cachedOriginalMarkdownAI: String?
+
     // Settings navigation
     var settingsSelectedTab = 0
 
@@ -50,13 +58,76 @@ final class AppState {
         guard let session = currentSession else { return "" }
         if let index = selectedHistoryStepIndex {
             if index < 0 {
-                return session.originalText
+                return originalTextForCurrentMode
             }
             if index < session.steps.count {
                 return session.steps[index].outputText
             }
         }
+        // No steps yet — show original in selected view mode
+        if !session.hasSteps {
+            return originalTextForCurrentMode
+        }
         return session.currentText
+    }
+
+    /// Returns the original text in the representation selected by `originalViewMode`.
+    var originalTextForCurrentMode: String {
+        guard let session = currentSession else { return "" }
+        switch originalViewMode {
+        case .plainText:
+            return session.originalText
+        case .html:
+            return session.originalHTML ?? session.originalText
+        case .markdown:
+            if let cached = cachedOriginalMarkdown { return cached }
+            if let html = session.originalHTML,
+               let md = MarkdownConverter.markdown(fromHTML: html), !md.isEmpty {
+                cachedOriginalMarkdown = md
+                return md
+            }
+            return session.originalText
+        case .markdownAI:
+            // AI conversion is triggered lazily — show cached or original until ready
+            return cachedOriginalMarkdownAI ?? session.originalText
+        }
+    }
+
+    /// Trigger lazy AI conversion for the original item.
+    func convertOriginalWithAI() {
+        guard cachedOriginalMarkdownAI == nil,
+              let session = currentSession,
+              let html = session.originalHTML
+        else { return }
+
+        let prompt = settings.customConversionPrompt.isEmpty
+            ? AppSettings.defaultConversionPrompt
+            : settings.customConversionPrompt
+
+        guard let provider = providerStore.defaultProvider else {
+            openSettingsToProviders()
+            return
+        }
+
+        isProcessing = true
+        streamingText = ""
+        let service = AIServiceFactory.service(for: provider.providerType)
+        let config = provider
+
+        currentTask = Task {
+            do {
+                let result = try await service.process(text: html, systemPrompt: prompt, config: config)
+                cachedOriginalMarkdownAI = result
+                isProcessing = false
+                streamingText = ""
+            } catch {
+                if !(error is CancellationError) {
+                    errorMessage = error.localizedDescription
+                }
+                isProcessing = false
+                streamingText = ""
+            }
+        }
     }
 
     // MARK: - Lifecycle
@@ -182,13 +253,7 @@ final class AppState {
     // MARK: - Triggers
 
     func triggerFromSelection() {
-        // First try Accessibility API (works in native apps)
-        if let text = TextCaptureService.captureSelectedText(), !text.isEmpty {
-            startSession(text: text, source: .selectedText)
-            return
-        }
-
-        // Fallback: simulate Cmd+C to grab selection (works in Chrome, Electron, etc.)
+        // Simulate Cmd+C first — preserves rich text (HTML/RTF) in clipboard
         let oldClipboard = ClipboardService.getText()
         let source = CGEventSource(stateID: .combinedSessionState)
         let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
@@ -199,14 +264,26 @@ final class AppState {
         keyUp?.post(tap: .cghidEventTap)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
-            let newClipboard = ClipboardService.getText()
-            if let text = newClipboard, !text.isEmpty, text != oldClipboard {
-                self?.startSession(text: text, source: .selectedText)
-            } else if let text = newClipboard, !text.isEmpty {
-                // Clipboard didn't change — use whatever is there
-                self?.startSession(text: text, source: .clipboard)
+            guard let self else { return }
+            let plainText = ClipboardService.getText()
+            let html = ClipboardService.getHTML()
+
+            if let text = plainText, !text.isEmpty, text != oldClipboard {
+                self.startSession(text: text, html: html, source: .selectedText)
+                return
+            }
+
+            // Fallback: Accessibility API (for apps where Cmd+C didn't work)
+            if let text = TextCaptureService.captureSelectedText(), !text.isEmpty {
+                self.startSession(text: text, source: .selectedText)
+                return
+            }
+
+            // Last resort: use whatever is in the clipboard
+            if let text = plainText, !text.isEmpty {
+                self.startSession(text: text, html: html, source: .clipboard)
             } else {
-                self?.showError(Loc.shared.t("error.no_text"))
+                self.showError(Loc.shared.t("error.no_text"))
             }
         }
     }
@@ -224,11 +301,13 @@ final class AppState {
     }
 
     func triggerFromClipboard() {
-        guard let text = ClipboardService.getText(), !text.isEmpty else {
+        let plainText = ClipboardService.getText()
+        let html = ClipboardService.getHTML()
+        guard let text = plainText, !text.isEmpty else {
             showError(Loc.shared.t("error.clipboard_empty"))
             return
         }
-        startSession(text: text, source: .clipboard)
+        startSession(text: text, html: html, source: .clipboard)
     }
 
     func triggerFromScreenCapture() {
@@ -247,8 +326,12 @@ final class AppState {
 
     // MARK: - Session Management
 
-    private func startSession(text: String, source: TransformationSession.InputSource) {
-        currentSession = TransformationSession(originalText: text, inputSource: source)
+    private func startSession(text: String, html: String? = nil, source: TransformationSession.InputSource) {
+        currentSession = TransformationSession(
+            originalText: text,
+            originalHTML: html,
+            inputSource: source
+        )
         navigationPath = []
         selectedHistoryStepIndex = nil
         isEditing = false
@@ -256,7 +339,24 @@ final class AppState {
         errorMessage = nil
         streamingText = ""
         isProcessing = false
+
+        // Reset lazy caches
+        cachedOriginalMarkdown = nil
+        cachedOriginalMarkdownAI = nil
+
+        // Pre-select modes from settings (runtime copies, independent from settings)
+        originalViewMode = settings.richTextMode
+        activeEditorMode = settings.editorMode
+
         showPopup()
+
+        // If markdownAI is pre-selected and we have HTML, trigger lazy conversion
+        if originalViewMode == .markdownAI, html != nil, source != .screenCapture {
+            let shouldConvert = !settings.markdownAIOnlyRichText || html != nil
+            if shouldConvert {
+                convertOriginalWithAI()
+            }
+        }
     }
 
     // MARK: - Navigation
@@ -294,20 +394,26 @@ final class AppState {
     // MARK: - Processing
 
     func applyPrompt(name: String, systemPrompt: String) {
-        guard let session = currentSession else { return }
+        guard var session = currentSession else { return }
 
         guard let provider = providerStore.defaultProvider else {
             openSettingsToProviders()
             return
         }
 
+        // If viewing a history step, truncate to that step first
+        if let index = selectedHistoryStepIndex, index >= 0 {
+            session = session.steppingTo(index: index)
+            currentSession = session
+        }
+
+        let inputText = currentDisplayText
 
         isProcessing = true
         streamingText = ""
         errorMessage = nil
 
         let service = AIServiceFactory.service(for: provider.providerType)
-        let inputText = session.currentText
         let config = provider
 
         currentTask = Task {
@@ -455,7 +561,14 @@ final class AppState {
     }
 
     func copyCurrentText() {
-        ClipboardService.setText(currentDisplayText)
+        switch activeEditorMode {
+        case .markdown:
+            ClipboardService.setRichText(currentDisplayText)
+        case .html:
+            ClipboardService.setHTMLContent(currentDisplayText)
+        case .plainText:
+            ClipboardService.setText(currentDisplayText)
+        }
         showCopiedFeedback = true
         Task {
             try? await Task.sleep(for: .seconds(1.5))
@@ -464,7 +577,14 @@ final class AppState {
     }
 
     func pasteCurrentText() {
-        ClipboardService.setText(currentDisplayText)
+        switch activeEditorMode {
+        case .markdown:
+            ClipboardService.setRichText(currentDisplayText)
+        case .html:
+            ClipboardService.setHTMLContent(currentDisplayText)
+        case .plainText:
+            ClipboardService.setText(currentDisplayText)
+        }
         dismissPopup()
         ClipboardService.simulatePaste()
     }

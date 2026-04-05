@@ -93,25 +93,47 @@ struct SamplesView: View {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "clipslop-prompts.json"
         panel.allowedContentTypes = [.json]
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            try? data.write(to: url)
-            statusMessage = loc.t("settings.samples.exported")
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+                statusMessage = loc.t("settings.samples.exported")
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+                statusMessage = loc.t("settings.samples.exported")
+            }
         }
     }
 
     private func importPrompts() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
-        panel.begin { response in
-            guard response == .OK, let url = panel.url,
-                  let data = try? Data(contentsOf: url)
-            else { return }
-            do {
-                try promptStore.importJSON(from: data)
-                statusMessage = loc.t("settings.samples.imported")
-            } catch {
-                statusMessage = loc.t("settings.samples.import_failed", error.localizedDescription)
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                do {
+                    try promptStore.importJSON(from: data)
+                    statusMessage = loc.t("settings.samples.imported")
+                } catch {
+                    statusMessage = loc.t("settings.samples.import_failed", error.localizedDescription)
+                }
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                do {
+                    try promptStore.importJSON(from: data)
+                    statusMessage = loc.t("settings.samples.imported")
+                } catch {
+                    statusMessage = loc.t("settings.samples.import_failed", error.localizedDescription)
+                }
             }
         }
     }

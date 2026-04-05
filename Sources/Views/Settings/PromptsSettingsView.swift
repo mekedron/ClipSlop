@@ -176,20 +176,36 @@ struct PromptsSettingsView: View {
         let panel = NSSavePanel()
         panel.nameFieldStringValue = "clipslop-prompts.json"
         panel.allowedContentTypes = [.json]
-        panel.begin { response in
-            guard response == .OK, let url = panel.url else { return }
-            try? data.write(to: url)
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+            }
         }
     }
 
     private func importPrompts() {
         let panel = NSOpenPanel()
         panel.allowedContentTypes = [.json]
-        panel.begin { response in
-            guard response == .OK, let url = panel.url,
-                  let data = try? Data(contentsOf: url)
-            else { return }
-            try? promptStore.importJSON(from: data)
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                try? promptStore.importJSON(from: data)
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                try? promptStore.importJSON(from: data)
+            }
         }
     }
 
@@ -292,12 +308,42 @@ struct PromptsSettingsView: View {
             Label(loc.t("settings.prompts.move_down"), systemImage: "arrow.down")
         }
 
+        moveToMenu(for: node)
+
         Divider()
 
         Button(role: .destructive) {
             confirmDelete(node)
         } label: {
             Label(loc.t("settings.prompts.delete"), systemImage: "trash")
+        }
+    }
+
+    @ViewBuilder
+    private func moveToMenu(for node: PromptNode) -> some View {
+        let folders = promptStore.allFolders().filter { $0.id != node.id }
+
+        Menu {
+            // Move to root
+            Button {
+                promptStore.moveNode(id: node.id, toFolderID: nil)
+            } label: {
+                Label(loc.t("settings.prompts.root"), systemImage: "tray")
+            }
+
+            if !folders.isEmpty {
+                Divider()
+                ForEach(folders, id: \.id) { folder in
+                    Button {
+                        promptStore.moveNode(id: node.id, toFolderID: folder.id)
+                    } label: {
+                        let indent = String(repeating: "  ", count: folder.depth)
+                        Label("\(indent)\(folder.name)", systemImage: "folder")
+                    }
+                }
+            }
+        } label: {
+            Label(loc.t("settings.prompts.move_to"), systemImage: "folder.badge.plus")
         }
     }
 

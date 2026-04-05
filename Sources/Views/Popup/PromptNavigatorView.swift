@@ -102,5 +102,6 @@ struct PromptCard: View {
             )
         }
         .buttonStyle(.plain)
+        .help(node.systemPrompt ?? (node.isFolder ? "\(node.name) (\(node.children?.count ?? 0))" : node.name))
     }
 }

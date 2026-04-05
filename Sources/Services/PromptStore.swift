@@ -67,6 +67,50 @@ final class PromptStore {
         saveToDisk(updated)
     }
 
+    func moveNode(id: UUID, toFolderID folderID: UUID?) {
+        var updated = prompts
+        // Extract the node from its current location
+        guard let node = findAndRemoveNode(id: id, from: &updated) else { return }
+        // Insert into the target folder (nil = root)
+        if let folderID {
+            insertNode(node, into: &updated, parentID: folderID)
+        } else {
+            updated.append(node)
+        }
+        prompts = updated
+        saveToDisk(updated)
+    }
+
+    func allFolders() -> [(id: UUID, name: String, depth: Int)] {
+        var result: [(id: UUID, name: String, depth: Int)] = []
+        collectFolders(from: prompts, depth: 0, into: &result)
+        return result
+    }
+
+    private func collectFolders(from nodes: [PromptNode], depth: Int, into result: inout [(id: UUID, name: String, depth: Int)]) {
+        for node in nodes where node.isFolder {
+            result.append((id: node.id, name: node.name, depth: depth))
+            if let children = node.children {
+                collectFolders(from: children, depth: depth + 1, into: &result)
+            }
+        }
+    }
+
+    private func findAndRemoveNode(id: UUID, from nodes: inout [PromptNode]) -> PromptNode? {
+        if let index = nodes.firstIndex(where: { $0.id == id }) {
+            return nodes.remove(at: index)
+        }
+        for i in nodes.indices {
+            if var children = nodes[i].children {
+                if let found = findAndRemoveNode(id: id, from: &children) {
+                    nodes[i].children = children
+                    return found
+                }
+            }
+        }
+        return nil
+    }
+
     func restoreDefaults() {
         prompts = loadDefaults()
         saveToDisk(prompts)

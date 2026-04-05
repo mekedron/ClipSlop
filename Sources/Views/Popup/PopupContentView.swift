@@ -6,9 +6,16 @@ struct PopupContentView: View {
     @State private var dragStartHeight: Double = 0
     private let loc = Loc.shared
 
+    private var isViewingOriginal: Bool {
+        guard let session = appState.currentSession else { return false }
+        if appState.selectedHistoryStepIndex == -1 { return true }
+        if appState.selectedHistoryStepIndex == nil && !session.hasSteps { return true }
+        return false
+    }
+
     var body: some View {
         HStack(spacing: 0) {
-            if let session = appState.currentSession, session.hasSteps {
+            if let session = appState.currentSession, session.hasSteps, !appState.isEditing {
                 HistorySidebarView(appState: appState)
                     .frame(width: 180)
                 Divider()
@@ -45,12 +52,23 @@ struct PopupContentView: View {
 
             VStack(spacing: 0) {
                 // Text display — takes all remaining vertical space
-                ScrollView(.vertical, showsIndicators: false) {
-                    Text(appState.currentDisplayText)
-                        .font(.system(.body, design: .monospaced))
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(16)
+                Group {
+                    switch appState.activeEditorMode {
+                    case .markdown:
+                        MarkdownPreviewView(markdown: appState.currentDisplayText)
+                            .id(appState.currentDisplayText)
+                    case .html:
+                        HTMLReadOnlyView(html: appState.currentDisplayText)
+                            .id(appState.currentDisplayText)
+                    case .plainText:
+                        ScrollView(.vertical, showsIndicators: false) {
+                            Text(appState.currentDisplayText)
+                                .font(.system(.body, design: .monospaced))
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                        }
+                    }
                 }
                 .frame(maxHeight: .infinity)
 
@@ -146,21 +164,21 @@ struct PopupContentView: View {
 
     private var editView: some View {
         VStack(spacing: 0) {
-            TextEditor(text: Bindable(appState).editingText)
-                .font(.system(.body, design: .monospaced))
-                .scrollContentBackground(.hidden)
-                .scrollIndicators(.hidden)
-                .padding(12)
-                .onAppear {
-                    // Focus the TextEditor automatically
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                        if let window = NSApp.windows.first(where: { $0 is PopupWindow }) {
-                            if let textView = findTextView(in: window.contentView) {
-                                window.makeFirstResponder(textView)
-                            }
-                        }
-                    }
+            Group {
+                switch appState.activeEditorMode {
+                case .markdown:
+                    MarkdownEditorView(text: Bindable(appState).editingText)
+                case .html:
+                    HTMLEditorView(text: Bindable(appState).editingText)
+                case .plainText:
+                    TextEditor(text: Bindable(appState).editingText)
+                        .font(.system(.body, design: .monospaced))
+                        .scrollContentBackground(.hidden)
+                        .scrollIndicators(.hidden)
+                        .padding(12)
                 }
+            }
+            .onAppear { focusEditor() }
 
             Divider()
 
@@ -191,12 +209,25 @@ struct PopupContentView: View {
 
                 Spacer()
 
-                Label(loc.t("popup.editing"), systemImage: "pencil")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                Picker(loc.t("popup.display"), selection: Bindable(appState).activeEditorMode) {
+                    Text("Plain text").tag(EditorMode.plainText)
+                    Text("HTML").tag(EditorMode.html)
+                    Text("Markdown").tag(EditorMode.markdown)
+                }
+                .frame(width: 145)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
+        }
+    }
+
+    private func focusEditor() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            if let window = NSApp.windows.first(where: { $0 is PopupWindow }) {
+                if let textView = findTextView(in: window.contentView) {
+                    window.makeFirstResponder(textView)
+                }
+            }
         }
     }
 
@@ -204,13 +235,7 @@ struct PopupContentView: View {
 
     private var actionsBar: some View {
         HStack(spacing: 10) {
-            actionButton(loc.t("popup.select_all"), icon: "selection.pin.in.out", shortcut: "⌘A") {
-                appState.selectAllText()
-            }
-
-            actionButton(loc.t("popup.copy"), icon: "doc.on.doc", shortcut: "⌘C") {
-                appState.copyCurrentText()
-            }
+            copyButton
 
             Divider().frame(height: 16)
 
@@ -228,14 +253,28 @@ struct PopupContentView: View {
 
             Spacer()
 
-            if appState.showCopiedFeedback {
-                Label(loc.t("popup.copied"), systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-                    .transition(.opacity)
+            if isViewingOriginal {
+                Picker(loc.t("popup.source"), selection: Bindable(appState).originalViewMode) {
+                    Text("Plain text").tag(RichTextMode.plainText)
+                    Text("HTML").tag(RichTextMode.html)
+                    Text("Markdown").tag(RichTextMode.markdown)
+                    Text("Markdown (AI)").tag(RichTextMode.markdownAI)
+                }
+                .frame(width: 160)
+                .onChange(of: appState.originalViewMode) { _, newMode in
+                    if newMode == .markdownAI {
+                        appState.convertOriginalWithAI()
+                    }
+                }
             }
+
+            Picker(loc.t("popup.display"), selection: Bindable(appState).activeEditorMode) {
+                Text("Plain text").tag(EditorMode.plainText)
+                Text("HTML").tag(EditorMode.html)
+                Text("Markdown").tag(EditorMode.markdown)
+            }
+            .frame(width: 145)
         }
-        .animation(.easeInOut(duration: 0.2), value: appState.showCopiedFeedback)
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
     }
@@ -275,6 +314,25 @@ struct PopupContentView: View {
             Text(label)
                 .foregroundStyle(.tertiary)
         }
+    }
+
+    private var copyButton: some View {
+        let copied = appState.showCopiedFeedback
+        return Button {
+            appState.copyCurrentText()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                Text(copied ? loc.t("popup.copied") : loc.t("popup.copy"))
+                if !copied {
+                    Text("⌘C").foregroundStyle(.tertiary)
+                }
+            }
+            .font(.caption)
+        }
+        .buttonStyle(.bordered)
+        .tint(copied ? .green : nil)
+        .animation(.easeInOut(duration: 0.2), value: copied)
     }
 
     private func actionButton(

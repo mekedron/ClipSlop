@@ -1,131 +1,273 @@
 [
   {
-    "id": "00000000-0001-0000-0000-000000000001",
-    "name": "Translate",
-    "mnemonicKey": "T",
-    "nodeType": "folder",
-    "children": [
+    "children" : [
       {
-        "id": "00000000-0001-0001-0000-000000000001",
-        "name": "English",
-        "mnemonicKey": "E",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into English. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0001-0000-000000000001",
+        "mnemonicKey" : "E",
+        "name" : "English",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into English. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0002-0000-000000000001",
-        "name": "Finnish",
-        "mnemonicKey": "F",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into Finnish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0007-0000-000000000001",
+        "mnemonicKey" : "C",
+        "name" : "Chinese",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Simplified Chinese (Mandarin). Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0003-0000-000000000001",
-        "name": "Russian",
-        "mnemonicKey": "R",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into Russian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0008-0000-000000000001",
+        "mnemonicKey" : "Z",
+        "name" : "Czech",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Czech. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0004-0000-000000000001",
-        "name": "Spanish",
-        "mnemonicKey": "S",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into Spanish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0009-0000-000000000001",
+        "mnemonicKey" : "D",
+        "name" : "Danish",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Danish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0005-0000-000000000001",
-        "name": "French",
-        "mnemonicKey": "A",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into French. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0010-0000-000000000001",
+        "mnemonicKey" : "L",
+        "name" : "Dutch",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Dutch. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0006-0000-000000000001",
-        "name": "German",
-        "mnemonicKey": "G",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into German. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0002-0000-000000000001",
+        "mnemonicKey" : "F",
+        "name" : "Finnish",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Finnish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0001-0007-0000-000000000001",
-        "name": "Chinese",
-        "mnemonicKey": "C",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a translator. Translate the following message into Simplified Chinese (Mandarin). Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0001-0005-0000-000000000001",
+        "mnemonicKey" : "A",
+        "name" : "French",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into French. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0006-0000-000000000001",
+        "mnemonicKey" : "G",
+        "name" : "German",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into German. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0011-0000-000000000001",
+        "mnemonicKey" : "H",
+        "name" : "Hungarian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Hungarian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0012-0000-000000000001",
+        "mnemonicKey" : "I",
+        "name" : "Italian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Italian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0013-0000-000000000001",
+        "mnemonicKey" : "N",
+        "name" : "Norwegian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Norwegian (Bokm\u00e5l). Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0014-0000-000000000001",
+        "mnemonicKey" : "P",
+        "name" : "Polish",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Polish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0015-0000-000000000001",
+        "mnemonicKey" : "T",
+        "name" : "Portuguese",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Portuguese. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0016-0000-000000000001",
+        "mnemonicKey" : "O",
+        "name" : "Romanian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Romanian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0003-0000-000000000001",
+        "mnemonicKey" : "R",
+        "name" : "Russian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Russian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0004-0000-000000000001",
+        "mnemonicKey" : "S",
+        "name" : "Spanish",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Spanish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0017-0000-000000000001",
+        "mnemonicKey" : "W",
+        "name" : "Swedish",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Swedish. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0001-0018-0000-000000000001",
+        "mnemonicKey" : "U",
+        "name" : "Ukrainian",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a translator. Translate the following message into Ukrainian. Preserve the original meaning, tone, and intent. Return only the translated text. Do not ask any questions or add any commentary."
       }
-    ]
+    ],
+    "id" : "00000000-0001-0000-0000-000000000001",
+    "mnemonicKey" : "T",
+    "name" : "Translate",
+    "nodeType" : "folder"
   },
   {
-    "id": "00000000-0002-0000-0000-000000000001",
-    "name": "Format",
-    "mnemonicKey": "F",
-    "nodeType": "folder",
-    "children": [
+    "children" : [
       {
-        "id": "00000000-0002-0001-0000-000000000001",
-        "name": "Fix Grammar",
-        "mnemonicKey": "G",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a proofreader. Fix any grammar, spelling, and punctuation errors in the following message. Preserve the original language, meaning, tone, and intent. Return only the corrected text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0002-0001-0000-000000000001",
+        "mnemonicKey" : "G",
+        "name" : "Fix Grammar",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a proofreader. Fix any grammar, spelling, and punctuation errors in the following message. Preserve the original language, meaning, tone, and intent. Return only the corrected text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0002-0002-0000-000000000001",
-        "name": "Business Tone",
-        "mnemonicKey": "B",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a writing assistant. Rewrite the following message in a formal, professional business tone. Preserve the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
+        "id" : "2B58919F-3355-42D0-85D4-981ABF84CE18",
+        "mnemonicKey" : "C",
+        "name" : "Clean Up",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a speech editor. Refine the given text by removing repetitive words and filler phrases to improve clarity and coherence. Preserve the original meaning and context. Return only the revised text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0002-0003-0000-000000000001",
-        "name": "Polite Tone",
-        "mnemonicKey": "P",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a writing assistant. Rewrite the following message in a polite, friendly, and neutral tone. Keep it natural and not overly formal. Preserve the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0002-0004-0000-000000000001",
+        "mnemonicKey" : "B",
+        "name" : "Beautify Code",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a code formatter. Reformat the provided source code with proper indentation, consistent spacing, and clean structure. Auto-detect the programming language. Do not change logic, variable names, or functionality. Return only the beautified code. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0002-0004-0000-000000000001",
-        "name": "Playful Tone",
-        "mnemonicKey": "L",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a writing assistant. Rewrite the following message in a playful, humorous, and cheerful tone. Keep it lighthearted and fun while preserving the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
-      },
-      {
-        "id": "00000000-0002-0005-0000-000000000001",
-        "name": "Biblical Style",
-        "mnemonicKey": "I",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a writing assistant. Rewrite the following message in a dramatic, biblical, spiritual style — as if it were a passage from sacred scripture. Use archaic language, grand metaphors, and a prophetic tone. Be humorous and over-the-top with the style while preserving the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
+        "id" : "15803C59-7E6B-4214-AEEE-E736DF6A76B8",
+        "mnemonicKey" : "F",
+        "name" : "Reformat",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a text formatter. Reformat the provided text to ensure proper paragraphs and line breaks, without altering the content. Preserve the original meaning and coherence. Return only the reformatted text. Do not ask any questions or add any commentary."
       }
-    ]
+    ],
+    "id" : "00000000-0002-0000-0000-000000000001",
+    "mnemonicKey" : "F",
+    "name" : "Format",
+    "nodeType" : "folder"
   },
   {
-    "id": "00000000-0003-0000-0000-000000000001",
-    "name": "Analyze",
-    "mnemonicKey": "A",
-    "nodeType": "folder",
-    "children": [
+    "children" : [
       {
-        "id": "00000000-0003-0001-0000-000000000001",
-        "name": "Summary",
-        "mnemonicKey": "S",
-        "nodeType": "prompt",
-        "systemPrompt": "You are an analyst. Read the following text and provide a brief, concise summary capturing the key points. Preserve the original language. Return only the summary. Do not ask any questions or add any commentary."
+        "id" : "183E35F4-845A-41D6-BD82-87DD335CAFB0",
+        "mnemonicKey" : "N",
+        "name" : "Neutral",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a tone neutralizer. Transform the text into a neutral tone. Preserve the original meaning. Return only the neutralized text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0003-0002-0000-000000000001",
-        "name": "Explain Simply",
-        "mnemonicKey": "E",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a helpful explainer. Take the following text and explain it in simple, easy-to-understand language. Break down complex concepts, avoid jargon, and use everyday words. Preserve the original language. Return only the explanation. Do not ask any questions or add any commentary."
+        "id" : "00000000-0002-0003-0000-000000000001",
+        "mnemonicKey" : "P",
+        "name" : "Polite",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a writing assistant. Rewrite the following message in a polite, friendly, and neutral tone. Keep it natural and not overly formal. Preserve the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
       },
       {
-        "id": "00000000-0003-0003-0000-000000000001",
-        "name": "TL;DR",
-        "mnemonicKey": "T",
-        "nodeType": "prompt",
-        "systemPrompt": "You are a concise editor. Condense the following text down to only the most essential information — the absolute key takeaways. Remove all filler, examples, and elaboration. Aim for 2-4 sentences maximum. Preserve the original language. Return only the condensed text. Do not ask any questions or add any commentary."
+        "id" : "00000000-0002-0002-0000-000000000001",
+        "mnemonicKey" : "B",
+        "name" : "Business",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a writing assistant. Rewrite the following message in a formal, professional business tone. Preserve the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0002-0004-0000-000000000001",
+        "mnemonicKey" : "L",
+        "name" : "Playful",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a writing assistant. Rewrite the following message in a playful, humorous, and cheerful tone. Keep it lighthearted and fun while preserving the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0002-0005-0000-000000000001",
+        "mnemonicKey" : "I",
+        "name" : "Biblical",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a writing assistant. Rewrite the following message in a dramatic, biblical, spiritual style — as if it were a passage from sacred scripture. Use archaic language, grand metaphors, and a prophetic tone. Be humorous and over-the-top with the style while preserving the original language and meaning. Return only the rewritten text. Do not ask any questions or add any commentary."
       }
-    ]
+    ],
+    "id" : "3FA14381-F584-47E2-9593-743CB0D31E1B",
+    "mnemonicKey" : "R",
+    "name" : "Rewrite",
+    "nodeType" : "folder"
+  },
+  {
+    "children" : [
+      {
+        "id" : "00000000-0003-0001-0000-000000000001",
+        "mnemonicKey" : "S",
+        "name" : "Summary",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are an analyst. Read the following text and provide a brief, concise summary capturing the key points. Preserve the original language. Return only the summary. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0003-0002-0000-000000000001",
+        "mnemonicKey" : "E",
+        "name" : "Explain Simply",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a helpful explainer. Take the following text and explain it in simple, easy-to-understand language. Break down complex concepts, avoid jargon, and use everyday words. Preserve the original language. Return only the explanation. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "00000000-0003-0003-0000-000000000001",
+        "mnemonicKey" : "T",
+        "name" : "TL;DR",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a concise editor. Condense the following text down to only the most essential information — the absolute key takeaways. Remove all filler, examples, and elaboration. Aim for 2-4 sentences maximum. Preserve the original language. Return only the condensed text. Do not ask any questions or add any commentary."
+      }
+    ],
+    "id" : "00000000-0003-0000-0000-000000000001",
+    "mnemonicKey" : "A",
+    "name" : "Analyze",
+    "nodeType" : "folder"
+  },
+  {
+    "children" : [
+      {
+        "id" : "6B037F08-761E-4E29-ADB3-C397739C0C35",
+        "mnemonicKey" : "M",
+        "name" : "Markdown",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a Markdown converter. Convert the input text from either HTML or plain text to Markdown format. Preserve the original meaning and content. Preserve the original language. Return only the formatted Markdown text. Do not ask any questions or add any commentary."
+      },
+      {
+        "id" : "4522C280-B1C5-486D-81EE-AAE1903EF158",
+        "mnemonicKey" : "H",
+        "name" : "HTML",
+        "nodeType" : "prompt",
+        "systemPrompt" : "You are a Markdown and text-to-HTML converter. Convert text or Markdown input into HTML format. Preserve the original language. Return only the HTML output. Do not ask any questions or add any commentary."
+      }
+    ],
+    "id" : "4D973A5F-8164-43F4-9BDD-31DE6B054721",
+    "mnemonicKey" : "C",
+    "name" : "Convert",
+    "nodeType" : "folder"
+  },
+  {
+    "id" : "509A3B07-4B2B-4F03-9879-2B6E479C25FC",
+    "mnemonicKey" : "/",
+    "name" : "// Your prompt",
+    "nodeType" : "prompt",
+    "systemPrompt" : "You are a text transformation assistant. Identify and execute actions marked with two slashes (//) in the user text. Preserve the original language of the message. Return only the transformed text as specified by the action. Retain all other parts of the original message under any circumstances. Do not ask any questions or add any commentary."
   }
 ]

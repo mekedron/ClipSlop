@@ -25,6 +25,23 @@ enum AppColorScheme: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+enum EditorMode: String, CaseIterable, Identifiable, Sendable {
+    case plainText
+    case html
+    case markdown
+
+    var id: String { rawValue }
+}
+
+enum RichTextMode: String, CaseIterable, Identifiable, Sendable {
+    case plainText
+    case html
+    case markdown
+    case markdownAI
+
+    var id: String { rawValue }
+}
+
 @MainActor
 @Observable
 final class AppSettings {
@@ -78,6 +95,35 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(appColorScheme.rawValue, forKey: "appColorScheme") }
     }
 
+    var editorMode: EditorMode {
+        didSet { UserDefaults.standard.set(editorMode.rawValue, forKey: "editorMode") }
+    }
+
+    var richTextMode: RichTextMode {
+        didSet { UserDefaults.standard.set(richTextMode.rawValue, forKey: "richTextMode") }
+    }
+
+    var markdownAIOnlyRichText: Bool {
+        didSet { UserDefaults.standard.set(markdownAIOnlyRichText, forKey: "markdownAIOnlyRichText") }
+    }
+
+    var useCustomConversionPrompt: Bool {
+        didSet { UserDefaults.standard.set(useCustomConversionPrompt, forKey: "useCustomConversionPrompt") }
+    }
+
+    var customConversionPrompt: String {
+        didSet { UserDefaults.standard.set(customConversionPrompt, forKey: "customConversionPrompt") }
+    }
+
+    static let defaultConversionPrompt = """
+    Convert the following HTML to clean, well-structured Markdown. \
+    Extract only meaningful content. Skip all presentational HTML \
+    (layout tables, spacers, style attributes, tracking pixels). \
+    Preserve headings, links, images with alt text, lists, and text formatting (bold, italic). \
+    For data that looks tabular, use Markdown tables. \
+    Output ONLY the Markdown, no explanations or commentary.
+    """
+
     private init() {
         // Load from UserDefaults (didSet does NOT fire during init)
         let defaults = UserDefaults.standard
@@ -94,6 +140,13 @@ final class AppSettings {
         useKeyCodes = defaults.bool(forKey: "useKeyCodes")
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
+        editorMode = defaults.string(forKey: "editorMode")
+            .flatMap(EditorMode.init(rawValue:)) ?? .markdown
+        richTextMode = defaults.string(forKey: "richTextMode")
+            .flatMap(RichTextMode.init(rawValue:)) ?? .markdownAI
+        markdownAIOnlyRichText = defaults.object(forKey: "markdownAIOnlyRichText") as? Bool ?? true
+        useCustomConversionPrompt = defaults.bool(forKey: "useCustomConversionPrompt")
+        customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
     }
 }
 

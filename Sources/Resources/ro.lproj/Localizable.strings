@@ -287,3 +287,24 @@
 
 /* Misc */
 "misc.manual_edit" = "Editare manuală";
+
+/* Rich text & editor settings */
+"popup.display" = "Display";
+"popup.source" = "Source";
+"settings.general.behavior.conversion_prompt" = "Conversion prompt";
+"settings.general.behavior.editor_mode" = "Display format";
+"settings.general.behavior.editor_mode_help" = "How text is displayed and edited in the popup";
+"settings.general.behavior.editor_mode.html" = "HTML";
+"settings.general.behavior.editor_mode.markdown" = "Markdown";
+"settings.general.behavior.editor_mode.plain" = "Plain text";
+"settings.general.behavior.markdown_ai_only_rich" = "Only when rich text detected";
+"settings.general.behavior.markdown_ai_only_rich_help" = "Skip AI conversion when clipboard contains plain text only (no HTML or RTF)";
+"settings.general.behavior.reset_default" = "Reset to default";
+"settings.general.behavior.rich_text_mode" = "Rich text processing";
+"settings.general.behavior.rich_text_mode_help" = "How to handle formatted text from clipboard (e.g. copied from Chrome, Word)";
+"settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
+"settings.general.behavior.rich_text_mode.markdown" = "Convert to Markdown";
+"settings.general.behavior.rich_text_mode.markdown_ai" = "Convert to Markdown (AI)";
+"settings.general.behavior.rich_text_mode.plain" = "Plain text";
+"settings.prompts.move_to" = "Move to...";
+"settings.prompts.root" = "Root (top level)";

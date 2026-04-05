@@ -20,13 +20,32 @@ struct HistorySidebarView: View {
                     }
 
                     // Original text at the bottom
-                    historyItem(
-                        index: -1,
-                        label: loc.t("popup.history.original"),
-                        icon: "doc.text",
-                        preview: session.originalText,
-                        isSelected: appState.selectedHistoryStepIndex == -1
-                    )
+                    VStack(spacing: 4) {
+                        historyItem(
+                            index: -1,
+                            label: loc.t("popup.history.original"),
+                            icon: "doc.text",
+                            preview: session.originalText,
+                            isSelected: appState.selectedHistoryStepIndex == -1
+                        )
+
+                        if appState.selectedHistoryStepIndex == -1 {
+                            Picker("", selection: Bindable(appState).originalViewMode) {
+                                Text("Plain").tag(RichTextMode.plainText)
+                                Text("HTML").tag(RichTextMode.html)
+                                Text("MD").tag(RichTextMode.markdown)
+                                Text("MD (AI)").tag(RichTextMode.markdownAI)
+                            }
+                            .pickerStyle(.segmented)
+                            .controlSize(.mini)
+                            .padding(.horizontal, 4)
+                            .onChange(of: appState.originalViewMode) { _, newMode in
+                                if newMode == .markdownAI {
+                                    appState.convertOriginalWithAI()
+                                }
+                            }
+                        }
+                    }
                 }
             }
             .padding(6)
