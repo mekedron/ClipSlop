@@ -261,7 +261,11 @@ struct GeneralSettingsView: View {
 
     private func refreshPermissions() {
         accessibilityGranted = PermissionService.isAccessibilityGranted
-        screenCaptureGranted = PermissionService.isScreenRecordingGranted
+        // Use live check for screen recording to bypass per-process cache
+        Task {
+            let granted = await PermissionService.checkScreenRecordingLive()
+            await MainActor.run { screenCaptureGranted = granted }
+        }
     }
 
     private func applyColorScheme(_ scheme: AppColorScheme) {
