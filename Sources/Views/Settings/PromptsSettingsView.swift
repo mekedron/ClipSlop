@@ -122,6 +122,17 @@ struct PromptsSettingsView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
+
+                Divider()
+
+                Toggle(loc.t("settings.prompts.auto_update"), isOn: Binding(
+                    get: { appState.settings.useDefaultPrompts },
+                    set: { appState.settings.useDefaultPrompts = $0 }
+                ))
+                .controlSize(.small)
+                .help(loc.t("settings.prompts.auto_update_help"))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
             }
             .frame(minWidth: 250, maxWidth: 320)
 

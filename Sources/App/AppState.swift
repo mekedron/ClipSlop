@@ -18,6 +18,7 @@ final class AppState {
     var streamingText = ""
     var errorMessage: String?
     var showCopiedFeedback = false
+    var showSelectionCopiedFeedback = false
 
     // Navigation state
     var navigationPath: [PromptNode] = []

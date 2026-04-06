@@ -97,7 +97,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 
 ```
 [T] Translate  → English, Finnish, Russian, Spanish, French, German, + 10 more
-[R] Rewrite    → Elaborate, Neutral, Polite, Business, Playful, Biblical
+[R] Rewrite    → Elaborate, Neutral, Professional, Warm, Business, Playful, Biblical
 [F] Format     → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
 [A] Analyze    → Summary, Explain Simply, TL;DR
 [C] Convert    → JSON, CSV

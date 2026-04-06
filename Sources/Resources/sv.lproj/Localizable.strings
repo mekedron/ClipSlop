@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importera prompter";
 "settings.prompts.export" = "Exportera prompter";
 "settings.prompts.restore" = "Återställ standardvärden";
+"settings.prompts.auto_update" = "Uppdatera automatiskt med appen";
+"settings.prompts.auto_update_help" = "Håll standardmallar uppdaterade vid appuppdatering. Inaktiveras automatiskt när du anpassar mallar.";
 "settings.prompts.delete_title" = "Radera \"%@\"?";
 "settings.prompts.delete_folder_message" = "Den här mappen innehåller %d objekt. Allt inuti kommer att raderas permanent.";
 "settings.prompts.delete_prompt_message" = "Den här prompten kommer att raderas permanent.";
@@ -262,6 +264,7 @@
 "popup.open" = "Öppna";
 "popup.save" = "Spara";
 "popup.copied" = "Kopierad!";
+"popup.selection_copied" = "Markering kopierad!";
 "popup.editing" = "Redigerar";
 "popup.done" = "Klar";
 "popup.cancel" = "Avbryt";

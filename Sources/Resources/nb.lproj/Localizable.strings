@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importer prompts";
 "settings.prompts.export" = "Eksporter prompts";
 "settings.prompts.restore" = "Gjenopprett standarder";
+"settings.prompts.auto_update" = "Oppdater automatisk med appen";
+"settings.prompts.auto_update_help" = "Hold standardmaler oppdatert ved appoppdatering. Deaktiveres automatisk når du tilpasser maler.";
 "settings.prompts.delete_title" = "Slette \"%@\"?";
 "settings.prompts.delete_folder_message" = "Denne mappen inneholder %d element(er). Alt inni vil bli permanent slettet.";
 "settings.prompts.delete_prompt_message" = "Dette promptet vil bli permanent slettet.";
@@ -262,6 +264,7 @@
 "popup.open" = "Apne";
 "popup.save" = "Lagre";
 "popup.copied" = "Kopiert!";
+"popup.selection_copied" = "Utvalg kopiert!";
 "popup.editing" = "Redigerer";
 "popup.done" = "Ferdig";
 "popup.cancel" = "Avbryt";

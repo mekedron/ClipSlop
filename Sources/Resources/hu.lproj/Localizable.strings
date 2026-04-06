@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Promptok importálása";
 "settings.prompts.export" = "Promptok exportálása";
 "settings.prompts.restore" = "Alapértelmezések visszaállítása";
+"settings.prompts.auto_update" = "Automatikus frissítés az alkalmazással";
+"settings.prompts.auto_update_help" = "Az alapértelmezett promptok naprakészen tartása frissítéskor. Automatikusan kikapcsol, ha testreszabja a promptokat.";
 "settings.prompts.delete_title" = "Törlöd: „%@"?";
 "settings.prompts.delete_folder_message" = "Ez a mappa %d elemet tartalmaz. Minden benne lévő véglegesen törlődik.";
 "settings.prompts.delete_prompt_message" = "Ez a prompt véglegesen törlődik.";
@@ -262,6 +264,7 @@
 "popup.open" = "Megnyitás";
 "popup.save" = "Mentés";
 "popup.copied" = "Másolva!";
+"popup.selection_copied" = "Kijelölés másolva!";
 "popup.editing" = "Szerkesztés";
 "popup.done" = "Kész";
 "popup.cancel" = "Mégse";

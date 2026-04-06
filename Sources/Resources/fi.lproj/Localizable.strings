@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Tuo kehotteet";
 "settings.prompts.export" = "Vie kehotteet";
 "settings.prompts.restore" = "Palauta oletukset";
+"settings.prompts.auto_update" = "Päivitä automaattisesti sovelluksen kanssa";
+"settings.prompts.auto_update_help" = "Pidä oletuskehotteet ajan tasalla sovelluspäivityksissä. Poistetaan automaattisesti käytöstä, kun muokkaat kehotteita.";
 "settings.prompts.delete_title" = "Poistetaanko \"%@\"?";
 "settings.prompts.delete_folder_message" = "Tämä kansio sisältää %d kohdetta. Kaikki sisältö poistetaan pysyvästi.";
 "settings.prompts.delete_prompt_message" = "Tämä kehote poistetaan pysyvästi.";
@@ -262,6 +264,7 @@
 "popup.open" = "Avaa";
 "popup.save" = "Tallenna";
 "popup.copied" = "Kopioitu!";
+"popup.selection_copied" = "Valinta kopioitu!";
 "popup.editing" = "Muokataan";
 "popup.done" = "Valmis";
 "popup.cancel" = "Peruuta";

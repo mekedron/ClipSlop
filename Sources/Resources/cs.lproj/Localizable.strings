@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importovat prompty";
 "settings.prompts.export" = "Exportovat prompty";
 "settings.prompts.restore" = "Obnovit výchozí";
+"settings.prompts.auto_update" = "Automaticky aktualizovat s aplikací";
+"settings.prompts.auto_update_help" = "Udržovat výchozí prompty aktuální při aktualizaci aplikace. Automaticky deaktivováno při úpravě promptů.";
 "settings.prompts.delete_title" = "Smazat \"%@\"?";
 "settings.prompts.delete_folder_message" = "Tato složka obsahuje %d položek. Vše uvnitř bude trvale smazáno.";
 "settings.prompts.delete_prompt_message" = "Tento prompt bude trvale smazán.";
@@ -262,6 +264,7 @@
 "popup.open" = "Otevřít";
 "popup.save" = "Uložit";
 "popup.copied" = "Zkopírováno!";
+"popup.selection_copied" = "Výběr zkopírován!";
 "popup.editing" = "Úpravy";
 "popup.done" = "Hotovo";
 "popup.cancel" = "Zrušit";

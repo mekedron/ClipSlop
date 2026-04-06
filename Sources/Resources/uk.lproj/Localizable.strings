@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Імпортувати промпти";
 "settings.prompts.export" = "Експортувати промпти";
 "settings.prompts.restore" = "Відновити типові";
+"settings.prompts.auto_update" = "Автоматично оновлювати з програмою";
+"settings.prompts.auto_update_help" = "Оновлювати стандартні промпти при оновленні програми. Автоматично вимикається при зміні промптів.";
 "settings.prompts.delete_title" = "Видалити \"%@\"?";
 "settings.prompts.delete_folder_message" = "Ця тека містить %d елемент(ів). Усе всередині буде безповоротно видалено.";
 "settings.prompts.delete_prompt_message" = "Цей промпт буде безповоротно видалено.";
@@ -262,6 +264,7 @@
 "popup.open" = "Відкрити";
 "popup.save" = "Зберегти";
 "popup.copied" = "Скопійовано!";
+"popup.selection_copied" = "Виділення скопійовано!";
 "popup.editing" = "Редагування";
 "popup.done" = "Готово";
 "popup.cancel" = "Скасувати";

@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importar prompts";
 "settings.prompts.export" = "Exportar prompts";
 "settings.prompts.restore" = "Restaurar padrões";
+"settings.prompts.auto_update" = "Atualizar automaticamente com a app";
+"settings.prompts.auto_update_help" = "Manter os prompts predefinidos atualizados nas atualizações da app. Desativado automaticamente ao personalizar prompts.";
 "settings.prompts.delete_title" = "Excluir \"%@\"?";
 "settings.prompts.delete_folder_message" = "Esta pasta contém %d item(ns). Tudo dentro será excluído permanentemente.";
 "settings.prompts.delete_prompt_message" = "Este prompt será excluído permanentemente.";
@@ -262,6 +264,7 @@
 "popup.open" = "Abrir";
 "popup.save" = "Salvar";
 "popup.copied" = "Copiado!";
+"popup.selection_copied" = "Seleção copiada!";
 "popup.editing" = "Editando";
 "popup.done" = "Feito";
 "popup.cancel" = "Cancelar";

@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importă prompt-uri";
 "settings.prompts.export" = "Exportă prompt-uri";
 "settings.prompts.restore" = "Restaurează valorile implicite";
+"settings.prompts.auto_update" = "Actualizare automată cu aplicația";
+"settings.prompts.auto_update_help" = "Păstrează prompturile implicite actualizate la actualizarea aplicației. Dezactivat automat când personalizezi prompturi.";
 "settings.prompts.delete_title" = "Ștergi „%@"?";
 "settings.prompts.delete_folder_message" = "Acest dosar conține %d element(e). Tot conținutul va fi șters permanent.";
 "settings.prompts.delete_prompt_message" = "Acest prompt va fi șters permanent.";
@@ -262,6 +264,7 @@
 "popup.open" = "Deschide";
 "popup.save" = "Salvează";
 "popup.copied" = "Copiat!";
+"popup.selection_copied" = "Selecție copiată!";
 "popup.editing" = "Editare";
 "popup.done" = "Gata";
 "popup.cancel" = "Anulează";

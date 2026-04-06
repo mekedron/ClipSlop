@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Prompts importeren";
 "settings.prompts.export" = "Prompts exporteren";
 "settings.prompts.restore" = "Standaardwaarden herstellen";
+"settings.prompts.auto_update" = "Automatisch bijwerken met de app";
+"settings.prompts.auto_update_help" = "Standaardprompts up-to-date houden bij app-updates. Automatisch uitgeschakeld wanneer u prompts aanpast.";
 "settings.prompts.delete_title" = "\"%@\" verwijderen?";
 "settings.prompts.delete_folder_message" = "Deze map bevat %d item(s). Alles erin wordt permanent verwijderd.";
 "settings.prompts.delete_prompt_message" = "Deze prompt wordt permanent verwijderd.";
@@ -262,6 +264,7 @@
 "popup.open" = "Openen";
 "popup.save" = "Opslaan";
 "popup.copied" = "Gekopieerd!";
+"popup.selection_copied" = "Selectie gekopieerd!";
 "popup.editing" = "Bewerken";
 "popup.done" = "Gereed";
 "popup.cancel" = "Annuleren";

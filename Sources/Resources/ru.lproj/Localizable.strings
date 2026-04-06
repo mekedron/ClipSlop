@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Импортировать промпты";
 "settings.prompts.export" = "Экспортировать промпты";
 "settings.prompts.restore" = "Восстановить по умолчанию";
+"settings.prompts.auto_update" = "Обновлять автоматически с приложением";
+"settings.prompts.auto_update_help" = "Обновлять стандартные промпты при обновлении приложения. Автоматически отключается при изменении промптов.";
 "settings.prompts.delete_title" = "Удалить \"%@\"?";
 "settings.prompts.delete_folder_message" = "Эта папка содержит %d элемент(ов). Всё содержимое будет удалено навсегда.";
 "settings.prompts.delete_prompt_message" = "Этот промпт будет удалён навсегда.";
@@ -262,6 +264,7 @@
 "popup.open" = "Открыть";
 "popup.save" = "Сохранить";
 "popup.copied" = "Скопировано!";
+"popup.selection_copied" = "Выделение скопировано!";
 "popup.editing" = "Редактирование";
 "popup.done" = "Готово";
 "popup.cancel" = "Отмена";

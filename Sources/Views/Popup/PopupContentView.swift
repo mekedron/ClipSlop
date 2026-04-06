@@ -365,24 +365,38 @@ struct PopupContentView: View {
 
     private var copyButton: some View {
         let copied = appState.showCopiedFeedback
+        let selCopied = appState.showSelectionCopiedFeedback
+        let active = copied || selCopied
         return Button {
-            if !SelectionService.copySelection(in: NSApp.keyWindow) {
+            if SelectionService.copySelection(in: NSApp.keyWindow) {
+                showSelectionCopied()
+            } else {
                 appState.copyCurrentText()
             }
         } label: {
             HStack(spacing: 4) {
-                Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
-                Text(copied ? loc.t("popup.copied") : loc.t("popup.copy"))
-                if !copied {
+                Image(systemName: active ? "checkmark.circle.fill" : "doc.on.doc")
+                Text(active
+                    ? loc.t(selCopied ? "popup.selection_copied" : "popup.copied")
+                    : loc.t("popup.copy"))
+                if !active {
                     Text("⌘C").foregroundStyle(.tertiary)
                 }
             }
             .font(.caption)
         }
         .buttonStyle(.bordered)
-        .tint(copied ? .green : nil)
-        .animation(.easeInOut(duration: 0.2), value: copied)
+        .tint(active ? .green : nil)
+        .animation(.easeInOut(duration: 0.2), value: active)
         .background(WindowDragBlocker())
+    }
+
+    private func showSelectionCopied() {
+        appState.showSelectionCopiedFeedback = true
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            appState.showSelectionCopiedFeedback = false
+        }
     }
 
     private func actionButton(
@@ -611,8 +625,13 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             if hasCmd && code == KeyCode.c {
-                if SelectionService.hasSelection(in: self.window) {
-                    return false  // Let responder handle copy of selected text
+                if SelectionService.copySelection(in: self.window) {
+                    appState.showSelectionCopiedFeedback = true
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .seconds(1.5))
+                        appState.showSelectionCopiedFeedback = false
+                    }
+                    return true
                 }
                 appState.copyCurrentText()
                 return true

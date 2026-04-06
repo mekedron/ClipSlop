@@ -13,7 +13,14 @@ final class PromptStore {
     private var isSyncing = false
 
     init() {
-        prompts = loadFromDisk() ?? loadDefaults()
+        let settings = AppSettings.shared
+        if settings.useDefaultPrompts {
+            // Always load latest defaults when user hasn't customized
+            prompts = loadDefaults()
+            saveToDisk(prompts)
+        } else {
+            prompts = loadFromDisk() ?? loadDefaults()
+        }
     }
 
     /// Replace prompts from a remote iCloud sync. Saves locally but does NOT fire onPromptsChanged.
@@ -31,6 +38,7 @@ final class PromptStore {
     func updatePrompts(_ newPrompts: [PromptNode]) {
         prompts = newPrompts
         saveToDisk(newPrompts)
+        markCustomized()
     }
 
     func addNode(_ node: PromptNode, toFolderWithID folderID: UUID? = nil) {
@@ -42,6 +50,7 @@ final class PromptStore {
         }
         prompts = updated
         saveToDisk(updated)
+        markCustomized()
     }
 
     func removeNode(withID id: UUID) {
@@ -49,6 +58,7 @@ final class PromptStore {
         removeNodeRecursive(id: id, from: &updated)
         prompts = updated
         saveToDisk(updated)
+        markCustomized()
     }
 
     func updateNode(_ node: PromptNode) {
@@ -56,6 +66,7 @@ final class PromptStore {
         updateNodeRecursive(node, in: &updated)
         prompts = updated
         saveToDisk(updated)
+        markCustomized()
     }
 
     enum MoveDirection { case up, down }
@@ -65,6 +76,7 @@ final class PromptStore {
         moveNodeRecursive(id: id, direction: direction, in: &updated)
         prompts = updated
         saveToDisk(updated)
+        markCustomized()
     }
 
     func moveNode(id: UUID, toFolderID folderID: UUID?) {
@@ -79,6 +91,7 @@ final class PromptStore {
         }
         prompts = updated
         saveToDisk(updated)
+        markCustomized()
     }
 
     func allFolders() -> [(id: UUID, name: String, depth: Int)] {
@@ -114,6 +127,7 @@ final class PromptStore {
     func restoreDefaults() {
         prompts = loadDefaults()
         saveToDisk(prompts)
+        AppSettings.shared.useDefaultPrompts = true
     }
 
     func exportJSON() -> Data? {
@@ -124,9 +138,14 @@ final class PromptStore {
         let decoded = try JSONDecoder().decode([PromptNode].self, from: data)
         prompts = decoded
         saveToDisk(decoded)
+        markCustomized()
     }
 
     // MARK: - Private
+
+    private func markCustomized() {
+        AppSettings.shared.useDefaultPrompts = false
+    }
 
     private func loadDefaults() -> [PromptNode] {
         guard let url = Bundle.module.url(forResource: "DefaultPrompts", withExtension: "json"),

@@ -149,6 +149,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(suppressPermissionAlert, forKey: "suppressPermissionAlert") }
     }
 
+    var useDefaultPrompts: Bool {
+        didSet { UserDefaults.standard.set(useDefaultPrompts, forKey: "useDefaultPrompts") }
+    }
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -187,6 +191,7 @@ final class AppSettings {
         useCustomConversionPrompt = defaults.bool(forKey: "useCustomConversionPrompt")
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
+        useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
     }
 }
 

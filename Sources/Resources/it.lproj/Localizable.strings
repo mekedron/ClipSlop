@@ -205,6 +205,8 @@
 "settings.prompts.import" = "Importa prompt";
 "settings.prompts.export" = "Esporta prompt";
 "settings.prompts.restore" = "Ripristina predefiniti";
+"settings.prompts.auto_update" = "Aggiorna automaticamente con l'app";
+"settings.prompts.auto_update_help" = "Mantenere i prompt predefiniti aggiornati con gli aggiornamenti dell'app. Disattivato automaticamente quando personalizzi i prompt.";
 "settings.prompts.delete_title" = "Eliminare \"%@\"?";
 "settings.prompts.delete_folder_message" = "Questa cartella contiene %d elemento/i. Tutto il contenuto verr\U00E0 eliminato definitivamente.";
 "settings.prompts.delete_prompt_message" = "Questo prompt verr\U00E0 eliminato definitivamente.";
@@ -262,6 +264,7 @@
 "popup.open" = "Apri";
 "popup.save" = "Salva";
 "popup.copied" = "Copiato!";
+"popup.selection_copied" = "Selezione copiata!";
 "popup.editing" = "Modifica in corso";
 "popup.done" = "Fatto";
 "popup.cancel" = "Annulla";
