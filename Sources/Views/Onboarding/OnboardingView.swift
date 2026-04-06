@@ -6,6 +6,8 @@ struct OnboardingView: View {
     @State private var currentStep = UserDefaults.standard.integer(forKey: "onboardingStep")
     @State private var accessibilityGranted = false
     @State private var screenRecordingGranted = false
+    @State private var accessibilityPending = false
+    @State private var screenRecordingPending = false
 
     private let loc = Loc.shared
     private let totalSteps = 7
@@ -67,9 +69,6 @@ struct OnboardingView: View {
             UserDefaults.standard.set(currentStep, forKey: "onboardingStep")
         }
         .onAppear { refreshPermissions() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            refreshPermissions()
-        }
     }
 
     // MARK: - Step 2: Welcome
@@ -136,10 +135,21 @@ struct OnboardingView: View {
                     description: loc.t("onboarding.permissions.accessibility.desc"),
                     icon: "hand.raised",
                     isGranted: accessibilityGranted,
-                    grantLabel: loc.t("onboarding.permissions.grant"),
+                    grantLabel: accessibilityPending
+                        ? loc.t("permission_alert.validate")
+                        : loc.t("onboarding.permissions.grant"),
                     onRequest: {
-                        moveOnboardingAside()
-                        TextCaptureService.requestAccessibility()
+                        if accessibilityPending {
+                            accessibilityGranted = PermissionService.isAccessibilityGranted
+                            if !accessibilityGranted {
+                                moveOnboardingAside()
+                                PermissionService.requestAccessibility()
+                            }
+                        } else {
+                            accessibilityPending = true
+                            moveOnboardingAside()
+                            PermissionService.requestAccessibility()
+                        }
                     }
                 )
 
@@ -148,11 +158,25 @@ struct OnboardingView: View {
                     description: loc.t("onboarding.permissions.screen_recording.desc"),
                     icon: "rectangle.dashed.badge.record",
                     isGranted: screenRecordingGranted,
-                    grantLabel: loc.t("onboarding.permissions.grant"),
+                    grantLabel: screenRecordingPending
+                        ? loc.t("permission_alert.validate")
+                        : loc.t("onboarding.permissions.grant"),
                     onRequest: {
-                        moveOnboardingAside()
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                            NSWorkspace.shared.open(url)
+                        if screenRecordingPending {
+                            Task {
+                                let granted = await PermissionService.checkScreenRecordingLive()
+                                await MainActor.run { screenRecordingGranted = granted }
+                                if !granted {
+                                    await MainActor.run {
+                                        moveOnboardingAside()
+                                        PermissionService.requestScreenRecording()
+                                    }
+                                }
+                            }
+                        } else {
+                            screenRecordingPending = true
+                            moveOnboardingAside()
+                            PermissionService.requestScreenRecording()
                         }
                     }
                 )
@@ -200,7 +224,11 @@ struct OnboardingView: View {
                     name: .triggerBlankEditor
                 )
                 ShortcutRow(
-                    label: loc.t("onboarding.shortcuts.ocr"),
+                    label: loc.t("onboarding.shortcuts.ocr_clipboard"),
+                    name: .triggerOCRToClipboard
+                )
+                ShortcutRow(
+                    label: loc.t("onboarding.shortcuts.ocr_clipslop"),
                     name: .triggerScreenCapture
                 )
             }
@@ -232,8 +260,8 @@ struct OnboardingView: View {
     // MARK: - Helpers
 
     private func refreshPermissions() {
-        accessibilityGranted = AXIsProcessTrusted()
-        screenRecordingGranted = CGPreflightScreenCaptureAccess()
+        accessibilityGranted = PermissionService.isAccessibilityGranted
+        screenRecordingGranted = PermissionService.isScreenRecordingGranted
     }
 
     private func moveOnboardingAside() {

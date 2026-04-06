@@ -145,6 +145,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(customConversionPrompt, forKey: "customConversionPrompt") }
     }
 
+    var suppressPermissionAlert: Bool {
+        didSet { UserDefaults.standard.set(suppressPermissionAlert, forKey: "suppressPermissionAlert") }
+    }
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -182,6 +186,7 @@ final class AppSettings {
         markdownAIOnlyRichText = defaults.object(forKey: "markdownAIOnlyRichText") as? Bool ?? true
         useCustomConversionPrompt = defaults.bool(forKey: "useCustomConversionPrompt")
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
+        suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
     }
 }
 

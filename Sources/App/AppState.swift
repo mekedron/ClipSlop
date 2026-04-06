@@ -45,6 +45,7 @@ final class AppState {
     @ObservationIgnored private var settingsWindow: NSWindow?
     @ObservationIgnored private var aboutWindow: NSWindow?
     @ObservationIgnored private var onboardingWindow: OnboardingWindow?
+    @ObservationIgnored private var permissionAlertWindow: PermissionAlertWindow?
     @ObservationIgnored private var currentTask: Task<Void, Never>?
 
     var currentPrompts: [PromptNode] {
@@ -150,6 +151,9 @@ final class AppState {
         hotkeyService.onTriggerScreenCapture = { [weak self] in
             self?.triggerFromScreenCapture()
         }
+        hotkeyService.onTriggerOCRToClipboard = { [weak self] in
+            self?.triggerOCRToClipboard()
+        }
         hotkeyService.register()
 
         // Wire iCloud sync — deferred by 2s so menu bar renders first
@@ -165,6 +169,8 @@ final class AppState {
 
         if !settings.hasCompletedOnboarding {
             showOnboarding()
+        } else {
+            checkPermissionsAfterUpdate()
         }
 
         // Listen for reopen requests (dock click when menu bar is hidden)
@@ -255,6 +261,41 @@ final class AppState {
         onboardingWindow = nil
     }
 
+    // MARK: - Permission Alert
+
+    private func checkPermissionsAfterUpdate() {
+        guard !settings.suppressPermissionAlert else { return }
+
+        let accessibilityOK = PermissionService.isAccessibilityGranted
+        let screenRecordingOK = PermissionService.isScreenRecordingGranted
+
+        if !accessibilityOK || !screenRecordingOK {
+            showPermissionAlert()
+        }
+    }
+
+    func showPermissionAlert() {
+        if permissionAlertWindow == nil {
+            permissionAlertWindow = PermissionAlertWindow(appState: self)
+        }
+        permissionAlertWindow?.center()
+
+        let window = permissionAlertWindow
+        DispatchQueue.main.async {
+            window?.makeKeyAndOrderFront(nil)
+            NSApplication.shared.activate(ignoringOtherApps: true)
+        }
+    }
+
+    func movePermissionAlertAside() {
+        permissionAlertWindow?.moveAside()
+    }
+
+    func dismissPermissionAlert() {
+        permissionAlertWindow?.close()
+        permissionAlertWindow = nil
+    }
+
     // MARK: - Triggers
 
     func triggerFromSelection() {
@@ -325,6 +366,24 @@ final class AppState {
                 showError(captureError.localizedDescription)
             } catch {
                 showError(error.localizedDescription)
+            }
+        }
+    }
+
+    func triggerOCRToClipboard() {
+        Task {
+            do {
+                let text = try await ScreenCaptureService.captureAndRecognize()
+                ClipboardService.setText(text)
+                // Brief visual feedback if popup is visible
+                showCopiedFeedback = true
+                try? await Task.sleep(for: .seconds(1.5))
+                showCopiedFeedback = false
+            } catch let captureError as ScreenCaptureService.CaptureError {
+                if case .userCancelled = captureError { return }
+                // No popup to show error — silently fail
+            } catch {
+                // Silently fail — no popup open
             }
         }
     }

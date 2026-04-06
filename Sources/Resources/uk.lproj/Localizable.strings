@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "Знімок екрана OCR";
 "settings.general.permissions.open_settings" = "Відкрити параметри";
 "settings.general.permissions.grant" = "Надати";
+"settings.general.permissions.suppress_alert" = "Приховати сповіщення про дозволи при запуску";
+"settings.general.permissions.suppress_alert_help" = "Не показувати сповіщення про дозволи, коли після запуску відсутні дозволи";
+
+/* Permission Alert */
+"permission_alert.title" = "Дозволи потребують уваги";
+"permission_alert.subtitle" = "ClipSlop міг втратити деякі дозволи після оновлення. macOS скидає дозволи, коли змінюється підпис коду програми.";
+"permission_alert.instructions_title" = "Якщо кнопка Надати не працює:";
+"permission_alert.step1" = "Відкрийте Системні налаштування > Конфіденційність і безпека";
+"permission_alert.step2" = "Знайдіть ClipSlop у списку та видаліть (виберіть, натисніть \"-\")";
+"permission_alert.step3" = "Натисніть \"+\" та додайте ClipSlop знову";
+"permission_alert.validate" = "Перевірити";
+"permission_alert.dont_show_again" = "Більше не показувати";
+"permission_alert.close" = "Закрити";
 
 /* Settings - Providers */
 "settings.providers.select" = "Оберіть провайдера";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

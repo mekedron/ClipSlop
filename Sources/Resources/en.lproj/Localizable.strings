@@ -28,6 +28,8 @@
 "onboarding.shortcuts.clipboard" = "From clipboard";
 "onboarding.shortcuts.blank" = "Blank editor";
 "onboarding.shortcuts.ocr" = "Screen capture (OCR)";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI Provider";
@@ -111,6 +113,8 @@
 "settings.general.shortcuts.clipboard" = "From clipboard:";
 "settings.general.shortcuts.blank" = "Blank editor:";
 "settings.general.shortcuts.ocr" = "Screen capture (OCR):";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Behavior";
@@ -162,6 +166,19 @@
 "settings.general.permissions.screen_recording_detail" = "OCR screen capture";
 "settings.general.permissions.open_settings" = "Open Settings";
 "settings.general.permissions.grant" = "Grant";
+"settings.general.permissions.suppress_alert" = "Suppress permission alert on startup";
+"settings.general.permissions.suppress_alert_help" = "Don't show the permission alert when permissions are missing after launch";
+
+/* Permission Alert */
+"permission_alert.title" = "Permissions Need Attention";
+"permission_alert.subtitle" = "ClipSlop may have lost some permissions after an update. macOS resets permissions when an app's code signature changes.";
+"permission_alert.instructions_title" = "If the Grant button doesn't work:";
+"permission_alert.step1" = "Open System Settings > Privacy & Security";
+"permission_alert.step2" = "Find ClipSlop in the list and remove it (select, click \"-\")";
+"permission_alert.step3" = "Click \"+\" and add ClipSlop again";
+"permission_alert.validate" = "Validate";
+"permission_alert.dont_show_again" = "Don't show this again";
+"permission_alert.close" = "Close";
 
 /* Settings - Providers */
 "settings.providers.select" = "Select a provider";

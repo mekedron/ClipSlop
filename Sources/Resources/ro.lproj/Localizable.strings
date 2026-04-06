@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "Captură ecran OCR";
 "settings.general.permissions.open_settings" = "Deschide Setări";
 "settings.general.permissions.grant" = "Acordă";
+"settings.general.permissions.suppress_alert" = "Suprimă alerta de permisiuni la pornire";
+"settings.general.permissions.suppress_alert_help" = "Nu afișa alerta de permisiuni când lipsesc permisiuni după pornire";
+
+/* Permission Alert */
+"permission_alert.title" = "Permisiunile necesită atenție";
+"permission_alert.subtitle" = "ClipSlop ar fi putut pierde unele permisiuni după o actualizare. macOS resetează permisiunile când se schimbă semnătura de cod a unei aplicații.";
+"permission_alert.instructions_title" = "Dacă butonul Acordă nu funcționează:";
+"permission_alert.step1" = "Deschide Setări de sistem > Confidențialitate și securitate";
+"permission_alert.step2" = "Găsește ClipSlop în listă și elimină-l (selectează, apasă \"-\")";
+"permission_alert.step3" = "Apasă \"+\" și adaugă ClipSlop din nou";
+"permission_alert.validate" = "Verifică";
+"permission_alert.dont_show_again" = "Nu mai afișa";
+"permission_alert.close" = "Închide";
 
 /* Settings - Providers */
 "settings.providers.select" = "Selectează un furnizor";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

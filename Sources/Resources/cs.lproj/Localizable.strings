@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "OCR snímek obrazovky";
 "settings.general.permissions.open_settings" = "Otevřít Nastavení";
 "settings.general.permissions.grant" = "Povolit";
+"settings.general.permissions.suppress_alert" = "Potlačit upozornění na oprávnění při spuštění";
+"settings.general.permissions.suppress_alert_help" = "Nezobrazovat upozornění na oprávnění, když po spuštění chybí oprávnění";
+
+/* Permission Alert */
+"permission_alert.title" = "Oprávnění vyžadují pozornost";
+"permission_alert.subtitle" = "ClipSlop mohl po aktualizaci ztratit některá oprávnění. macOS resetuje oprávnění při změně podpisu kódu aplikace.";
+"permission_alert.instructions_title" = "Pokud tlačítko Povolit nefunguje:";
+"permission_alert.step1" = "Otevřete Nastavení systému > Soukromí a zabezpečení";
+"permission_alert.step2" = "Najděte ClipSlop v seznamu a odeberte jej (vyberte, klikněte \"-\")";
+"permission_alert.step3" = "Klikněte \"+\" a přidejte ClipSlop znovu";
+"permission_alert.validate" = "Ověřit";
+"permission_alert.dont_show_again" = "Příště nezobrazovat";
+"permission_alert.close" = "Zavřít";
 
 /* Settings - Providers */
 "settings.providers.select" = "Vyberte poskytovatele";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

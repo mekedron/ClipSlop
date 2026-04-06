@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "OCR-näytönkaappaus";
 "settings.general.permissions.open_settings" = "Avaa asetukset";
 "settings.general.permissions.grant" = "Myönnä";
+"settings.general.permissions.suppress_alert" = "Piilota käyttöoikeusvaroitus käynnistyksessä";
+"settings.general.permissions.suppress_alert_help" = "Älä näytä käyttöoikeusvaroitusta, kun käyttöoikeudet puuttuvat käynnistyksen jälkeen";
+
+/* Permission Alert */
+"permission_alert.title" = "Käyttöoikeudet vaativat huomiota";
+"permission_alert.subtitle" = "ClipSlop on saattanut menettää joitakin käyttöoikeuksia päivityksen jälkeen. macOS nollaa käyttöoikeudet, kun sovelluksen koodiallekirjoitus muuttuu.";
+"permission_alert.instructions_title" = "Jos Myönnä-painike ei toimi:";
+"permission_alert.step1" = "Avaa Järjestelmäasetukset > Tietosuoja ja turvallisuus";
+"permission_alert.step2" = "Etsi ClipSlop luettelosta ja poista se (valitse, napsauta \"-\")";
+"permission_alert.step3" = "Napsauta \"+\" ja lisää ClipSlop uudelleen";
+"permission_alert.validate" = "Tarkista";
+"permission_alert.dont_show_again" = "Älä näytä uudelleen";
+"permission_alert.close" = "Sulje";
 
 /* Settings - Providers */
 "settings.providers.select" = "Valitse palvelu";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "Captura de pantalla con OCR";
 "settings.general.permissions.open_settings" = "Abrir Ajustes";
 "settings.general.permissions.grant" = "Conceder";
+"settings.general.permissions.suppress_alert" = "Suprimir alerta de permisos al iniciar";
+"settings.general.permissions.suppress_alert_help" = "No mostrar la alerta de permisos cuando falten permisos tras el inicio";
+
+/* Permission Alert */
+"permission_alert.title" = "Los permisos necesitan atención";
+"permission_alert.subtitle" = "ClipSlop puede haber perdido algunos permisos tras una actualización. macOS restablece los permisos cuando cambia la firma de código de una app.";
+"permission_alert.instructions_title" = "Si el botón Conceder no funciona:";
+"permission_alert.step1" = "Abre Ajustes del Sistema > Privacidad y seguridad";
+"permission_alert.step2" = "Busca ClipSlop en la lista y elimínalo (selecciona, haz clic en \"-\")";
+"permission_alert.step3" = "Haz clic en \"+\" y añade ClipSlop de nuevo";
+"permission_alert.validate" = "Verificar";
+"permission_alert.dont_show_again" = "No mostrar de nuevo";
+"permission_alert.close" = "Cerrar";
 
 /* Settings - Providers */
 "settings.providers.select" = "Selecciona un proveedor";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

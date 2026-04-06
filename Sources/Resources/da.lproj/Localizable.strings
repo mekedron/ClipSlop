@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "OCR-skærmoptagelse";
 "settings.general.permissions.open_settings" = "Åbn Indstillinger";
 "settings.general.permissions.grant" = "Tillad";
+"settings.general.permissions.suppress_alert" = "Undertryk tilladelsesadvarsel ved opstart";
+"settings.general.permissions.suppress_alert_help" = "Vis ikke tilladelsesadvarslen, når tilladelser mangler efter start";
+
+/* Permission Alert */
+"permission_alert.title" = "Tilladelser kræver opmærksomhed";
+"permission_alert.subtitle" = "ClipSlop kan have mistet nogle tilladelser efter en opdatering. macOS nulstiller tilladelser, når en apps kodesignatur ændres.";
+"permission_alert.instructions_title" = "Hvis Tillad-knappen ikke virker:";
+"permission_alert.step1" = "Åbn Systemindstillinger > Anonymitet & sikkerhed";
+"permission_alert.step2" = "Find ClipSlop på listen og fjern den (vælg, klik \"-\")";
+"permission_alert.step3" = "Klik \"+\" og tilføj ClipSlop igen";
+"permission_alert.validate" = "Bekræft";
+"permission_alert.dont_show_again" = "Vis ikke igen";
+"permission_alert.close" = "Luk";
 
 /* Settings - Providers */
 "settings.providers.select" = "Vælg en udbyder";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";

@@ -5,8 +5,8 @@ import LaunchAtLogin
 struct GeneralSettingsView: View {
     let appState: AppState
 
-    @State private var accessibilityGranted = AXIsProcessTrusted()
-    @State private var screenCaptureGranted = CGPreflightScreenCaptureAccess()
+    @State private var accessibilityGranted = PermissionService.isAccessibilityGranted
+    @State private var screenCaptureGranted = PermissionService.isScreenRecordingGranted
 
     private let loc = Loc.shared
 
@@ -58,7 +58,8 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.trigger"), name: .triggerClipSlop)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.clipboard"), name: .triggerFromClipboard)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.blank"), name: .triggerBlankEditor)
-                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr"), name: .triggerScreenCapture)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipboard"), name: .triggerOCRToClipboard)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipslop"), name: .triggerScreenCapture)
             }
 
             Section(loc.t("settings.general.behavior")) {
@@ -185,14 +186,26 @@ struct GeneralSettingsView: View {
                     title: loc.t("settings.general.permissions.accessibility"),
                     detail: loc.t("settings.general.permissions.accessibility_detail"),
                     isGranted: accessibilityGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                    onRequest: { PermissionService.requestAccessibility() }
                 )
                 permissionRow(
                     title: loc.t("settings.general.permissions.screen_recording"),
                     detail: loc.t("settings.general.permissions.screen_recording_detail"),
                     isGranted: screenCaptureGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+                    grantLabel: loc.t("permission_alert.check_and_grant"),
+                    onRequest: {
+                        Task {
+                            let granted = await PermissionService.checkScreenRecordingLive()
+                            await MainActor.run { screenCaptureGranted = granted }
+                            if !granted {
+                                await MainActor.run { PermissionService.requestScreenRecording() }
+                            }
+                        }
+                    }
                 )
+
+                Toggle(loc.t("settings.general.permissions.suppress_alert"), isOn: $settings.suppressPermissionAlert)
+                    .help(loc.t("settings.general.permissions.suppress_alert_help"))
             }
         }
         .formStyle(.grouped)
@@ -208,7 +221,8 @@ struct GeneralSettingsView: View {
         title: String,
         detail: String,
         isGranted: Bool,
-        settingsURL: String
+        grantLabel: String? = nil,
+        onRequest: @escaping () -> Void
     ) -> some View {
         LabeledContent {
             HStack(spacing: 8) {
@@ -216,10 +230,11 @@ struct GeneralSettingsView: View {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundStyle(.green)
                 }
-                Button(isGranted ? loc.t("settings.general.permissions.open_settings") : loc.t("settings.general.permissions.grant")) {
-                    if let url = URL(string: settingsURL) {
-                        NSWorkspace.shared.open(url)
-                    }
+                Button(isGranted
+                    ? loc.t("settings.general.permissions.open_settings")
+                    : (grantLabel ?? loc.t("settings.general.permissions.grant"))
+                ) {
+                    onRequest()
                 }
                 .controlSize(.small)
             }
@@ -232,8 +247,8 @@ struct GeneralSettingsView: View {
     }
 
     private func refreshPermissions() {
-        accessibilityGranted = AXIsProcessTrusted()
-        screenCaptureGranted = CGPreflightScreenCaptureAccess()
+        accessibilityGranted = PermissionService.isAccessibilityGranted
+        screenCaptureGranted = PermissionService.isScreenRecordingGranted
     }
 
     private func applyColorScheme(_ scheme: AppColorScheme) {

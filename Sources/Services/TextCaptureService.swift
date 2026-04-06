@@ -34,11 +34,10 @@ enum TextCaptureService {
     }
 
     static func isAccessibilityEnabled() -> Bool {
-        AXIsProcessTrusted()
+        PermissionService.isAccessibilityGranted
     }
 
     static func requestAccessibility() {
-        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary
-        AXIsProcessTrustedWithOptions(options)
+        PermissionService.requestAccessibility()
     }
 }

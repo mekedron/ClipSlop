@@ -139,6 +139,19 @@
 "settings.general.permissions.screen_recording_detail" = "OCR képernyőfotó";
 "settings.general.permissions.open_settings" = "Beállítások megnyitása";
 "settings.general.permissions.grant" = "Engedélyezés";
+"settings.general.permissions.suppress_alert" = "Jogosultsági figyelmeztetés elrejtése indításkor";
+"settings.general.permissions.suppress_alert_help" = "Ne jelenjen meg a jogosultsági figyelmeztetés, ha indítás után hiányoznak a jogosultságok";
+
+/* Permission Alert */
+"permission_alert.title" = "A jogosultságok figyelmet igényelnek";
+"permission_alert.subtitle" = "A ClipSlop egy frissítés után elveszíthette egyes jogosultságait. A macOS visszaállítja a jogosultságokat, ha egy alkalmazás kódaláírása megváltozik.";
+"permission_alert.instructions_title" = "Ha az Engedélyezés gomb nem működik:";
+"permission_alert.step1" = "Nyissa meg a Rendszerbeállítások > Adatvédelem és biztonság menüt";
+"permission_alert.step2" = "Keresse meg a ClipSlop-ot a listában és távolítsa el (jelölje ki, kattintson a \"-\" gombra)";
+"permission_alert.step3" = "Kattintson a \"+\" gombra és adja hozzá újra a ClipSlop-ot";
+"permission_alert.validate" = "Ellenőrzés";
+"permission_alert.dont_show_again" = "Ne jelenjen meg újra";
+"permission_alert.close" = "Bezárás";
 
 /* Settings - Providers */
 "settings.providers.select" = "Válassz szolgáltatót";
@@ -333,3 +346,7 @@
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
+"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
+"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
+"onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
