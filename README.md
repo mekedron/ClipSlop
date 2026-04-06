@@ -107,6 +107,13 @@ Fully customizable — add your own prompts, folders, and mnemonics in Settings 
 
 ## Install
 
+### Homebrew
+
+```bash
+brew tap mekedron/tap
+brew install --cask clipslop
+```
+
 ### Download
 
 Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest). Drag to Applications.
