@@ -10,6 +10,8 @@ jobs:
     runs-on: macos-15
     permissions:
       contents: write
+    env:
+      HAS_HOMEBREW_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
 
     steps:
       - name: Checkout
@@ -283,7 +285,7 @@ jobs:
           git push origin main
 
       - name: Update Homebrew Cask
-        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
+        if: ${{ env.HAS_HOMEBREW_TOKEN == 'true' }}
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
