@@ -162,7 +162,7 @@ final class AppSettings {
         hasCompletedOnboarding = defaults.bool(forKey: "hasCompletedOnboarding")
         selectedProviderID = defaults.string(forKey: "selectedProviderID") ?? ""
         popupOpacity = defaults.object(forKey: "popupOpacity") as? Double ?? 0.85
-        popupWidth = defaults.object(forKey: "popupWidth") as? Double ?? 850
+        popupWidth = defaults.object(forKey: "popupWidth") as? Double ?? 950
         popupHeight = defaults.object(forKey: "popupHeight") as? Double ?? 520
         hideMenuBarIcon = defaults.bool(forKey: "hideMenuBarIcon")
         hideDockIcon = defaults.object(forKey: "hideDockIcon") as? Bool ?? true

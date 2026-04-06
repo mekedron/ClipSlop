@@ -380,6 +380,7 @@ struct PopupContentView: View {
         .buttonStyle(.bordered)
         .tint(copied ? .green : nil)
         .animation(.easeInOut(duration: 0.2), value: copied)
+        .background(WindowDragBlocker())
     }
 
     private func actionButton(
@@ -398,6 +399,7 @@ struct PopupContentView: View {
             .font(.caption)
         }
         .buttonStyle(.bordered)
+        .background(WindowDragBlocker())
     }
 
     // MARK: - Error
@@ -545,7 +547,9 @@ struct KeyEventHandler: NSViewRepresentable {
             // --- Normal mode ---
 
             if code == KeyCode.escape {
-                if !appState.navigationPath.isEmpty {
+                if appState.isProcessing {
+                    appState.cancelProcessing()
+                } else if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
                 } else if appState.settings.closeOnEscape {
                     appState.dismissPopup()
