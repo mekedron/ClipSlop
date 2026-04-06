@@ -6,6 +6,7 @@ struct ProvidersSettingsView: View {
     @State private var showAddProvider = false
     @State private var showDuplicateSheet = false
     @State private var duplicateSourceID: UUID?
+    @State private var justAddedChatGPTProviderID: UUID?
 
     private let loc = Loc.shared
     private var providerStore: ProviderStore { appState.providerStore }
@@ -114,8 +115,17 @@ struct ProvidersSettingsView: View {
             // Detail
             if let id = selectedProviderID,
                let provider = providerStore.providers.first(where: { $0.id == id }) {
-                ProviderDetailView(provider: provider, providerStore: providerStore)
-                    .id(provider.id)
+                ProviderDetailView(
+                    provider: provider,
+                    providerStore: providerStore,
+                    autoStartSignIn: justAddedChatGPTProviderID == provider.id
+                )
+                .id(provider.id)
+                .onAppear {
+                    if justAddedChatGPTProviderID == provider.id {
+                        justAddedChatGPTProviderID = nil
+                    }
+                }
             } else {
                 VStack(spacing: 12) {
                     if providerStore.providers.isEmpty {
@@ -135,6 +145,10 @@ struct ProvidersSettingsView: View {
         }
         .sheet(isPresented: $showAddProvider) {
             AddProviderSheet(providerStore: providerStore, isPresented: $showAddProvider, onAdded: { id in
+                if let provider = providerStore.providers.first(where: { $0.id == id }),
+                   provider.providerType == .openAIChatGPT {
+                    justAddedChatGPTProviderID = id
+                }
                 selectedProviderID = id
             })
         }
@@ -166,6 +180,7 @@ struct ProvidersSettingsView: View {
 struct ProviderDetailView: View {
     let provider: AIProviderConfig
     let providerStore: ProviderStore
+    var autoStartSignIn: Bool = false
 
     @State private var name: String = ""
     @State private var baseURL: String = ""
@@ -183,6 +198,7 @@ struct ProviderDetailView: View {
     @State private var signInTask: Task<Void, Never>?
     @State private var isTesting = false
     @State private var testResult: TestResult?
+    @State private var showSignInAlert = false
 
     private let loc = Loc.shared
     private var tokenManager: ChatGPTTokenManager { .shared }
@@ -299,7 +315,20 @@ struct ProviderDetailView: View {
             }
         }
         .formStyle(.grouped)
-        .onAppear { loadValues() }
+        .onAppear {
+            loadValues()
+            if autoStartSignIn && provider.providerType == .openAIChatGPT {
+                showSignInAlert = true
+            }
+        }
+        .alert(loc.t("settings.providers.chatgpt.sign_in_title"), isPresented: $showSignInAlert) {
+            Button(loc.t("settings.providers.chatgpt.sign_in_continue")) {
+                startChatGPTLogin()
+            }
+            .keyboardShortcut(.defaultAction)
+        } message: {
+            Text(loc.t("settings.providers.chatgpt.sign_in_message"))
+        }
     }
 
     // MARK: - Model Field

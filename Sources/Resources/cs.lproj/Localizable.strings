@@ -186,6 +186,9 @@
 "settings.providers.cli.available" = "Dostupný";
 "settings.providers.cli.not_found" = "Nenalezen — nástroj mohl být odinstalován";
 "settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.sign_in_title" = "Vyžadováno přihlášení";
+"settings.providers.chatgpt.sign_in_message" = "ChatGPT vyžaduje přihlášení přes prohlížeč. Budete přesměrováni na přihlašovací stránku OpenAI.";
+"settings.providers.chatgpt.sign_in_continue" = "Pokračovat v prohlížeči";
 "settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
 "settings.providers.chatgpt.sign_out" = "Sign Out";
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";

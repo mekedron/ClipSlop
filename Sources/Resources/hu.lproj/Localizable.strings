@@ -186,6 +186,9 @@
 "settings.providers.cli.available" = "Elérhető";
 "settings.providers.cli.not_found" = "Nem található — az eszköz eltávolításra kerülhetett";
 "settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.sign_in_title" = "Bejelentkezés szükséges";
+"settings.providers.chatgpt.sign_in_message" = "A ChatGPT böngészőn keresztüli bejelentkezést igényel. Átirányítjuk az OpenAI bejelentkezési oldalára.";
+"settings.providers.chatgpt.sign_in_continue" = "Folytatás a böngészőben";
 "settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
 "settings.providers.chatgpt.sign_out" = "Sign Out";
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";

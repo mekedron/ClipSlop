@@ -186,6 +186,9 @@
 "settings.providers.cli.available" = "Disponibile";
 "settings.providers.cli.not_found" = "Non trovato — lo strumento potrebbe essere stato disinstallato";
 "settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.sign_in_title" = "Accesso richiesto";
+"settings.providers.chatgpt.sign_in_message" = "ChatGPT richiede l'accesso tramite il browser. Verrai reindirizzato alla pagina di accesso di OpenAI.";
+"settings.providers.chatgpt.sign_in_continue" = "Continua nel browser";
 "settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
 "settings.providers.chatgpt.sign_out" = "Sign Out";
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";

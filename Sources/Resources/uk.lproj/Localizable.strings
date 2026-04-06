@@ -186,6 +186,9 @@
 "settings.providers.cli.available" = "Доступний";
 "settings.providers.cli.not_found" = "Не знайдено — інструмент міг бути видалений";
 "settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.sign_in_title" = "Потрібен вхід";
+"settings.providers.chatgpt.sign_in_message" = "ChatGPT потребує входу через браузер. Вас буде перенаправлено на сторінку входу OpenAI.";
+"settings.providers.chatgpt.sign_in_continue" = "Продовжити в браузері";
 "settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
 "settings.providers.chatgpt.sign_out" = "Sign Out";
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";

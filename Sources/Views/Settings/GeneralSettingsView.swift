@@ -7,6 +7,8 @@ struct GeneralSettingsView: View {
 
     @State private var accessibilityGranted = PermissionService.isAccessibilityGranted
     @State private var screenCaptureGranted = PermissionService.isScreenRecordingGranted
+    @State private var accessibilityPending = false
+    @State private var screenRecordingPending = false
 
     private let loc = Loc.shared
 
@@ -186,20 +188,40 @@ struct GeneralSettingsView: View {
                     title: loc.t("settings.general.permissions.accessibility"),
                     detail: loc.t("settings.general.permissions.accessibility_detail"),
                     isGranted: accessibilityGranted,
-                    onRequest: { PermissionService.requestAccessibility() }
+                    grantLabel: accessibilityPending
+                        ? loc.t("permission_alert.validate")
+                        : loc.t("settings.general.permissions.grant"),
+                    onRequest: {
+                        if accessibilityPending {
+                            accessibilityGranted = PermissionService.isAccessibilityGranted
+                            if !accessibilityGranted {
+                                PermissionService.requestAccessibility()
+                            }
+                        } else {
+                            accessibilityPending = true
+                            PermissionService.requestAccessibility()
+                        }
+                    }
                 )
                 permissionRow(
                     title: loc.t("settings.general.permissions.screen_recording"),
                     detail: loc.t("settings.general.permissions.screen_recording_detail"),
                     isGranted: screenCaptureGranted,
-                    grantLabel: loc.t("permission_alert.check_and_grant"),
+                    grantLabel: screenRecordingPending
+                        ? loc.t("permission_alert.validate")
+                        : loc.t("settings.general.permissions.grant"),
                     onRequest: {
-                        Task {
-                            let granted = await PermissionService.checkScreenRecordingLive()
-                            await MainActor.run { screenCaptureGranted = granted }
-                            if !granted {
-                                await MainActor.run { PermissionService.requestScreenRecording() }
+                        if screenRecordingPending {
+                            Task {
+                                let granted = await PermissionService.checkScreenRecordingLive()
+                                await MainActor.run { screenCaptureGranted = granted }
+                                if !granted {
+                                    await MainActor.run { PermissionService.requestScreenRecording() }
+                                }
                             }
+                        } else {
+                            screenRecordingPending = true
+                            PermissionService.requestScreenRecording()
                         }
                     }
                 )
@@ -210,11 +232,6 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .onAppear { refreshPermissions() }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            Task { @MainActor in
-                refreshPermissions()
-            }
-        }
     }
 
     private func permissionRow(
@@ -225,15 +242,11 @@ struct GeneralSettingsView: View {
         onRequest: @escaping () -> Void
     ) -> some View {
         LabeledContent {
-            HStack(spacing: 8) {
-                if isGranted {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                }
-                Button(isGranted
-                    ? loc.t("settings.general.permissions.open_settings")
-                    : (grantLabel ?? loc.t("settings.general.permissions.grant"))
-                ) {
+            if isGranted {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+            } else {
+                Button(grantLabel ?? loc.t("settings.general.permissions.grant")) {
                     onRequest()
                 }
                 .controlSize(.small)

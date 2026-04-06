@@ -39,18 +39,10 @@ enum PermissionService {
 
     /// Attempts to show the system screen recording prompt.
     /// `CGRequestScreenCaptureAccess()` only shows the dialog on the very first call;
-    /// subsequent calls are no-ops. When it is a no-op we fall back to opening
-    /// System Settings directly so the user can grant permission manually.
+    /// subsequent calls are no-ops. The UI provides a separate Validate button
+    /// and manual instructions for users to open System Settings if needed.
     static func requestScreenRecording() {
-        let alreadyGranted = CGRequestScreenCaptureAccess()
-        if !alreadyGranted {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if !CGPreflightScreenCaptureAccess() {
-                    if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }
-            }
-        }
+        CGPreflightScreenCaptureAccess()
+        CGRequestScreenCaptureAccess()
     }
 }

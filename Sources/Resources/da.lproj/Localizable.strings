@@ -186,6 +186,9 @@
 "settings.providers.cli.available" = "Tilgængelig";
 "settings.providers.cli.not_found" = "Ikke fundet — værktøjet er muligvis afinstalleret";
 "settings.providers.chatgpt.sign_in" = "Sign in with ChatGPT";
+"settings.providers.chatgpt.sign_in_title" = "Login påkrævet";
+"settings.providers.chatgpt.sign_in_message" = "ChatGPT kræver login via din browser. Du bliver omdirigeret til OpenAIs loginside.";
+"settings.providers.chatgpt.sign_in_continue" = "Fortsæt i browser";
 "settings.providers.chatgpt.signing_in" = "Waiting for browser sign-in…";
 "settings.providers.chatgpt.sign_out" = "Sign Out";
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";
