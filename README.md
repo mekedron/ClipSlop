@@ -164,6 +164,7 @@ ClipSlop is built with these open-source libraries:
 - [swift-markdown](https://github.com/swiftlang/swift-markdown) by Apple / Swift Project — Markdown parsing and rendering
 - [Textual](https://github.com/gonzalezreal/textual) by Guillermo Gonzalez — native SwiftUI Markdown rendering
 - [swift-rich-html-editor](https://github.com/Infomaniak/swift-rich-html-editor) by Infomaniak — WYSIWYG rich HTML editor
+- [Lobe Icons](https://github.com/lobehub/lobe-icons) by LobeHub — provider icons for OpenAI, Anthropic, Ollama, Claude, Codex
 
 ## License
 

@@ -150,6 +150,12 @@ struct ThirdPartyLibrariesView: View {
             "WYSIWYG rich HTML editor component for SwiftUI",
             "https://github.com/Infomaniak/swift-rich-html-editor"
         ),
+        (
+            "Lobe Icons",
+            "LobeHub",
+            "Provider icons for OpenAI, Anthropic, Ollama, Claude, Codex",
+            "https://github.com/lobehub/lobe-icons"
+        ),
     ]
 
     var body: some View {
