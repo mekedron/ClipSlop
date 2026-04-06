@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Peruuta";
 "settings.providers.add_button" = "Lisää";
 "settings.providers.name_optional" = "Nimi (valinnainen)";
+"settings.providers.desc.openAIChatGPT" = "Kirjaudu ChatGPT-tililläsi";
+"settings.providers.desc.openAI" = "Käytä OpenAI API:a API-avaimellasi";
+"settings.providers.desc.anthropic" = "Käytä Anthropic API:a API-avaimellasi";
+"settings.providers.desc.ollama" = "Yhdistä paikalliseen Ollama-instanssiin";
+"settings.providers.desc.openAICompatible" = "Mikä tahansa OpenAI-yhteensopiva API-päätepiste";
+"settings.providers.desc.cliTool" = "Käytä CLI-työkalua (Claude Code jne.)";
 "settings.providers.fetch_models" = "Hae käytettävissä olevat mallit";
 "settings.providers.add_first" = "Lisää ensimmäinen palveluntarjoaja";
 "settings.providers.cli.tool" = "CLI-työkalu";

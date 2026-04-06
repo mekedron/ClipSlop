@@ -24,10 +24,11 @@ struct OnboardingProviderView: View {
             // Current provider status
             if let provider = providerStore.defaultProvider {
                 VStack(spacing: 8) {
-                    Label {
+                    HStack(spacing: 8) {
+                        ProviderIconView(providerType: provider.providerType, modelID: provider.modelID)
+                            .foregroundStyle(.green)
                         Text(provider.name + " — " + provider.modelID)
                             .font(.callout.weight(.medium))
-                    } icon: {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                     }

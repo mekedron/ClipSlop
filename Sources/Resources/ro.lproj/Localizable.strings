@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Anulează";
 "settings.providers.add_button" = "Adaugă";
 "settings.providers.name_optional" = "Nume (opțional)";
+"settings.providers.desc.openAIChatGPT" = "Conectați-vă cu contul ChatGPT";
+"settings.providers.desc.openAI" = "Folosește API-ul OpenAI cu cheia ta API";
+"settings.providers.desc.anthropic" = "Folosește API-ul Anthropic cu cheia ta API";
+"settings.providers.desc.ollama" = "Conectează-te la o instanță Ollama locală";
+"settings.providers.desc.openAICompatible" = "Orice endpoint compatibil OpenAI";
+"settings.providers.desc.cliTool" = "Folosește un instrument CLI (Claude Code etc.)";
 "settings.providers.fetch_models" = "Încarcă modelele disponibile";
 "settings.providers.add_first" = "Adăugați primul furnizor";
 "settings.providers.cli.tool" = "Instrument CLI";

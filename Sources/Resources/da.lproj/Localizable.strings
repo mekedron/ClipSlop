@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Annuller";
 "settings.providers.add_button" = "Tilføj";
 "settings.providers.name_optional" = "Navn (valgfrit)";
+"settings.providers.desc.openAIChatGPT" = "Log ind med din ChatGPT-konto";
+"settings.providers.desc.openAI" = "Brug OpenAI API med din API-nøgle";
+"settings.providers.desc.anthropic" = "Brug Anthropic API med din API-nøgle";
+"settings.providers.desc.ollama" = "Opret forbindelse til en lokal Ollama-instans";
+"settings.providers.desc.openAICompatible" = "Ethvert OpenAI-kompatibelt API-endpoint";
+"settings.providers.desc.cliTool" = "Brug et CLI-værktøj (Claude Code osv.)";
 "settings.providers.fetch_models" = "Hent tilgængelige modeller";
 "settings.providers.add_first" = "Tilføj første udbyder";
 "settings.providers.cli.tool" = "CLI-værktøj";

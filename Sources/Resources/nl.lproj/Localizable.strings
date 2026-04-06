@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Annuleren";
 "settings.providers.add_button" = "Toevoegen";
 "settings.providers.name_optional" = "Naam (optioneel)";
+"settings.providers.desc.openAIChatGPT" = "Log in met je ChatGPT-account";
+"settings.providers.desc.openAI" = "Gebruik de OpenAI API met je API-sleutel";
+"settings.providers.desc.anthropic" = "Gebruik de Anthropic API met je API-sleutel";
+"settings.providers.desc.ollama" = "Verbind met een lokale Ollama-instantie";
+"settings.providers.desc.openAICompatible" = "Elk OpenAI-compatibel API-eindpunt";
+"settings.providers.desc.cliTool" = "Gebruik een CLI-tool (Claude Code, enz.)";
 "settings.providers.fetch_models" = "Beschikbare modellen ophalen";
 "settings.providers.add_first" = "Eerste provider toevoegen";
 "settings.providers.cli.tool" = "CLI-tool";

@@ -15,7 +15,9 @@ struct ProvidersSettingsView: View {
             // Provider list
             VStack(spacing: 0) {
                 List(providerStore.providers, selection: $selectedProviderID) { provider in
-                    HStack {
+                    HStack(spacing: 8) {
+                        ProviderIconView(providerType: provider.providerType, modelID: provider.modelID)
+                            .foregroundStyle(.secondary)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(provider.name)
                                 .font(.subheadline).fontWeight(.medium)
@@ -549,14 +551,28 @@ private struct TestResult {
 
 // MARK: - Add Provider Sheet
 
+/// Represents a selectable option in the Add Provider sheet —
+/// either a standard provider type or a specific detected CLI tool.
+private enum ProviderOption: Equatable, Identifiable {
+    case standard(AIProviderType)
+    case cliTool(CLIToolDetector.DetectionResult)
+
+    var id: String {
+        switch self {
+        case .standard(let type): "type-\(type.rawValue)"
+        case .cliTool(let result): "cli-\(result.definition.id)"
+        }
+    }
+
+    static func == (lhs: ProviderOption, rhs: ProviderOption) -> Bool { lhs.id == rhs.id }
+}
+
 struct AddProviderSheet: View {
     let providerStore: ProviderStore
     @Binding var isPresented: Bool
     var onAdded: ((UUID) -> Void)?
-    @State private var selectedType: AIProviderType = .openAIChatGPT
-    @State private var name: String = ""
-    @State private var detectedCLITools: [CLIToolDetector.DetectionResult] = []
-    @State private var selectedCLIToolID: String = ""
+    @State private var selected: ProviderOption?
+    @State private var options: [ProviderOption] = []
 
     private let loc = Loc.shared
 
@@ -564,28 +580,14 @@ struct AddProviderSheet: View {
         VStack(spacing: 16) {
             Text(loc.t("settings.providers.add")).font(.headline)
 
-            Picker(loc.t("settings.providers.type"), selection: $selectedType) {
-                ForEach(AIProviderType.allCases) { type in
-                    Text(type.displayName).tag(type)
-                }
-            }
-
-            if selectedType == .cliTool {
-                if detectedCLITools.isEmpty {
-                    Text(loc.t("onboarding.provider.cli.none_found"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
-                    Picker(loc.t("onboarding.provider.cli.select_tool"), selection: $selectedCLIToolID) {
-                        ForEach(detectedCLITools, id: \.definition.id) { result in
-                            Text(result.definition.displayName).tag(result.definition.id)
-                        }
+            ScrollView {
+                VStack(spacing: 4) {
+                    ForEach(options) { option in
+                        optionRow(option)
                     }
                 }
-            } else {
-                TextField(loc.t("settings.providers.name_optional"), text: $name)
-                    .textFieldStyle(.roundedBorder)
             }
+            .frame(maxHeight: 340)
 
             HStack {
                 Button(loc.t("settings.providers.cancel")) { isPresented = false }
@@ -595,33 +597,104 @@ struct AddProviderSheet: View {
                     isPresented = false
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(selectedType == .cliTool && selectedCLIToolID.isEmpty)
+                .disabled(selected == nil)
             }
         }
         .padding(20)
-        .frame(width: 350)
-        .onChange(of: selectedType) {
-            if selectedType == .cliTool {
-                detectedCLITools = CLIToolDetector.detectAll()
-                selectedCLIToolID = detectedCLITools.first?.definition.id ?? ""
+        .frame(width: 380)
+        .onAppear { buildOptions() }
+    }
+
+    private func buildOptions() {
+        let detectedCLI = CLIToolDetector.detectAll()
+        var result: [ProviderOption] = []
+        for type in AIProviderType.allCases {
+            if type == .cliTool {
+                // Replace generic CLI Tool with individual detected tools
+                for tool in detectedCLI {
+                    result.append(.cliTool(tool))
+                }
+            } else {
+                result.append(.standard(type))
             }
+        }
+        options = result
+    }
+
+    private func optionRow(_ option: ProviderOption) -> some View {
+        let isSelected = selected == option
+        return Button {
+            selected = option
+        } label: {
+            HStack(spacing: 12) {
+                optionIcon(option, isSelected: isSelected)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(optionTitle(option))
+                        .font(.body)
+                    Text(optionSubtitle(option))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(.blue)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .background(isSelected ? Color.accentColor.opacity(0.1) : .clear,
+                        in: RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+    }
+
+    @ViewBuilder
+    private func optionIcon(_ option: ProviderOption, isSelected: Bool) -> some View {
+        switch option {
+        case .standard(let type):
+            ProviderIconView(providerType: type, size: 22)
+                .foregroundStyle(isSelected ? .blue : .secondary)
+        case .cliTool(let result):
+            Image(result.definition.iconName, bundle: .module)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 22, height: 22)
+                .foregroundStyle(isSelected ? .blue : .secondary)
+        }
+    }
+
+    private func optionTitle(_ option: ProviderOption) -> String {
+        switch option {
+        case .standard(let type): type.displayName
+        case .cliTool(let result): result.definition.displayName
+        }
+    }
+
+    private func optionSubtitle(_ option: ProviderOption) -> String {
+        switch option {
+        case .standard(let type): type.providerDescription
+        case .cliTool(let result): result.binaryPath
         }
     }
 
     private func addProvider() {
+        guard let selected else { return }
         let config: AIProviderConfig
-        if selectedType == .cliTool {
-            guard let result = detectedCLITools.first(where: { $0.definition.id == selectedCLIToolID }) else { return }
+        switch selected {
+        case .standard(let type):
+            config = AIProviderConfig(
+                name: type.displayName,
+                providerType: type
+            )
+        case .cliTool(let result):
             config = AIProviderConfig(
                 name: result.definition.displayName,
                 providerType: .cliTool,
                 baseURL: result.binaryPath,
                 modelID: result.definition.id
-            )
-        } else {
-            config = AIProviderConfig(
-                name: name.isEmpty ? selectedType.displayName : name,
-                providerType: selectedType
             )
         }
         providerStore.addProvider(config)

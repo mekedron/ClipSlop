@@ -21,6 +21,39 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
         }
     }
 
+    var iconName: String {
+        switch self {
+        case .openAIChatGPT: "provider-openai"
+        case .openAI: "provider-openai"
+        case .anthropic: "provider-anthropic"
+        case .ollama: "provider-ollama"
+        case .openAICompatible: "globe"         // SF Symbol
+        case .cliTool: "apple.terminal"          // SF Symbol
+        }
+    }
+
+    /// Whether `iconName` refers to a bundled asset (true) or SF Symbol (false).
+    var usesAssetIcon: Bool {
+        switch self {
+        case .openAICompatible, .cliTool: false
+        default: true
+        }
+    }
+
+    /// Resolves the icon name for a specific provider config (uses CLI tool icon if available).
+    func resolvedIconName(modelID: String? = nil) -> (name: String, isAsset: Bool) {
+        if self == .cliTool, let modelID,
+           let tool = CLIToolDefinition.find(byID: modelID) {
+            return (tool.iconName, true)
+        }
+        return (iconName, usesAssetIcon)
+    }
+
+    @MainActor
+    var providerDescription: String {
+        Loc.shared.t("settings.providers.desc.\(rawValue)")
+    }
+
     var requiresAPIKey: Bool {
         switch self {
         case .ollama, .cliTool, .openAIChatGPT: false

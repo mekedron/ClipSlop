@@ -15,7 +15,7 @@ struct CLIToolDefinition: Sendable, Identifiable {
             id: "claude",
             displayName: "Claude Code",
             binaryNames: ["claude"],
-            iconName: "terminal",
+            iconName: "provider-claude",
             usesOutputFile: false,
             buildArguments: { text, systemPrompt, _ in
                 let combined = systemPrompt.isEmpty ? text : "\(systemPrompt)\n\n\(text)"
@@ -26,7 +26,7 @@ struct CLIToolDefinition: Sendable, Identifiable {
             id: "codex",
             displayName: "Codex CLI",
             binaryNames: ["codex"],
-            iconName: "terminal.fill",
+            iconName: "provider-codex",
             usesOutputFile: true,
             buildArguments: { text, systemPrompt, outputFile in
                 let combined = systemPrompt.isEmpty ? text : "\(systemPrompt)\n\n\(text)"

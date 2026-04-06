@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Mégse";
 "settings.providers.add_button" = "Hozzáadás";
 "settings.providers.name_optional" = "Név (opcionális)";
+"settings.providers.desc.openAIChatGPT" = "Jelentkezzen be ChatGPT-fiókjával";
+"settings.providers.desc.openAI" = "Használja az OpenAI API-t az API kulcsával";
+"settings.providers.desc.anthropic" = "Használja az Anthropic API-t az API kulcsával";
+"settings.providers.desc.ollama" = "Csatlakozzon egy helyi Ollama példányhoz";
+"settings.providers.desc.openAICompatible" = "Bármely OpenAI-kompatibilis API végpont";
+"settings.providers.desc.cliTool" = "Használjon CLI eszközt (Claude Code stb.)";
 "settings.providers.fetch_models" = "Elérhető modellek lekérése";
 "settings.providers.add_first" = "Első szolgáltató hozzáadása";
 "settings.providers.cli.tool" = "CLI eszköz";

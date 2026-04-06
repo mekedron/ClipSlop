@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Abbrechen";
 "settings.providers.add_button" = "Hinzufügen";
 "settings.providers.name_optional" = "Name (optional)";
+"settings.providers.desc.openAIChatGPT" = "Mit Ihrem ChatGPT-Konto anmelden";
+"settings.providers.desc.openAI" = "OpenAI API mit Ihrem API-Schlüssel verwenden";
+"settings.providers.desc.anthropic" = "Anthropic API mit Ihrem API-Schlüssel verwenden";
+"settings.providers.desc.ollama" = "Mit einer lokalen Ollama-Instanz verbinden";
+"settings.providers.desc.openAICompatible" = "Jeder OpenAI-kompatible API-Endpunkt";
+"settings.providers.desc.cliTool" = "CLI-Tool verwenden (Claude Code usw.)";
 "settings.providers.fetch_models" = "Verfügbare Modelle abrufen";
 "settings.providers.add_first" = "Ersten Anbieter hinzufügen";
 "settings.providers.cli.tool" = "CLI-Tool";

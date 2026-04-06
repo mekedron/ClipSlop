@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Отмена";
 "settings.providers.add_button" = "Добавить";
 "settings.providers.name_optional" = "Название (необязательно)";
+"settings.providers.desc.openAIChatGPT" = "Войдите с аккаунтом ChatGPT";
+"settings.providers.desc.openAI" = "Используйте OpenAI API с вашим API-ключом";
+"settings.providers.desc.anthropic" = "Используйте Anthropic API с вашим API-ключом";
+"settings.providers.desc.ollama" = "Подключитесь к локальному экземпляру Ollama";
+"settings.providers.desc.openAICompatible" = "Любой OpenAI-совместимый API-эндпоинт";
+"settings.providers.desc.cliTool" = "Используйте CLI-инструмент (Claude Code и др.)";
 "settings.providers.fetch_models" = "Загрузить доступные модели";
 "settings.providers.add_first" = "Добавить первый провайдер";
 "settings.providers.cli.tool" = "CLI-инструмент";

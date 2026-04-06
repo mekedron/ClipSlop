@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Zrušit";
 "settings.providers.add_button" = "Přidat";
 "settings.providers.name_optional" = "Název (volitelné)";
+"settings.providers.desc.openAIChatGPT" = "Přihlaste se účtem ChatGPT";
+"settings.providers.desc.openAI" = "Použijte OpenAI API s vaším API klíčem";
+"settings.providers.desc.anthropic" = "Použijte Anthropic API s vaším API klíčem";
+"settings.providers.desc.ollama" = "Připojte se k lokální instanci Ollama";
+"settings.providers.desc.openAICompatible" = "Jakýkoli OpenAI-kompatibilní API endpoint";
+"settings.providers.desc.cliTool" = "Použijte CLI nástroj (Claude Code atd.)";
 "settings.providers.fetch_models" = "Načíst dostupné modely";
 "settings.providers.add_first" = "Přidat prvního poskytovatele";
 "settings.providers.cli.tool" = "Nástroj CLI";

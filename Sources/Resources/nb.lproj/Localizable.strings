@@ -172,6 +172,12 @@
 "settings.providers.cancel" = "Avbryt";
 "settings.providers.add_button" = "Legg til";
 "settings.providers.name_optional" = "Navn (valgfritt)";
+"settings.providers.desc.openAIChatGPT" = "Logg inn med ChatGPT-kontoen din";
+"settings.providers.desc.openAI" = "Bruk OpenAI API med din API-nøkkel";
+"settings.providers.desc.anthropic" = "Bruk Anthropic API med din API-nøkkel";
+"settings.providers.desc.ollama" = "Koble til en lokal Ollama-instans";
+"settings.providers.desc.openAICompatible" = "Ethvert OpenAI-kompatibelt API-endepunkt";
+"settings.providers.desc.cliTool" = "Bruk et CLI-verktøy (Claude Code osv.)";
 "settings.providers.fetch_models" = "Hent tilgjengelige modeller";
 "settings.providers.add_first" = "Legg til første leverandør";
 "settings.providers.cli.tool" = "CLI-verktøy";
