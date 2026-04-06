@@ -129,6 +129,7 @@ jobs:
             "release/${DMG_NAME}"
 
           echo "DMG_NAME=${DMG_NAME}" >> $GITHUB_ENV
+          echo "DMG_SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')" >> $GITHUB_ENV
           echo "DMG created at release/${DMG_NAME}"
 
       - name: Sign DMG for Sparkle
@@ -289,15 +290,12 @@ jobs:
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
-          TAG="${GITHUB_REF_NAME#v}"
-          SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')
-
           python3 << 'PYEOF'
           import json, base64, urllib.request, os
 
           token = os.environ["HOMEBREW_TAP_TOKEN"]
           tag = os.environ["GITHUB_REF_NAME"].lstrip("v")
-          sha256 = os.popen('shasum -a 256 "release/' + os.environ["DMG_NAME"] + '"').read().split()[0]
+          sha256 = os.environ["DMG_SHA256"]
 
           cask = f'''cask "clipslop" do
             version "{tag}"
