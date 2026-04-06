@@ -34,6 +34,10 @@ struct AboutView: View {
                           tint: .orange)
 
                 Button {
+                    // Lower the settings window so Sparkle's update dialog appears on top
+                    if let settingsWindow = NSApp.windows.first(where: { $0.title == Loc.shared.t("window.settings") }) {
+                        settingsWindow.level = .normal
+                    }
                     SparkleUpdater.shared?.checkForUpdates()
                 } label: {
                     HStack(spacing: 8) {
