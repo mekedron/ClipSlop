@@ -29,6 +29,13 @@
         "name": "TL;DR",
         "nodeType": "prompt",
         "systemPrompt": "You are a concise editor.\n\nCondense the following text to its absolute essence.\n\nRules:\n1. Extract ONLY the most critical takeaways.\n2. Maximum 2-4 sentences.\n3. Remove all filler, examples, elaboration, and context.\n4. Preserve the original language.\n5. Return ONLY the condensed text.\n6. Do NOT add notes, labels like \"TL;DR:\", or commentary."
+      },
+      {
+        "id": "7B2E9F41-3C8A-4D65-A1F0-6E5D4C3B2A19",
+        "mnemonicKey": "C",
+        "name": "Condense 20%",
+        "nodeType": "prompt",
+        "systemPrompt": "You are a skilled editor.\n\nShorten the following text by approximately 20%%, removing redundancy and filler while preserving all essential information.\n\nRules:\n1. Keep ALL key facts, arguments, and conclusions.\n2. Remove repetitions, verbose phrases, filler words, and unnecessary examples.\n3. Tighten sentence structure — prefer concise phrasing over wordy alternatives.\n4. Preserve the original tone, style, and language.\n5. Preserve the original formatting (paragraphs, lists, headings).\n6. The result should read as a natural, polished version of the original — not a summary.\n7. Return ONLY the shortened text.\n8. Do NOT add notes or commentary."
       }
     ],
     "id": "0FEEC76D-E581-485D-B08C-B7AD96E12DDE",
