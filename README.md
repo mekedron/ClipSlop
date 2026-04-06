@@ -77,7 +77,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 - **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
 - **Multi-provider** — OpenAI (sign in with ChatGPT or API key), Anthropic, Ollama, CLI tools, any OpenAI-compatible API
 - **Nested prompt tree** — Organize prompts in folders, each with a mnemonic key
-- **Built-in prompts** — Translate (16 languages), Rewrite (6 tones), Format (7 tools), Analyze, Convert
+- **Built-in prompts** — Translate (18 languages), Rewrite (7 tones), Format (7 tools), Dev (6 tools), Analyze (4), Convert
 - **Manual editing** — Edit any result inline (`⌘E`), saved as a history step
 - **Find in text** — `⌘F` search with highlighting across all display modes
 - **Screen OCR** — Capture and recognize text from any screen region (`⇧⌘2`)
@@ -112,11 +112,13 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 ## Default prompts
 
 ```
-[T] Translate  → English, Finnish, Russian, Spanish, French, German, + 10 more
-[R] Rewrite    → Elaborate, Neutral, Professional, Warm, Business, Playful, Biblical
-[F] Format     → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
-[A] Analyze    → Summary, Explain Simply, TL;DR
-[C] Convert    → JSON, CSV
+[⌘Enter] >> Your prompt — type >> followed by your instruction to run a one-off custom prompt
+[T]  Translate   → English, Finnish, Russian, Spanish, French, German, + 12 more
+[R]  Rewrite     → Elaborate, Neutral, Professional, Warm, Business, Playful, Biblical
+[F]  Format      → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
+[D]  Dev         → Add Comments, Beautify Code, Clean Logs, Explain Code, Explain Stack Trace, Naming
+[A]  Analyze     → Summary, Explain Simply, TL;DR, Condense 20%
+[C]  Convert     → HTML, Markdown
 ```
 
 Fully customizable — add your own prompts, folders, and mnemonics in Settings → Prompts.

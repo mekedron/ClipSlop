@@ -652,32 +652,35 @@ struct AddProviderSheet: View {
 
     private func optionRow(_ option: ProviderOption) -> some View {
         let isSelected = selected == option
-        return Button {
-            selected = option
-        } label: {
-            HStack(spacing: 12) {
-                optionIcon(option, isSelected: isSelected)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(optionTitle(option))
-                        .font(.body)
-                    Text(optionSubtitle(option))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
-                        .foregroundStyle(.blue)
-                }
+        return HStack(spacing: 12) {
+            optionIcon(option, isSelected: isSelected)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(optionTitle(option))
+                    .font(.body)
+                Text(optionSubtitle(option))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .background(isSelected ? Color.accentColor.opacity(0.1) : .clear,
-                        in: RoundedRectangle(cornerRadius: 8))
+            Spacer()
+            if isSelected {
+                Image(systemName: "checkmark")
+                    .foregroundStyle(.blue)
+            }
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
+        .background(isSelected ? Color.accentColor.opacity(0.1) : .clear,
+                    in: RoundedRectangle(cornerRadius: 8))
+        .onTapGesture(count: 2) {
+            selected = option
+            addProvider()
+            isPresented = false
+        }
+        .onTapGesture(count: 1) {
+            selected = option
+        }
     }
 
     @ViewBuilder

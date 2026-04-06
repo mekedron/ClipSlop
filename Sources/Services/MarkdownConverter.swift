@@ -16,7 +16,7 @@ enum MarkdownConverter {
     static func styledHTML(from markdown: String) -> String {
         let body = html(from: markdown)
         return """
-        <html><head><style>
+        <html><head><meta charset="utf-8"><style>
         body { font-family: -apple-system, Helvetica Neue, sans-serif; font-size: 13px; line-height: 1.5; color: #1d1d1f; }
         code { font-family: Menlo, monospace; font-size: 12px; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
         pre { background: #f0f0f0; padding: 10px; border-radius: 6px; overflow-x: auto; }

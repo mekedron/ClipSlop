@@ -67,7 +67,9 @@ enum ClipboardService {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(html, forType: .string)
-        if let htmlData = html.data(using: .utf8) {
+        let wrappedHTML = html.contains("<meta charset") ? html
+            : "<html><head><meta charset=\"utf-8\"></head><body>\(html)</body></html>"
+        if let htmlData = wrappedHTML.data(using: .utf8) {
             pb.setData(htmlData, forType: .html)
         }
     }
