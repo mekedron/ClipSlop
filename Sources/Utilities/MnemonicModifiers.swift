@@ -50,3 +50,40 @@ func keyCodeToCharacter(_ keyCode: UInt16) -> String? {
     ]
     return map[keyCode]
 }
+
+// MARK: - Special key code → identifier map
+
+/// Maps a macOS virtual key code to a special key identifier string.
+/// Covers non-character keys: Delete, Tab, Enter, F1–F12, etc.
+func keyCodeToIdentifier(_ keyCode: UInt16) -> String? {
+    let map: [UInt16: String] = [
+        51: "delete",        // Backspace / Delete
+       117: "forwarddelete", // Forward Delete (Fn+Delete)
+        48: "tab",
+        36: "enter",         // Return
+        76: "enter",         // Numpad Enter
+       122: "f1",  120: "f2",   99: "f3",  118: "f4",
+        96: "f5",   97: "f6",   98: "f7",  100: "f8",
+       101: "f9",  109: "f10", 103: "f11", 111: "f12",
+    ]
+    return map[keyCode]
+}
+
+/// Returns a display symbol for a special key identifier, e.g. "delete" → "⌫".
+func specialKeyDisplaySymbol(_ identifier: String) -> String? {
+    let map: [String: String] = [
+        "delete": "⌫",
+        "forwarddelete": "⌦",
+        "tab": "⇥",
+        "enter": "↩",
+        "f1": "F1",   "f2": "F2",   "f3": "F3",   "f4": "F4",
+        "f5": "F5",   "f6": "F6",   "f7": "F7",   "f8": "F8",
+        "f9": "F9",   "f10": "F10", "f11": "F11", "f12": "F12",
+    ]
+    return map[identifier]
+}
+
+/// Whether the given mnemonicKey is a special key identifier (multi-char, known).
+func isSpecialKeyIdentifier(_ key: String) -> Bool {
+    key.count > 1 && specialKeyDisplaySymbol(key) != nil
+}

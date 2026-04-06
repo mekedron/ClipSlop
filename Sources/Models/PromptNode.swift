@@ -38,9 +38,13 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
         self.displayMode = displayMode
     }
 
-    /// Display string for the mnemonic badge, e.g. "⇧F" or "T".
+    /// Display string for the mnemonic badge, e.g. "⇧F", "T", "⌫", "F5".
     var mnemonicDisplay: String {
         let prefix = (mnemonicModifiers ?? []).symbolString
+        if mnemonicKey.isEmpty { return "?" }
+        if let symbol = specialKeyDisplaySymbol(mnemonicKey) {
+            return prefix + symbol
+        }
         return prefix + mnemonicKey.uppercased()
     }
 

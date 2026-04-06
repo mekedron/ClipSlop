@@ -641,6 +641,7 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
+
             if code == KeyCode.delete || code == KeyCode.forwardDelete {
                 if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
@@ -655,18 +656,38 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             // Mnemonic key navigation
-            let matchChar: String
-            if appState.settings.useKeyCodes {
-                matchChar = keyCodeToCharacter(code) ?? ""
-            } else {
-                matchChar = event.characters?.lowercased() ?? ""
-            }
-
             let mods = MnemonicModifiers(eventFlags: event.modifierFlags)
 
-            guard !appState.isProcessing, !matchChar.isEmpty else { return false }
+            // Try character-based matching first, then keyCode-based as fallback.
+            // This ensures mnemonics like ⇧. work on any keyboard layout.
+            let charMatch: String
+            if appState.settings.useKeyCodes {
+                charMatch = keyCodeToCharacter(code) ?? ""
+            } else {
+                charMatch = event.characters?.lowercased() ?? ""
+            }
 
-            return appState.handleMnemonicKey(matchChar, modifiers: mods)
+            guard !appState.isProcessing else { return false }
+
+            if !charMatch.isEmpty && appState.handleMnemonicKey(charMatch, modifiers: mods) {
+                return true
+            }
+
+            // Fallback: try keyCode-based match (handles shifted keys on non-Latin layouts)
+            if !appState.settings.useKeyCodes,
+               let keyChar = keyCodeToCharacter(code),
+               keyChar != charMatch,
+               appState.handleMnemonicKey(keyChar, modifiers: mods) {
+                return true
+            }
+
+            // Special key identifier matching (Tab, Enter, F-keys, Delete at root)
+            if let specialID = keyCodeToIdentifier(code),
+               appState.handleMnemonicKey(specialID, modifiers: mods) {
+                return true
+            }
+
+            return false
         }
 
         private func scrollTextArea(up: Bool, by amount: CGFloat) {

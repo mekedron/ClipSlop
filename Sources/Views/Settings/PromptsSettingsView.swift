@@ -261,7 +261,7 @@ struct PromptsSettingsView: View {
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(minWidth: 22, minHeight: 22)
-                .padding(.horizontal, node.mnemonicModifiers == nil ? 0 : 2)
+                .padding(.horizontal, node.mnemonicModifiers == nil && !isSpecialKeyIdentifier(node.mnemonicKey) ? 0 : 2)
                 .background(node.isFolder ? Color.blue : Color.purple)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
 
@@ -405,13 +405,10 @@ struct PromptEditorView: View {
                 TextField(loc.t("settings.prompts.editor.name"), text: $node.name)
                     .onChange(of: node.name) { autoSave() }
 
-                TextField(loc.t("settings.prompts.editor.mnemonic"), text: $node.mnemonicKey)
-                    .onChange(of: node.mnemonicKey) {
-                        if node.mnemonicKey.count > 1 {
-                            node.mnemonicKey = String(node.mnemonicKey.suffix(1))
-                        }
-                        autoSave()
-                    }
+                LabeledContent(loc.t("settings.prompts.editor.mnemonic")) {
+                    MnemonicKeyCaptureView(mnemonicKey: $node.mnemonicKey) { autoSave() }
+                        .frame(width: 120, height: 24)
+                }
 
                 HStack(spacing: 12) {
                     Text(loc.t("settings.prompts.editor.modifiers"))
