@@ -405,7 +405,9 @@ struct PromptEditorView: View {
                 TextField(loc.t("settings.prompts.editor.name"), text: $node.name)
                     .onChange(of: node.name) { autoSave() }
 
-                LabeledContent(loc.t("settings.prompts.editor.mnemonic")) {
+                HStack {
+                    Text(loc.t("settings.prompts.editor.mnemonic"))
+                    Spacer()
                     MnemonicKeyCaptureView(mnemonicKey: $node.mnemonicKey) { autoSave() }
                         .frame(width: 120, height: 24)
                 }

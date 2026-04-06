@@ -20,4 +20,9 @@ extension KeyboardShortcuts.Name {
         "triggerScreenCapture",
         default: .init(.two, modifiers: [.command, .shift])
     )
+
+    static let triggerOCRToClipboard = Self(
+        "triggerOCRToClipboard",
+        default: .init(.one, modifiers: [.command, .shift])
+    )
 }

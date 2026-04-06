@@ -6,6 +6,7 @@ final class HotkeyService {
     var onTriggerFromClipboard: (() -> Void)?
     var onTriggerBlankEditor: (() -> Void)?
     var onTriggerScreenCapture: (() -> Void)?
+    var onTriggerOCRToClipboard: (() -> Void)?
 
     func register() {
         KeyboardShortcuts.onKeyUp(for: .triggerClipSlop) { [weak self] in
@@ -20,6 +21,9 @@ final class HotkeyService {
         KeyboardShortcuts.onKeyUp(for: .triggerScreenCapture) { [weak self] in
             self?.onTriggerScreenCapture?()
         }
+        KeyboardShortcuts.onKeyUp(for: .triggerOCRToClipboard) { [weak self] in
+            self?.onTriggerOCRToClipboard?()
+        }
     }
 
     func unregister() {
@@ -27,5 +31,6 @@ final class HotkeyService {
         KeyboardShortcuts.disable(.triggerFromClipboard)
         KeyboardShortcuts.disable(.triggerBlankEditor)
         KeyboardShortcuts.disable(.triggerScreenCapture)
+        KeyboardShortcuts.disable(.triggerOCRToClipboard)
     }
 }
