@@ -125,7 +125,8 @@ final class AppState {
                 isProcessing = false
                 streamingText = ""
             } catch {
-                if !(error is CancellationError) {
+                let wasCancelled = error is CancellationError || Task.isCancelled
+                if !wasCancelled {
                     errorMessage = error.localizedDescription
                 }
                 isProcessing = false
@@ -453,7 +454,8 @@ final class AppState {
                 isProcessing = false
                 streamingText = ""
             } catch {
-                if !(error is CancellationError) {
+                let wasCancelled = error is CancellationError || Task.isCancelled
+                if !wasCancelled {
                     errorMessage = error.localizedDescription
                 }
                 isProcessing = false
@@ -467,6 +469,7 @@ final class AppState {
         currentTask = nil
         isProcessing = false
         streamingText = ""
+        errorMessage = nil
     }
 
     // MARK: - Actions

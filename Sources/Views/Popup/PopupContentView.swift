@@ -417,7 +417,6 @@ struct PopupContentView: View {
             HStack {
                 Button(loc.t("popup.dismiss")) {
                     appState.clearError()
-                    appState.dismissPopup()
                 }
                 Button(loc.t("popup.try_again")) {
                     appState.clearError()
@@ -549,6 +548,8 @@ struct KeyEventHandler: NSViewRepresentable {
             if code == KeyCode.escape {
                 if appState.isProcessing {
                     appState.cancelProcessing()
+                } else if appState.errorMessage != nil {
+                    appState.clearError()
                 } else if !appState.navigationPath.isEmpty {
                     appState.navigateBack()
                 } else if appState.settings.closeOnEscape {
