@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop ar fi putut pierde unele permisiuni după o actualizare. macOS resetează permisiunile când se schimbă semnătura de cod a unei aplicații.";
 "permission_alert.instructions_title" = "Dacă butonul Acordă nu funcționează:";
 "permission_alert.step1" = "Deschide Setări de sistem > Confidențialitate și securitate";
-"permission_alert.step2" = "Găsește ClipSlop în listă și elimină-l (selectează, apasă \"-\")";
-"permission_alert.step3" = "Apasă \"+\" și adaugă ClipSlop din nou";
+"permission_alert.step2" = "Selectează Accesibilitate (sau Înregistrare ecran pentru OCR)";
+"permission_alert.step3" = "Găsește ClipSlop în listă și elimină-l (selectează, apasă \"-\")";
+"permission_alert.step4" = "Apasă \"+\" și adaugă ClipSlop din nou";
 "permission_alert.validate" = "Verifică";
 "permission_alert.dont_show_again" = "Nu mai afișa";
 "permission_alert.close" = "Închide";

@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop hat nach einem Update möglicherweise einige Berechtigungen verloren. macOS setzt Berechtigungen zurück, wenn sich die Codesignatur einer App ändert.";
 "permission_alert.instructions_title" = "Falls die Erlauben-Taste nicht funktioniert:";
 "permission_alert.step1" = "Öffnen Sie Systemeinstellungen > Datenschutz & Sicherheit";
-"permission_alert.step2" = "Finden Sie ClipSlop in der Liste und entfernen Sie es (auswählen, \"-\" klicken)";
-"permission_alert.step3" = "Klicken Sie \"+\" und fügen Sie ClipSlop erneut hinzu";
+"permission_alert.step2" = "Wählen Sie Bedienungshilfen (oder Bildschirmaufnahme für OCR)";
+"permission_alert.step3" = "Finden Sie ClipSlop in der Liste und entfernen Sie es (auswählen, \"-\" klicken)";
+"permission_alert.step4" = "Klicken Sie \"+\" und fügen Sie ClipSlop erneut hinzu";
 "permission_alert.validate" = "Überprüfen";
 "permission_alert.dont_show_again" = "Nicht mehr anzeigen";
 "permission_alert.close" = "Schließen";

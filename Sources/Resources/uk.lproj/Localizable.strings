@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop міг втратити деякі дозволи після оновлення. macOS скидає дозволи, коли змінюється підпис коду програми.";
 "permission_alert.instructions_title" = "Якщо кнопка Надати не працює:";
 "permission_alert.step1" = "Відкрийте Системні налаштування > Конфіденційність і безпека";
-"permission_alert.step2" = "Знайдіть ClipSlop у списку та видаліть (виберіть, натисніть \"-\")";
-"permission_alert.step3" = "Натисніть \"+\" та додайте ClipSlop знову";
+"permission_alert.step2" = "Виберіть Доступність (або Запис екрана для OCR)";
+"permission_alert.step3" = "Знайдіть ClipSlop у списку та видаліть (виберіть, натисніть \"-\")";
+"permission_alert.step4" = "Натисніть \"+\" та додайте ClipSlop знову";
 "permission_alert.validate" = "Перевірити";
 "permission_alert.dont_show_again" = "Більше не показувати";
 "permission_alert.close" = "Закрити";

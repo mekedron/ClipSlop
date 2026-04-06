@@ -496,10 +496,18 @@ final class AppState {
             do {
                 if settings.streamingEnabled {
                     var accumulated = ""
+                    var lastUIUpdate = ContinuousClock.now
+                    let throttleInterval = Duration.milliseconds(50)
                     for try await chunk in service.stream(text: inputText, systemPrompt: systemPrompt, config: config) {
                         accumulated += chunk
-                        streamingText = accumulated
+                        let now = ContinuousClock.now
+                        if now - lastUIUpdate >= throttleInterval {
+                            streamingText = accumulated
+                            lastUIUpdate = now
+                        }
                     }
+                    // Final flush to ensure all text is shown
+                    streamingText = accumulated
                     guard !accumulated.isEmpty else {
                         throw AIServiceError.emptyResponse
                     }

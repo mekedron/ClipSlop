@@ -20,7 +20,7 @@ final class PopupWindow: NSPanel {
 
         title = "ClipSlop"
         titlebarAppearsTransparent = true
-        isMovableByWindowBackground = true
+        isMovableByWindowBackground = false
         level = .floating
         isOpaque = false
         backgroundColor = .clear
@@ -50,7 +50,10 @@ final class PopupWindow: NSPanel {
 
     override func cancelOperation(_ sender: Any?) {
         Task { @MainActor in
-            appState.dismissPopup()
+            if SelectionService.clearSelection(in: self) { return }
+            if appState.settings.closeOnEscape {
+                appState.dismissPopup()
+            }
         }
     }
 

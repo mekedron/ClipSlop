@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop a peut-être perdu certaines permissions après une mise à jour. macOS réinitialise les permissions lorsque la signature de code d'une app change.";
 "permission_alert.instructions_title" = "Si le bouton Autoriser ne fonctionne pas :";
 "permission_alert.step1" = "Ouvrez Réglages Système > Confidentialité et sécurité";
-"permission_alert.step2" = "Trouvez ClipSlop dans la liste et supprimez-le (sélectionnez, cliquez \"-\")";
-"permission_alert.step3" = "Cliquez \"+\" et ajoutez ClipSlop à nouveau";
+"permission_alert.step2" = "Sélectionnez Accessibilité (ou Enregistrement de l'écran pour l'OCR)";
+"permission_alert.step3" = "Trouvez ClipSlop dans la liste et supprimez-le (sélectionnez, cliquez \"-\")";
+"permission_alert.step4" = "Cliquez \"+\" et ajoutez ClipSlop à nouveau";
 "permission_alert.validate" = "Vérifier";
 "permission_alert.dont_show_again" = "Ne plus afficher";
 "permission_alert.close" = "Fermer";

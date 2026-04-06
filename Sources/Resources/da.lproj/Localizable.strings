@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop kan have mistet nogle tilladelser efter en opdatering. macOS nulstiller tilladelser, når en apps kodesignatur ændres.";
 "permission_alert.instructions_title" = "Hvis Tillad-knappen ikke virker:";
 "permission_alert.step1" = "Åbn Systemindstillinger > Anonymitet & sikkerhed";
-"permission_alert.step2" = "Find ClipSlop på listen og fjern den (vælg, klik \"-\")";
-"permission_alert.step3" = "Klik \"+\" og tilføj ClipSlop igen";
+"permission_alert.step2" = "Vælg Tilgængelighed (eller Skærmoptagelse for OCR)";
+"permission_alert.step3" = "Find ClipSlop på listen og fjern den (vælg, klik \"-\")";
+"permission_alert.step4" = "Klik \"+\" og tilføj ClipSlop igen";
 "permission_alert.validate" = "Bekræft";
 "permission_alert.dont_show_again" = "Vis ikke igen";
 "permission_alert.close" = "Luk";

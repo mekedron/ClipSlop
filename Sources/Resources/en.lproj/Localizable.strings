@@ -174,8 +174,9 @@
 "permission_alert.subtitle" = "ClipSlop may have lost some permissions after an update. macOS resets permissions when an app's code signature changes.";
 "permission_alert.instructions_title" = "If the Grant button doesn't work:";
 "permission_alert.step1" = "Open System Settings > Privacy & Security";
-"permission_alert.step2" = "Find ClipSlop in the list and remove it (select, click \"-\")";
-"permission_alert.step3" = "Click \"+\" and add ClipSlop again";
+"permission_alert.step2" = "Select Accessibility (or Screen Recording for OCR)";
+"permission_alert.step3" = "Find ClipSlop in the list and remove it (select, click \"-\")";
+"permission_alert.step4" = "Click \"+\" and add ClipSlop again";
 "permission_alert.validate" = "Validate";
 "permission_alert.dont_show_again" = "Don't show this again";
 "permission_alert.close" = "Close";

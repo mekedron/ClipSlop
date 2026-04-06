@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop mohl po aktualizaci ztratit některá oprávnění. macOS resetuje oprávnění při změně podpisu kódu aplikace.";
 "permission_alert.instructions_title" = "Pokud tlačítko Povolit nefunguje:";
 "permission_alert.step1" = "Otevřete Nastavení systému > Soukromí a zabezpečení";
-"permission_alert.step2" = "Najděte ClipSlop v seznamu a odeberte jej (vyberte, klikněte \"-\")";
-"permission_alert.step3" = "Klikněte \"+\" a přidejte ClipSlop znovu";
+"permission_alert.step2" = "Vyberte Zpřístupnění (nebo Nahrávání obrazovky pro OCR)";
+"permission_alert.step3" = "Najděte ClipSlop v seznamu a odeberte jej (vyberte, klikněte \"-\")";
+"permission_alert.step4" = "Klikněte \"+\" a přidejte ClipSlop znovu";
 "permission_alert.validate" = "Ověřit";
 "permission_alert.dont_show_again" = "Příště nezobrazovat";
 "permission_alert.close" = "Zavřít";

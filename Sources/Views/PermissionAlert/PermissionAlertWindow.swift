@@ -8,7 +8,7 @@ final class PermissionAlertWindow: NSWindow {
         let hostingView = DragSafeHostingView(rootView: rootView)
 
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 480, height: 640),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false

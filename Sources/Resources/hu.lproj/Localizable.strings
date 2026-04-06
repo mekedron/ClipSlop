@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "A ClipSlop egy frissítés után elveszíthette egyes jogosultságait. A macOS visszaállítja a jogosultságokat, ha egy alkalmazás kódaláírása megváltozik.";
 "permission_alert.instructions_title" = "Ha az Engedélyezés gomb nem működik:";
 "permission_alert.step1" = "Nyissa meg a Rendszerbeállítások > Adatvédelem és biztonság menüt";
-"permission_alert.step2" = "Keresse meg a ClipSlop-ot a listában és távolítsa el (jelölje ki, kattintson a \"-\" gombra)";
-"permission_alert.step3" = "Kattintson a \"+\" gombra és adja hozzá újra a ClipSlop-ot";
+"permission_alert.step2" = "Válassza a Kisegítő lehetőségek (vagy Képernyőfelvétel az OCR-hez) lehetőséget";
+"permission_alert.step3" = "Keresse meg a ClipSlop-ot a listában és távolítsa el (jelölje ki, kattintson a \"-\" gombra)";
+"permission_alert.step4" = "Kattintson a \"+\" gombra és adja hozzá újra a ClipSlop-ot";
 "permission_alert.validate" = "Ellenőrzés";
 "permission_alert.dont_show_again" = "Ne jelenjen meg újra";
 "permission_alert.close" = "Bezárás";

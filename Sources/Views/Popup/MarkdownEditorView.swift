@@ -815,12 +815,12 @@ struct MarkdownPreviewView: View {
                 if settings.showImagesInMarkdown {
                     StructuredText(markdown: markdown)
                         .textual.imageAttachmentLoader(.image())
-                        .textSelection(.enabled)
+                        .textual.textSelection(.enabled)
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     StructuredText(markdown: markdown)
-                        .textSelection(.enabled)
+                        .textual.textSelection(.enabled)
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }

@@ -366,7 +366,9 @@ struct PopupContentView: View {
     private var copyButton: some View {
         let copied = appState.showCopiedFeedback
         return Button {
-            appState.copyCurrentText()
+            if !SelectionService.copySelection(in: NSApp.keyWindow) {
+                appState.copyCurrentText()
+            }
         } label: {
             HStack(spacing: 4) {
                 Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
@@ -520,7 +522,12 @@ struct KeyEventHandler: NSViewRepresentable {
                 return true
             }
 
-            // Esc closes find bar first
+            // Esc: clear text selection first
+            if code == KeyCode.escape && SelectionService.clearSelection(in: self.window) {
+                return true
+            }
+
+            // Esc closes find bar next
             if code == KeyCode.escape && appState.findBarState.isVisible {
                 appState.findBarState.dismiss()
                 return true
@@ -604,9 +611,8 @@ struct KeyEventHandler: NSViewRepresentable {
             }
 
             if hasCmd && code == KeyCode.c {
-                if let textView = self.window?.firstResponder as? NSTextView,
-                   textView.selectedRange().length > 0 {
-                    return false
+                if SelectionService.hasSelection(in: self.window) {
+                    return false  // Let responder handle copy of selected text
                 }
                 appState.copyCurrentText()
                 return true

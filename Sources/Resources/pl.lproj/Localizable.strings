@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop mógł utracić niektóre uprawnienia po aktualizacji. macOS resetuje uprawnienia, gdy zmieni się podpis kodu aplikacji.";
 "permission_alert.instructions_title" = "Jeśli przycisk Przyznaj nie działa:";
 "permission_alert.step1" = "Otwórz Ustawienia systemowe > Prywatność i ochrona";
-"permission_alert.step2" = "Znajdź ClipSlop na liście i usuń go (zaznacz, kliknij \"-\")";
-"permission_alert.step3" = "Kliknij \"+\" i dodaj ClipSlop ponownie";
+"permission_alert.step2" = "Wybierz Dostępność (lub Nagrywanie ekranu dla OCR)";
+"permission_alert.step3" = "Znajdź ClipSlop na liście i usuń go (zaznacz, kliknij \"-\")";
+"permission_alert.step4" = "Kliknij \"+\" i dodaj ClipSlop ponownie";
 "permission_alert.validate" = "Sprawdź";
 "permission_alert.dont_show_again" = "Nie pokazuj ponownie";
 "permission_alert.close" = "Zamknij";

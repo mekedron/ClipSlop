@@ -4,6 +4,7 @@ import Combine
 struct ProcessingView: View {
     let appState: AppState
     @State private var scrollTrigger = false
+    @State private var isAtBottom = true
     private let loc = Loc.shared
 
     var body: some View {
@@ -20,7 +21,6 @@ struct ProcessingView: View {
 
                 Spacer()
             } else {
-                // Streaming text display
                 ScrollViewReader { proxy in
                     ScrollView {
                         Text(appState.streamingText)
@@ -28,10 +28,19 @@ struct ProcessingView: View {
                             .textSelection(.enabled)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(16)
+
+                        Color.clear
+                            .frame(height: 1)
                             .id("streamingEnd")
+
+                        // Monitors NSScrollView to detect if user is near the bottom
+                        ScrollBottomDetector(isAtBottom: $isAtBottom)
+                            .frame(height: 0)
                     }
                     .onChange(of: scrollTrigger) {
-                        proxy.scrollTo("streamingEnd", anchor: .bottom)
+                        if isAtBottom {
+                            proxy.scrollTo("streamingEnd", anchor: .bottom)
+                        }
                     }
                 }
                 .onReceive(
@@ -58,6 +67,53 @@ struct ProcessingView: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
+        }
+    }
+}
+
+// MARK: - NSScrollView bottom detection
+
+/// Hooks into the enclosing NSScrollView to report whether the scroll
+/// position is near the bottom. Works reliably even as content grows.
+struct ScrollBottomDetector: NSViewRepresentable {
+    @Binding var isAtBottom: Bool
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async {
+            guard let scrollView = view.enclosingScrollView else { return }
+            scrollView.contentView.postsBoundsChangedNotifications = true
+            NotificationCenter.default.addObserver(
+                context.coordinator,
+                selector: #selector(Coordinator.boundsDidChange),
+                name: NSView.boundsDidChangeNotification,
+                object: scrollView.contentView
+            )
+        }
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator { Coordinator(isAtBottom: $isAtBottom) }
+
+    final class Coordinator: NSObject {
+        private let isAtBottom: Binding<Bool>
+
+        init(isAtBottom: Binding<Bool>) {
+            self.isAtBottom = isAtBottom
+        }
+
+        @objc func boundsDidChange(_ note: Notification) {
+            guard let clipView = note.object as? NSClipView,
+                  let docHeight = clipView.documentView?.frame.height else { return }
+            let viewHeight = clipView.bounds.height
+            let scrollY = clipView.bounds.origin.y
+            let distanceFromBottom = docHeight - scrollY - viewHeight
+            let atBottom = distanceFromBottom < 40
+            if isAtBottom.wrappedValue != atBottom {
+                isAtBottom.wrappedValue = atBottom
+            }
         }
     }
 }

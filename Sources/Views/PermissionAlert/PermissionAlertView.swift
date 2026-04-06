@@ -95,6 +95,7 @@ struct PermissionAlertView: View {
                     instructionStep("1", loc.t("permission_alert.step1"))
                     instructionStep("2", loc.t("permission_alert.step2"))
                     instructionStep("3", loc.t("permission_alert.step3"))
+                    instructionStep("4", loc.t("permission_alert.step4"))
                 }
                 .font(.subheadline)
             }

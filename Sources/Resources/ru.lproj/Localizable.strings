@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop мог потерять некоторые разрешения после обновления. macOS сбрасывает разрешения при изменении подписи кода приложения.";
 "permission_alert.instructions_title" = "Если кнопка Разрешить не работает:";
 "permission_alert.step1" = "Откройте Системные настройки > Конфиденциальность и безопасность";
-"permission_alert.step2" = "Найдите ClipSlop в списке и удалите (выберите, нажмите \"-\")";
-"permission_alert.step3" = "Нажмите \"+\" и добавьте ClipSlop снова";
+"permission_alert.step2" = "Выберите Универсальный доступ (или Запись экрана для OCR)";
+"permission_alert.step3" = "Найдите ClipSlop в списке и удалите (выберите, нажмите \"-\")";
+"permission_alert.step4" = "Нажмите \"+\" и добавьте ClipSlop снова";
 "permission_alert.validate" = "Проверить";
 "permission_alert.dont_show_again" = "Больше не показывать";
 "permission_alert.close" = "Закрыть";

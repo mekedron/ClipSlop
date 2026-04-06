@@ -147,8 +147,9 @@
 "permission_alert.subtitle" = "ClipSlop on saattanut menettää joitakin käyttöoikeuksia päivityksen jälkeen. macOS nollaa käyttöoikeudet, kun sovelluksen koodiallekirjoitus muuttuu.";
 "permission_alert.instructions_title" = "Jos Myönnä-painike ei toimi:";
 "permission_alert.step1" = "Avaa Järjestelmäasetukset > Tietosuoja ja turvallisuus";
-"permission_alert.step2" = "Etsi ClipSlop luettelosta ja poista se (valitse, napsauta \"-\")";
-"permission_alert.step3" = "Napsauta \"+\" ja lisää ClipSlop uudelleen";
+"permission_alert.step2" = "Valitse Esteettömyys (tai Näytön tallennus OCR:ää varten)";
+"permission_alert.step3" = "Etsi ClipSlop luettelosta ja poista se (valitse, napsauta \"-\")";
+"permission_alert.step4" = "Napsauta \"+\" ja lisää ClipSlop uudelleen";
 "permission_alert.validate" = "Tarkista";
 "permission_alert.dont_show_again" = "Älä näytä uudelleen";
 "permission_alert.close" = "Sulje";
