@@ -283,20 +283,25 @@ jobs:
           git push origin main
 
       - name: Update Homebrew Cask
-        if: ${{ env.HOMEBREW_TAP_TOKEN != '' }}
+        if: ${{ secrets.HOMEBREW_TAP_TOKEN != '' }}
         env:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME#v}"
-          DMG_URL="https://github.com/mekedron/clipslop/releases/download/${GITHUB_REF_NAME}/${DMG_NAME}"
           SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')
 
-          CASK_CONTENT=$(cat << 'CASK_EOF'
-          cask "clipslop" do
-            version "VERSION_PLACEHOLDER"
-            sha256 "SHA256_PLACEHOLDER"
+          python3 << 'PYEOF'
+          import json, base64, urllib.request, os
 
-            url "https://github.com/mekedron/clipslop/releases/download/v#{version}/ClipSlop-#{version}-macOS.dmg"
+          token = os.environ["HOMEBREW_TAP_TOKEN"]
+          tag = os.environ["GITHUB_REF_NAME"].lstrip("v")
+          sha256 = os.popen('shasum -a 256 "release/' + os.environ["DMG_NAME"] + '"').read().split()[0]
+
+          cask = f'''cask "clipslop" do
+            version "{tag}"
+            sha256 "{sha256}"
+
+            url "https://github.com/mekedron/clipslop/releases/download/v#{{version}}/ClipSlop-#{{version}}-macOS.dmg"
             name "ClipSlop"
             desc "Keyboard-first AI text pipeline for macOS"
             homepage "https://github.com/mekedron/ClipSlop"
@@ -310,32 +315,29 @@ jobs:
               "~/Library/Preferences/com.clipslop.app.plist",
             ]
           end
-          CASK_EOF
-          )
+          '''
 
-          CASK_CONTENT="${CASK_CONTENT//VERSION_PLACEHOLDER/$TAG}"
-          CASK_CONTENT="${CASK_CONTENT//SHA256_PLACEHOLDER/$SHA256}"
-          # Remove heredoc leading whitespace
-          CASK_CONTENT=$(echo "$CASK_CONTENT" | sed 's/^          //')
+          api_url = "https://api.github.com/repos/mekedron/homebrew-tap/contents/Casks/clipslop.rb"
+          headers = {"Authorization": f"token {token}", "Content-Type": "application/json"}
 
-          # Get current file SHA for update
-          FILE_SHA=$(curl -s -H "Authorization: token ${HOMEBREW_TAP_TOKEN}" \
-            "https://api.github.com/repos/mekedron/homebrew-tap/contents/Casks/clipslop.rb" | \
-            python3 -c "import sys,json; print(json.load(sys.stdin).get('sha',''))")
+          # Check if file exists to get its SHA
+          req = urllib.request.Request(api_url, headers=headers)
+          file_sha = ""
+          try:
+              resp = urllib.request.urlopen(req)
+              file_sha = json.loads(resp.read()).get("sha", "")
+          except urllib.error.HTTPError:
+              pass  # File doesn't exist yet, will create
 
-          # Update the cask file
-          curl -s -X PUT \
-            -H "Authorization: token ${HOMEBREW_TAP_TOKEN}" \
-            -H "Content-Type: application/json" \
-            "https://api.github.com/repos/mekedron/homebrew-tap/contents/Casks/clipslop.rb" \
-            -d "$(python3 -c "
-          import json, base64, sys
-          content = base64.b64encode('''${CASK_CONTENT}'''.encode()).decode()
-          print(json.dumps({
-              'message': 'chore: update ClipSlop to ${TAG}',
-              'content': content,
-              'sha': '${FILE_SHA}'
-          }))
-          ")"
+          body = {
+              "message": f"chore: update ClipSlop to {tag}",
+              "content": base64.b64encode(cask.encode()).decode(),
+              "committer": {"name": "github-actions[bot]", "email": "github-actions[bot]@users.noreply.github.com"},
+          }
+          if file_sha:
+              body["sha"] = file_sha
 
-          echo "Homebrew cask updated to ${TAG}"
+          req = urllib.request.Request(api_url, data=json.dumps(body).encode(), headers=headers, method="PUT")
+          resp = urllib.request.urlopen(req)
+          print(f"Homebrew cask updated to {tag} (status {resp.status})")
+          PYEOF
