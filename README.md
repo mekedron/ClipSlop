@@ -17,6 +17,22 @@
 
 ---
 
+## Table of Contents
+
+- [Why?](#why)
+- [How it works](#how-it-works)
+- [What makes it different](#what-makes-it-different)
+- [Features](#features)
+- [Default shortcuts](#default-shortcuts)
+- [Default prompts](#default-prompts)
+- [Install](#install)
+- [Requirements](#requirements)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+- [Support](#support)
+
+---
+
 ## Why?
 
 Raycast, PopClip, and ChatGPT all let you run text through AI. But they don't support true multi-step pipelines with persistent history and branching. You can chain translate → fix grammar → make formal → format as email manually, but not as a fast, keyboard-driven, persistent pipeline. And you don't get step-level navigation with the ability to branch and continue from any intermediate result.
