@@ -19,9 +19,9 @@
 
 ## Why?
 
-Raycast, PopClip, and ChatGPT all let you run text through AI. But they give you one prompt at a time. You can't chain translate → fix grammar → make formal → format as email in a single keyboard-driven flow. And you definitely can't navigate back to any step and branch off.
+Raycast, PopClip, and ChatGPT all let you run text through AI. But they don't support true multi-step pipelines with persistent history and branching. You can chain translate → fix grammar → make formal → format as email manually, but not as a fast, keyboard-driven, persistent pipeline. And you don't get step-level navigation with the ability to branch and continue from any intermediate result.
 
-ClipSlop is a full pipeline. Select text, press a shortcut, navigate a prompt tree with single-key mnemonics, chain as many transformations as you want — each step saved in history. All from the keyboard, all in a floating panel, all without touching a browser.
+ClipSlop treats text transformation as a versioned pipeline, not a linear interaction. Select text, press a shortcut, navigate a prompt tree with single-key mnemonics, chain as many transformations as you want — each step saved in history. Fully keyboard-driven pipeline navigation, not just triggering actions. All in a floating panel, all without touching a browser.
 
 It's also completely free, open-source, and works with any AI provider — your own API keys, ChatGPT sign-in, local Ollama, or CLI tools like Claude Code.
 
@@ -47,12 +47,13 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 
 | | ClipSlop | Raycast AI | PopClip | ChatGPT |
 |---|---|---|---|---|
-| **Prompt chaining** | Chain unlimited transformations, full history | One prompt at a time | One action | Manual copy-paste |
-| **Keyboard-first** | Single-key mnemonics, no mouse needed | Menu-based | Mouse-first | Browser UI |
-| **Prompt organization** | Nested folders with mnemonics | Flat list | Flat list | Chat history |
-| **Step history** | Navigate back/forward, branch from any step | No history | No history | Scroll up |
-| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | OpenAI only | OpenAI only | OpenAI only |
-| **Price** | Free, open-source | $8/mo for AI | $30 one-time + API costs | $20/mo |
+| **Prompt chaining** | Chain unlimited transformations, full history | Limited chaining (via commands/chat), no true pipeline or step history | One action | No native prompt chaining; manual workflow required |
+| **Keyboard-first** | Single-key mnemonics, fully keyboard-driven pipeline navigation | Keyboard-driven launcher, menu-based AI | Primarily mouse-driven | Browser UI |
+| **Prompt organization** | Nested folders with mnemonics | Flat command list | Flat list | Chat history |
+| **Step history** | Navigate back/forward, branch from any step | No step history | No history | Scroll up |
+| **Branching history** | Branch from any intermediate step | No | No | No |
+| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | Multiple providers (built-in + extensions), not fully open BYO | OpenAI API | OpenAI ecosystem (no external providers) |
+| **Price** | Free, open-source | Free tier + paid Pro (~$8/mo for extended AI) | $30 one-time + API costs | $20/mo |
 
 ## Features
 
