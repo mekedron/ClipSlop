@@ -247,7 +247,13 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME#v}"
 
-          # Generate appcast.xml with the latest release
+          # Switch to main first, then generate appcast.xml
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git stash --include-untracked
+          git fetch origin main
+          git checkout main
+
           cat > appcast.xml << APPCAST_EOF
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
@@ -272,14 +278,8 @@ jobs:
           </rss>
           APPCAST_EOF
 
-          # Remove leading whitespace from heredoc
           sed -i '' 's/^          //' appcast.xml
 
-          # Commit and push to main
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git fetch origin main
-          git checkout main
           git add appcast.xml
           git commit -m "chore: update appcast for ${GITHUB_REF_NAME}" || echo "No changes to commit"
           git push origin main
