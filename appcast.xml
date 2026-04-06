@@ -7,14 +7,14 @@
     <language>en</language>
     <item>
       <title>Version 1.1.7</title>
-      <sparkle:version>31</sparkle:version>
+      <sparkle:version>33</sparkle:version>
       <sparkle:shortVersionString>1.1.7</sparkle:shortVersionString>
       <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-      <pubDate>Mon, 06 Apr 2026 16:11:06 +0000</pubDate>
+      <pubDate>Mon, 06 Apr 2026 16:27:21 +0000</pubDate>
       <enclosure
         url="https://github.com/mekedron/clipslop/releases/download/v1.1.7/ClipSlop-1.1.7-macOS.dmg"
-        sparkle:edSignature="6U+Tq8v4RqiXU8Ep1cv4UBrbdDZSxSiQvCR3oDm4dZx0zgC19ZGrFCYD6UCXNlgvCJOtX8pS84ieX/vWQocHAA=="
-        length="13048060"
+        sparkle:edSignature="fei/uMh1N8izFZoTQA+rDI+JPdMmJJaFbQ2AahfL0FJzTwa2CdYL5ZKeOUJUDehiHrcDnCiXazClhwLsrNI7DQ=="
+        length="13048009"
         type="application/octet-stream"/>
     </item>
   </channel>
