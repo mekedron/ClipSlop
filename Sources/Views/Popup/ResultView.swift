@@ -20,11 +20,15 @@ struct ResultView: View {
             // Action bar
             HStack(spacing: 12) {
                 actionButton("Copy", icon: "doc.on.doc", key: "C") {
-                    appState.copyCurrentText()
-                    showCopiedFeedback = true
-                    Task {
-                        try? await Task.sleep(for: .seconds(1.5))
-                        showCopiedFeedback = false
+                    if appState.settings.closeOnCopy {
+                        appState.copyAndDismiss()
+                    } else {
+                        appState.copyCurrentText()
+                        showCopiedFeedback = true
+                        Task {
+                            try? await Task.sleep(for: .seconds(1.5))
+                            showCopiedFeedback = false
+                        }
                     }
                 }
 

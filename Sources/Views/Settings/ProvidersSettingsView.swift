@@ -187,7 +187,7 @@ struct ProviderDetailView: View {
     @State private var modelID: String = ""
     @State private var maxTokens: Int = 4096
     @State private var temperature: Double = 1.0
-    @State private var reasoningEffort: ReasoningEffort = .medium
+    @State private var reasoningEffort: ReasoningEffort = .low
     @State private var apiKey: String = ""
     @State private var cliToolAvailable: Bool = true
     @State private var availableModels: [String] = []
@@ -536,7 +536,7 @@ struct ProviderDetailView: View {
         modelID = provider.modelID
         maxTokens = provider.maxTokens
         temperature = provider.temperature
-        reasoningEffort = provider.reasoningEffort ?? .medium
+        reasoningEffort = provider.reasoningEffort ?? .low
         apiKey = providerStore.getAPIKey(for: provider)
         if provider.providerType == .cliTool {
             cliToolAvailable = CLIToolDetector.isAvailable(at: provider.baseURL)

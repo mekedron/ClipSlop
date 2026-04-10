@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PopupContentView: View {
     let appState: AppState
-    @State private var promptGridHeight: Double = UserDefaults.standard.object(forKey: "promptGridHeight") as? Double ?? 200
+    @State private var promptGridHeight: Double = UserDefaults.standard.object(forKey: "promptGridHeight") as? Double ?? 80
     @State private var dragStartHeight: Double = 0
     private let loc = Loc.shared
 
@@ -367,26 +367,66 @@ struct PopupContentView: View {
         let copied = appState.showCopiedFeedback
         let selCopied = appState.showSelectionCopiedFeedback
         let active = copied || selCopied
-        return Button {
-            if SelectionService.copySelection(in: NSApp.keyWindow) {
-                showSelectionCopied()
-            } else {
-                appState.copyCurrentText()
-            }
-        } label: {
-            HStack(spacing: 4) {
-                Image(systemName: active ? "checkmark.circle.fill" : "doc.on.doc")
-                Text(active
-                    ? loc.t(selCopied ? "popup.selection_copied" : "popup.copied")
-                    : loc.t("popup.copy"))
-                if !active {
-                    Text("⌘C").foregroundStyle(.tertiary)
+        let closeOnCopy = appState.settings.closeOnCopy
+        let label = active
+            ? loc.t(selCopied ? "popup.selection_copied" : "popup.copied")
+            : loc.t(closeOnCopy ? "popup.copy_and_close" : "popup.copy")
+        return HStack(spacing: 0) {
+            Menu {
+                if !closeOnCopy {
+                    Button {
+                        appState.copyAndDismiss()
+                    } label: {
+                        Text("\(loc.t("popup.copy_and_close"))  ⌘⌃C")
+                    }
                 }
+                Button {
+                    appState.pasteCurrentText()
+                } label: {
+                    Text("\(loc.t("popup.copy_close_paste"))  ⌘⌃V")
+                }
+            } label: {
+                Image(systemName: "chevron.down")
+                    .font(.caption2)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(.secondary)
             }
-            .font(.caption)
+            .menuStyle(.button)
+            .buttonStyle(.plain)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .frame(width: 18)
+
+            Button {
+                if SelectionService.copySelection(in: NSApp.keyWindow) {
+                    showSelectionCopied()
+                } else if closeOnCopy {
+                    appState.copyAndDismiss()
+                } else {
+                    appState.copyCurrentText()
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Image(systemName: active ? "checkmark.circle.fill" : "doc.on.doc")
+                    Text(label)
+                    if !active {
+                        Text("⌘C").foregroundStyle(.tertiary)
+                    }
+                }
+                .font(.caption)
+            }
+            .buttonStyle(.bordered)
+            .tint(active ? .green : nil)
+            .clipShape(UnevenRoundedRectangle(
+                topLeadingRadius: 0, bottomLeadingRadius: 0,
+                bottomTrailingRadius: 5, topTrailingRadius: 5
+            ))
         }
-        .buttonStyle(.bordered)
-        .tint(active ? .green : nil)
+        .background(.quaternary, in: UnevenRoundedRectangle(
+            topLeadingRadius: 5, bottomLeadingRadius: 5,
+            bottomTrailingRadius: 0, topTrailingRadius: 0
+        ))
+        .fixedSize(horizontal: false, vertical: true)
         .animation(.easeInOut(duration: 0.2), value: active)
         .background(WindowDragBlocker())
     }
@@ -430,14 +470,35 @@ struct PopupContentView: View {
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
 
+            if let detail = appState.errorDetail {
+                ScrollView {
+                    Text(detail)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(8)
+                }
+                .frame(maxHeight: 120)
+                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 6))
+                .padding(.horizontal, 16)
+            }
+
             HStack {
                 Button(loc.t("popup.dismiss")) {
                     appState.clearError()
                 }
-                Button(loc.t("popup.try_again")) {
-                    appState.clearError()
+                if appState.errorProviderType == .openAIChatGPT {
+                    Button(loc.t("popup.sign_in_again")) {
+                        appState.reauthenticateChatGPT()
+                    }
+                    .buttonStyle(.borderedProminent)
+                } else {
+                    Button(loc.t("popup.try_again")) {
+                        appState.clearError()
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.borderedProminent)
             }
         }
         .padding(32)
@@ -633,7 +694,11 @@ struct KeyEventHandler: NSViewRepresentable {
                     }
                     return true
                 }
-                appState.copyCurrentText()
+                if appState.settings.closeOnCopy {
+                    appState.copyAndDismiss()
+                } else {
+                    appState.copyCurrentText()
+                }
                 return true
             }
 

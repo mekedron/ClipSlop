@@ -130,6 +130,8 @@
 "settings.general.behavior.preserve_image_widths_help" = "Keep width and max-width from HTML image tags when rendering Markdown";
 "settings.general.behavior.close_on_escape" = "Close window on Escape";
 "settings.general.behavior.close_on_escape_help" = "When enabled, pressing Escape closes the window; when disabled, Escape only navigates back";
+"settings.general.behavior.close_on_copy" = "Close window on Copy";
+"settings.general.behavior.close_on_copy_help" = "Copies text and closes the window. ⌘⌃C (Copy & Close) is always available regardless of this setting";
 "settings.general.behavior.editor_mode" = "Display format";
 "settings.general.behavior.editor_mode_help" = "How text is displayed and edited in the popup";
 "settings.general.behavior.editor_mode.plain" = "Plain text";
@@ -302,6 +304,8 @@
 "popup.back" = "Back";
 "popup.select_all" = "Select All";
 "popup.copy" = "Copy";
+"popup.copy_and_close" = "Copy & Close";
+"popup.copy_close_paste" = "Copy, Close & Paste";
 "popup.edit" = "Edit";
 "popup.open" = "Open";
 "popup.save" = "Save";
@@ -312,6 +316,7 @@
 "popup.cancel" = "Cancel";
 "popup.dismiss" = "Dismiss";
 "popup.try_again" = "Try Again";
+"popup.sign_in_again" = "Sign In Again";
 "popup.hint.display" = "Display";
 "popup.mnemonic_hint" = "Press a letter to pick a prompt";
 "popup.source" = "Source";

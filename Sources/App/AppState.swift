@@ -17,6 +17,8 @@ final class AppState {
     var isProcessing = false
     var streamingText = ""
     var errorMessage: String?
+    var errorDetail: String?
+    var errorProviderType: AIProviderType?
     var showCopiedFeedback = false
     var showSelectionCopiedFeedback = false
 
@@ -129,7 +131,7 @@ final class AppState {
             } catch {
                 let wasCancelled = error is CancellationError || Task.isCancelled
                 if !wasCancelled {
-                    errorMessage = error.localizedDescription
+                    setError(from: error, providerType: config.providerType)
                 }
                 isProcessing = false
                 streamingText = ""
@@ -141,10 +143,20 @@ final class AppState {
 
     func setup() {
         hotkeyService.onTrigger = { [weak self] in
-            self?.triggerFromSelection()
+            guard let self else { return }
+            if self.isPopupVisible {
+                self.copyAndDismiss()
+            } else {
+                self.triggerFromSelection()
+            }
         }
         hotkeyService.onTriggerFromClipboard = { [weak self] in
-            self?.triggerFromClipboard()
+            guard let self else { return }
+            if self.isPopupVisible {
+                self.pasteCurrentText()
+            } else {
+                self.triggerFromClipboard()
+            }
         }
         hotkeyService.onTriggerBlankEditor = { [weak self] in
             self?.triggerBlankEditor()
@@ -402,6 +414,7 @@ final class AppState {
         isEditing = false
         editingText = ""
         errorMessage = nil
+        errorDetail = nil
         streamingText = ""
         isProcessing = false
 
@@ -489,6 +502,7 @@ final class AppState {
         isProcessing = true
         streamingText = ""
         errorMessage = nil
+        errorDetail = nil
 
         let service = AIServiceFactory.service(for: provider.providerType)
         let config = provider
@@ -524,7 +538,7 @@ final class AppState {
             } catch {
                 let wasCancelled = error is CancellationError || Task.isCancelled
                 if !wasCancelled {
-                    errorMessage = error.localizedDescription
+                    setError(from: error, providerType: config.providerType)
                 }
                 isProcessing = false
                 streamingText = ""
@@ -538,6 +552,7 @@ final class AppState {
         isProcessing = false
         streamingText = ""
         errorMessage = nil
+        errorDetail = nil
     }
 
     // MARK: - Actions
@@ -670,6 +685,18 @@ final class AppState {
         }
     }
 
+    func copyAndDismiss() {
+        switch activeEditorMode {
+        case .markdown:
+            ClipboardService.setRichText(currentDisplayText)
+        case .html:
+            ClipboardService.setHTMLContent(currentDisplayText)
+        case .plainText:
+            ClipboardService.setText(currentDisplayText)
+        }
+        dismissPopup()
+    }
+
     func pasteCurrentText() {
         switch activeEditorMode {
         case .markdown:
@@ -714,6 +741,7 @@ final class AppState {
         navigationPath = []
         selectedHistoryStepIndex = nil
         errorMessage = nil
+        errorDetail = nil
         streamingText = ""
         isProcessing = false
         isEditing = false
@@ -724,10 +752,42 @@ final class AppState {
 
     func showError(_ message: String) {
         errorMessage = message
+        errorDetail = nil
+        errorProviderType = nil
         showPopup()
+    }
+
+    func setError(from error: Error, providerType: AIProviderType? = nil) {
+        errorMessage = error.localizedDescription
+        errorDetail = Self.extractDetail(from: error)
+        errorProviderType = providerType
     }
 
     func clearError() {
         errorMessage = nil
+        errorDetail = nil
+        errorProviderType = nil
+    }
+
+    func reauthenticateChatGPT() {
+        guard let provider = providerStore.providers.first(where: { $0.providerType == .openAIChatGPT }) else { return }
+        clearError()
+        dismissPopup()
+        ChatGPTTokenManager.shared.clearTokens(for: provider.id)
+        openSettingsToProviders()
+    }
+
+    private static func extractDetail(from error: Error) -> String? {
+        guard let aiError = error as? AIServiceError else { return nil }
+        switch aiError {
+        case .httpError(let code, let body):
+            return "HTTP \(code)\n\(body)"
+        case .networkError(let underlying):
+            return String(describing: underlying)
+        case .cliToolFailed(let exitCode, let stderr):
+            return "Exit code \(exitCode)\n\(stderr)"
+        default:
+            return nil
+        }
     }
 }

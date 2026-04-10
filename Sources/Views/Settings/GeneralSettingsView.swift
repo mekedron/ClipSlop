@@ -71,6 +71,14 @@ struct GeneralSettingsView: View {
                     .help(loc.t("settings.general.behavior.keycodes_help"))
                 Toggle(loc.t("settings.general.behavior.close_on_escape"), isOn: $settings.closeOnEscape)
                     .help(loc.t("settings.general.behavior.close_on_escape_help"))
+                Toggle(isOn: $settings.closeOnCopy) {
+                    HStack(spacing: 4) {
+                        Text(loc.t("settings.general.behavior.close_on_copy"))
+                        Image(systemName: "questionmark.circle")
+                            .foregroundStyle(.secondary)
+                            .help(loc.t("settings.general.behavior.close_on_copy_help"))
+                    }
+                }
                 LabeledContent(loc.t("settings.general.behavior.markdown_renderer")) {
                     Picker("", selection: $settings.markdownRenderer) {
                         ForEach(MarkdownRenderer.allCases) { renderer in

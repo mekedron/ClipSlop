@@ -269,6 +269,8 @@
 "popup.back" = "Назад";
 "popup.select_all" = "Выделить всё";
 "popup.copy" = "Копировать";
+"popup.copy_and_close" = "Копировать и закрыть";
+"popup.copy_close_paste" = "Копировать, закрыть и вставить";
 "popup.edit" = "Редактировать";
 "popup.open" = "Открыть";
 "popup.save" = "Сохранить";
@@ -279,6 +281,7 @@
 "popup.cancel" = "Отмена";
 "popup.dismiss" = "Закрыть";
 "popup.try_again" = "Попробовать снова";
+"popup.sign_in_again" = "Войти снова";
 "popup.mnemonic_hint" = "Нажмите клавишу для выбора промпта";
 "popup.hint.history" = "История";
 "popup.hint.scroll" = "Прокрутка";
@@ -350,6 +353,8 @@
 "settings.prompts.editor.provider_default" = "Use default";
 "settings.general.behavior.close_on_escape" = "Close window on Escape";
 "settings.general.behavior.close_on_escape_help" = "When enabled, pressing Escape closes the window; when disabled, Escape only navigates back";
+"settings.general.behavior.close_on_copy" = "Закрывать окно при копировании";
+"settings.general.behavior.close_on_copy_help" = "Копирует текст и закрывает окно. ⌘⌃C (Копировать и закрыть) доступно всегда, вне зависимости от этой настройки";
 "popup.hint.display" = "Display";
 "settings.prompts.editor.display_mode" = "Display mode";
 "settings.prompts.editor.display_mode_default" = "Use default";

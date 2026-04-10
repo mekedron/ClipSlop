@@ -135,7 +135,7 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
         isDefault: Bool = false,
         maxTokens: Int = Constants.Defaults.maxTokens,
         temperature: Double = Constants.Defaults.temperature,
-        reasoningEffort: ReasoningEffort? = nil
+        reasoningEffort: ReasoningEffort? = .low
     ) {
         self.id = id
         self.name = name

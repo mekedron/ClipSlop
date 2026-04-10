@@ -121,6 +121,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(closeOnEscape, forKey: "closeOnEscape") }
     }
 
+    var closeOnCopy: Bool {
+        didSet { UserDefaults.standard.set(closeOnCopy, forKey: "closeOnCopy") }
+    }
+
     var appColorScheme: AppColorScheme {
         didSet { UserDefaults.standard.set(appColorScheme.rawValue, forKey: "appColorScheme") }
     }
@@ -181,6 +185,7 @@ final class AppSettings {
             .flatMap(MarkdownRenderer.init(rawValue:)) ?? .textual
         preserveImageWidths = defaults.object(forKey: "preserveImageWidths") as? Bool ?? true
         closeOnEscape = defaults.object(forKey: "closeOnEscape") as? Bool ?? true
+        closeOnCopy = defaults.object(forKey: "closeOnCopy") as? Bool ?? true
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
         editorMode = defaults.string(forKey: "editorMode")

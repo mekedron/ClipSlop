@@ -38,7 +38,7 @@ enum Constants {
         static let tokenEndpoint = "https://auth.openai.com/oauth/token"
         static let scopes = "openid profile email offline_access api.connectors.read api.connectors.invoke"
         static let baseURL = "https://chatgpt.com/backend-api/codex"
-        static let defaultModel = "gpt-5.3-codex"
+        static let defaultModel = "gpt-5.4-mini"
     }
 
     enum Defaults {
