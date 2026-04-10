@@ -269,6 +269,8 @@
 "popup.back" = "Terug";
 "popup.select_all" = "Alles selecteren";
 "popup.copy" = "Kopiëren";
+"popup.copy_and_close" = "Copy & Close";
+"popup.copy_close_paste" = "Copy, Close & Paste";
 "popup.edit" = "Bewerken";
 "popup.open" = "Openen";
 "popup.save" = "Opslaan";
@@ -279,6 +281,7 @@
 "popup.cancel" = "Annuleren";
 "popup.dismiss" = "Sluiten";
 "popup.try_again" = "Opnieuw proberen";
+"popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Druk op een letter om een prompt te kiezen";
 "popup.hint.history" = "Geschiedenis";
 "popup.hint.scroll" = "Scrollen";
@@ -350,6 +353,8 @@
 "settings.prompts.editor.provider_default" = "Use default";
 "settings.general.behavior.close_on_escape" = "Close window on Escape";
 "settings.general.behavior.close_on_escape_help" = "When enabled, pressing Escape closes the window; when disabled, Escape only navigates back";
+"settings.general.behavior.close_on_copy" = "Close window on Copy";
+"settings.general.behavior.close_on_copy_help" = "Copies text and closes the window. ⌘⌃C (Copy & Close) is always available regardless of this setting";
 "popup.hint.display" = "Display";
 "settings.prompts.editor.display_mode" = "Display mode";
 "settings.prompts.editor.display_mode_default" = "Use default";
