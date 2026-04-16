@@ -148,7 +148,7 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 | | ClipSlop | ClipboardAI | ShortcutAI | Raycast AI | PopClip | ChatGPT |
 |---|---|---|---|---|---|---|
 | **Prompt chaining** | ✅ Unlimited chaining, full history | ❌ One action per shortcut | ❌ One action per shortcut | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
-| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation | ⚠️ Per-prompt shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
+| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Quick Paste, Open & Run) and on-screen text (OCR) | ⚠️ Per-prompt shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
 | **Prompt organization** | ✅ Nested folders with mnemonics | ⚠️ Flat list | ⚠️ Flat list | ⚠️ Flat command list | ⚠️ Flat list | ❌ Chat history |
 | **Step history** | ✅ Navigate back/forward, branch from any step | ❌ No | ❌ No | ❌ No | ❌ No | ⚠️ Scroll up |
 | **Branching history** | ✅ Branch from any intermediate step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
