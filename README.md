@@ -17,14 +17,16 @@
 
 ---
 
+ClipSlop is a free, open-source AI writing tool for macOS that works in any app. Fix grammar, translate text, rewrite in different tones, format as email or Markdown — all with a keyboard shortcut. Use it as a simple AI grammar checker with a single hotkey, or chain multiple AI prompts into a full text transformation pipeline. Supports ChatGPT (free sign-in), OpenAI API, Anthropic Claude, Ollama (local models), and any OpenAI-compatible provider.
+
 ## Table of Contents
 
-- [Why?](#why)
+- [Why ClipSlop?](#why-clipslop)
 - [How it works](#how-it-works)
-- [Default prompts](#default-prompts)
-- [Default shortcuts](#default-shortcuts)
+- [Built-in prompts](#built-in-prompts)
+- [Keyboard shortcuts](#keyboard-shortcuts)
 - [Features](#features)
-- [Comparison](#comparison)
+- [Comparison with other AI writing tools](#comparison-with-other-ai-writing-tools)
 - [Install](#install)
 - [Requirements](#requirements)
 - [Acknowledgements](#acknowledgements)
@@ -33,9 +35,9 @@
 
 ---
 
-## Why?
+## Why ClipSlop?
 
-Most AI text tools make you copy text, switch to a browser, paste, wait, copy the result, switch back, paste. ClipSlop does it with a hotkey — right where you're already typing.
+Most AI writing tools make you copy text, switch to a browser, paste, wait, copy the result, switch back, paste. ClipSlop does it with a hotkey — right where you're already typing.
 
 **Fix grammar without thinking about it:**
 ```
@@ -52,7 +54,7 @@ That's **Quick Paste** — assign any prompt to a global hotkey, and it runs inl
 
 Each key picks a prompt from a navigable tree — `RB` Rewrite → Business, `TE` Translate → English, `FE` Format → Email. Every step is saved, arrow keys to go back, branch from any point. No browser, no copy-paste, no tab switching.
 
-Free, open-source, any AI provider.
+Free, open-source, works with any AI provider — ChatGPT, Claude, Ollama, or your own API.
 
 ---
 
@@ -94,7 +96,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 - **Built-in prompts** — Translate (18 languages), Rewrite (7 tones), Format (7 tools), Dev (6 tools), Analyze (4), Convert
 - **Manual editing** — Edit any result inline (`⌘E`), saved as a history step
 - **Find in text** — `⌘F` search with highlighting across all display modes
-- **Screen OCR** — Capture and recognize text from any screen region (`⇧⌘2`)
+- **Screen OCR** — Capture and recognize text from any screen region with OCR (`⇧⌘2`)
 - **Blank editor** — Open an empty editor (`⌃⌘N`), write text, run prompts on it
 - **Generate prompts with AI** — Describe what you want, AI writes the system prompt
 - **Per-prompt settings** — Override provider, display mode per prompt
@@ -104,7 +106,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 - **Multiple display modes** — Plain text, Markdown (native or HTML renderer), HTML
 - **Adjustable UI** — Opacity, size, theme, launch at login
 
-## Default prompts
+## Built-in prompts
 
 ```
 [⌘/] // Your prompt — type // followed by your instruction to run a one-off custom prompt
@@ -116,7 +118,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 [C]  Convert     → HTML, Markdown
 ```
 
-Some prompts ship with default global shortcuts (Quick Paste pastes the result inline, Open & Run opens ClipSlop):
+Some prompts ship with default global keyboard shortcuts (Quick Paste pastes the result inline, Open & Run opens ClipSlop):
 
 | Shortcut | Prompt | Mode |
 |----------|--------|------|
@@ -130,7 +132,7 @@ Some prompts ship with default global shortcuts (Quick Paste pastes the result i
 
 Fully customizable — add your own prompts, folders, mnemonics, and global shortcuts in Settings → Prompts.
 
-## Default shortcuts
+## Keyboard shortcuts
 
 | Shortcut | Action |
 |----------|--------|
@@ -149,7 +151,7 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 | `Space` | Page down |
 | `Esc` | Close / Back |
 
-## Comparison
+## Comparison with other AI writing tools
 
 | | ClipSlop | RewriteBar | WritingTools | Cai | ClipboardAI | WritersBrew | Elephas | Fixkey | ShortcutAI | Raycast AI | PopClip | ChatGPT |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
