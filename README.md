@@ -145,16 +145,16 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 
 ## Comparison
 
-| | ClipSlop | ClipboardAI | ShortcutAI | Raycast AI | PopClip | ChatGPT |
-|---|---|---|---|---|---|---|
-| **Prompt chaining** | ✅ Unlimited chaining, full history | ❌ One action per shortcut | ❌ One action per shortcut | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
-| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Quick Paste, Open & Run) and on-screen text (OCR) | ⚠️ Per-prompt shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
-| **Prompt organization** | ✅ Nested folders with mnemonics | ⚠️ Flat list | ⚠️ Flat list | ⚠️ Flat command list | ⚠️ Flat list | ❌ Chat history |
-| **Step history** | ✅ Navigate back/forward, branch from any step | ❌ No | ❌ No | ❌ No | ❌ No | ⚠️ Scroll up |
-| **Branching history** | ✅ Branch from any intermediate step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
-| **Provider freedom** | ✅ ChatGPT sign-in (free), API keys, Ollama (local), CLI tools | ⚠️ BYO key (OpenAI, OpenRouter) | ❌ Managed API only (no BYO keys) | ⚠️ Multiple, not fully open BYO | ⚠️ OpenAI API | ❌ OpenAI only |
-| **Platform** | ⚠️ macOS (native, works in any app) | ✅ macOS + Windows (native, works in any app) | ❌ Chrome extension only (browser text fields) | ⚠️ macOS | ⚠️ macOS | ✅ Web (any platform) |
-| **Price** | ✅ Free, open-source | ⚠️ €29 one-time (7-day trial) | ⚠️ Free (limited) / $5.90–$19.90/mo | ⚠️ Free tier + Pro ~$8/mo | ⚠️ $30 one-time + API costs | ❌ $20/mo |
+| | ClipSlop | RewriteBar | WritingTools | Cai | ClipboardAI | WritersBrew | Elephas | Fixkey | ShortcutAI | Raycast AI | PopClip | ChatGPT |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| **Prompt chaining** | ✅ Unlimited chaining, full history | ⚠️ Sequential action flow, no history | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
+| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Quick Paste, Open & Run) and on-screen text (OCR) | ⚠️ Shortcut + action picker | ⚠️ Hotkey + action picker | ⚠️ ⌥C hotkey + action list | ⚠️ Per-prompt shortcuts | ⚠️ Shortcut + menu | ⚠️ Super Command shortcut | ⚠️ Custom shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
+| **Prompt organization** | ✅ Nested folders with mnemonics | ⚠️ Flat action list | ⚠️ Fixed presets + custom instructions | ⚠️ Flat action list | ⚠️ Flat list | ⚠️ Flat preset list | ⚠️ Flat snippets | ⚠️ Flat list | ⚠️ Flat list | ⚠️ Flat command list | ⚠️ Flat list | ❌ Chat history |
+| **Step history** | ✅ Navigate back/forward, branch from any step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ⚠️ Scroll up |
+| **Branching history** | ✅ Branch from any intermediate step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Provider freedom** | ✅ ChatGPT sign-in (free), API keys, Ollama (local), CLI tools | ✅ 37+ providers, local models, Apple Intelligence | ✅ Gemini (free), OpenAI, Anthropic, Ollama, MLX local | ✅ Built-in local, Ollama, LM Studio, Apple Intelligence, cloud APIs | ⚠️ BYO key (OpenAI, OpenRouter) | ⚠️ BYO OpenAI key only | ⚠️ Built-in + BYO keys (OpenAI, Anthropic, Gemini) | ❌ Built-in only (provider unclear) | ❌ Managed API only (no BYO keys) | ⚠️ Multiple, not fully open BYO | ⚠️ OpenAI API | ❌ OpenAI only |
+| **Platform** | ⚠️ macOS (native, works in any app) | ⚠️ macOS (native, works in any app) | ✅ macOS + Windows + Linux | ⚠️ macOS (native, works in any app) | ✅ macOS + Windows (native, works in any app) | ⚠️ macOS (native, works in any app) | ⚠️ macOS + iOS | ⚠️ macOS | ❌ Chrome extension only (browser text fields) | ⚠️ macOS | ⚠️ macOS | ✅ Web (any platform) |
+| **Price** | ✅ Free, open-source | ⚠️ $29 one-time (BYO key) or $5/mo | ✅ Free, open-source | ✅ Free, open-source | ⚠️ €29 one-time (7-day trial) | ⚠️ $24–$49 one-time + API costs | ❌ $9.99–$39.99/mo | ❌ $48/year | ⚠️ Free (limited) / $5.90–$19.90/mo | ⚠️ Free tier + Pro ~$8/mo | ⚠️ $30 one-time + API costs | ❌ $20/mo |
 
 ## Install
 
