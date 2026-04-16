@@ -53,6 +53,11 @@ With ClipSlop:
 
 Each key combo picks a prompt from the tree — `RB` Rewrite → Business, `TE` Translate → English, `FE` Format → Email. Every step is saved, arrow keys to go back, branch from any point. No browser, no copy-paste, no tab switching.
 
+Or assign a global hotkey to a single prompt — **Quick Paste** runs it inline without ever opening ClipSlop:
+```
+select text → ⌃⌘G → grammar is fixed in place. Done.
+```
+
 Free, open-source, any AI provider.
 
 ---
@@ -77,6 +82,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 
 - **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
 - **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
+- **Prompt shortcuts** — Assign a global hotkey to any prompt. **Quick Paste** captures text, runs the prompt, and pastes the result inline — never leaving your app. **Open & Run** opens ClipSlop and auto-runs the prompt. Configure per-prompt in Settings → Prompts; shortcuts appear in the menu bar organized by folder
 - **Multi-provider** — OpenAI (sign in with ChatGPT or API key), Anthropic, Ollama, CLI tools, any OpenAI-compatible API
 - **Nested prompt tree** — Organize prompts in folders, each with a mnemonic key
 - **Built-in prompts** — Translate (18 languages), Rewrite (7 tones), Format (7 tools), Dev (6 tools), Analyze (4), Convert
