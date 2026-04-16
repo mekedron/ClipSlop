@@ -58,6 +58,11 @@ final class AppState {
     @ObservationIgnored private var permissionAlertWindow: PermissionAlertWindow?
     @ObservationIgnored private var currentTask: Task<Void, Never>?
 
+    /// The last non-ClipSlop app that was frontmost.
+    /// Updated via NSWorkspace notifications so it stays correct even when
+    /// the user switches apps while the popup is open.
+    @ObservationIgnored private(set) var lastExternalApp: NSRunningApplication?
+
     var currentPrompts: [PromptNode] {
         if let last = navigationPath.last {
             return last.children ?? []
@@ -191,6 +196,20 @@ final class AppState {
                 guard let self else { return }
                 self.syncService.start(promptStore: self.promptStore)
             }
+        }
+
+        // Track the last non-ClipSlop frontmost app so paste can target it
+        let myBundleID = Bundle.main.bundleIdentifier
+        lastExternalApp = NSWorkspace.shared.frontmostApplication
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                  app.bundleIdentifier != myBundleID
+            else { return }
+            self?.lastExternalApp = app
         }
 
         if !settings.hasCompletedOnboarding {
@@ -727,6 +746,7 @@ final class AppState {
             ClipboardService.setText(currentDisplayText)
         }
         dismissPopup()
+        lastExternalApp?.activate()
         ClipboardService.simulatePaste()
     }
 
