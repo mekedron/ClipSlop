@@ -153,7 +153,7 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 
 ## Comparison with other AI writing tools
 
-| | ClipSlop | RewriteBar | WritingTools | Cai | ClipboardAI | WritersBrew | Elephas | Fixkey | ShortcutAI | Raycast AI | PopClip | ChatGPT |
+| | ClipSlop | RewriteBar | WritingTools | Cai | ClipboardAI | WritersBrew | Elephas | Fixkey | ShortcutAI | Raycast AI | PopClip | ChatGPT (web) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **Prompt chaining** | ✅ Unlimited chaining, full history | ⚠️ Sequential action flow, no history | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
 | **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Quick Paste, Open & Run) and on-screen text (OCR) | ⚠️ Shortcut + action picker | ⚠️ Hotkey + action picker | ⚠️ ⌥C hotkey + action list | ⚠️ Per-prompt shortcuts | ⚠️ Shortcut + menu | ⚠️ Super Command shortcut | ⚠️ Custom shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
