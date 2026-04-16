@@ -120,7 +120,7 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 ## Default prompts
 
 ```
-[⌘Enter] >> Your prompt — type >> followed by your instruction to run a one-off custom prompt
+[⌘/] // Your prompt — type // followed by your instruction to run a one-off custom prompt
 [T]  Translate   → English, Finnish, Russian, Spanish, French, German, + 12 more
 [R]  Rewrite     → Elaborate, Neutral, Professional, Warm, Business, Playful, Biblical
 [F]  Format      → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
