@@ -129,7 +129,19 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 [C]  Convert     → HTML, Markdown
 ```
 
-Fully customizable — add your own prompts, folders, and mnemonics in Settings → Prompts.
+Some prompts ship with default global shortcuts (Quick Paste pastes the result inline, Open & Run opens ClipSlop):
+
+| Shortcut | Prompt | Mode |
+|----------|--------|------|
+| `⌃⌘/` | // Your prompt | Quick Paste |
+| `⌃⌘⌥/` | // Your prompt | Open & Run |
+| `⌃⌘G` | Fix Grammar | Quick Paste |
+| `⌃⌘F` | Reformat | Quick Paste |
+| `⌃⌘T` | Translate → English | Quick Paste |
+| `⌃⌘⌥T` | Translate → English | Open & Run |
+| `⌃⌘⌥A` | Explain Simply | Open & Run |
+
+Fully customizable — add your own prompts, folders, mnemonics, and global shortcuts in Settings → Prompts.
 
 ## Comparison
 
