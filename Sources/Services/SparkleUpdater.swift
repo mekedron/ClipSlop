@@ -1,3 +1,4 @@
+import AppKit
 import Sparkle
 
 @MainActor
@@ -18,6 +19,8 @@ final class SparkleUpdater {
     }
 
     func checkForUpdates() {
+        // Activate the app so Sparkle's update window appears above all other windows
+        NSApplication.shared.activate()
         controller?.checkForUpdates(nil)
     }
 }

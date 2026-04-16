@@ -77,7 +77,7 @@ struct PopupContentView: View {
                             .id("md-search")
                         } else {
                             MarkdownPreviewView(markdown: appState.currentDisplayText)
-                                .id(appState.currentDisplayText)
+                                .id("md-preview")
                         }
                     case .html:
                         HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false, findBarState: appState.findBarState)
