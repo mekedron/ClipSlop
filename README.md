@@ -147,14 +147,14 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 
 | | ClipSlop | ClipboardAI | ShortcutAI | Raycast AI | PopClip | ChatGPT |
 |---|---|---|---|---|---|---|
-| **Prompt chaining** | Chain unlimited transformations, full history | One action per shortcut | One action per shortcut | Limited chaining, no true pipeline | One action | Manual workflow |
-| **Keyboard-first** | Single-key mnemonics, fully keyboard-driven pipeline | Per-prompt shortcuts | Keyboard shortcuts + `//` text commands | Keyboard launcher, menu-based AI | Primarily mouse-driven | Browser UI |
-| **Prompt organization** | Nested folders with mnemonics | Flat prompt list | Flat prompt list | Flat command list | Flat list | Chat history |
-| **Step history** | Navigate back/forward, branch from any step | No | No | No | No | Scroll up |
-| **Branching history** | Branch from any intermediate step | No | No | No | No | No |
-| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | BYO API key (OpenAI, OpenRouter) | Managed API only (no BYO keys) | Multiple providers, not fully open BYO | OpenAI API | OpenAI only |
-| **Platform** | macOS (native, works in any app) | macOS, Windows (native, works in any app) | Chrome extension only (browser text fields) | macOS | macOS | Web |
-| **Price** | Free, open-source | €29 one-time (7-day trial) | Free (limited) / $5.90–$19.90/mo | Free tier + Pro ~$8/mo | $30 one-time + API costs | $20/mo |
+| **Prompt chaining** | ✅ Unlimited chaining, full history | ❌ One action per shortcut | ❌ One action per shortcut | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
+| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation | ⚠️ Per-prompt shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
+| **Prompt organization** | ✅ Nested folders with mnemonics | ⚠️ Flat list | ⚠️ Flat list | ⚠️ Flat command list | ⚠️ Flat list | ❌ Chat history |
+| **Step history** | ✅ Navigate back/forward, branch from any step | ❌ No | ❌ No | ❌ No | ❌ No | ⚠️ Scroll up |
+| **Branching history** | ✅ Branch from any intermediate step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
+| **Provider freedom** | ✅ ChatGPT sign-in (free), API keys, Ollama (local), CLI tools | ⚠️ BYO key (OpenAI, OpenRouter) | ❌ Managed API only (no BYO keys) | ⚠️ Multiple, not fully open BYO | ⚠️ OpenAI API | ❌ OpenAI only |
+| **Platform** | ⚠️ macOS (native, works in any app) | ✅ macOS + Windows (native, works in any app) | ❌ Chrome extension only (browser text fields) | ⚠️ macOS | ⚠️ macOS | ✅ Web (any platform) |
+| **Price** | ✅ Free, open-source | ⚠️ €29 one-time (7-day trial) | ⚠️ Free (limited) / $5.90–$19.90/mo | ⚠️ Free tier + Pro ~$8/mo | ⚠️ $30 one-time + API costs | ❌ $20/mo |
 
 ## Install
 
