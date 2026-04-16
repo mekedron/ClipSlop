@@ -145,15 +145,16 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 
 ## Comparison
 
-| | ClipSlop | Raycast AI | PopClip | ChatGPT |
-|---|---|---|---|---|
-| **Prompt chaining** | Chain unlimited transformations, full history | Limited chaining (via commands/chat), no true pipeline or step history | One action | No native prompt chaining; manual workflow required |
-| **Keyboard-first** | Single-key mnemonics, fully keyboard-driven pipeline navigation | Keyboard-driven launcher, menu-based AI | Primarily mouse-driven | Browser UI |
-| **Prompt organization** | Nested folders with mnemonics | Flat command list | Flat list | Chat history |
-| **Step history** | Navigate back/forward, branch from any step | No step history | No history | Scroll up |
-| **Branching history** | Branch from any intermediate step | No | No | No |
-| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | Multiple providers (built-in + extensions), not fully open BYO | OpenAI API | OpenAI ecosystem (no external providers) |
-| **Price** | Free, open-source | Free tier + paid Pro (~$8/mo for extended AI) | $30 one-time + API costs | $20/mo |
+| | ClipSlop | ClipboardAI | ShortcutAI | Raycast AI | PopClip | ChatGPT |
+|---|---|---|---|---|---|---|
+| **Prompt chaining** | Chain unlimited transformations, full history | One action per shortcut | One action per shortcut | Limited chaining, no true pipeline | One action | Manual workflow |
+| **Keyboard-first** | Single-key mnemonics, fully keyboard-driven pipeline | Per-prompt shortcuts | Keyboard shortcuts + `//` text commands | Keyboard launcher, menu-based AI | Primarily mouse-driven | Browser UI |
+| **Prompt organization** | Nested folders with mnemonics | Flat prompt list | Flat prompt list | Flat command list | Flat list | Chat history |
+| **Step history** | Navigate back/forward, branch from any step | No | No | No | No | Scroll up |
+| **Branching history** | Branch from any intermediate step | No | No | No | No | No |
+| **Provider freedom** | Any: ChatGPT sign-in, API keys, Ollama, CLI tools | BYO API key (OpenAI, OpenRouter) | Managed API only (no BYO keys) | Multiple providers, not fully open BYO | OpenAI API | OpenAI only |
+| **Platform** | macOS (native, works in any app) | macOS, Windows (native, works in any app) | Chrome extension only (browser text fields) | macOS | macOS | Web |
+| **Price** | Free, open-source | €29 one-time (7-day trial) | Free (limited) / $5.90–$19.90/mo | Free tier + Pro ~$8/mo | $30 one-time + API costs | $20/mo |
 
 ## Install
 
