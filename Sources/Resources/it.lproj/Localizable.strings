@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Attiva ClipSlop";
 "onboarding.shortcuts.clipboard" = "Dagli appunti";
 "onboarding.shortcuts.blank" = "Editor vuoto";
-"onboarding.shortcuts.ocr" = "Cattura schermo (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Modifica";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Provider IA";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Attiva ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Dagli appunti:";
 "settings.general.shortcuts.blank" = "Editor vuoto:";
-"settings.general.shortcuts.ocr" = "Cattura schermo (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Modifica:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportamento";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Attiva";
 "menu.clipboard" = "Dagli appunti";
 "menu.blank" = "Editor vuoto";
-"menu.ocr" = "Cattura schermo (OCR)";
+"menu.ocr" = "OCR + Modifica";
+"menu.ocr_clipboard" = "OCR negli appunti";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Modello: %@";
 "menu.settings" = "Impostazioni...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Scorciatoie prompt";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Scorciatoie globali";
+"settings.prompts.editor.quick_paste" = "Incolla rapido:";
+"settings.prompts.editor.quick_paste_help" = "Cattura il testo selezionato, lo elabora con questo prompt e incolla il risultato";
+"settings.prompts.editor.open_run" = "Apri ed esegui:";
+"settings.prompts.editor.open_run_help" = "Cattura il testo selezionato, apre ClipSlop e applica automaticamente questo prompt";
+"settings.prompts.editor.select_all" = "Seleziona tutto prima della cattura";
+"settings.prompts.editor.select_all_help" = "Simula ⌘A prima della cattura del testo, utile per sostituire l'intero contenuto del campo";

@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "ClipSlop indítása";
 "onboarding.shortcuts.clipboard" = "Vágólapról";
 "onboarding.shortcuts.blank" = "Üres szerkesztő";
-"onboarding.shortcuts.ocr" = "Képernyőfotó (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Szerkesztés";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "MI-szolgáltató";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "ClipSlop indítása:";
 "settings.general.shortcuts.clipboard" = "Vágólapról:";
 "settings.general.shortcuts.blank" = "Üres szerkesztő:";
-"settings.general.shortcuts.ocr" = "Képernyőfotó (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Szerkesztés:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Viselkedés";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Indítás";
 "menu.clipboard" = "Vágólapról";
 "menu.blank" = "Üres szerkesztő";
-"menu.ocr" = "Képernyőfotó (OCR)";
+"menu.ocr" = "OCR + Szerkesztés";
+"menu.ocr_clipboard" = "OCR a vágólapra";
 "menu.provider" = "Szolgáltató: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Beállítások...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Prompt billentyűparancsok";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globális billentyűparancsok";
+"settings.prompts.editor.quick_paste" = "Gyors beillesztés:";
+"settings.prompts.editor.quick_paste_help" = "Rögzíti a kijelölt szöveget, feldolgozza ezzel a prompttal, és beilleszti az eredményt";
+"settings.prompts.editor.open_run" = "Megnyitás és futtatás:";
+"settings.prompts.editor.open_run_help" = "Rögzíti a kijelölt szöveget, megnyitja a ClipSlop-ot és automatikusan alkalmazza ezt a promptot";
+"settings.prompts.editor.select_all" = "Mindent kijelöl rögzítés előtt";
+"settings.prompts.editor.select_all_help" = "⌘A szimulálása a szöveg rögzítése előtt, hasznos a teljes mezőtartalom cseréjéhez";

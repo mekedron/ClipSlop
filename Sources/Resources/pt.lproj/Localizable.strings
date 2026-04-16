@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Acionar ClipSlop";
 "onboarding.shortcuts.clipboard" = "Da área de transferência";
 "onboarding.shortcuts.blank" = "Editor em branco";
-"onboarding.shortcuts.ocr" = "Captura de tela (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Editar";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Provedor de IA";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Acionar ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Da área de transferência:";
 "settings.general.shortcuts.blank" = "Editor em branco:";
-"settings.general.shortcuts.ocr" = "Captura de tela (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Editar:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportamento";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Acionar";
 "menu.clipboard" = "Da Área de Transferência";
 "menu.blank" = "Editor em Branco";
-"menu.ocr" = "Captura de Tela (OCR)";
+"menu.ocr" = "OCR + Editar";
+"menu.ocr_clipboard" = "OCR para a área de transferência";
 "menu.provider" = "Provedor: %@";
 "menu.model" = "Modelo: %@";
 "menu.settings" = "Definições...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Atalhos de prompts";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Atalhos globais";
+"settings.prompts.editor.quick_paste" = "Colar rápido:";
+"settings.prompts.editor.quick_paste_help" = "Captura o texto selecionado, processa-o com este prompt e cola o resultado";
+"settings.prompts.editor.open_run" = "Abrir e executar:";
+"settings.prompts.editor.open_run_help" = "Captura o texto selecionado, abre o ClipSlop e aplica automaticamente este prompt";
+"settings.prompts.editor.select_all" = "Selecionar tudo antes da captura";
+"settings.prompts.editor.select_all_help" = "Simula ⌘A antes de capturar o texto, útil para substituir todo o conteúdo do campo";

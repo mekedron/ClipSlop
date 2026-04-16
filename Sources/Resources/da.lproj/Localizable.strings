@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Aktiver ClipSlop";
 "onboarding.shortcuts.clipboard" = "Fra udklipsholder";
 "onboarding.shortcuts.blank" = "Tom editor";
-"onboarding.shortcuts.ocr" = "Skærmoptagelse (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Rediger";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-udbyder";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Aktiver ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Fra udklipsholder:";
 "settings.general.shortcuts.blank" = "Tom editor:";
-"settings.general.shortcuts.ocr" = "Skærmoptagelse (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Rediger:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Adfærd";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Aktiver";
 "menu.clipboard" = "Fra udklipsholder";
 "menu.blank" = "Tom editor";
-"menu.ocr" = "Skærmoptagelse (OCR)";
+"menu.ocr" = "OCR + Rediger";
+"menu.ocr_clipboard" = "OCR til udklipsholder";
 "menu.provider" = "Udbyder: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Indstillinger...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Promptgenveje";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globale genveje";
+"settings.prompts.editor.quick_paste" = "Hurtig indsæt:";
+"settings.prompts.editor.quick_paste_help" = "Fanger markeret tekst, behandler den med denne prompt og indsætter resultatet";
+"settings.prompts.editor.open_run" = "Åbn og kør:";
+"settings.prompts.editor.open_run_help" = "Fanger markeret tekst, åbner ClipSlop og anvender automatisk denne prompt";
+"settings.prompts.editor.select_all" = "Vælg alt før optagelse";
+"settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstoptagelse, nyttigt til at erstatte hele feltindholdet";

@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Запустити ClipSlop";
 "onboarding.shortcuts.clipboard" = "З буфера обміну";
 "onboarding.shortcuts.blank" = "Порожній редактор";
-"onboarding.shortcuts.ocr" = "Знімок екрана (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Редагувати";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "ШІ-провайдер";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Запустити ClipSlop:";
 "settings.general.shortcuts.clipboard" = "З буфера обміну:";
 "settings.general.shortcuts.blank" = "Порожній редактор:";
-"settings.general.shortcuts.ocr" = "Знімок екрана (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Редагувати:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Поведінка";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Запустити";
 "menu.clipboard" = "З буфера обміну";
 "menu.blank" = "Порожній редактор";
-"menu.ocr" = "Знімок екрана (OCR)";
+"menu.ocr" = "OCR + Редагувати";
+"menu.ocr_clipboard" = "OCR до буфера обміну";
 "menu.provider" = "Провайдер: %@";
 "menu.model" = "Модель: %@";
 "menu.settings" = "Параметри...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Гарячі клавіші промптів";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Глобальні гарячі клавіші";
+"settings.prompts.editor.quick_paste" = "Швидка вставка:";
+"settings.prompts.editor.quick_paste_help" = "Захоплює виділений текст, обробляє його цим промптом і вставляє результат назад";
+"settings.prompts.editor.open_run" = "Відкрити і виконати:";
+"settings.prompts.editor.open_run_help" = "Захоплює виділений текст, відкриває ClipSlop і автоматично застосовує цей промпт";
+"settings.prompts.editor.select_all" = "Виділити все перед захопленням";
+"settings.prompts.editor.select_all_help" = "Симулює ⌘A перед захопленням тексту, корисно для заміни всього вмісту поля";

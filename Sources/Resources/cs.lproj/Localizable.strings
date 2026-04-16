@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Spustit ClipSlop";
 "onboarding.shortcuts.clipboard" = "Ze schránky";
 "onboarding.shortcuts.blank" = "Prázdný editor";
-"onboarding.shortcuts.ocr" = "Snímek obrazovky (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Upravit";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI poskytovatel";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Spustit ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Ze schránky:";
 "settings.general.shortcuts.blank" = "Prázdný editor:";
-"settings.general.shortcuts.ocr" = "Snímek obrazovky (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Upravit:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Chování";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Spustit";
 "menu.clipboard" = "Ze schránky";
 "menu.blank" = "Prázdný editor";
-"menu.ocr" = "Snímek obrazovky (OCR)";
+"menu.ocr" = "OCR + Upravit";
+"menu.ocr_clipboard" = "OCR do schránky";
 "menu.provider" = "Poskytovatel: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Nastavení...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Zkratky promptů";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globální zkratky";
+"settings.prompts.editor.quick_paste" = "Rychlé vložení:";
+"settings.prompts.editor.quick_paste_help" = "Zachytí vybraný text, zpracuje jej tímto promptem a vloží výsledek zpět";
+"settings.prompts.editor.open_run" = "Otevřít a spustit:";
+"settings.prompts.editor.open_run_help" = "Zachytí vybraný text, otevře ClipSlop a automaticky aplikuje tento prompt";
+"settings.prompts.editor.select_all" = "Vybrat vše před zachycením";
+"settings.prompts.editor.select_all_help" = "Simuluje ⌘A před zachycením textu, užitečné pro nahrazení celého obsahu pole";

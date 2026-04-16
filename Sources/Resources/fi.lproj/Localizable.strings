@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Käynnistä ClipSlop";
 "onboarding.shortcuts.clipboard" = "Leikepöydältä";
 "onboarding.shortcuts.blank" = "Tyhjä editori";
-"onboarding.shortcuts.ocr" = "Näytön kaappaus (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Muokkaa";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Tekoälypalvelu";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Käynnistä ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Leikepöydältä:";
 "settings.general.shortcuts.blank" = "Tyhjä editori:";
-"settings.general.shortcuts.ocr" = "Näytön kaappaus (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Muokkaa:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Toiminta";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Käynnistä";
 "menu.clipboard" = "Leikepöydältä";
 "menu.blank" = "Tyhjä editori";
-"menu.ocr" = "Näytön kaappaus (OCR)";
+"menu.ocr" = "OCR + Muokkaa";
+"menu.ocr_clipboard" = "OCR leikepöydälle";
 "menu.provider" = "Palvelu: %@";
 "menu.model" = "Malli: %@";
 "menu.settings" = "Asetukset...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Kehotepikanäppäimet";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Yleiset pikanäppäimet";
+"settings.prompts.editor.quick_paste" = "Pikaliimatsu:";
+"settings.prompts.editor.quick_paste_help" = "Kaappaa valitun tekstin, käsittelee sen tällä kehotteella ja liittää tuloksen";
+"settings.prompts.editor.open_run" = "Avaa ja suorita:";
+"settings.prompts.editor.open_run_help" = "Kaappaa valitun tekstin, avaa ClipSlopin ja soveltaa automaattisesti tätä kehotetta";
+"settings.prompts.editor.select_all" = "Valitse kaikki ennen kaappausta";
+"settings.prompts.editor.select_all_help" = "Simuloi ⌘A ennen tekstin kaappausta, hyödyllinen koko kentän sisällön korvaamiseen";

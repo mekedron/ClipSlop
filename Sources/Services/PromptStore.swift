@@ -94,6 +94,22 @@ final class PromptStore {
         markCustomized()
     }
 
+    func findNode(byID id: UUID) -> PromptNode? {
+        findNodeRecursive(id: id, in: prompts)
+    }
+
+    func allPromptIDs() -> Set<UUID> {
+        var result = Set<UUID>()
+        collectIDs(from: prompts, into: &result)
+        return result
+    }
+
+    func allPromptNodes() -> [PromptNode] {
+        var result: [PromptNode] = []
+        collectPrompts(from: prompts, into: &result)
+        return result
+    }
+
     func allFolders() -> [(id: UUID, name: String, depth: Int)] {
         var result: [(id: UUID, name: String, depth: Int)] = []
         collectFolders(from: prompts, depth: 0, into: &result)
@@ -105,6 +121,36 @@ final class PromptStore {
             result.append((id: node.id, name: node.name, depth: depth))
             if let children = node.children {
                 collectFolders(from: children, depth: depth + 1, into: &result)
+            }
+        }
+    }
+
+    private func findNodeRecursive(id: UUID, in nodes: [PromptNode]) -> PromptNode? {
+        for node in nodes {
+            if node.id == id { return node }
+            if let found = findNodeRecursive(id: id, in: node.children ?? []) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func collectIDs(from nodes: [PromptNode], into result: inout Set<UUID>) {
+        for node in nodes {
+            result.insert(node.id)
+            if let children = node.children {
+                collectIDs(from: children, into: &result)
+            }
+        }
+    }
+
+    private func collectPrompts(from nodes: [PromptNode], into result: inout [PromptNode]) {
+        for node in nodes {
+            if node.isPrompt {
+                result.append(node)
+            }
+            if let children = node.children {
+                collectPrompts(from: children, into: &result)
             }
         }
     }

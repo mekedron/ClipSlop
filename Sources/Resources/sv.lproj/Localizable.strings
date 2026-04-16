@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Aktivera ClipSlop";
 "onboarding.shortcuts.clipboard" = "Från urklipp";
 "onboarding.shortcuts.blank" = "Tom redigerare";
-"onboarding.shortcuts.ocr" = "Skärmdump (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Redigera";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-leverantör";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Aktivera ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Från urklipp:";
 "settings.general.shortcuts.blank" = "Tom redigerare:";
-"settings.general.shortcuts.ocr" = "Skärmdump (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Redigera:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Beteende";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Aktivera";
 "menu.clipboard" = "Från urklipp";
 "menu.blank" = "Tom redigerare";
-"menu.ocr" = "Skärmdump (OCR)";
+"menu.ocr" = "OCR + Redigera";
+"menu.ocr_clipboard" = "OCR till urklipp";
 "menu.provider" = "Leverantör: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Inställningar...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Promptgenvägar";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globala genvägar";
+"settings.prompts.editor.quick_paste" = "Snabbklistra:";
+"settings.prompts.editor.quick_paste_help" = "Fångar markerad text, bearbetar den med denna prompt och klistrar in resultatet";
+"settings.prompts.editor.open_run" = "Öppna och kör:";
+"settings.prompts.editor.open_run_help" = "Fångar markerad text, öppnar ClipSlop och tillämpar automatiskt denna prompt";
+"settings.prompts.editor.select_all" = "Markera allt före fångst";
+"settings.prompts.editor.select_all_help" = "Simulerar ⌘A före textfångst, användbart för att ersätta hela fältinnehållet";

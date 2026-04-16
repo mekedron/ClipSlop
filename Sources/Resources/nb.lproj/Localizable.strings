@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Utlos ClipSlop";
 "onboarding.shortcuts.clipboard" = "Fra utklippstavlen";
 "onboarding.shortcuts.blank" = "Tom editor";
-"onboarding.shortcuts.ocr" = "Skjermfangst (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Rediger";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-leverandor";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Utlos ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Fra utklippstavlen:";
 "settings.general.shortcuts.blank" = "Tom editor:";
-"settings.general.shortcuts.ocr" = "Skjermfangst (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Rediger:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Oppforsel";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Utlos";
 "menu.clipboard" = "Fra utklippstavlen";
 "menu.blank" = "Tom editor";
-"menu.ocr" = "Skjermfangst (OCR)";
+"menu.ocr" = "OCR + Rediger";
+"menu.ocr_clipboard" = "OCR til utklippstavle";
 "menu.provider" = "Leverandor: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Innstillinger...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Promptsnarveier";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globale snarveier";
+"settings.prompts.editor.quick_paste" = "Hurtiglim:";
+"settings.prompts.editor.quick_paste_help" = "Fanger markert tekst, behandler den med denne prompten og limer inn resultatet";
+"settings.prompts.editor.open_run" = "Åpne og kjøre:";
+"settings.prompts.editor.open_run_help" = "Fanger markert tekst, åpner ClipSlop og bruker automatisk denne prompten";
+"settings.prompts.editor.select_all" = "Velg alt før fangst";
+"settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstfangst, nyttig for å erstatte hele feltinnholdet";

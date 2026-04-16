@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Uruchom ClipSlop";
 "onboarding.shortcuts.clipboard" = "Ze schowka";
 "onboarding.shortcuts.blank" = "Pusty edytor";
-"onboarding.shortcuts.ocr" = "Zrzut ekranu (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Edytuj";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Dostawca AI";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Uruchom ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Ze schowka:";
 "settings.general.shortcuts.blank" = "Pusty edytor:";
-"settings.general.shortcuts.ocr" = "Zrzut ekranu (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Edytuj:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Zachowanie";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Uruchom";
 "menu.clipboard" = "Ze schowka";
 "menu.blank" = "Pusty edytor";
-"menu.ocr" = "Zrzut ekranu (OCR)";
+"menu.ocr" = "OCR + Edytuj";
+"menu.ocr_clipboard" = "OCR do schowka";
 "menu.provider" = "Dostawca: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Ustawienia...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Skróty promptów";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globalne skróty";
+"settings.prompts.editor.quick_paste" = "Szybkie wklejenie:";
+"settings.prompts.editor.quick_paste_help" = "Przechwytuje zaznaczony tekst, przetwarza go tym promptem i wkleja wynik";
+"settings.prompts.editor.open_run" = "Otwórz i uruchom:";
+"settings.prompts.editor.open_run_help" = "Przechwytuje zaznaczony tekst, otwiera ClipSlop i automatycznie stosuje ten prompt";
+"settings.prompts.editor.select_all" = "Zaznacz wszystko przed przechwyceniem";
+"settings.prompts.editor.select_all_help" = "Symuluje ⌘A przed przechwyceniem tekstu, przydatne do zastąpienia całej zawartości pola";

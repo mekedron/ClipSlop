@@ -1,5 +1,10 @@
 import Foundation
 
+struct ShortcutConfig: Codable, Hashable, Sendable {
+    var carbonKeyCode: Int
+    var carbonModifiers: Int
+}
+
 struct PromptNode: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     var name: String
@@ -10,6 +15,9 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
     var mnemonicModifiers: MnemonicModifiers?
     var providerID: UUID?
     var displayMode: EditorMode?
+    var quickPasteShortcut: ShortcutConfig?
+    var openRunShortcut: ShortcutConfig?
+    var selectAllBeforeCapture: Bool?
 
     enum NodeType: String, Codable, Sendable {
         case folder
@@ -25,7 +33,10 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
         children: [PromptNode]? = nil,
         mnemonicModifiers: MnemonicModifiers? = nil,
         providerID: UUID? = nil,
-        displayMode: EditorMode? = nil
+        displayMode: EditorMode? = nil,
+        quickPasteShortcut: ShortcutConfig? = nil,
+        openRunShortcut: ShortcutConfig? = nil,
+        selectAllBeforeCapture: Bool? = nil
     ) {
         self.id = id
         self.name = name
@@ -36,6 +47,9 @@ struct PromptNode: Codable, Identifiable, Hashable, Sendable {
         self.mnemonicModifiers = mnemonicModifiers
         self.providerID = providerID
         self.displayMode = displayMode
+        self.quickPasteShortcut = quickPasteShortcut
+        self.openRunShortcut = openRunShortcut
+        self.selectAllBeforeCapture = selectAllBeforeCapture
     }
 
     /// Display string for the mnemonic badge, e.g. "⇧F", "T", "⌫", "F5".

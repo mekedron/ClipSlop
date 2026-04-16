@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "ClipSlop activeren";
 "onboarding.shortcuts.clipboard" = "Vanuit klembord";
 "onboarding.shortcuts.blank" = "Lege editor";
-"onboarding.shortcuts.ocr" = "Schermopname (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Bewerken";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "AI-provider";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "ClipSlop activeren:";
 "settings.general.shortcuts.clipboard" = "Vanuit klembord:";
 "settings.general.shortcuts.blank" = "Lege editor:";
-"settings.general.shortcuts.ocr" = "Schermopname (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Bewerken:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Gedrag";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Activeren";
 "menu.clipboard" = "Vanuit klembord";
 "menu.blank" = "Lege editor";
-"menu.ocr" = "Schermopname (OCR)";
+"menu.ocr" = "OCR + Bewerken";
+"menu.ocr_clipboard" = "OCR naar klembord";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Instellingen...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Promptsneltoetsen";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Globale sneltoetsen";
+"settings.prompts.editor.quick_paste" = "Snel plakken:";
+"settings.prompts.editor.quick_paste_help" = "Vangt geselecteerde tekst, verwerkt deze met dit prompt en plakt het resultaat";
+"settings.prompts.editor.open_run" = "Openen en uitvoeren:";
+"settings.prompts.editor.open_run_help" = "Vangt geselecteerde tekst, opent ClipSlop en past automatisch dit prompt toe";
+"settings.prompts.editor.select_all" = "Alles selecteren voor vastlegging";
+"settings.prompts.editor.select_all_help" = "Simuleert ⌘A voor het vastleggen van tekst, handig om de hele veldinhoud te vervangen";

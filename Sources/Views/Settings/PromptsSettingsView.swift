@@ -1,4 +1,5 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct PromptsSettingsView: View {
     let appState: AppState
@@ -467,6 +468,39 @@ struct PromptEditorView: View {
             }
 
             if node.isPrompt {
+                Section(loc.t("settings.prompts.editor.global_shortcuts")) {
+                    KeyboardShortcuts.Recorder(
+                        loc.t("settings.prompts.editor.quick_paste"),
+                        name: PromptShortcutService.quickPasteName(for: node.id)
+                    ) { _ in
+                        appState.promptShortcutService.syncToModel(promptID: node.id)
+                        appState.promptShortcutService.refreshShortcuts()
+                    }
+                    Text(loc.t("settings.prompts.editor.quick_paste_help"))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+
+                    Toggle(
+                        loc.t("settings.prompts.editor.select_all"),
+                        isOn: $node.selectAllBeforeCapture.withDefault(false)
+                    )
+                    .onChange(of: node.selectAllBeforeCapture) { autoSave() }
+                    Text(loc.t("settings.prompts.editor.select_all_help"))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+
+                    KeyboardShortcuts.Recorder(
+                        loc.t("settings.prompts.editor.open_run"),
+                        name: PromptShortcutService.openRunName(for: node.id)
+                    ) { _ in
+                        appState.promptShortcutService.syncToModel(promptID: node.id)
+                        appState.promptShortcutService.refreshShortcuts()
+                    }
+                    Text(loc.t("settings.prompts.editor.open_run_help"))
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+
                 Section(loc.t("settings.prompts.editor.system_prompt")) {
                     TextEditor(text: Binding(
                         get: { node.systemPrompt ?? "" },
@@ -671,5 +705,16 @@ struct RestoreDefaultsSheet: View {
             }
         }
         return result
+    }
+}
+
+// MARK: - Optional<Bool> Binding helper
+
+extension Binding where Value == Bool? {
+    func withDefault(_ defaultValue: Bool) -> Binding<Bool> {
+        Binding<Bool>(
+            get: { self.wrappedValue ?? defaultValue },
+            set: { self.wrappedValue = $0 }
+        )
     }
 }

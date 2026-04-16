@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Déclencher ClipSlop";
 "onboarding.shortcuts.clipboard" = "Depuis le presse-papiers";
 "onboarding.shortcuts.blank" = "Éditeur vide";
-"onboarding.shortcuts.ocr" = "Capture d'écran (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Modifier";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Fournisseur d'IA";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Déclencher ClipSlop :";
 "settings.general.shortcuts.clipboard" = "Depuis le presse-papiers :";
 "settings.general.shortcuts.blank" = "Éditeur vide :";
-"settings.general.shortcuts.ocr" = "Capture d'écran (OCR) :";
+"settings.general.shortcuts.ocr" = "OCR + Modifier :";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportement";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Déclencher";
 "menu.clipboard" = "Depuis le presse-papiers";
 "menu.blank" = "Éditeur vide";
-"menu.ocr" = "Capture d'écran (OCR)";
+"menu.ocr" = "OCR + Modifier";
+"menu.ocr_clipboard" = "OCR vers le presse-papiers";
 "menu.provider" = "Fournisseur : %@";
 "menu.model" = "Modèle : %@";
 "menu.settings" = "Réglages...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Raccourcis de prompts";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Raccourcis globaux";
+"settings.prompts.editor.quick_paste" = "Collage rapide :";
+"settings.prompts.editor.quick_paste_help" = "Capture le texte sélectionné, le traite avec ce prompt et colle le résultat";
+"settings.prompts.editor.open_run" = "Ouvrir et exécuter :";
+"settings.prompts.editor.open_run_help" = "Capture le texte sélectionné, ouvre ClipSlop et applique automatiquement ce prompt";
+"settings.prompts.editor.select_all" = "Tout sélectionner avant capture";
+"settings.prompts.editor.select_all_help" = "Simule ⌘A avant la capture du texte, utile pour remplacer tout le contenu d'un champ";

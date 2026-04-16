@@ -46,12 +46,25 @@ final class PopupWindow: NSPanel {
         let y = screenFrame.midY - windowFrame.height / 2
         setFrameOrigin(NSPoint(x: x, y: y))
         makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate()
     }
 
     override func cancelOperation(_ sender: Any?) {
         Task { @MainActor in
             if SelectionService.clearSelection(in: self) { return }
             if appState.settings.closeOnEscape {
+                appState.dismissPopup()
+            }
+        }
+    }
+
+    // When the panel auto-hides (e.g. user clicks another app and
+    // hidesOnDeactivate kicks in) or the close button is clicked,
+    // sync isPopupVisible so global shortcuts don't see stale state.
+    override func orderOut(_ sender: Any?) {
+        super.orderOut(sender)
+        Task { @MainActor [appState] in
+            if appState.isPopupVisible {
                 appState.dismissPopup()
             }
         }

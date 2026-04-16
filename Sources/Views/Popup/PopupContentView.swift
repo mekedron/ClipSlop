@@ -579,7 +579,13 @@ struct KeyEventHandler: NSViewRepresentable {
         @MainActor
         private func handleKey(_ event: NSEvent, appState: AppState) -> Bool {
             let code = event.keyCode
-            let hasCmd = event.modifierFlags.contains(.command)
+            let flags = event.modifierFlags
+            let hasCmd = flags.contains(.command)
+            let hasControl = flags.contains(.control)
+
+            // Let global shortcuts (⌃⌘ combos) pass through to the
+            // KeyboardShortcuts handler — don't intercept them here.
+            if hasCmd && hasControl { return false }
 
             // --- Find bar shortcuts (both modes) ---
             if hasCmd && code == KeyCode.f {

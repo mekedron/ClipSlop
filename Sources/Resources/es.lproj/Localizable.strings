@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Activar ClipSlop";
 "onboarding.shortcuts.clipboard" = "Desde el portapapeles";
 "onboarding.shortcuts.blank" = "Editor en blanco";
-"onboarding.shortcuts.ocr" = "Captura de pantalla (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Editar";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Proveedor de IA";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Activar ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Desde el portapapeles:";
 "settings.general.shortcuts.blank" = "Editor en blanco:";
-"settings.general.shortcuts.ocr" = "Captura de pantalla (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Editar:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportamiento";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Activar";
 "menu.clipboard" = "Desde el portapapeles";
 "menu.blank" = "Editor en blanco";
-"menu.ocr" = "Captura de pantalla (OCR)";
+"menu.ocr" = "OCR + Editar";
+"menu.ocr_clipboard" = "OCR al portapapeles";
 "menu.provider" = "Proveedor: %@";
 "menu.model" = "Modelo: %@";
 "menu.settings" = "Ajustes...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Atajos de prompts";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Atajos globales";
+"settings.prompts.editor.quick_paste" = "Pegar rápido:";
+"settings.prompts.editor.quick_paste_help" = "Captura el texto seleccionado, lo procesa con este prompt y pega el resultado";
+"settings.prompts.editor.open_run" = "Abrir y ejecutar:";
+"settings.prompts.editor.open_run_help" = "Captura el texto seleccionado, abre ClipSlop y aplica automáticamente este prompt";
+"settings.prompts.editor.select_all" = "Seleccionar todo antes de capturar";
+"settings.prompts.editor.select_all_help" = "Simula ⌘A antes de capturar el texto, útil para reemplazar todo el contenido del campo";

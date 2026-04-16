@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Trigger ClipSlop";
 "onboarding.shortcuts.clipboard" = "From clipboard";
 "onboarding.shortcuts.blank" = "Blank editor";
-"onboarding.shortcuts.ocr" = "Screen capture (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Edit";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
 
@@ -112,7 +112,7 @@
 "settings.general.shortcuts.trigger" = "Trigger ClipSlop:";
 "settings.general.shortcuts.clipboard" = "From clipboard:";
 "settings.general.shortcuts.blank" = "Blank editor:";
-"settings.general.shortcuts.ocr" = "Screen capture (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Edit:";
 "settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 
@@ -344,7 +344,8 @@
 "menu.trigger" = "Trigger";
 "menu.clipboard" = "From Clipboard";
 "menu.blank" = "Blank Editor";
-"menu.ocr" = "Screen Capture (OCR)";
+"menu.ocr" = "OCR + Edit";
+"menu.ocr_clipboard" = "OCR to Clipboard";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Settings...";
@@ -366,3 +367,15 @@
 
 /* Misc */
 "misc.manual_edit" = "Manual Edit";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Prompt Shortcuts";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Global Shortcuts";
+"settings.prompts.editor.quick_paste" = "Quick Paste:";
+"settings.prompts.editor.quick_paste_help" = "Captures selected text, processes it through this prompt, and pastes the result back";
+"settings.prompts.editor.open_run" = "Open & Run:";
+"settings.prompts.editor.open_run_help" = "Captures selected text, opens ClipSlop, and automatically applies this prompt";
+"settings.prompts.editor.select_all" = "Select all before capture";
+"settings.prompts.editor.select_all_help" = "Simulates ⌘A before capturing text, useful for replacing entire field contents";

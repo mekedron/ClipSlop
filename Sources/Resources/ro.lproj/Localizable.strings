@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Activează ClipSlop";
 "onboarding.shortcuts.clipboard" = "Din clipboard";
 "onboarding.shortcuts.blank" = "Editor gol";
-"onboarding.shortcuts.ocr" = "Captură ecran (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Editare";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "Furnizor AI";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Activează ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Din clipboard:";
 "settings.general.shortcuts.blank" = "Editor gol:";
-"settings.general.shortcuts.ocr" = "Captură ecran (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Editare:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportament";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Activează";
 "menu.clipboard" = "Din clipboard";
 "menu.blank" = "Editor gol";
-"menu.ocr" = "Captură ecran (OCR)";
+"menu.ocr" = "OCR + Editare";
+"menu.ocr_clipboard" = "OCR în clipboard";
 "menu.provider" = "Furnizor: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Setări...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Scurtături prompturi";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Scurtături globale";
+"settings.prompts.editor.quick_paste" = "Lipire rapidă:";
+"settings.prompts.editor.quick_paste_help" = "Captează textul selectat, îl procesează cu acest prompt și lipește rezultatul";
+"settings.prompts.editor.open_run" = "Deschide și rulează:";
+"settings.prompts.editor.open_run_help" = "Captează textul selectat, deschide ClipSlop și aplică automat acest prompt";
+"settings.prompts.editor.select_all" = "Selectează tot înainte de captură";
+"settings.prompts.editor.select_all_help" = "Simulează ⌘A înainte de captura textului, util pentru înlocuirea întregului conținut al câmpului";

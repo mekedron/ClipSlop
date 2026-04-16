@@ -7,6 +7,7 @@ final class AppState {
     let providerStore = ProviderStore()
     let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
+    let promptShortcutService = PromptShortcutService()
     let settings = AppSettings.shared
     let syncService = CloudSyncService()
     let findBarState = FindBarState()
@@ -22,6 +23,9 @@ final class AppState {
     var showCopiedFeedback = false
     var showSelectionCopiedFeedback = false
 
+    /// Incremented when prompt shortcuts change, so the menu bar re-renders.
+    var promptShortcutsVersion = 0
+
     // Navigation state
     var navigationPath: [PromptNode] = []
     var selectedHistoryStepIndex: Int?
@@ -29,6 +33,9 @@ final class AppState {
     // Edit mode
     var isEditing = false
     var editingText = ""
+
+    // Pending prompt for Open & Run shortcut
+    var pendingPromptNode: PromptNode?
 
     // Original item view mode (which representation to show for the original text)
     var originalViewMode: RichTextMode = .plainText
@@ -169,9 +176,15 @@ final class AppState {
         }
         hotkeyService.register()
 
+        // Wire prompt shortcut service
+        promptShortcutService.appState = self
+        promptShortcutService.syncFromModel()
+        promptShortcutService.registerAll()
+
         // Wire iCloud sync — deferred by 2s so menu bar renders first
         promptStore.onPromptsChanged = { [weak self] data in
             self?.syncService.handleLocalChange(data: data)
+            self?.promptShortcutService.refreshShortcuts()
         }
         if settings.iCloudSyncEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
@@ -342,6 +355,7 @@ final class AppState {
             if let text = plainText, !text.isEmpty {
                 self.startSession(text: text, html: html, source: .clipboard)
             } else {
+                self.pendingPromptNode = nil
                 self.showError(Loc.shared.t("error.no_text"))
             }
         }
@@ -428,6 +442,12 @@ final class AppState {
         originalDisplayMode = settings.editorMode
 
         showPopup()
+
+        // If an Open & Run shortcut set a pending prompt, run it now
+        if let prompt = pendingPromptNode {
+            pendingPromptNode = nil
+            navigateInto(prompt)
+        }
 
         // If markdownAI is pre-selected and we have HTML, trigger lazy conversion
         if originalViewMode == .markdownAI, html != nil, source != .screenCapture {

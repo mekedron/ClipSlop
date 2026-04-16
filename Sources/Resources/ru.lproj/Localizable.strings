@@ -27,7 +27,7 @@
 "onboarding.shortcuts.trigger" = "Вызвать ClipSlop";
 "onboarding.shortcuts.clipboard" = "Из буфера обмена";
 "onboarding.shortcuts.blank" = "Пустой редактор";
-"onboarding.shortcuts.ocr" = "Снимок экрана (OCR)";
+"onboarding.shortcuts.ocr" = "OCR + Редактировать";
 
 /* Onboarding - Provider */
 "onboarding.provider.title" = "ИИ-провайдер";
@@ -110,7 +110,7 @@
 "settings.general.shortcuts.trigger" = "Вызвать ClipSlop:";
 "settings.general.shortcuts.clipboard" = "Из буфера обмена:";
 "settings.general.shortcuts.blank" = "Пустой редактор:";
-"settings.general.shortcuts.ocr" = "Снимок экрана (OCR):";
+"settings.general.shortcuts.ocr" = "OCR + Редактировать:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Поведение";
@@ -306,7 +306,8 @@
 "menu.trigger" = "Вызвать";
 "menu.clipboard" = "Из буфера обмена";
 "menu.blank" = "Пустой редактор";
-"menu.ocr" = "Снимок экрана (OCR)";
+"menu.ocr" = "OCR + Редактировать";
+"menu.ocr_clipboard" = "OCR в буфер обмена";
 "menu.provider" = "Провайдер: %@";
 "menu.model" = "Модель: %@";
 "menu.settings" = "Настройки...";
@@ -368,3 +369,15 @@
 "settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR to clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop";
+
+/* Menu Bar - Prompt Shortcuts */
+"menu.prompt_shortcuts" = "Горячие клавиши промптов";
+
+/* Settings - Prompt Editor - Global Shortcuts */
+"settings.prompts.editor.global_shortcuts" = "Глобальные горячие клавиши";
+"settings.prompts.editor.quick_paste" = "Быстрая вставка:";
+"settings.prompts.editor.quick_paste_help" = "Захватывает выделенный текст, обрабатывает его этим промптом и вставляет результат обратно";
+"settings.prompts.editor.open_run" = "Открыть и выполнить:";
+"settings.prompts.editor.open_run_help" = "Захватывает выделенный текст, открывает ClipSlop и автоматически применяет этот промпт";
+"settings.prompts.editor.select_all" = "Выделить всё перед захватом";
+"settings.prompts.editor.select_all_help" = "Симулирует ⌘A перед захватом текста, полезно для замены всего содержимого поля";
