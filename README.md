@@ -5,8 +5,8 @@
 <h1 align="center">ClipSlop</h1>
 
 <p align="center">
-  <strong>Keyboard-first AI text pipeline for macOS.</strong><br>
-  Chain prompts, transform text, never leave your keyboard.<br>
+  <strong>Select text. Press a hotkey. Grammar fixed.</strong><br>
+  AI-powered text transformations for macOS — fix grammar, translate, rewrite, format — without leaving your app.<br>
   Free and open-source.
 </p>
 
@@ -21,10 +21,10 @@
 
 - [Why?](#why)
 - [How it works](#how-it-works)
+- [Default prompts](#default-prompts)
+- [Default shortcuts](#default-shortcuts)
 - [Features](#features)
 - [Comparison](#comparison)
-- [Default shortcuts](#default-shortcuts)
-- [Default prompts](#default-prompts)
 - [Install](#install)
 - [Requirements](#requirements)
 - [Acknowledgements](#acknowledgements)
@@ -35,38 +35,42 @@
 
 ## Why?
 
-ClipSlop lets you chain AI text transformations — translate, rewrite, format — as a single keyboard-driven pipeline, right where you're working.
+Most AI text tools make you copy text, switch to a browser, paste, wait, copy the result, switch back, paste. ClipSlop does it with a hotkey — right where you're already typing.
 
-**Task:** rewrite text professionally, translate to English, format as email.
-
-Without ClipSlop (ChatGPT):
+**Fix grammar without thinking about it:**
 ```
-copy text → open ChatGPT → paste → "rewrite professionally" → wait → copy result →
-paste back → copy again → ChatGPT → "translate to English" → wait → copy →
-paste back → copy again → ChatGPT → "format as email" → wait → copy → paste back
+select text → ⌃⌘G → grammar is fixed in place. Done.
 ```
 
-With ClipSlop:
+That's **Quick Paste** — assign any prompt to a global hotkey, and it runs inline: captures the selected text, transforms it, pastes the result back. You never leave your app.
+
+**Need more than one step?** Chain transformations into a pipeline:
+
 ```
 ⌃⌘C → RB → TE → FE → done.
 ```
 
-Each key combo picks a prompt from the tree — `RB` Rewrite → Business, `TE` Translate → English, `FE` Format → Email. Every step is saved, arrow keys to go back, branch from any point. No browser, no copy-paste, no tab switching.
-
-Or assign a global hotkey to a single prompt — **Quick Paste** runs it inline without ever opening ClipSlop:
-```
-select text → ⌃⌘G → grammar is fixed in place. Done.
-```
+Each key picks a prompt from a navigable tree — `RB` Rewrite → Business, `TE` Translate → English, `FE` Format → Email. Every step is saved, arrow keys to go back, branch from any point. No browser, no copy-paste, no tab switching.
 
 Free, open-source, any AI provider.
 
 ---
 
 <p align="center">
-  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — keyboard-driven AI text pipeline with prompt tree, transformation history, and search">
+  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI text transformations for macOS with prompt tree, Quick Paste, transformation history, and search">
 </p>
 
 ## How it works
+
+### Quick Paste (fastest)
+
+```
+Select text → ⌃⌘G → grammar fixed in place
+```
+
+Assign any prompt to a global hotkey. ClipSlop captures the text, runs the prompt, pastes the result — all in the background.
+
+### Full pipeline
 
 ```
 Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations → Copy result
@@ -80,9 +84,11 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 
 ## Features
 
-- **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
+- **Quick Paste** — Assign a global hotkey to any prompt. Captures selected text, runs the prompt, pastes the result inline — you never leave your app
+- **Open & Run** — Like Quick Paste, but opens ClipSlop and auto-runs the prompt so you can review, edit, or keep chaining
+- **Prompt shortcuts** — Configure per-prompt in Settings → Prompts; shortcuts appear in the menu bar organized by folder
 - **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
-- **Prompt shortcuts** — Assign a global hotkey to any prompt. **Quick Paste** captures text, runs the prompt, and pastes the result inline — never leaving your app. **Open & Run** opens ClipSlop and auto-runs the prompt. Configure per-prompt in Settings → Prompts; shortcuts appear in the menu bar organized by folder
+- **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
 - **Multi-provider** — OpenAI (sign in with ChatGPT or API key), Anthropic, Ollama, CLI tools, any OpenAI-compatible API
 - **Nested prompt tree** — Organize prompts in folders, each with a mnemonic key
 - **Built-in prompts** — Translate (18 languages), Rewrite (7 tones), Format (7 tools), Dev (6 tools), Analyze (4), Convert
@@ -97,25 +103,6 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 - **Temperature & reasoning** — Per-provider temperature control, reasoning effort for ChatGPT models
 - **Multiple display modes** — Plain text, Markdown (native or HTML renderer), HTML
 - **Adjustable UI** — Opacity, size, theme, launch at login
-
-## Default shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `⌃⌘C` | Trigger ClipSlop (selected text) |
-| `⌃⌘V` | Process from clipboard |
-| `⌃⌘N` | Blank editor |
-| `⇧⌘2` | Screen capture (OCR) |
-| `⌘E` | Edit mode |
-| `⌘F` | Find in text |
-| `⌘S` | Save to file |
-| `⌘O` | Open in TextEdit |
-| `⌘D` | Cycle display mode |
-| `⌘,` | Settings |
-| `←→` | Navigate history |
-| `↑↓` | Scroll text |
-| `Space` | Page down |
-| `Esc` | Close / Back |
 
 ## Default prompts
 
@@ -142,6 +129,25 @@ Some prompts ship with default global shortcuts (Quick Paste pastes the result i
 | `⌃⌘⌥A` | Explain Simply | Open & Run |
 
 Fully customizable — add your own prompts, folders, mnemonics, and global shortcuts in Settings → Prompts.
+
+## Default shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `⌃⌘C` | Trigger ClipSlop (selected text) |
+| `⌃⌘V` | Process from clipboard |
+| `⌃⌘N` | Blank editor |
+| `⇧⌘2` | Screen capture (OCR) |
+| `⌘E` | Edit mode |
+| `⌘F` | Find in text |
+| `⌘S` | Save to file |
+| `⌘O` | Open in TextEdit |
+| `⌘D` | Cycle display mode |
+| `⌘,` | Settings |
+| `←→` | Navigate history |
+| `↑↓` | Scroll text |
+| `Space` | Page down |
+| `Esc` | Close / Back |
 
 ## Comparison
 
