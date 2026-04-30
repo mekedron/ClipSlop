@@ -141,7 +141,7 @@ final class PromptShortcutService {
 
     func unregisterAll() {
         for name in registeredNames {
-            KeyboardShortcuts.disable(name)
+            KeyboardShortcuts.removeHandler(for: name)
         }
         registeredNames.removeAll()
     }
