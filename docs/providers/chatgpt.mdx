@@ -3,6 +3,8 @@ sidebar_position: 1
 title: ChatGPT (free sign-in)
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Sign in with ChatGPT
 
 Use your existing ChatGPT account — no API key, no separate billing. ClipSlop authenticates via OAuth 2.0 with PKCE and calls the same `chatgpt.com` backend the official Codex CLI uses.
@@ -16,6 +18,12 @@ Use your existing ChatGPT account — no API key, no separate billing. ClipSlop 
 5. The browser redirects back to `localhost:1455` and the connection completes automatically.
 
 That's it. Tokens are stored in your macOS Keychain.
+
+<img
+  src={useBaseUrl('/demos/screenshots/openai-signin.png')}
+  alt="OpenAI Sign In provider configuration — sign in button, account status, model picker"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
 
 ## What you get
 

@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
@@ -100,13 +101,17 @@ function Features() {
 function Screenshot() {
   return (
     <section className={clsx(styles.section, styles.screenshotSection)}>
-      <img
-        src="img/screenshot.png"
-        alt="ClipSlop in action — prompt tree, transformation history, and search"
+      <video
+        src={useBaseUrl('/demos/videos/quick-paste.webm')}
         className={styles.screenshot}
+        autoPlay
+        loop
+        muted
+        playsInline
+        controls
       />
       <p className={styles.screenshotCaption}>
-        Prompt tree, transformation history, and search — all keyboard-driven.
+        Quick Paste in action — select, hit a hotkey, transformed text appears.
       </p>
     </section>
   );

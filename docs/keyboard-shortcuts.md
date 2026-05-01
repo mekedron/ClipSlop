@@ -17,7 +17,7 @@ These work even when ClipSlop is in the background.
 | `⌃⌘N`    | Blank editor                    |
 | `⇧⌘2`    | Screen capture (OCR)            |
 
-Default per-prompt global shortcuts ship with the catalogue — see [Built-in Prompts](./built-in-prompts.md#default-global-shortcuts).
+Default per-prompt global shortcuts ship with the catalogue — see [Built-in Prompts](./built-in-prompts.mdx#default-global-shortcuts).
 
 ## Inside the ClipSlop panel
 

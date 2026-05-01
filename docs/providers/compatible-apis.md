@@ -35,7 +35,7 @@ Configure the binary path and arguments in **Settings → Providers → CLI**.
 
 | Scenario                                | Use                       |
 |-----------------------------------------|---------------------------|
-| ChatGPT Plus / Pro / Team account       | [Sign in with ChatGPT](./chatgpt.md) |
+| ChatGPT Plus / Pro / Team account       | [Sign in with ChatGPT](./chatgpt.mdx) |
 | OpenAI API key                          | [OpenAI API](./openai-api.md)        |
 | Anthropic API key                       | [Anthropic](./anthropic.md)          |
 | Local on the same Mac                   | [Ollama](./ollama.md) or LM Studio   |

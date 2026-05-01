@@ -2,6 +2,8 @@
 sidebar_position: 4
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Built-in Prompts
 
 ClipSlop ships with a curated catalogue. Six top-level groups, each with a single-letter mnemonic.
@@ -34,12 +36,41 @@ All of these can be reassigned, removed, or added to other prompts in **Settings
 
 ## Customising
 
-Every built-in prompt is editable. You can also:
+Every built-in prompt is editable. Open **Settings → Prompts** to see the library:
 
-- **Add new prompts.** System prompt, model, provider, display mode, optional global shortcut.
-- **Add folders.** Group prompts and give the folder its own mnemonic.
-- **Reorder.** Drag-and-drop in Settings.
+<img
+  src={useBaseUrl('/demos/screenshots/prompt-library.png')}
+  alt="Prompt library — every prompt with its mnemonic, system prompt, provider override, and shortcut"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+For each prompt you can configure:
+
+- **Name and mnemonic.** The single key used to pick it from the prompt tree.
+- **System prompt.** The instruction sent to the model.
+- **Provider and model.** Override the global default for this prompt only.
+- **Display mode.** Plain text, Markdown, HTML.
+- **Global shortcut.** Optional Quick Paste / Open & Run binding.
+
+You can also:
+
+- **Add new prompts and folders.** Group related prompts; folders have their own mnemonic.
+- **Reorder.** Drag-and-drop within a folder.
 - **Generate with AI.** Describe what you want — ClipSlop writes the system prompt for you.
 - **Export / Import.** Share configurations as JSON. iCloud Sync mirrors prompts across Macs.
+
+### Adding a custom prompt
+
+Type `//` followed by an instruction in the prompt panel to run a one-off — no need to save it. If you find yourself reaching for the same one-off repeatedly, save it as a permanent prompt with its own mnemonic and shortcut:
+
+<video
+  src={useBaseUrl('/demos/videos/custom-prompts.webm')}
+  controls
+  autoPlay
+  loop
+  muted
+  playsInline
+  style={{maxWidth: '100%', width: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
 
 For the full keyboard map (not just prompt shortcuts), see [Keyboard Shortcuts](./keyboard-shortcuts.md).
