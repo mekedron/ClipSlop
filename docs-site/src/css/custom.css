@@ -383,10 +383,14 @@ pre.prism-code {
   background: color-mix(in srgb, var(--c-rose) 8%, var(--bg-card));
 }
 
-/* Tables */
-table {
-  display: table;
-  width: 100%;
+/* Tables — keep Infima's default `display: block; overflow: auto` so wide
+   tables (e.g. the comparison matrix) scroll horizontally inside their
+   own container instead of pushing the page width. */
+.markdown table,
+.theme-doc-markdown table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
   font-size: 14px;
 }
 table thead tr {
