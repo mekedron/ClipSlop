@@ -391,9 +391,10 @@
   font-size: 14px;
 }
 
-/* Floating decorative tiles */
+/* Floating decorative tiles — sit above the demo window */
 .floatTile {
   position: absolute;
+  z-index: 2;
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 600;
@@ -408,8 +409,8 @@
   align-items: center;
   gap: 6px;
 }
-.floatTileL { top: 64px; left: -8px; transform: rotate(-8deg); }
-.floatTileR { top: 30px; right: -10px; transform: rotate(6deg); }
+.floatTileL { top: -18px; left: -8px;  transform: rotate(-8deg); }
+.floatTileR { top: -22px; right: -10px; transform: rotate(6deg); }
 .floatBadge {
   display: inline-block;
   width: 16px;
