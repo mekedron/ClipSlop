@@ -1,3 +1,8 @@
+---
+sidebar_position: 2
+title: ChatGPT OAuth integration
+---
+
 # ChatGPT OAuth Integration
 
 Technical documentation for the OpenAI (Sign In) provider — OAuth 2.0 + PKCE authentication via ChatGPT, using the Codex backend Responses API.

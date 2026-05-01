@@ -1,0 +1,285 @@
+.landing {
+  display: flex;
+  flex-direction: column;
+}
+
+.section {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 64px 24px;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  letter-spacing: -0.02em;
+}
+
+.sectionLead {
+  font-size: 17px;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 32px;
+  max-width: 640px;
+}
+
+/* ---------- Hero ---------- */
+
+.hero {
+  background: linear-gradient(
+    180deg,
+    var(--ifm-color-emphasis-100) 0%,
+    transparent 100%
+  );
+  padding: 96px 24px 80px;
+  text-align: center;
+}
+
+.heroInner {
+  max-width: 820px;
+  margin: 0 auto;
+}
+
+.heroTitle {
+  font-size: 56px;
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 24px;
+}
+
+.heroAccent {
+  color: var(--ifm-color-primary);
+}
+
+.heroLead {
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--ifm-color-emphasis-700);
+  max-width: 640px;
+  margin: 0 auto 36px;
+}
+
+.heroCtas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.heroMeta {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--ifm-color-emphasis-600);
+}
+
+/* ---------- Buttons ---------- */
+
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 15px;
+  text-decoration: none;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn:hover {
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+
+.btnPrimary {
+  background: var(--ifm-color-primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(79, 109, 245, 0.25);
+}
+
+.btnPrimary:hover {
+  background: var(--ifm-color-primary-dark);
+  color: #fff;
+}
+
+.btnGhost {
+  background: transparent;
+  color: var(--ifm-font-color-base);
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.btnGhost:hover {
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-font-color-base);
+}
+
+/* ---------- Features grid ---------- */
+
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.featureCard {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 14px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.featureTitle {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  letter-spacing: -0.01em;
+}
+
+.featureBlurb {
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 16px;
+  flex-grow: 1;
+}
+
+.featureExample {
+  display: block;
+  background: var(--ifm-color-emphasis-100);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  color: var(--ifm-color-emphasis-800);
+}
+
+.featureLink {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ifm-color-primary);
+}
+
+/* ---------- Screenshot ---------- */
+
+.screenshotSection {
+  text-align: center;
+  padding-top: 24px;
+}
+
+.screenshot {
+  max-width: 100%;
+  width: 720px;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.12);
+}
+
+.screenshotCaption {
+  margin-top: 16px;
+  color: var(--ifm-color-emphasis-600);
+  font-size: 14px;
+}
+
+/* ---------- Prompts ---------- */
+
+.promptsSection {
+  text-align: center;
+}
+
+.promptsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.promptCard {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 12px;
+  padding: 20px 14px;
+  text-align: center;
+}
+
+.promptKey {
+  font-family: var(--ifm-font-family-monospace);
+  font-weight: 700;
+  color: var(--ifm-color-primary);
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.promptLabel {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.promptDetail {
+  font-size: 12px;
+  color: var(--ifm-color-emphasis-600);
+  line-height: 1.4;
+}
+
+.promptsLink {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+/* ---------- Bottom CTA ---------- */
+
+.bottomCta {
+  text-align: center;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  margin-top: 32px;
+}
+
+.bottomTitle {
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+}
+
+.bottomLead {
+  font-size: 17px;
+  color: var(--ifm-color-emphasis-700);
+  margin: 0 0 28px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 996px) {
+  .heroTitle {
+    font-size: 40px;
+  }
+  .heroLead {
+    font-size: 17px;
+  }
+  .featuresGrid {
+    grid-template-columns: 1fr;
+  }
+  .promptsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .section {
+    padding: 48px 20px;
+  }
+  .hero {
+    padding: 64px 20px 56px;
+  }
+}

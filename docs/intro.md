@@ -1,0 +1,31 @@
+---
+slug: /intro
+sidebar_position: 1
+title: Introduction
+---
+
+# Introduction
+
+ClipSlop is a **free, open-source AI writing tool for macOS** that works in any app. Fix grammar, translate text, rewrite in different tones, format as email or Markdown — all with a keyboard shortcut.
+
+Use it as a simple AI grammar checker with a single hotkey, or chain multiple AI prompts into a full text transformation pipeline.
+
+## What ClipSlop is
+
+- **Keyboard-first.** Single-key mnemonics for navigating prompts, global hotkeys for the actions you use most.
+- **Inline.** Quick Paste captures selected text, runs a prompt, and pastes the result back — without ever leaving your current app.
+- **Composable.** Chain unlimited transformations. Translate, then rewrite, then format. Branch from any history step.
+- **Provider-agnostic.** Sign in with ChatGPT for free, bring your own OpenAI / Anthropic API key, or run locally with Ollama.
+
+## What ClipSlop is not
+
+- Not a chatbot. There's no conversational thread — each prompt is a one-shot transformation.
+- Not a subscription. The app is free; you only pay your AI provider (or use the free ChatGPT sign-in).
+- Not signed by Apple. We don't pay Apple's $99/year fee, so first launch needs a one-time approval. See [Getting Started](./getting-started.md).
+
+## Where to next
+
+- **New here?** Start with [Getting Started](./getting-started.md) to install and grant permissions.
+- **Want the deep tour?** [How it works](./how-it-works.md) explains Quick Paste vs the full pipeline.
+- **Looking for a prompt?** Browse the [Built-in Prompts](./built-in-prompts.md) catalogue.
+- **Need a provider?** Pick from [ChatGPT](./providers/chatgpt.md), [OpenAI API](./providers/openai-api.md), [Anthropic](./providers/anthropic.md), [Ollama](./providers/ollama.md), or any [compatible API](./providers/compatible-apis.md).

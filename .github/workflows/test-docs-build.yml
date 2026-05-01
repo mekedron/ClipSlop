@@ -1,0 +1,36 @@
+name: Test docs build
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'docs-site/**'
+      - '.github/workflows/test-docs-build.yml'
+
+jobs:
+  test-build:
+    name: Build site (no deploy)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./docs-site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: docs-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
