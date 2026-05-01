@@ -1,0 +1,64 @@
+.callout {
+  display: flex;
+  gap: 14px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  margin: 0 0 24px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.callout :global(p) {
+  margin: 0 0 8px;
+}
+.callout :global(p:last-child) {
+  margin-bottom: 0;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: white;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg);
+}
+
+.title {
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.tip {
+  border-color: color-mix(in srgb, var(--c-mint) 30%, var(--border));
+  background: color-mix(in srgb, var(--c-mint) 6%, var(--bg-card));
+}
+.tip .icon {
+  background: var(--c-mint);
+}
+
+.note {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+}
+.note .icon {
+  background: var(--accent);
+}
+
+.warn {
+  border-color: color-mix(in srgb, var(--c-amber) 35%, var(--border));
+  background: color-mix(in srgb, var(--c-amber) 8%, var(--bg-card));
+}
+.warn .icon {
+  background: var(--c-amber);
+}

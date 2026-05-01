@@ -1,0 +1,27 @@
+---
+sidebar_position: 5
+title: Screen OCR
+description: Capture any region of the screen and run OCR — feed the recognised text directly into a prompt.
+---
+
+# Screen OCR
+
+Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>2</kbd> from anywhere on macOS. ClipSlop captures a screen region, runs OCR locally, and opens the recognised text in the panel — ready to translate, rewrite, format, or chain.
+
+## When to use it
+
+- The text is in an image, a PDF, or a screen-shared window — you can't `⌘C` it.
+- A native app refuses to expose its text via Accessibility (Slack huddles, video players, some Electron apps).
+- You want to grab a quote from a YouTube subtitle, a webinar slide, or a screenshot you were sent.
+
+## Permission
+
+Screen OCR needs **Screen Recording** permission in **System Settings → Privacy &amp; Security → Screen Recording**. Granting Accessibility alone is not enough.
+
+If the screen capture appears as a black rectangle, the permission is missing or was revoked after a ClipSlop update. See [Install &amp; first run](../install.mdx) for the re-grant procedure.
+
+## Behind the scenes
+
+OCR runs on-device using Apple's Vision framework — the captured pixels and recognised text never leave your Mac unless you then run a prompt that calls a remote provider.
+
+For more on data handling, see [Privacy &amp; data](../guides/privacy-and-data.mdx).

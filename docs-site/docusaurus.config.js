@@ -91,12 +91,12 @@ const config = {
             label: 'Documentation',
           },
           {
-            to: '/docs/getting-started',
-            label: 'Getting Started',
+            to: '/docs/install',
+            label: 'Install',
             position: 'left',
           },
           {
-            to: '/docs/built-in-prompts',
+            to: '/docs/reference/built-in-prompts',
             label: 'Prompts',
             position: 'left',
           },
@@ -119,9 +119,9 @@ const config = {
             title: 'Docs',
             items: [
               {label: 'Introduction', to: '/docs/intro'},
-              {label: 'Getting Started', to: '/docs/getting-started'},
-              {label: 'Built-in Prompts', to: '/docs/built-in-prompts'},
-              {label: 'Keyboard Shortcuts', to: '/docs/keyboard-shortcuts'},
+              {label: 'Install', to: '/docs/install'},
+              {label: 'Built-in Prompts', to: '/docs/reference/built-in-prompts'},
+              {label: 'Keyboard Map', to: '/docs/reference/keyboard-map'},
             ],
           },
           {

@@ -1,0 +1,32 @@
+---
+sidebar_position: 5
+title: iCloud sync
+description: Mirror your prompt library across every Mac signed into the same iCloud account.
+---
+
+# iCloud sync
+
+When enabled, ClipSlop mirrors your **prompt library** across every Mac signed into the same iCloud account. Add a prompt on your laptop, it shows up on your desktop seconds later — same mnemonics, same shortcuts, same provider overrides.
+
+## What syncs
+
+- Custom prompts and folders.
+- Mnemonic keys and per-prompt global shortcuts.
+- Provider override per prompt.
+- Display mode per prompt.
+
+## What does *not* sync
+
+- **Provider credentials.** Your OpenAI / Anthropic API keys live in the macOS Keychain on each Mac and are never sent through iCloud. The free **ChatGPT sign-in** OAuth tokens also stay local.
+- **Transformation history.** History is in-session only — never written to disk, never synced.
+- **App settings.** Theme, opacity, launch-at-login are per-Mac.
+
+## Enabling sync
+
+Open **Settings → iCloud Sync** and flip the toggle. ClipSlop uses CloudKit under the hood — the data lives in your private iCloud Drive container, not Anthropic's or OpenAI's servers.
+
+If you turn sync off, your prompts on the local Mac stay; only the connection to iCloud is cut. Other Macs keep their copy.
+
+<Callout type="note">
+  iCloud sync requires that you're signed into iCloud on macOS and have iCloud Drive enabled in **System Settings → Apple Account → iCloud Drive**.
+</Callout>

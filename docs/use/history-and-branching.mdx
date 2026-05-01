@@ -1,0 +1,36 @@
+---
+sidebar_position: 4
+title: "History & branching"
+description: Every transformation in a session is a step. Walk back and forward, branch from any point, edit results inline.
+---
+
+# History &amp; branching
+
+Every transformation in a session is saved as a step. The floating panel exposes the full chain — you can walk it, branch from any point, or edit results manually.
+
+## Navigation keys
+
+| Shortcut | Action                                          |
+|----------|-------------------------------------------------|
+| <kbd>←</kbd>      | Go back one step                                |
+| <kbd>→</kbd>      | Go forward one step                             |
+| <kbd>⌘E</kbd>     | Edit the current result inline (saved as a step) |
+| <kbd>⌘S</kbd>     | Save the current result to a file               |
+| <kbd>⌘O</kbd>     | Open the current result in TextEdit             |
+| <kbd>⌘C</kbd>     | Copy the current result                         |
+
+## Branching
+
+Press a prompt key from any step — the new result becomes a **sibling**, not a replacement. Your previous chain stays intact, and you can `←` back to it later.
+
+This is useful when you want to compare two rewrites of the same input, or try a different translation language without losing the first one.
+
+## Edit mode
+
+Press <kbd>⌘E</kbd> to edit any result manually. Your edit becomes its own history step, so you can keep chaining from your edited version or revert to the original.
+
+## What is *not* saved
+
+History is kept **in-session only** — close the panel and the chain is gone. ClipSlop deliberately doesn't persist transformation history to disk. This is a privacy choice: your prompts and results never leave your machine except to call your configured AI provider.
+
+For more on what does and doesn't get stored, see [Privacy &amp; data](../guides/privacy-and-data.mdx).

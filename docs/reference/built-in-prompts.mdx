@@ -1,0 +1,105 @@
+---
+sidebar_position: 1
+title: Built-in prompts
+description: Six prompt groups, forty-plus prompts. Translate, Rewrite, Format, Dev, Analyze, Convert — each editable.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Built-in prompts
+
+ClipSlop ships with a curated catalogue. Six top-level groups, each with a single-letter mnemonic.
+
+```
+[⌘/]  // Your prompt — type // followed by your instruction to run a one-off custom prompt
+[T]   Translate   → English, Finnish, Russian, Spanish, French, German, + 12 more
+[R]   Rewrite     → Elaborate, Neutral, Professional, Warm, Business, Playful, Biblical
+[F]   Format      → Fix Grammar, Clean Up, Beautify Code, Reformat, Email, Markdownify, HTMLify
+[D]   Dev         → Add Comments, Beautify Code, Clean Logs, Explain Code, Explain Stack Trace, Naming
+[A]   Analyze     → Summary, Explain Simply, TL;DR, Condense 20%
+[C]   Convert     → HTML, Markdown
+```
+
+## Translate
+18 languages out of the box: English, Finnish, Russian, Spanish, French, German, Italian, Portuguese, Dutch, Swedish, Norwegian, Danish, Polish, Japanese, Korean, Mandarin, Arabic, Turkish.
+
+Each language has its own mnemonic — `T` → `E` is English, `T` → `F` is Finnish, and so on. Open **Settings → Prompts → Translate** to see the full mapping or rebind keys.
+
+## Rewrite
+Seven tones for the same input:
+
+- **Elaborate** — expand a terse note into a full paragraph.
+- **Neutral** — strip emotional or persuasive language.
+- **Professional** — formal but readable. Default for business writing.
+- **Warm** — friendlier than Neutral, less formal than Professional.
+- **Business** — corporate-toned; terse, action-oriented.
+- **Playful** — informal, lighter, punchier.
+- **Biblical** — for the lulz.
+
+## Format
+Seven tools that operate on the surface of the text:
+
+- **Fix Grammar** — corrects grammar, spelling, punctuation. Quick Paste default <kbd>⌃⌘G</kbd>.
+- **Clean Up** — removes line-noise (extra whitespace, broken markup, line numbers).
+- **Beautify Code** — passes code through a formatter prompt for the language guessed.
+- **Reformat** — reflows for the destination context. Quick Paste default <kbd>⌃⌘F</kbd>.
+- **Email** — turns notes into a polite email body.
+- **Markdownify** — converts plain text or HTML to Markdown.
+- **HTMLify** — the inverse — Markdown or plain text to HTML.
+
+## Dev
+For developers:
+
+- **Add Comments** — annotates code with inline comments.
+- **Beautify Code** — same as Format → Beautify Code, surfaced in the Dev folder for muscle memory.
+- **Clean Logs** — strips timestamps, ANSI codes, and noise from logs.
+- **Explain Code** — line-by-line plain-English walk-through.
+- **Explain Stack Trace** — finds the cause and reframes the trace in human terms.
+- **Naming** — suggests better names for variables / functions / types.
+
+## Analyze
+For incoming text:
+
+- **Summary** — a paragraph or bullet list, depends on input length.
+- **Explain Simply** — ELI5. Open &amp; Run default <kbd>⌃⌘⌥A</kbd>.
+- **TL;DR** — one-sentence compression.
+- **Condense 20%** — keeps the structure, trims fluff.
+
+## Convert
+- **HTML** — Markdown (or plain) → HTML. Strips presentational cruft.
+- **Markdown** — HTML → Markdown. Preserves headings, lists, code blocks.
+
+## Default global shortcuts
+Some prompts ship with a default global hotkey. **Quick Paste** runs the prompt inline; **Open &amp; Run** opens ClipSlop with the result ready.
+
+| Shortcut    | Prompt                | Mode        |
+|-------------|-----------------------|-------------|
+| `⌃⌘/`       | // Your prompt        | Quick Paste |
+| `⌃⌘⌥/`      | // Your prompt        | Open &amp; Run  |
+| `⌃⌘G`       | Fix Grammar           | Quick Paste |
+| `⌃⌘F`       | Reformat              | Quick Paste |
+| `⌃⌘T`       | Translate → English   | Quick Paste |
+| `⌃⌘⌥T`      | Translate → English   | Open &amp; Run  |
+| `⌃⌘⌥A`      | Explain Simply        | Open &amp; Run  |
+
+All of these can be reassigned, removed, or added to other prompts in **Settings → Prompts**.
+
+## Customising
+
+Every built-in prompt is editable. See [Prompt library](../configure/prompt-library.mdx) for the full breakdown of per-prompt fields and configuration.
+
+### Adding a custom prompt
+
+Type `//` followed by an instruction in the prompt panel to run a one-off — no need to save it. If you find yourself reaching for the same one-off repeatedly, save it as a permanent prompt with its own mnemonic and shortcut:
+
+<video
+  src={useBaseUrl('/demos/videos/custom-prompts.webm')}
+  controls
+  autoPlay
+  loop
+  muted
+  playsInline
+  style={{maxWidth: '100%', width: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+For the full keyboard map (not just prompt shortcuts), see [Keyboard map](./keyboard-map.md).

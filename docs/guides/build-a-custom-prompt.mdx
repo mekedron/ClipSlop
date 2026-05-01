@@ -1,0 +1,57 @@
+---
+sidebar_position: 1
+title: Build a custom prompt
+description: Step-by-step — turn an instruction into a saved prompt with its own mnemonic and Quick Paste shortcut.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Build a custom prompt
+
+Let's build *Translate to Pirate* — a one-key shortcut that takes whatever you've selected and rewrites it as a sea shanty.
+
+## 1. Open the prompt library
+
+Press <kbd>⌘,</kbd> or click the menu-bar icon → **Settings → Prompts**.
+
+<img
+  src={useBaseUrl('/demos/screenshots/prompt-library.png')}
+  alt="Prompt library"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+## 2. Add a new prompt
+
+Click **+ New prompt** at the bottom of the library. Or duplicate an existing one if you want to start from a working baseline.
+
+## 3. Fill in the fields
+
+| Field            | Value                                                          |
+|------------------|----------------------------------------------------------------|
+| **Name**         | Translate to Pirate                                            |
+| **Mnemonic**     | `P` — single letter, lives under the **Translate** folder      |
+| **System prompt**| Rewrite the user's text as if a 17th-century pirate said it. Keep meaning intact. |
+| **Provider**     | Default (or override per prompt — Ollama for offline, ChatGPT for richer style) |
+| **Display mode** | Plain text                                                     |
+| **Global shortcut · Quick Paste** | Optional — `⌃⌘P` if you want a hotkey         |
+
+## 4. Save and test
+
+Save the prompt. From any text field, select some text and either:
+
+- Press <kbd>⌃</kbd><kbd>⌘</kbd><kbd>P</kbd> if you set a Quick Paste shortcut, or
+- Press <kbd>⌃</kbd><kbd>⌘</kbd><kbd>C</kbd> → <kbd>T</kbd> → <kbd>P</kbd> to navigate to it manually.
+
+Result: pirate text. Hopefully.
+
+<Callout type="tip" title="Iterating on a prompt">
+  If the first results aren't what you want, edit the system prompt and run again. Each iteration is fast — there's no schema to validate or model to fine-tune.
+</Callout>
+
+## Folders
+
+Group related prompts under a folder — folders also have a mnemonic, so navigation stays one-keypress per level. Drag-and-drop in the library reorders without breaking shortcuts.
+
+## Sharing
+
+**Settings → Prompts → … → Export** dumps the library as JSON. Share it with a teammate, or import on a fresh Mac. iCloud Sync (see [iCloud sync](../configure/icloud-sync.mdx)) does the same thing automatically across your own Macs.

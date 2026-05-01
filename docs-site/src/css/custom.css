@@ -1,11 +1,51 @@
 /**
- * Minimal theme tweaks for ClipSlop.
- * Keeps Docusaurus defaults and only overrides the accent color and font stack.
+ * ClipSlop docs theme.
+ * Tokens ported from the design bundle's Homepage.html / Introduction.html.
+ * Light = warm off-white indie-mac. Dark = near-black with cool accent.
  */
 
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap');
+
 :root {
-  /* Accent: a calm slate-blue. Generated with the Docusaurus color generator
-   * starting from #4F6DF5 to keep contrast ratios in spec. */
+  /* Design tokens — light */
+  --bg:           #FAF8F4;
+  --bg-alt:       #FFFFFF;
+  --bg-card:      #FFFFFF;
+  --bg-sunken:    #F1ECE2;
+  --fg:           #1A1714;
+  --fg-2:         #4D4944;
+  --fg-3:         #8A857C;
+  --border:       #E8E2D4;
+  --border-2:     #D9D2BF;
+  --ring:         rgba(79, 109, 245, 0.45);
+
+  --accent:       #4F6DF5;
+  --accent-2:     #3550E8;
+  --accent-soft:  #E5EBFF;
+  --accent-ink:   #FFFFFF;
+
+  --c-magenta:    #E2479A;
+  --c-blue:       #4F6DF5;
+  --c-teal:       #14B5C4;
+  --c-amber:      #F2A93B;
+  --c-rose:       #F26A6A;
+  --c-mint:       #4CC38A;
+
+  --shadow-sm:    0 1px 2px rgba(34, 28, 18, 0.06), 0 1px 1px rgba(34, 28, 18, 0.04);
+  --shadow-md:    0 6px 16px -4px rgba(34, 28, 18, 0.12), 0 2px 4px rgba(34, 28, 18, 0.06);
+  --shadow-lg:    0 24px 50px -16px rgba(34, 28, 18, 0.22), 0 8px 16px -8px rgba(34, 28, 18, 0.10);
+  --shadow-key:   0 1px 0 rgba(0, 0, 0, 0.08), 0 2px 0 var(--border-2), 0 3px 6px rgba(34, 28, 18, 0.10);
+
+  --radius-sm:    8px;
+  --radius:       14px;
+  --radius-lg:    20px;
+  --radius-xl:    28px;
+
+  --font-sans:    'Instrument Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --font-serif:   'Instrument Serif', Georgia, serif;
+
+  /* Infima — accent scale (kept matching --accent) */
   --ifm-color-primary: #4F6DF5;
   --ifm-color-primary-dark: #2f51f3;
   --ifm-color-primary-darker: #2042f2;
@@ -14,18 +54,92 @@
   --ifm-color-primary-lighter: #7e95f8;
   --ifm-color-primary-lightest: #abbafb;
 
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+  /* Infima — backgrounds & surfaces */
+  --ifm-background-color: var(--bg);
+  --ifm-background-surface-color: var(--bg-card);
+  --ifm-color-content: var(--fg);
+  --ifm-font-color-base: var(--fg);
+  --ifm-color-content-secondary: var(--fg-2);
 
-  /* Use the macOS system font stack so the docs feel native to the platform
-   * the app targets. No webfonts loaded over the network. */
-  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-  --ifm-font-family-monospace: "SF Mono", "Menlo", "Monaco", "Consolas",
-    "Liberation Mono", "Courier New", monospace;
+  /* Infima — emphasis ramp (drives admonitions, separators, hovers) */
+  --ifm-color-emphasis-0:   var(--bg);
+  --ifm-color-emphasis-100: var(--bg-sunken);
+  --ifm-color-emphasis-200: var(--border);
+  --ifm-color-emphasis-300: var(--border-2);
+  --ifm-color-emphasis-400: #BDB7A8;
+  --ifm-color-emphasis-500: #A8A294;
+  --ifm-color-emphasis-600: var(--fg-3);
+  --ifm-color-emphasis-700: var(--fg-2);
+  --ifm-color-emphasis-800: #2C2823;
+  --ifm-color-emphasis-900: var(--fg);
+
+  /* Infima — fonts */
+  --ifm-font-family-base: var(--font-sans);
+  --ifm-font-family-monospace: var(--font-mono);
+  --ifm-heading-font-family: var(--font-sans);
+  --ifm-heading-font-weight: 700;
+  --ifm-code-font-size: 88%;
+
+  /* Infima — TOC */
+  --ifm-toc-border-color: var(--border);
+  --ifm-toc-link-color: var(--fg-2);
+  --ifm-toc-padding-vertical: 6px;
+
+  /* Infima — sidebar menu */
+  --ifm-menu-color: var(--fg-2);
+  --ifm-menu-color-active: var(--accent);
+  --ifm-menu-color-background-active: var(--accent-soft);
+  --ifm-menu-color-background-hover: var(--bg-sunken);
+  --ifm-menu-link-padding-horizontal: 10px;
+  --ifm-menu-link-padding-vertical: 7px;
+
+  /* Infima — links */
+  --ifm-link-color: var(--accent);
+  --ifm-link-hover-color: var(--accent-2);
+  --ifm-link-decoration: none;
+  --ifm-link-hover-decoration: underline;
+
+  /* Infima — code blocks */
+  --ifm-code-background: var(--bg-sunken);
+  --ifm-pre-background: #15141A;
+  --ifm-pre-color: #E0DDD2;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+
+  /* Infima — navbar */
+  --ifm-navbar-background-color: color-mix(in srgb, var(--bg) 78%, transparent);
+  --ifm-navbar-shadow: inset 0 -1px 0 color-mix(in srgb, var(--border) 70%, transparent);
+  --ifm-navbar-link-color: var(--fg-2);
+  --ifm-navbar-link-hover-color: var(--fg);
+
+  /* Infima — footer */
+  --ifm-footer-background-color: var(--bg-sunken);
+  --ifm-footer-color: var(--fg-2);
+  --ifm-footer-link-color: var(--fg-2);
+  --ifm-footer-title-color: var(--fg);
 }
 
 [data-theme='dark'] {
+  --bg:           #0E0D10;
+  --bg-alt:       #16151A;
+  --bg-card:      #1B1A20;
+  --bg-sunken:    #100F13;
+  --fg:           #F4F2EE;
+  --fg-2:         #B7B2A8;
+  --fg-3:         #6F6A60;
+  --border:       #2A2832;
+  --border-2:     #3A3845;
+  --ring:         rgba(138, 161, 255, 0.55);
+
+  --accent:       #8AA1FF;
+  --accent-2:     #A8B8FF;
+  --accent-soft:  rgba(138, 161, 255, 0.14);
+  --accent-ink:   #0E0D10;
+
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md:    0 6px 16px -4px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-lg:    0 24px 50px -16px rgba(0, 0, 0, 0.7), 0 8px 16px -8px rgba(0, 0, 0, 0.4);
+  --shadow-key:   0 1px 0 rgba(255, 255, 255, 0.06), 0 2px 0 #000, 0 3px 8px rgba(0, 0, 0, 0.5);
+
   --ifm-color-primary: #8aa1ff;
   --ifm-color-primary-dark: #6a87ff;
   --ifm-color-primary-darker: #5a7aff;
@@ -34,5 +148,315 @@
   --ifm-color-primary-lighter: #bac8ff;
   --ifm-color-primary-lightest: #e8edff;
 
-  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.1);
+  --ifm-color-emphasis-0:   var(--bg);
+  --ifm-color-emphasis-100: var(--bg-sunken);
+  --ifm-color-emphasis-200: var(--border);
+  --ifm-color-emphasis-300: var(--border-2);
+  --ifm-color-emphasis-400: #4A4754;
+  --ifm-color-emphasis-500: #5C5867;
+  --ifm-color-emphasis-600: var(--fg-3);
+  --ifm-color-emphasis-700: var(--fg-2);
+  --ifm-color-emphasis-800: #D9D5CC;
+  --ifm-color-emphasis-900: var(--fg);
+
+  --ifm-pre-background: #08070B;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.10);
+}
+
+/* Body uses the warm bg directly for the indie-mac feel */
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Serif italic accents inside docs headings (used as <em>) */
+.theme-doc-markdown h1 em,
+.theme-doc-markdown h2 em,
+.theme-doc-markdown h3 em,
+.markdown h1 em,
+.markdown h2 em,
+.markdown h3 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* Tighten heading tracking to match design */
+.theme-doc-markdown h1 {
+  letter-spacing: -0.03em;
+}
+.theme-doc-markdown h2 {
+  letter-spacing: -0.02em;
+  margin-top: 56px;
+}
+.theme-doc-markdown h3 {
+  letter-spacing: -0.01em;
+  margin-top: 36px;
+}
+
+/* Inline code chip */
+.markdown code:not([class*='codeBlock']):not(pre code) {
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  border-radius: 5px;
+  padding: 2px 6px;
+  font-weight: 500;
+}
+
+/* Keyboard chip — design's key shadow treatment */
+kbd,
+.markdown kbd {
+  font-family: var(--font-mono);
+  font-size: 0.82em;
+  font-weight: 600;
+  background: var(--bg-card);
+  color: var(--fg);
+  border: 1px solid var(--border-2);
+  border-radius: 5px;
+  padding: 2px 7px;
+  box-shadow: var(--shadow-key);
+  display: inline-block;
+  vertical-align: 1px;
+  margin: 0 1px;
+  line-height: 1.4;
+}
+
+/* Sidebar */
+.menu {
+  font-size: 14px;
+  padding: 1rem 0.75rem;
+}
+.menu__list-item:not(:first-child) {
+  margin-top: 2px;
+}
+.menu__link {
+  border-radius: 6px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.menu__link--active {
+  font-weight: 600;
+}
+.menu__list .menu__list {
+  margin-left: 14px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+.theme-doc-sidebar-container {
+  border-right-color: var(--border) !important;
+}
+.menu__caret::before,
+.menu__link--sublist-caret::after {
+  background-size: 1em 1em;
+}
+/* Section labels (when using _category_.json with collapsed: false rendered as label) */
+.theme-doc-sidebar-item-category > .menu__list-item-collapsible > .menu__link {
+  font-weight: 600;
+  color: var(--fg-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  padding: 14px 10px 6px;
+}
+
+/* TOC */
+.table-of-contents {
+  font-size: 13px;
+  border-left: 1px solid var(--border);
+  padding-left: 16px;
+}
+.table-of-contents__link {
+  color: var(--fg-2);
+  display: block;
+  padding: 5px 0 5px 12px;
+  border-left: 2px solid transparent;
+  margin-left: -14px;
+  padding-left: 12px;
+  transition: color 0.12s ease, border-color 0.12s ease;
+}
+.table-of-contents__link:hover {
+  color: var(--fg);
+  text-decoration: none;
+}
+.table-of-contents__link--active {
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+
+/* Pagination — pager card style */
+.pagination-nav__link {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  padding: 18px 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.pagination-nav__link:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+.pagination-nav__sublabel {
+  color: var(--fg-3);
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.pagination-nav__label {
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Breadcrumbs */
+.breadcrumbs__link {
+  color: var(--fg-3);
+  font-size: 13px;
+}
+.breadcrumbs__link:hover {
+  color: var(--fg);
+  text-decoration: none;
+}
+.breadcrumbs__item--active .breadcrumbs__link {
+  color: var(--fg);
+  font-weight: 500;
+  background: transparent;
+}
+
+/* Code blocks (Prism) — keep dark in both themes for contrast */
+.theme-code-block {
+  border-radius: 12px !important;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid #2A2832;
+}
+[data-theme='dark'] .theme-code-block {
+  border-color: #1E1D24;
+}
+.prism-code,
+pre.prism-code {
+  background: var(--ifm-pre-background) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 13.5px;
+  line-height: 1.7;
+}
+
+/* Admonitions — recolor to match design */
+.theme-admonition,
+.alert {
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+  font-size: 15px;
+}
+.theme-admonition-tip,
+.alert--success {
+  border-color: color-mix(in srgb, var(--c-mint) 30%, var(--border));
+  background: color-mix(in srgb, var(--c-mint) 6%, var(--bg-card));
+}
+.theme-admonition-note,
+.theme-admonition-info,
+.alert--secondary,
+.alert--info {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-card));
+}
+.theme-admonition-warning,
+.alert--warning {
+  border-color: color-mix(in srgb, var(--c-amber) 35%, var(--border));
+  background: color-mix(in srgb, var(--c-amber) 8%, var(--bg-card));
+}
+.theme-admonition-danger,
+.alert--danger {
+  border-color: color-mix(in srgb, var(--c-rose) 35%, var(--border));
+  background: color-mix(in srgb, var(--c-rose) 8%, var(--bg-card));
+}
+
+/* Tables */
+table {
+  display: table;
+  width: 100%;
+  font-size: 14px;
+}
+table thead tr {
+  background: var(--bg-sunken);
+  border-bottom-color: var(--border);
+}
+table th,
+table td {
+  border-color: var(--border);
+  padding: 12px 14px;
+}
+table tr:nth-child(2n) {
+  background: transparent;
+}
+table tbody tr:hover {
+  background: var(--bg-sunken);
+}
+
+/* Blockquote */
+blockquote,
+.markdown blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0 0 0 20px;
+  color: var(--fg-2);
+  font-style: italic;
+  margin: 20px 0;
+  background: transparent;
+}
+
+/* Hr */
+hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 40px 0;
+}
+
+/* Navbar fine-tuning */
+.navbar {
+  backdrop-filter: saturate(180%) blur(16px);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+.navbar__brand {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.navbar__link {
+  font-weight: 500;
+}
+.navbar__link--active {
+  color: var(--accent);
+}
+
+/* Footer fine-tuning */
+.footer {
+  border-top: 1px solid var(--border);
+}
+.footer--dark {
+  --ifm-footer-background-color: #15141A;
+  --ifm-footer-link-color: #B7B2A8;
+  --ifm-footer-color: #B7B2A8;
+  --ifm-footer-title-color: #F4F2EE;
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    transition-duration: 0s !important;
+  }
 }

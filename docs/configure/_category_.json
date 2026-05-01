@@ -1,0 +1,8 @@
+{
+  "label": "Configure",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "Settings, providers, prompt library, keyboard shortcuts, and iCloud sync."
+  }
+}

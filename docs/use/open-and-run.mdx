@@ -1,0 +1,42 @@
+---
+sidebar_position: 2
+title: "Open & Run"
+description: Like Quick Paste, but opens the ClipSlop panel with the result ready so you can review, edit, or keep chaining.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Open &amp; Run
+
+Same idea as [Quick Paste](./quick-paste.mdx), but ClipSlop opens its panel with the result ready, so you can review, tweak, or keep chaining. Useful for translations and longer rewrites where you want a chance to review before pasting.
+
+<video
+  src={useBaseUrl('/demos/videos/open-and-run.webm')}
+  controls
+  autoPlay
+  loop
+  muted
+  playsInline
+  style={{maxWidth: '100%', width: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+## Default Open &amp; Run shortcuts
+
+| Shortcut  | Prompt              |
+|-----------|---------------------|
+| `⌃⌘⌥/`    | // Your prompt      |
+| `⌃⌘⌥T`    | Translate → English |
+| `⌃⌘⌥A`    | Explain Simply      |
+
+Open &amp; Run pairs with [the full pipeline](./full-pipeline.mdx) — once the panel is open, you can chain prompts, branch from history, or copy the result manually with <kbd>⌘C</kbd>.
+
+## When to use each
+
+| Situation                                    | Use         |
+|----------------------------------------------|-------------|
+| One-shot fix you trust (grammar, formatting) | Quick Paste |
+| Translation you might want to tweak          | Open &amp; Run  |
+| Multiple prompts in sequence                 | Open &amp; Run  |
+| Long-form rewriting with branching           | Open &amp; Run  |
+
+Bind your own per-prompt shortcuts in **Settings → Prompts**.

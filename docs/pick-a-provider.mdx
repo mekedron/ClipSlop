@@ -1,0 +1,39 @@
+---
+sidebar_position: 3
+title: Pick a provider
+description: ClipSlop is provider-agnostic. Sign in with ChatGPT free, bring your own API key, or run locally with Ollama.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Pick a provider
+
+ClipSlop calls a real AI model for every transformation, so you need at least one provider configured. The Providers tab in Settings lists every supported option:
+
+<img
+  src={useBaseUrl('/demos/screenshots/providers-list.png')}
+  alt="Providers tab — ChatGPT sign-in, OpenAI API, Anthropic, Ollama, OpenAI-compatible, CLI tools"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+<DocCards>
+  <DocCard to="/docs/configure/providers/chatgpt" keyLabel="C" color="mint" title="Sign in with ChatGPT" cta="ChatGPT sign-in">
+    Free, OAuth-based, no API key needed. Best starting point.
+  </DocCard>
+  <DocCard to="/docs/configure/providers/openai-api" keyLabel="O" color="accent" title="OpenAI API" cta="OpenAI API">
+    Paid, bring-your-own-key. More control, all OpenAI models.
+  </DocCard>
+  <DocCard to="/docs/configure/providers/anthropic" keyLabel="A" color="amber" title="Anthropic Claude" cta="Anthropic">
+    Paid, bring-your-own-key. Claude Sonnet, Opus, and Haiku.
+  </DocCard>
+  <DocCard to="/docs/configure/providers/ollama" keyLabel="L" color="rose" title="Ollama (local)" cta="Ollama">
+    Free, runs entirely on your machine. No network calls.
+  </DocCard>
+  <DocCard to="/docs/configure/providers/compatible-apis" keyLabel="X" color="t" title="Compatible APIs" cta="Compatible APIs">
+    OpenRouter, LM Studio, custom endpoints — anything OpenAI-compatible.
+  </DocCard>
+</DocCards>
+
+You can configure several providers at once and pick the default in **Settings → Providers**. Each prompt can override the default — set a fast model for grammar fixes and a smarter one for analysis.
+
+Continue with [Your first transformation](./first-transformation.mdx) once a provider is configured.

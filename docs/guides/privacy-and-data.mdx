@@ -1,0 +1,52 @@
+---
+sidebar_position: 4
+title: "Privacy & data"
+description: "What ClipSlop reads, what it sends, what it stores. Short answer: as little as possible."
+---
+
+# Privacy &amp; data
+
+ClipSlop is a local app that talks directly to the AI provider you choose. There's no Anthropic-hosted backend, no analytics, no telemetry, no signup.
+
+## What ClipSlop reads
+
+- **The text you select** when you press a hotkey. Read via macOS Accessibility (simulated <kbd>⌘C</kbd> / <kbd>⌘V</kbd>).
+- **The clipboard contents** when you press <kbd>⌃⌘V</kbd> to process from clipboard.
+- **A captured screen region** when you press <kbd>⇧⌘2</kbd> for OCR. Recognition happens on-device with Apple's Vision framework — pixels never leave your Mac.
+
+## What ClipSlop sends to providers
+
+For each prompt run, ClipSlop sends:
+
+- The **selected/clipboard text** as the user message.
+- The **system prompt** of the chosen prompt (e.g., *"Fix grammar"*).
+- Provider-specific knobs: model name, temperature, reasoning effort.
+
+It sends to **whichever provider you configured** — OpenAI, Anthropic, your local Ollama, etc. Each provider has its own privacy policy; ClipSlop's role is simply to make the API call.
+
+## What ClipSlop stores on disk
+
+- **Prompt library** — your prompts, mnemonics, shortcuts, provider overrides. Stored in `~/Library/Application Support/ClipSlop/`. Mirrored via iCloud only if you've enabled [iCloud sync](../configure/icloud-sync.mdx).
+- **Provider credentials** — API keys go in the macOS Keychain. ChatGPT OAuth tokens also live in the Keychain. Never written to plain files.
+- **App settings** — appearance, opacity, window size. Same `Application Support` folder.
+
+## What ClipSlop does *not* store
+
+- **Transformation history.** History is in-session only. Close the panel and the chain is gone.
+- **Selected text.** ClipSlop never persists a copy of what you ran a prompt on.
+- **Telemetry, analytics, crash reports.** None.
+- **Update pings beyond Sparkle's appcast.** Sparkle (the macOS update framework) fetches `appcast.xml` from this repo to check for new versions; that's the only outbound network call ClipSlop makes outside provider API calls.
+
+## Running fully offline
+
+Configure **Ollama** as your provider and disable iCloud sync. With those two settings, ClipSlop makes zero network requests during a transformation — Ollama runs locally on your machine. See [Ollama](../configure/providers/ollama.md).
+
+## Data deletion
+
+To wipe everything ClipSlop has on disk:
+
+```bash
+rm -rf ~/Library/Application\ Support/ClipSlop
+```
+
+Then revoke API keys from your providers' dashboards if you want belt-and-braces. ChatGPT OAuth tokens get cleared automatically when you sign out from **Settings → Providers → ChatGPT**.

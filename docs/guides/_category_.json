@@ -1,0 +1,8 @@
+{
+  "label": "Guides",
+  "position": 4,
+  "link": {
+    "type": "generated-index",
+    "description": "Custom prompts, AI-generated prompts, recipe chains, and a privacy reference."
+  }
+}

@@ -1,6 +1,6 @@
 {
   "label": "Providers",
-  "position": 6,
+  "position": 3,
   "link": {
     "type": "generated-index",
     "description": "Configure an AI provider — sign in with ChatGPT for free, bring your own API key, or run locally with Ollama."

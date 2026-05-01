@@ -1,0 +1,70 @@
+---
+sidebar_position: 2
+title: "Install & first run"
+description: Install ClipSlop, open it past the Gatekeeper warning, and grant the macOS permissions it needs.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Install &amp; first run
+
+Three steps: install, open past the Gatekeeper warning, grant permissions. About three minutes total.
+
+## Install
+
+### Via Homebrew
+
+```bash
+brew tap mekedron/tap
+brew install --cask clipslop
+```
+
+### Via the DMG
+
+Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest) and drag `ClipSlop.app` to your **Applications** folder.
+
+After install, ClipSlop lives in your menu bar:
+
+<img
+  src={useBaseUrl('/demos/screenshots/menu-bar.png')}
+  alt="ClipSlop in the macOS menu bar"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+## Opening the app for the first time
+
+ClipSlop is **not signed with an Apple Developer certificate** — we don't pay Apple's $99/year. macOS will block it on first launch, which is expected.
+
+The app is safe: the source is fully open and every release is built by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) directly from the public repository.
+
+To open it:
+
+1. Drag `ClipSlop.app` to your **Applications** folder.
+2. Double-click — macOS shows a warning and refuses.
+3. Open **System Settings → Privacy &amp; Security**.
+4. Scroll down — you'll see _"ClipSlop was blocked from use because it is not from an identified developer"_.
+5. Click **Open Anyway**, then confirm.
+
+Subsequent launches open normally.
+
+## Grant permissions
+
+ClipSlop needs two macOS permissions to work in any app:
+
+- **Accessibility** — required to read the text you've selected and paste results back. Grant in **System Settings → Privacy &amp; Security → Accessibility**.
+- **Screen Recording** — only needed for the OCR feature (`⇧⌘2`). Grant in **System Settings → Privacy &amp; Security → Screen Recording**.
+
+## After updating to a new version
+
+<Callout type="warn">
+Because the app is unsigned, macOS may change the bundle identifier between versions and invalidate previously granted permissions. If shortcuts stop working after an update:
+
+1. Open **System Settings → Privacy &amp; Security → Accessibility**.
+2. Find ClipSlop in the list and **remove it** (select → click "−").
+3. Click "+" and **re-add** `ClipSlop.app` from your Applications folder.
+4. Repeat for **Screen Recording** if you use OCR.
+
+Your prompts and settings are never affected.
+</Callout>
+
+Continue with [Pick a provider](./pick-a-provider.mdx) — ClipSlop calls a real AI model for every transformation, so you need at least one provider configured.

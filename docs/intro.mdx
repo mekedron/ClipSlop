@@ -2,38 +2,76 @@
 slug: /intro
 sidebar_position: 1
 title: Introduction
+description: ClipSlop is a free, open-source AI writing tool for macOS. Fix grammar, translate, rewrite, format — all without leaving your app.
 ---
 
-import useBaseUrl from '@docusaurus/useBaseUrl';
+# Welcome to *ClipSlop*
 
-# Introduction
+ClipSlop sits in your menu bar and makes any AI prompt feel like a native macOS shortcut. Select text in any app, press a hotkey, get the result back where the cursor is — that's the whole pitch.
 
-ClipSlop is a **free, open-source AI writing tool for macOS** that works in any app. Fix grammar, translate text, rewrite in different tones, format as email or Markdown — all with a keyboard shortcut.
-
-Use it as a simple AI grammar checker with a single hotkey, or chain multiple AI prompts into a full text transformation pipeline.
-
-<img
-  src={useBaseUrl('/demos/screenshots/menu-bar.png')}
-  alt="ClipSlop's menu bar — quick access to prompts and settings"
-  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
-/>
-
-## What ClipSlop is
-
-- **Keyboard-first.** Single-key mnemonics for navigating prompts, global hotkeys for the actions you use most.
-- **Inline.** Quick Paste captures selected text, runs a prompt, and pastes the result back — without ever leaving your current app.
+- **Keyboard-first.** Every prompt has a single-letter mnemonic. Every action has a shortcut. The mouse is optional.
+- **Inline.** Quick Paste captures the selection, runs a prompt, and pastes the result back — without ever leaving the app you're typing in.
 - **Composable.** Chain unlimited transformations. Translate, then rewrite, then format. Branch from any history step.
-- **Provider-agnostic.** Sign in with ChatGPT for free, bring your own OpenAI / Anthropic API key, or run locally with Ollama.
+- **Provider-agnostic.** Sign in with ChatGPT for free, bring your own OpenAI / Anthropic key, or run locally with Ollama.
 
-## What ClipSlop is not
+<Callout type="tip" title="In a hurry?">
+  Skip ahead to [Install &amp; first run](./install.mdx) — it's ten lines and takes about three minutes.
+</Callout>
 
-- Not a chatbot. There's no conversational thread — each prompt is a one-shot transformation.
-- Not a subscription. The app is free; you only pay your AI provider (or use the free ChatGPT sign-in).
-- Not signed by Apple. We don't pay Apple's $99/year fee, so first launch needs a one-time approval. See [Getting Started](./getting-started.mdx).
+## What ClipSlop *is not*
 
-## Where to next
+An equally important question. ClipSlop has a deliberately small surface area.
 
-- **New here?** Start with [Getting Started](./getting-started.mdx) to install and grant permissions.
-- **Want the deep tour?** [How it works](./how-it-works.mdx) explains Quick Paste vs the full pipeline.
-- **Looking for a prompt?** Browse the [Built-in Prompts](./built-in-prompts.mdx) catalogue.
-- **Need a provider?** Pick from [ChatGPT](./providers/chatgpt.mdx), [OpenAI API](./providers/openai-api.md), [Anthropic](./providers/anthropic.md), [Ollama](./providers/ollama.md), or any [compatible API](./providers/compatible-apis.md).
+- **Not a chatbot.** There's no conversational thread — each prompt is a one-shot transformation. If you want chat, use the ChatGPT or Claude apps.
+- **Not a subscription.** The app is free and MIT-licensed. You only ever pay your AI provider — and the free ChatGPT sign-in counts.
+- **Not signed by Apple.** We don't pay Apple's $99/year fee, so first launch needs a one-time approval. See [Install &amp; first run](./install.mdx).
+- **Not phoning home.** ClipSlop has no backend. API requests go directly from your Mac to the provider you chose.
+
+## Why a *keyboard-first* AI tool?
+
+Most AI writing tools follow the same pattern: copy text, switch to a browser tab or app, paste it, click a button, wait, copy the result, switch back, paste. Six context switches for what should be one.
+
+ClipSlop collapses all of that into a hotkey. Below is everything that happens when you press <kbd>⌃</kbd><kbd>⌘</kbd><kbd>G</kbd> in any text field on your Mac:
+
+```
+# 1. ClipSlop intercepts the hotkey
+on hotkey ⌃⌘G:
+    selection ← readSelection()       # simulated ⌘C, then restored
+    result    ← runPrompt("Fix Grammar", selection)
+    paste(result)                     # simulated ⌘V
+
+# 2. Total round-trip: ~600ms with ChatGPT, ~200ms with Ollama
+```
+
+The clipboard is restored to whatever was on it before the run. Streaming output is supported — the result appears progressively if you use [Open &amp; Run](./use/open-and-run.mdx) instead of Quick Paste.
+
+## Where to *next*
+
+Pick a path based on what you want to do.
+
+<DocCards>
+  <DocCard to="/docs/install" keyLabel="1" color="p" title="I just want to install it" cta="Install &amp; first run">
+    Three steps: download, grant Accessibility, sign into ChatGPT. Done.
+  </DocCard>
+  <DocCard to="/docs/use/quick-paste" keyLabel="F" color="f" title="I want to fix grammar with a hotkey" cta="Quick Paste">
+    Quick Paste does it inline. <kbd>⌃⌘G</kbd> by default; rebind in Settings.
+  </DocCard>
+  <DocCard to="/docs/configure/providers/chatgpt" keyLabel="T" color="t" title="I want to translate text" cta="Pick a provider">
+    18 languages out of the box. Hotkey or pipeline. Mix providers per language.
+  </DocCard>
+  <DocCard to="/docs/use/full-pipeline" keyLabel="R" color="r" title="I want to chain prompts together" cta="The full pipeline">
+    Translate → Rewrite → Format. The full pipeline with branching history.
+  </DocCard>
+</DocCards>
+
+<Callout type="note" title="No provider yet?">
+  Start with the free [ChatGPT sign-in](./configure/providers/chatgpt.mdx) — it uses your existing ChatGPT account, no API key needed. Or pick from [OpenAI](./configure/providers/openai-api.md), [Anthropic](./configure/providers/anthropic.md), [Ollama](./configure/providers/ollama.md), or any [OpenAI-compatible API](./configure/providers/compatible-apis.md).
+</Callout>
+
+## A short note on *philosophy*
+
+ClipSlop is opinionated about three things, in order:
+
+1. **Latency over features.** A grammar fix that takes 600ms beats one with thirty options that takes six seconds. Every keystroke matters.
+2. **Your tools, your data.** Bring your own provider. Run Ollama locally. Read the source. Build it yourself if you want — see [Building from source](./develop/building-from-source.md).
+3. **Boring is good.** No login screens, no onboarding wizards, no AI personas. The app is small on purpose.

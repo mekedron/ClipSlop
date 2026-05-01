@@ -1,0 +1,76 @@
+---
+sidebar_position: 3
+title: "Recipes & chains"
+description: Tested chains for common tasks — Slack draft → Email, Finnish → Business email, Code → Documented.
+---
+
+# Recipes &amp; chains
+
+Some chains we've found useful. Each one is a sequence of single-key prompts after the trigger.
+
+## Fix grammar in a Slack message
+
+```
+select message → ⌃⌘G → grammar fixed in place
+```
+
+The simplest recipe — Quick Paste with **Fix Grammar**. ~600ms with ChatGPT, ~200ms with Ollama. Zero context switches.
+
+## Translate Finnish into a Business email
+
+```
+⌃⌘C → T → E → R → B → F → E
+```
+
+| Key | Step                   |
+|-----|------------------------|
+| `⌃⌘C` | Trigger ClipSlop with selection |
+| `T E` | **Translate** → English |
+| `R B` | **Rewrite** → Business |
+| `F E` | **Format** → Email      |
+
+Five keystrokes after the trigger. Ready to paste with <kbd>⌘C</kbd>.
+
+## Explain a stack trace in plain English
+
+```
+copy stack trace → ⌃⌘V → D → S
+```
+
+| Key | Step                    |
+|-----|-------------------------|
+| `⌃⌘V` | Process clipboard      |
+| `D S` | **Dev** → Explain Stack Trace |
+
+Get a plain-English summary plus the likely root cause. Add `A → S` (Analyze → Summary) on top to compress further.
+
+## Code → Documented + Beautified
+
+```
+select code → ⌃⌘C → D → A → D → B
+```
+
+| Key | Step                   |
+|-----|------------------------|
+| `⌃⌘C` | Trigger                |
+| `D A` | **Dev** → Add Comments |
+| `D B` | **Dev** → Beautify Code |
+
+Annotates the code with inline comments, then runs the beautifier. Branch (`←`) if you want only one of the two.
+
+## OCR a slide → TL;DR
+
+```
+⇧⌘2 → drag region → A → T
+```
+
+| Key | Step                     |
+|-----|--------------------------|
+| `⇧⌘2` | Screen capture (OCR)    |
+| `A T` | **Analyze** → TL;DR     |
+
+Useful for webinar slides, video frames, anything where text isn't selectable. See [Screen OCR](../use/screen-ocr.mdx).
+
+## Build your own
+
+Chains are just keypresses — there's nothing to save. If you find one you keep using, the cleaner solution is to bind a single-prompt Quick Paste shortcut for the result you want. Or generate a custom prompt that does all the steps in one model call — see [Generate prompts with AI](./generate-prompts-with-ai.mdx).

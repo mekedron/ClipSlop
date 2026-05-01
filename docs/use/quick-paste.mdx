@@ -1,0 +1,58 @@
+---
+sidebar_position: 1
+title: Quick Paste
+description: Bind any prompt to a global hotkey. Captures selected text, runs the prompt, pastes the result back — all without leaving your app.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Quick Paste
+
+```
+Select text → ⌃⌘G → grammar fixed in place
+```
+
+Quick Paste is the fastest way to use ClipSlop. Assign a global hotkey to any prompt, and ClipSlop runs entirely in the background:
+
+1. Captures the currently selected text.
+2. Sends it through the prompt.
+3. Pastes the result back, replacing the selection.
+
+You never leave your app.
+
+<video
+  src={useBaseUrl('/demos/videos/quick-paste.webm')}
+  controls
+  autoPlay
+  loop
+  muted
+  playsInline
+  style={{maxWidth: '100%', width: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+## Default Quick Paste shortcuts
+
+A handful of prompts ship with a default global hotkey:
+
+| Shortcut | Prompt              |
+|----------|---------------------|
+| `⌃⌘/`    | // Your prompt      |
+| `⌃⌘G`    | Fix Grammar         |
+| `⌃⌘F`    | Reformat            |
+| `⌃⌘T`    | Translate → English |
+
+Configure your own in **Settings → Prompts** — every prompt can have a Quick Paste binding.
+
+<Callout type="tip" title="Want to review the result first?">
+  Use [Open &amp; Run](./open-and-run.mdx) instead — same idea, but ClipSlop opens its panel with the result so you can edit, branch, or keep chaining.
+</Callout>
+
+## How it works under the hood
+
+ClipSlop simulates <kbd>⌘C</kbd> to read your selection, runs the prompt against your configured AI provider, then simulates <kbd>⌘V</kbd> to paste the result. The clipboard is restored to whatever was on it before the hotkey fired — Quick Paste leaves no trace beyond the replaced selection.
+
+## Want to bind a custom prompt?
+
+Open **Settings → Prompts**, pick or create a prompt, and assign a **Global shortcut · Quick Paste**. The shortcut works system-wide as long as ClipSlop has Accessibility permission.
+
+See [Build a custom prompt](../guides/build-a-custom-prompt.mdx) for a step-by-step.

@@ -1,0 +1,44 @@
+---
+sidebar_position: 4
+title: Your first transformation
+description: A 30-second walk-through — select text, hit ⌃⌘G, watch grammar get fixed in place.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Your first transformation
+
+ClipSlop is installed, permissions are granted, a provider is configured. Time for the moment of truth.
+
+1. Open any app — Notes, Mail, Slack, your editor.
+2. Type or paste a sentence with a deliberate typo: *"i recieved your email yesterday and i wanted too say thanks for there quick reply."*
+3. Select the sentence.
+4. Press <kbd>⌃</kbd><kbd>⌘</kbd><kbd>G</kbd>. ClipSlop runs **Fix Grammar** in the background.
+5. The corrected text replaces the selection.
+
+That's **Quick Paste** — the fastest mode. No app switch, no dialog, no copy-paste dance.
+
+<Callout type="tip" title="What just happened?">
+ClipSlop simulated <kbd>⌘C</kbd> to read your selection, ran the **Fix Grammar** prompt against the configured provider, and simulated <kbd>⌘V</kbd> with the result. The clipboard is restored to whatever was on it before the run.
+</Callout>
+
+## Want more than one step?
+
+Press <kbd>⌃</kbd><kbd>⌘</kbd><kbd>C</kbd> instead. ClipSlop opens its floating panel with the selection, and you can chain prompts together: translate, then rewrite, then format. See [The full pipeline](./use/full-pipeline.mdx).
+
+## Where to next
+
+<DocCards>
+  <DocCard to="/docs/use/quick-paste" keyLabel="Q" color="f" title="Quick Paste" cta="Read more">
+    The inline mode you just used. Bind any prompt to any hotkey.
+  </DocCard>
+  <DocCard to="/docs/use/full-pipeline" keyLabel="P" color="r" title="The full pipeline" cta="Read more">
+    Chain prompts. Branch from any step. The keyboard-first power tool.
+  </DocCard>
+  <DocCard to="/docs/reference/built-in-prompts" keyLabel="R" color="t" title="Built-in prompts" cta="Browse the catalogue">
+    Six groups, forty-plus prompts, all editable.
+  </DocCard>
+  <DocCard to="/docs/configure/keyboard-shortcuts" keyLabel="K" color="amber" title="Keyboard shortcuts" cta="Customise">
+    Rebind anything. The defaults are just suggestions.
+  </DocCard>
+</DocCards>

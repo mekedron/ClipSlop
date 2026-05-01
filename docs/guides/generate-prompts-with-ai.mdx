@@ -1,0 +1,33 @@
+---
+sidebar_position: 2
+title: Generate prompts with AI
+description: Describe what you want; ClipSlop writes the system prompt for you.
+---
+
+# Generate prompts with AI
+
+Writing system prompts is a knack. If you don't have it, ask the model to do it for you.
+
+## How
+
+1. Open **Settings → Prompts**.
+2. Click **+ New prompt**, then **Generate with AI**.
+3. Describe what the prompt should do in plain English — *"Take any text and rewrite it as a haiku, preserving meaning"*.
+4. ClipSlop sends the description to your default provider and inserts the generated system prompt into the **System prompt** field.
+5. Tweak, save, test.
+
+## Why this beats writing prompts yourself
+
+Models know what good system prompts look like — they've ingested thousands. The generated baseline is usually 80% there, and editing 20% beats writing 100%.
+
+## Iterating
+
+If the first generated prompt produces shaky results:
+
+- Edit the description to be more specific. *"Rewrite as a haiku"* is vague; *"Rewrite as a strict 5-7-5 haiku in English, preserving the literal meaning of the input, no commentary"* is better.
+- Click **Regenerate** to get a fresh attempt.
+- Once it's working, save and assign a mnemonic.
+
+## Provider for generation
+
+Use a smarter model (Claude Sonnet, GPT-4o) for prompt generation, even if the prompt itself will be run by a fast model. Generation happens once; running happens hundreds of times. The cost asymmetry favours quality at generation time.

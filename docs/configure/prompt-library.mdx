@@ -1,0 +1,44 @@
+---
+sidebar_position: 4
+title: Prompt library
+description: Every prompt has a name, mnemonic, system prompt, optional provider override, display mode, and shortcut bindings.
+---
+
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
+# Prompt library
+
+Open **Settings → Prompts** to see the library:
+
+<img
+  src={useBaseUrl('/demos/screenshots/prompt-library.png')}
+  alt="Prompt library — every prompt with its mnemonic, system prompt, provider override, and shortcut"
+  style={{maxWidth: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+For each prompt you can configure:
+
+- **Name and mnemonic.** The single key used to pick it from the prompt tree.
+- **System prompt.** The instruction sent to the model.
+- **Provider and model.** Override the global default for this prompt only.
+- **Display mode.** Plain text, Markdown, HTML.
+- **Global shortcut.** Optional Quick Paste / Open &amp; Run binding.
+
+## What you can do
+
+- **Add new prompts and folders.** Group related prompts; folders have their own mnemonic.
+- **Reorder.** Drag-and-drop within a folder.
+- **Generate with AI.** Describe what you want — ClipSlop writes the system prompt for you. See [Generate prompts with AI](../guides/generate-prompts-with-ai.mdx).
+- **Export / Import.** Share configurations as JSON. iCloud Sync mirrors prompts across Macs.
+
+## Building a custom prompt
+
+See [Build a custom prompt](../guides/build-a-custom-prompt.mdx) for a step-by-step.
+
+## One-off prompts
+
+Don't bother saving a prompt you'll only use once. From the panel, type `//` followed by an instruction — ClipSlop runs it as a one-shot custom prompt without adding it to the library. Quick Paste binds the same idea to <kbd>⌃⌘/</kbd>.
+
+## Per-prompt provider overrides
+
+Use a fast model (e.g., `gpt-4o-mini` or local Ollama) for grammar and formatting; use a smarter one (`claude-sonnet`, `gpt-4o`) for analysis and complex rewrites. Configure the override in the prompt detail view.
