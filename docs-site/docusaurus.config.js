@@ -21,14 +21,16 @@ const config = {
   },
 
   // Production URL and base path for GitHub Pages (project site at
-  // https://mekedron.github.io/clipslop/).
+  // https://mekedron.github.io/ClipSlop/). The canonical repo slug on GitHub
+  // is `ClipSlop` (case-sensitive in the Pages path), even though `clipslop`
+  // also resolves via GitHub's redirect.
   url: 'https://mekedron.github.io',
-  baseUrl: '/clipslop/',
+  baseUrl: '/ClipSlop/',
   trailingSlash: false,
 
   // GitHub Pages deployment config.
   organizationName: 'mekedron',
-  projectName: 'clipslop',
+  projectName: 'ClipSlop',
   deploymentBranch: 'gh-pages',
 
   onBrokenLinks: 'throw',
@@ -55,7 +57,7 @@ const config = {
           path: '../docs',
           sidebarPath: './sidebars.js',
           routeBasePath: 'docs',
-          editUrl: 'https://github.com/mekedron/clipslop/tree/main/docs/',
+          editUrl: 'https://github.com/mekedron/ClipSlop/tree/main/docs/',
           // Internal scratch doc — not part of the published site.
           exclude: ['**/initial-prompt.md'],
         },
@@ -99,12 +101,12 @@ const config = {
             position: 'left',
           },
           {
-            href: 'https://github.com/mekedron/clipslop/releases/latest',
+            href: 'https://github.com/mekedron/ClipSlop/releases/latest',
             label: 'Download',
             position: 'right',
           },
           {
-            href: 'https://github.com/mekedron/clipslop',
+            href: 'https://github.com/mekedron/ClipSlop',
             label: 'GitHub',
             position: 'right',
           },
@@ -127,15 +129,15 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/mekedron/clipslop',
+                href: 'https://github.com/mekedron/ClipSlop',
               },
               {
                 label: 'Releases',
-                href: 'https://github.com/mekedron/clipslop/releases',
+                href: 'https://github.com/mekedron/ClipSlop/releases',
               },
               {
                 label: 'Issues',
-                href: 'https://github.com/mekedron/clipslop/issues',
+                href: 'https://github.com/mekedron/ClipSlop/issues',
               },
             ],
           },

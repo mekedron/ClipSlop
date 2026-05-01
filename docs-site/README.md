@@ -1,6 +1,6 @@
 # ClipSlop docs site
 
-Docusaurus app for [https://mekedron.github.io/clipslop/](https://mekedron.github.io/clipslop/).
+Docusaurus app for [https://mekedron.github.io/ClipSlop/](https://mekedron.github.io/ClipSlop/).
 
 Markdown content lives at the repo root in `../docs/`. This folder only holds the build configuration, the landing page, and the theme.
 

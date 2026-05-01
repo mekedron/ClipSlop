@@ -17,13 +17,13 @@ brew install --cask clipslop
 
 ### Via the DMG
 
-Grab the latest `.dmg` from [Releases](https://github.com/mekedron/clipslop/releases/latest) and drag `ClipSlop.app` to your **Applications** folder.
+Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest) and drag `ClipSlop.app` to your **Applications** folder.
 
 ## Opening the app for the first time
 
 ClipSlop is **not signed with an Apple Developer certificate** — we don't pay Apple's $99/year. macOS will block it on first launch, which is expected.
 
-The app is safe: the source is fully open and every release is built by [GitHub Actions](https://github.com/mekedron/clipslop/actions) directly from the public repository.
+The app is safe: the source is fully open and every release is built by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) directly from the public repository.
 
 To open it:
 

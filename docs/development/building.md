@@ -6,8 +6,8 @@ title: Build from source
 # Build from source
 
 ```bash
-git clone https://github.com/mekedron/clipslop.git
-cd clipslop
+git clone https://github.com/mekedron/ClipSlop.git
+cd ClipSlop
 swift build
 ```
 
@@ -51,4 +51,4 @@ To cut a release locally, see `Scripts/`.
 
 ## Contributing
 
-Open an issue or PR on [github.com/mekedron/clipslop](https://github.com/mekedron/clipslop). The codebase is small enough that a tour of `Sources/` and `Tests/` is the fastest way in.
+Open an issue or PR on [github.com/mekedron/ClipSlop](https://github.com/mekedron/ClipSlop). The codebase is small enough that a tour of `Sources/` and `Tests/` is the fastest way in.

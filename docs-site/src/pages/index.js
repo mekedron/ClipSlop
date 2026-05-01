@@ -59,7 +59,7 @@ function Hero() {
         <div className={styles.heroCtas}>
           <Link
             className={clsx(styles.btn, styles.btnPrimary)}
-            href="https://github.com/mekedron/clipslop/releases/latest">
+            href="https://github.com/mekedron/ClipSlop/releases/latest">
             Download for macOS
           </Link>
           <Link className={clsx(styles.btn, styles.btnGhost)} to="/docs/intro">
@@ -146,7 +146,7 @@ function BottomCta() {
       <div className={styles.heroCtas}>
         <Link
           className={clsx(styles.btn, styles.btnPrimary)}
-          href="https://github.com/mekedron/clipslop">
+          href="https://github.com/mekedron/ClipSlop">
           View on GitHub
         </Link>
         <Link
