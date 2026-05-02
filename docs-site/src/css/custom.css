@@ -427,11 +427,38 @@ hr {
   margin: 40px 0;
 }
 
-/* Navbar fine-tuning */
+/*
+ * Navbar — backdrop-filter is delegated to a ::before pseudo-element.
+ *
+ * Why this matters: per the Filter Effects Level 2 spec, an element
+ * with backdrop-filter establishes both a stacking context AND a
+ * containing block for descendants with position: fixed. Docusaurus
+ * renders <NavbarMobileSidebar /> (the .navbar-sidebar drawer) as a
+ * direct child of <nav class="navbar">. If we put backdrop-filter on
+ * .navbar, the drawer's `top: 0; bottom: 0` resolves against the
+ * navbar's ~60px box instead of the viewport, so the drawer collapses
+ * to navbar height and the menu items render with `height: 0`.
+ *
+ * iOS Safari (WebKit) follows the spec strictly and clipped the drawer.
+ * Chrome (Blink) is historically lenient and let it through, but we
+ * shouldn't rely on that. Moving the filter to a pseudo-element keeps
+ * the visual blur — the pseudo is the navbar's only descendant that
+ * gets a containing block, and the drawer is its sibling, not its
+ * descendant — so the drawer escapes back to the viewport.
+ */
 .navbar {
+  background: transparent;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+.navbar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ifm-navbar-background-color);
   backdrop-filter: saturate(180%) blur(16px);
   -webkit-backdrop-filter: saturate(180%) blur(16px);
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  pointer-events: none;
 }
 .navbar__brand {
   font-weight: 700;
