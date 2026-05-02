@@ -444,6 +444,24 @@ hr {
   color: var(--accent);
 }
 
+/* Mobile navbar sidebar — must be opaque. The desktop navbar's
+   --ifm-navbar-background-color is 78% transparent (paired with a
+   backdrop-filter blur), but the mobile drawer inherits the same
+   variable and ends up see-through on iOS Safari, so the page content
+   bleeds through behind the menu. Force a solid background here. */
+.navbar-sidebar,
+.navbar-sidebar__brand,
+.navbar-sidebar__items,
+.navbar-sidebar__back {
+  background-color: var(--bg);
+}
+.navbar-sidebar__backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+[data-theme='dark'] .navbar-sidebar__backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
 /* Footer fine-tuning */
 .footer {
   border-top: 1px solid var(--border);
