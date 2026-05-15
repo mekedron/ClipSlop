@@ -463,7 +463,11 @@
 .demoCardVideoWrap {
   position: relative;
   width: 100%;
-  aspect-ratio: 1898 / 1080;
+  /* The recordings have non-square pixels (SAR 135:166) — their displayed
+     aspect ratio is 949:664 (≈1.43:1), not the 1898:1080 (1.76:1) the
+     coded stream would suggest. Match the container to the display aspect
+     so neither the video nor the poster gets cropped. */
+  aspect-ratio: 949 / 664;
   background: #0E0D12;
   overflow: hidden;
 }
@@ -473,7 +477,7 @@
   width: 100%;
   height: 100%;
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* Click-to-play overlay — visible only while the clip hasn't been started. */
