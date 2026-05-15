@@ -116,6 +116,55 @@ final class PromptStore {
         return result
     }
 
+    // MARK: - Validation queries
+
+    /// Returns IDs of sibling nodes (in the same parent folder, or root level)
+    /// that share the same mnemonic key as `nodeID`. Case-insensitive.
+    /// The placeholder "?" is never reported as a conflict so that freshly
+    /// added prompts (which all default to "?") can coexist until renamed.
+    func mnemonicConflictSiblings(of nodeID: UUID) -> [UUID] {
+        guard let target = findNodeRecursive(id: nodeID, in: prompts) else { return [] }
+        let key = target.mnemonicKey.lowercased()
+        guard key != "?" else { return [] }
+
+        let siblings = siblingsOfNode(id: nodeID, in: prompts) ?? []
+        return siblings
+            .filter { $0.mnemonicKey.lowercased() == key }
+            .map(\.id)
+    }
+
+    /// Returns every prompt node (other than `excludingID`) whose
+    /// `quickPasteShortcut` or `openRunShortcut` matches `config` exactly,
+    /// paired with which field matched.
+    func prompts(
+        matchingShortcut config: ShortcutConfig,
+        excluding excludingID: UUID
+    ) -> [(prompt: PromptNode, field: ShortcutField)] {
+        var result: [(prompt: PromptNode, field: ShortcutField)] = []
+        for prompt in allPromptNodes() where prompt.id != excludingID {
+            if prompt.quickPasteShortcut == config {
+                result.append((prompt, .quickPaste))
+            }
+            if prompt.openRunShortcut == config {
+                result.append((prompt, .openRun))
+            }
+        }
+        return result
+    }
+
+    private func siblingsOfNode(id: UUID, in nodes: [PromptNode]) -> [PromptNode]? {
+        if nodes.contains(where: { $0.id == id }) {
+            return nodes.filter { $0.id != id }
+        }
+        for node in nodes {
+            if let children = node.children,
+               let result = siblingsOfNode(id: id, in: children) {
+                return result
+            }
+        }
+        return nil
+    }
+
     private func collectFolders(from nodes: [PromptNode], depth: Int, into result: inout [(id: UUID, name: String, depth: Int)]) {
         for node in nodes where node.isFolder {
             result.append((id: node.id, name: node.name, depth: depth))

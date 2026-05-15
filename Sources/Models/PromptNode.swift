@@ -5,6 +5,12 @@ struct ShortcutConfig: Codable, Hashable, Sendable {
     var carbonModifiers: Int
 }
 
+/// Identifies which of a prompt's two global shortcut slots is being referenced.
+enum ShortcutField: Sendable, Hashable {
+    case quickPaste
+    case openRun
+}
+
 struct PromptNode: Codable, Identifiable, Hashable, Sendable {
     let id: UUID
     var name: String

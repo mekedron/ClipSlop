@@ -715,25 +715,20 @@ struct KeyEventHandler: NSViewRepresentable {
 
             let isArrowUp = code == KeyCode.upArrow
             let isArrowDown = code == KeyCode.downArrow
-            let isArrowLeft = code == KeyCode.leftArrow
-            let isArrowRight = code == KeyCode.rightArrow
             let hasShift = event.modifierFlags.contains(.shift)
             let isSpace = code == KeyCode.space
 
-            if isArrowLeft {
+            if isArrowUp {
                 appState.navigateHistoryNewer()
                 return true
             }
-            if isArrowRight {
+            if isArrowDown {
                 appState.navigateHistoryOlder()
                 return true
             }
 
-            if isArrowUp || isArrowDown || isSpace {
-                let isUp = isArrowUp || (isSpace && hasShift)
-                let pageScroll = isSpace || hasShift
-                let amount: CGFloat = pageScroll ? 300 : 40
-                scrollTextArea(up: isUp, by: amount)
+            if isSpace {
+                scrollTextArea(up: hasShift, by: 300)
                 return true
             }
 

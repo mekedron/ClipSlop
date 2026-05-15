@@ -177,7 +177,14 @@ struct PromptsSettingsView: View {
             }
         }
         .sheet(isPresented: $showRestoreDefaults) {
-            RestoreDefaultsSheet(promptStore: promptStore, isPresented: $showRestoreDefaults)
+            RestoreDefaultsSheet(
+                promptStore: promptStore,
+                isPresented: $showRestoreDefaults,
+                onRestored: {
+                    appState.promptShortcutService.syncFromModel()
+                    appState.promptShortcutService.refreshShortcuts()
+                }
+            )
         }
     }
 
@@ -268,7 +275,9 @@ struct PromptsSettingsView: View {
     }
 
     private func promptTreeRow(_ node: PromptNode) -> some View {
-        HStack(spacing: 8) {
+        let mnemonicConflict = !promptStore.mnemonicConflictSiblings(of: node.id).isEmpty
+
+        return HStack(spacing: 8) {
             Text(node.mnemonicDisplay)
                 .font(.system(.caption, design: .rounded, weight: .bold))
                 .foregroundStyle(.white)
@@ -276,6 +285,12 @@ struct PromptsSettingsView: View {
                 .padding(.horizontal, node.mnemonicModifiers == nil && !isSpecialKeyIdentifier(node.mnemonicKey) ? 0 : 2)
                 .background(node.isFolder ? Color.blue : Color.purple)
                 .clipShape(RoundedRectangle(cornerRadius: 4))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.orange, lineWidth: 2)
+                        .opacity(mnemonicConflict ? 1 : 0)
+                )
+                .help(mnemonicConflict ? loc.t("settings.prompts.mnemonic_conflict_tooltip") : "")
 
             Text(node.name)
                 .lineLimit(1)
@@ -285,7 +300,36 @@ struct PromptsSettingsView: View {
                     .foregroundStyle(.secondary)
                     .font(.caption)
             }
+
+            Spacer(minLength: 4)
+
+            if node.isPrompt {
+                if let qp = node.quickPasteShortcut {
+                    shortcutChip(config: qp, icon: "doc.on.clipboard", label: loc.t("settings.prompts.field.quick_paste"))
+                }
+                if let or = node.openRunShortcut {
+                    shortcutChip(config: or, icon: "play.fill", label: loc.t("settings.prompts.field.open_run"))
+                }
+            }
         }
+    }
+
+    private func shortcutChip(config: ShortcutConfig, icon: String, label: String) -> some View {
+        let shortcut = KeyboardShortcuts.Shortcut(
+            carbonKeyCode: config.carbonKeyCode,
+            carbonModifiers: config.carbonModifiers
+        )
+        return HStack(spacing: 3) {
+            Image(systemName: icon)
+                .font(.system(size: 9))
+            Text(shortcut.displayString)
+                .font(.system(.caption2, design: .monospaced))
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 2)
+        .background(.quaternary.opacity(0.5), in: Capsule())
+        .help(label)
     }
 
     // MARK: - Context Menu
@@ -424,6 +468,17 @@ struct PromptEditorView: View {
                         .frame(width: 120, height: 24)
                 }
 
+                if let conflictMessage = mnemonicConflictMessage {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                        Text(conflictMessage)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                    }
+                }
+
                 HStack(spacing: 12) {
                     Text(loc.t("settings.prompts.editor.modifiers"))
                     Spacer()
@@ -548,6 +603,74 @@ struct PromptEditorView: View {
             }
         }
         .formStyle(.grouped)
+        .confirmationDialog(
+            loc.t("settings.prompts.shortcut_conflict_title"),
+            isPresented: shortcutConflictBinding,
+            presenting: shortcutConflictForThisPrompt
+        ) { conflict in
+            Button(loc.t("settings.prompts.shortcut_conflict_replace"), role: .destructive) {
+                appState.promptShortcutService.resolveShortcutConflict(replace: true)
+            }
+            Button(loc.t("settings.prompts.cancel"), role: .cancel) {
+                appState.promptShortcutService.resolveShortcutConflict(replace: false)
+            }
+        } message: { conflict in
+            Text(shortcutConflictMessage(for: conflict))
+        }
+        .onChange(of: appState.promptShortcutService.pendingShortcutConflict?.id) { _, newID in
+            // After resolution (transition to nil), re-sync the local @State node
+            // from the store so we don't write a stale snapshot back via autoSave.
+            if newID == nil, let fresh = promptStore.findNode(byID: node.id) {
+                node = fresh
+            }
+        }
+    }
+
+    // MARK: - Mnemonic conflict UI
+
+    private var mnemonicConflictMessage: String? {
+        let conflictIDs = promptStore.mnemonicConflictSiblings(of: node.id)
+        guard !conflictIDs.isEmpty else { return nil }
+        let names = conflictIDs
+            .compactMap { promptStore.findNode(byID: $0)?.name }
+            .joined(separator: ", ")
+        return loc.t("settings.prompts.editor.mnemonic_conflict", names)
+    }
+
+    // MARK: - Shortcut conflict UI
+
+    private var shortcutConflictForThisPrompt: PendingShortcutConflict? {
+        let pending = appState.promptShortcutService.pendingShortcutConflict
+        return pending?.newPromptID == node.id ? pending : nil
+    }
+
+    private var shortcutConflictBinding: Binding<Bool> {
+        Binding(
+            get: { shortcutConflictForThisPrompt != nil },
+            set: { newValue in
+                if !newValue && appState.promptShortcutService.pendingShortcutConflict != nil {
+                    appState.promptShortcutService.resolveShortcutConflict(replace: false)
+                }
+            }
+        )
+    }
+
+    private func shortcutConflictMessage(for conflict: PendingShortcutConflict) -> String {
+        let display = KeyboardShortcuts.Shortcut(
+            carbonKeyCode: conflict.newShortcut.carbonKeyCode,
+            carbonModifiers: conflict.newShortcut.carbonModifiers
+        ).displayString
+        let fieldKey: String
+        switch conflict.conflictingField {
+        case .quickPaste: fieldKey = "settings.prompts.field.quick_paste"
+        case .openRun:    fieldKey = "settings.prompts.field.open_run"
+        }
+        return loc.t(
+            "settings.prompts.shortcut_conflict_message",
+            display,
+            conflict.conflictingPromptName,
+            loc.t(fieldKey)
+        )
     }
 
     private func modifierToggle(_ symbol: String, flag: MnemonicModifiers) -> some View {
@@ -619,6 +742,7 @@ struct PromptEditorView: View {
 struct RestoreDefaultsSheet: View {
     let promptStore: PromptStore
     @Binding var isPresented: Bool
+    let onRestored: () -> Void
 
     private let loc = Loc.shared
 
@@ -672,6 +796,7 @@ struct RestoreDefaultsSheet: View {
                 Spacer()
                 Button(loc.t("settings.prompts.restore_button")) {
                     promptStore.restoreDefaults()
+                    onRestored()
                     isPresented = false
                 }
                 .buttonStyle(.borderedProminent)

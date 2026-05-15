@@ -109,12 +109,12 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Keyboard Shortcuts";
-"settings.general.shortcuts.trigger" = "Trigger ClipSlop:";
-"settings.general.shortcuts.clipboard" = "From clipboard:";
-"settings.general.shortcuts.blank" = "Blank editor:";
-"settings.general.shortcuts.ocr" = "OCR + Edit:";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.trigger" = "Edit Selected Text:";
+"settings.general.shortcuts.clipboard" = "Edit Clipboard:";
+"settings.general.shortcuts.blank" = "Open Blank Editor:";
+"settings.general.shortcuts.ocr" = "Edit Screen Text:";
+"settings.general.shortcuts.ocr_clipboard" = "Copy Screen Text:";
+"settings.general.shortcuts.ocr_clipslop" = "Edit Screen Text:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Behavior";
@@ -253,6 +253,12 @@
 "settings.prompts.restore_title" = "Restore Default Prompts?";
 "settings.prompts.restore_message" = "This will replace all your current prompts with the defaults below. This cannot be undone.";
 "settings.prompts.restore_button" = "Restore Defaults";
+"settings.prompts.mnemonic_conflict_tooltip" = "Duplicate mnemonic in this folder";
+"settings.prompts.field.quick_paste" = "Inline Run";
+"settings.prompts.field.open_run" = "Run in Editor";
+"settings.prompts.shortcut_conflict_title" = "Shortcut already in use";
+"settings.prompts.shortcut_conflict_message" = "%1$@ is currently assigned to \"%2$@\" (%3$@). Replace it on the other prompt, or cancel?";
+"settings.prompts.shortcut_conflict_replace" = "Replace";
 
 /* Settings - Prompt Editor */
 "settings.prompts.editor.general" = "General";
@@ -272,6 +278,7 @@
 "settings.prompts.editor.generate_button" = "Generate Prompt";
 "settings.prompts.editor.generating" = "Generating...";
 "settings.prompts.editor.ai_hint" = "Uses your default AI provider";
+"settings.prompts.editor.mnemonic_conflict" = "Another prompt in this folder uses the same mnemonic (%@). Only one will be reachable via the menu — change the key here or on the other prompt.";
 
 /* Settings - Samples */
 "settings.samples.default_structure" = "Default Prompt Structure";
@@ -341,11 +348,11 @@
 "popup.navigator.close" = "Close";
 
 /* Menu Bar */
-"menu.trigger" = "Trigger";
-"menu.clipboard" = "From Clipboard";
-"menu.blank" = "Blank Editor";
-"menu.ocr" = "OCR + Edit";
-"menu.ocr_clipboard" = "OCR to Clipboard";
+"menu.trigger" = "Edit Selected Text";
+"menu.clipboard" = "Edit Clipboard";
+"menu.blank" = "Open Blank Editor";
+"menu.ocr" = "Edit Screen Text";
+"menu.ocr_clipboard" = "Copy Screen Text";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Settings...";
@@ -370,12 +377,14 @@
 
 /* Menu Bar - Prompt Shortcuts */
 "menu.prompt_shortcuts" = "Prompt Shortcuts";
+"menu.prompt_shortcuts.open_run" = "Run in Editor";
+"menu.prompt_shortcuts.quick_paste" = "Inline Run";
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Global Shortcuts";
-"settings.prompts.editor.quick_paste" = "Quick Paste:";
-"settings.prompts.editor.quick_paste_help" = "Captures selected text, processes it through this prompt, and pastes the result back";
-"settings.prompts.editor.open_run" = "Open & Run:";
-"settings.prompts.editor.open_run_help" = "Captures selected text, opens ClipSlop, and automatically applies this prompt";
+"settings.prompts.editor.quick_paste" = "Inline Run:";
+"settings.prompts.editor.quick_paste_help" = "Runs the prompt on the currently selected text and replaces it with the result — no popup, just transforms in place.";
+"settings.prompts.editor.open_run" = "Run in Editor:";
+"settings.prompts.editor.open_run_help" = "Captures selected text, opens the ClipSlop editor with the result, and lets you review or tweak before copying.";
 "settings.prompts.editor.select_all" = "Select all before capture";
 "settings.prompts.editor.select_all_help" = "Simulates ⌘A before capturing text, useful for replacing entire field contents";

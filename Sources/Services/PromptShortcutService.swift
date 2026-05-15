@@ -1,8 +1,42 @@
 import AppKit
 import KeyboardShortcuts
 
+/// Describes a pending cross-prompt shortcut collision awaiting user resolution.
+struct PendingShortcutConflict: Identifiable, Hashable, Sendable {
+    let id: UUID
+    let newShortcut: ShortcutConfig
+    let newPromptID: UUID
+    let newField: ShortcutField
+    let conflictingPromptID: UUID
+    let conflictingPromptName: String
+    let conflictingField: ShortcutField
+
+    init(
+        newShortcut: ShortcutConfig,
+        newPromptID: UUID,
+        newField: ShortcutField,
+        conflictingPromptID: UUID,
+        conflictingPromptName: String,
+        conflictingField: ShortcutField
+    ) {
+        self.id = UUID()
+        self.newShortcut = newShortcut
+        self.newPromptID = newPromptID
+        self.newField = newField
+        self.conflictingPromptID = conflictingPromptID
+        self.conflictingPromptName = conflictingPromptName
+        self.conflictingField = conflictingField
+    }
+}
+
 @MainActor
+@Observable
 final class PromptShortcutService {
+
+    /// Set when `syncToModel` detects a cross-prompt shortcut collision. The
+    /// editor view observes this and presents a "Replace / Cancel" dialog.
+    var pendingShortcutConflict: PendingShortcutConflict?
+
 
     // MARK: - Dependencies (set by AppState after init)
 
@@ -66,21 +100,123 @@ final class PromptShortcutService {
 
     /// Pull current shortcut from KeyboardShortcuts back into the PromptNode model and save.
     /// Called when the user changes a shortcut via the Recorder widget.
+    ///
+    /// If the newly recorded shortcut is already used by another prompt, the
+    /// new assignment is **not** committed. Instead `pendingShortcutConflict`
+    /// is set so the editor can show a Replace / Cancel dialog, and the
+    /// Recorder is rolled back to the prompt's previous value.
     func syncToModel(promptID: UUID) {
         guard let appState, !isSyncing,
-              var node = appState.promptStore.findNode(byID: promptID)
+              let existingNode = appState.promptStore.findNode(byID: promptID)
         else { return }
 
         isSyncing = true
         defer { isSyncing = false }
 
-        let qp = KeyboardShortcuts.getShortcut(for: Self.quickPasteName(for: promptID))
-        let or = KeyboardShortcuts.getShortcut(for: Self.openRunName(for: promptID))
+        let qpName = Self.quickPasteName(for: promptID)
+        let orName = Self.openRunName(for: promptID)
 
-        node.quickPasteShortcut = qp.map { ShortcutConfig(carbonKeyCode: $0.carbonKeyCode, carbonModifiers: $0.carbonModifiers) }
-        node.openRunShortcut = or.map { ShortcutConfig(carbonKeyCode: $0.carbonKeyCode, carbonModifiers: $0.carbonModifiers) }
+        let newQP = KeyboardShortcuts.getShortcut(for: qpName).map {
+            ShortcutConfig(carbonKeyCode: $0.carbonKeyCode, carbonModifiers: $0.carbonModifiers)
+        }
+        let newOR = KeyboardShortcuts.getShortcut(for: orName).map {
+            ShortcutConfig(carbonKeyCode: $0.carbonKeyCode, carbonModifiers: $0.carbonModifiers)
+        }
 
+        if newQP != existingNode.quickPasteShortcut,
+           let candidate = newQP,
+           let conflict = appState.promptStore
+               .prompts(matchingShortcut: candidate, excluding: promptID)
+               .first {
+            applyShortcut(existingNode.quickPasteShortcut, to: qpName)
+            pendingShortcutConflict = PendingShortcutConflict(
+                newShortcut: candidate,
+                newPromptID: promptID,
+                newField: .quickPaste,
+                conflictingPromptID: conflict.prompt.id,
+                conflictingPromptName: conflict.prompt.name,
+                conflictingField: conflict.field
+            )
+            return
+        }
+
+        if newOR != existingNode.openRunShortcut,
+           let candidate = newOR,
+           let conflict = appState.promptStore
+               .prompts(matchingShortcut: candidate, excluding: promptID)
+               .first {
+            applyShortcut(existingNode.openRunShortcut, to: orName)
+            pendingShortcutConflict = PendingShortcutConflict(
+                newShortcut: candidate,
+                newPromptID: promptID,
+                newField: .openRun,
+                conflictingPromptID: conflict.prompt.id,
+                conflictingPromptName: conflict.prompt.name,
+                conflictingField: conflict.field
+            )
+            return
+        }
+
+        var node = existingNode
+        node.quickPasteShortcut = newQP
+        node.openRunShortcut = newOR
         appState.promptStore.updateNode(node)
+    }
+
+    /// Resolve a pending shortcut conflict. When `replace` is true the
+    /// conflicting prompt's matching shortcut is cleared and the new shortcut
+    /// is committed to the editing prompt. When false the new assignment is
+    /// discarded — it was already rolled back when the conflict was detected.
+    func resolveShortcutConflict(replace: Bool) {
+        guard let conflict = pendingShortcutConflict, let appState else {
+            pendingShortcutConflict = nil
+            return
+        }
+        pendingShortcutConflict = nil
+
+        guard replace else { return }
+
+        isSyncing = true
+        defer { isSyncing = false }
+
+        if var other = appState.promptStore.findNode(byID: conflict.conflictingPromptID) {
+            let otherName: KeyboardShortcuts.Name
+            switch conflict.conflictingField {
+            case .quickPaste:
+                other.quickPasteShortcut = nil
+                otherName = Self.quickPasteName(for: other.id)
+            case .openRun:
+                other.openRunShortcut = nil
+                otherName = Self.openRunName(for: other.id)
+            }
+            KeyboardShortcuts.reset(otherName)
+            appState.promptStore.updateNode(other)
+        }
+
+        if var node = appState.promptStore.findNode(byID: conflict.newPromptID) {
+            let newName: KeyboardShortcuts.Name
+            switch conflict.newField {
+            case .quickPaste:
+                node.quickPasteShortcut = conflict.newShortcut
+                newName = Self.quickPasteName(for: node.id)
+            case .openRun:
+                node.openRunShortcut = conflict.newShortcut
+                newName = Self.openRunName(for: node.id)
+            }
+            applyShortcut(conflict.newShortcut, to: newName)
+            appState.promptStore.updateNode(node)
+        }
+    }
+
+    private func applyShortcut(_ config: ShortcutConfig?, to name: KeyboardShortcuts.Name) {
+        if let config {
+            KeyboardShortcuts.setShortcut(
+                .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
+                for: name
+            )
+        } else {
+            KeyboardShortcuts.reset(name)
+        }
     }
 
     /// Migrate shortcuts that exist in UserDefaults but not yet in the model (upgrade path).
