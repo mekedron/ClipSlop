@@ -40,6 +40,10 @@ const config = {
     },
   },
 
+  // Hydrates the live GitHub star count in the navbar.
+  // (Path is resolved relative to the Docusaurus site directory.)
+  clientModules: ['./src/clientModules/github-stars.js'],
+
   i18n: {
     defaultLocale: 'en',
     locales: ['en'],
@@ -109,6 +113,22 @@ const config = {
             href: 'https://github.com/mekedron/ClipSlop',
             label: 'GitHub',
             position: 'right',
+          },
+          {
+            // Live star count, hydrated client-side by
+            // src/clientModules/github-stars.js. The placeholder "—" is
+            // what visitors see during the first paint and on offline /
+            // rate-limited fetches.
+            type: 'html',
+            position: 'right',
+            value:
+              '<a class="navbar-stars" href="https://github.com/mekedron/ClipSlop/stargazers" target="_blank" rel="noopener noreferrer" aria-label="Star ClipSlop on GitHub">' +
+              '<svg class="navbar-stars__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' +
+              '</svg>' +
+              '<span class="navbar-stars__label">Star</span>' +
+              '<span class="navbar-stars__count" data-github-stars>—</span>' +
+              '</a>',
           },
         ],
       },

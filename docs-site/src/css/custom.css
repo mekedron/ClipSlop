@@ -471,6 +471,73 @@ hr {
   color: var(--accent);
 }
 
+/* GitHub stars pill — hydrated by src/clientModules/github-stars.js. */
+.navbar-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease,
+    border-color 0.18s ease, background 0.18s ease;
+}
+.navbar-stars:hover,
+.navbar-stars:focus-visible {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: var(--shadow-md);
+  background: color-mix(in srgb, var(--accent-soft) 60%, var(--bg-card));
+  color: var(--fg);
+  text-decoration: none;
+}
+.navbar-stars__icon {
+  flex: 0 0 auto;
+  color: var(--c-amber, #F4A93B);
+}
+.navbar-stars:hover .navbar-stars__icon,
+.navbar-stars:focus-visible .navbar-stars__icon {
+  fill: currentColor;
+}
+.navbar-stars__label {
+  /* Hide the word "Star" on narrow screens so the count stays compact. */
+}
+.navbar-stars__count {
+  min-width: 1.5ch;
+  text-align: right;
+  padding-left: 6px;
+  margin-left: 2px;
+  border-left: 1px solid var(--border);
+  color: var(--fg-2);
+  font-variant-numeric: tabular-nums;
+}
+.navbar-stars__count[data-loaded='true'] {
+  color: var(--fg);
+}
+
+@media (max-width: 996px) {
+  /* Inside Docusaurus' mobile drawer the pill should look like a row. */
+  .navbar-sidebar .navbar-stars {
+    margin: 4px 0;
+    box-shadow: none;
+  }
+}
+@media (max-width: 480px) {
+  .navbar-stars__label { display: none; }
+  .navbar-stars { padding: 4px 10px; }
+  .navbar-stars__count { padding-left: 0; margin-left: 0; border-left: 0; }
+}
+
 /* Mobile navbar sidebar — must be opaque. The desktop navbar's
    --ifm-navbar-background-color is 78% transparent (paired with a
    backdrop-filter blur), but the mobile drawer inherits the same
