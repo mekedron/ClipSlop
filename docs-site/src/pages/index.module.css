@@ -467,6 +467,70 @@
   object-fit: cover;
 }
 
+/* Click-to-play overlay — visible only while the clip hasn't been started. */
+.demoCardPlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.08) 0%, rgba(0, 0, 0, 0.28) 100%);
+  border: 0;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: background 0.2s ease;
+  z-index: 2;
+}
+.demoCardPlay:hover,
+.demoCardPlay:focus-visible {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.42) 100%);
+}
+.demoCardPlay:focus-visible {
+  outline: none;
+}
+
+.demoCardPlayIcon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.48);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(8px) saturate(1.1);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+.demoCardPlay:hover .demoCardPlayIcon,
+.demoCardPlay:focus-visible .demoCardPlayIcon {
+  transform: scale(1.08);
+  background: rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 14px 36px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+.demoCardPlay:active .demoCardPlayIcon {
+  transform: scale(1.02);
+}
+.demoCardPlayIcon svg {
+  display: block;
+  width: 40px;
+  height: 40px;
+  /* Optical-center the right-pointing triangle inside the circle. */
+  margin-left: 4px;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.25));
+}
+@media (max-width: 700px) {
+  .demoCardPlayIcon { width: 76px; height: 76px; }
+  .demoCardPlayIcon svg { width: 32px; height: 32px; margin-left: 3px; }
+}
+
 .demoCardCaption {
   padding: 22px 24px 24px;
   display: flex;
@@ -562,6 +626,15 @@
   max-width: 60ch;
   color: var(--fg-2);
   font-size: 17px;
+}
+.demoHint {
+  margin: 10px auto 0;
+  color: var(--fg-3);
+  font-size: 15px;
+}
+.demoHint em {
+  font-family: var(--font-serif);
+  font-style: italic;
 }
 
 /* ----------- HOW IT WORKS ----------- */

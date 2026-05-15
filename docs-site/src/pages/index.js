@@ -338,6 +338,49 @@ function Demo() {
   );
 }
 
+function DemoCardVideo({src, poster, label}) {
+  // Hide native controls until first click — the resting state is a clean
+  // poster with a big play overlay. After the user starts the clip, controls
+  // are revealed for scrubbing/pausing.
+  const videoRef = useRef(null);
+  const [played, setPlayed] = useState(false);
+
+  const handlePlay = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    setPlayed(true);
+    const p = v.play();
+    if (p && typeof p.catch === 'function') p.catch(() => {});
+  };
+
+  return (
+    <div className={styles.demoCardVideoWrap}>
+      <video
+        ref={videoRef}
+        className={styles.demoCardVideo}
+        src={src}
+        poster={poster}
+        controls={played}
+        playsInline
+        preload="metadata"
+      />
+      {!played && (
+        <button
+          type="button"
+          className={styles.demoCardPlay}
+          onClick={handlePlay}
+          aria-label={`Play: ${label}`}>
+          <span className={styles.demoCardPlayIcon} aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <polygon points="7,4 7,20 21,12" fill="currentColor" />
+            </svg>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+}
+
 function Demos() {
   // Real screen recordings. Paused by default with a poster frame so visitors
   // can read the captions before opting into playback — otherwise four
@@ -396,22 +439,16 @@ function Demos() {
           <p className={styles.secLede}>
             Unedited screen recordings of the released app. Global shortcuts in
             Gmail and Notes, prompt chains across providers, on-device OCR — all
-            running inline. <em>Click any clip to play.</em>
+            running inline.
+          </p>
+          <p className={styles.demoHint}>
+            <em>Click any clip to play.</em>
           </p>
         </div>
         <div className={styles.demoGrid}>
           {demos.map((d) => (
             <figure className={styles.demoCard} key={d.src}>
-              <div className={styles.demoCardVideoWrap}>
-                <video
-                  className={styles.demoCardVideo}
-                  src={d.src}
-                  poster={d.poster}
-                  controls
-                  playsInline
-                  preload="metadata"
-                />
-              </div>
+              <DemoCardVideo src={d.src} poster={d.poster} label={d.title} />
               <figcaption className={styles.demoCardCaption}>
                 <div className={styles.demoCardHead}>
                   <span className={clsx(styles.demoBadge, d.badgeClass)}>
