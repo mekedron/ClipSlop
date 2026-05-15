@@ -329,8 +329,11 @@ struct PopupContentView: View {
 
     private var shortcutsHint: some View {
         HStack(spacing: 16) {
-            shortcutHint("←→", loc.t("popup.hint.history"))
-            shortcutHint("↑↓", loc.t("popup.hint.scroll"))
+            // Up/Down walk the history chain (older ↓ / newer ↑).
+            // Page-scrolling is now Space and Shift+Space — the arrow
+            // keys are reserved for chain navigation so a single keypress
+            // never has two meanings depending on caret position.
+            shortcutHint("↑↓", loc.t("popup.hint.history"))
             shortcutHint("Space", loc.t("popup.hint.page_down"))
             shortcutHint("⇧Space", loc.t("popup.hint.page_up"))
 

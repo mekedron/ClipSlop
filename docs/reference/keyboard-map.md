@@ -43,9 +43,9 @@ When the floating panel is open:
 | `⌘O`     | Open in TextEdit   |
 | `⌘D`     | Cycle display mode |
 | `⌘,`     | Settings           |
-| `←` `→`  | Navigate history   |
-| `↑` `↓`  | Scroll text        |
+| `↑` `↓`  | Navigate history (↑ newer step, ↓ older step) |
 | `Space`  | Page down          |
+| `⇧Space` | Page up            |
 | `Esc`    | Close / Back       |
 
 ## Prompt navigation

@@ -545,12 +545,13 @@ function HowItWorks() {
             </div>
             <h3>Branch &amp; revisit</h3>
             <p>
-              Hit ←/→ to walk the whole transformation chain. Don&rsquo;t like a
+              Hit ↑/↓ to walk the whole transformation chain — ↑ for the next
+              (newer) step, ↓ to revisit the previous one. Don&rsquo;t like a
               result? Branch from any step. History is kept in-session, never on disk.
             </p>
             <div className={styles.terminal}>
-              <span className={styles.ks}>←</span> back &nbsp;
-              <span className={styles.ks}>→</span> forward &nbsp;
+              <span className={styles.ks}>↓</span> back &nbsp;
+              <span className={styles.ks}>↑</span> forward &nbsp;
               <span className={styles.ks}>⌘E</span> edit
             </div>
           </div>

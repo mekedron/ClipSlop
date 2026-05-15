@@ -183,9 +183,9 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 | `⌘O` | Open in TextEdit |
 | `⌘D` | Cycle display mode |
 | `⌘,` | Settings |
-| `←→` | Navigate history |
-| `↑↓` | Scroll text |
+| `↑↓` | Navigate history (↑ newer step, ↓ older step) |
 | `Space` | Page down |
+| `⇧Space` | Page up |
 | `Esc` | Close / Back |
 
 ## Comparison with other AI writing tools
