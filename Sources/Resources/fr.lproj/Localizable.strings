@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Appuyez sur une touche pour choisir un prompt";
 "popup.hint.history" = "Historique";
-"popup.hint.scroll" = "Défiler";
 "popup.hint.page_down" = "Page ↓";
 "popup.hint.page_up" = "Page ↑";
 "popup.hint.back" = "Retour";

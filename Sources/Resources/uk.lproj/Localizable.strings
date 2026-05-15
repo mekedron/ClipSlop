@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Натисніть літеру, щоб обрати промпт";
 "popup.hint.history" = "Історія";
-"popup.hint.scroll" = "Прокрутка";
 "popup.hint.page_down" = "Стор. ↓";
 "popup.hint.page_up" = "Стор. ↑";
 "popup.hint.back" = "Назад";

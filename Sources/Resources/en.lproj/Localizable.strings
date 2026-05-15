@@ -329,7 +329,6 @@
 "popup.source" = "Source";
 "popup.display" = "Display";
 "popup.hint.history" = "History";
-"popup.hint.scroll" = "Scroll";
 "popup.hint.page_down" = "Page ↓";
 "popup.hint.page_up" = "Page ↑";
 "popup.hint.back" = "Back";

@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Paina kirjainta valitaksesi kehotteen";
 "popup.hint.history" = "Historia";
-"popup.hint.scroll" = "Vieritä";
 "popup.hint.page_down" = "Sivu ↓";
 "popup.hint.page_up" = "Sivu ↑";
 "popup.hint.back" = "Takaisin";

@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Nyomj egy betűt a prompt kiválasztásához";
 "popup.hint.history" = "Előzmények";
-"popup.hint.scroll" = "Görgetés";
 "popup.hint.page_down" = "Oldal ↓";
 "popup.hint.page_up" = "Oldal ↑";
 "popup.hint.back" = "Vissza";

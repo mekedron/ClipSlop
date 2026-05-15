@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Tryk på et bogstav for at vælge en prompt";
 "popup.hint.history" = "Historik";
-"popup.hint.scroll" = "Rul";
 "popup.hint.page_down" = "Side ned";
 "popup.hint.page_up" = "Side op";
 "popup.hint.back" = "Tilbage";

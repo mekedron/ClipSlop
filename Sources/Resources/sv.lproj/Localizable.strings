@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Sign In Again";
 "popup.mnemonic_hint" = "Tryck en bokstav för att välja en prompt";
 "popup.hint.history" = "Historik";
-"popup.hint.scroll" = "Scrolla";
 "popup.hint.page_down" = "Sida ↓";
 "popup.hint.page_up" = "Sida ↑";
 "popup.hint.back" = "Tillbaka";

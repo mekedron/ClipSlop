@@ -284,7 +284,6 @@
 "popup.sign_in_again" = "Войти снова";
 "popup.mnemonic_hint" = "Нажмите клавишу для выбора промпта";
 "popup.hint.history" = "История";
-"popup.hint.scroll" = "Прокрутка";
 "popup.hint.page_down" = "Стр. ↓";
 "popup.hint.page_up" = "Стр. ↑";
 "popup.hint.back" = "Назад";
