@@ -430,7 +430,7 @@ function Demos() {
 
   return (
     <section className={clsx(styles.sec, styles.secTight)} id="demos">
-      <div className={styles.wrap}>
+      <div className={styles.wrapWide}>
         <div className={styles.secHead}>
           <div className={styles.secEyebrow}>See it in action</div>
           <h2 className={styles.h2}>
