@@ -4,9 +4,23 @@ title: Screen OCR
 description: Capture any region of the screen and run OCR — feed the recognised text directly into a prompt.
 ---
 
+import useBaseUrl from '@docusaurus/useBaseUrl';
+
 # Screen OCR
 
 Press <kbd>⇧</kbd><kbd>⌘</kbd><kbd>2</kbd> from anywhere on macOS. ClipSlop captures a screen region, runs OCR locally, and opens the recognised text in the panel — ready to translate, rewrite, format, or chain.
+
+<video
+  src={useBaseUrl('/demos/videos/screen-ocr.mp4')}
+  controls
+  autoPlay
+  loop
+  muted
+  playsInline
+  style={{maxWidth: '100%', width: '100%', borderRadius: 8, boxShadow: '0 6px 24px rgba(0,0,0,0.12)'}}
+/>
+
+Capture the region containing the text, then chain straight into the pipeline — translate the recognised text to English, then condense it with **Analyze → Summary**.
 
 ## When to use it
 

@@ -22,6 +22,7 @@ ClipSlop is a free, open-source AI writing tool for macOS that works in any app.
 ## Table of Contents
 
 - [Why ClipSlop?](#why-clipslop)
+- [Demos](#demos)
 - [How it works](#how-it-works)
 - [Built-in prompts](#built-in-prompts)
 - [Keyboard shortcuts](#keyboard-shortcuts)
@@ -61,6 +62,50 @@ Free, open-source, works with any AI provider — ChatGPT, Claude, Ollama, or yo
 <p align="center">
   <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI text transformations for macOS with prompt tree, Quick Paste, transformation history, and search">
 </p>
+
+## Demos
+
+Unedited screen recordings of the released app. Click the thumbnails below to play (GitHub renders `<video>` inline on most browsers; if your client falls back to a download link, the videos open in any media player).
+
+### Run inline anywhere &nbsp;·&nbsp; Quick Paste &nbsp;·&nbsp; `⌃⌘G` · `⌃⌘T` · `⌃⌘/`
+
+Three lines, three global shortcuts. Select the first line — **Fix Grammar**. Select the second — **Translate → English**. Select the third (prefixed with `//`) — **Run Custom Prompt** with the instruction typed inline after `//`. Every result pastes back where the cursor is.
+
+<p align="center">
+  <video src="https://github.com/mekedron/ClipSlop/raw/main/docs-site/static/demos/videos/inline-run.mp4" controls muted playsinline width="720"></video>
+</p>
+
+▶ [Watch `inline-run.mp4`](docs-site/static/demos/videos/inline-run.mp4) · [open in the docs](https://mekedron.github.io/ClipSlop/docs/use/quick-paste)
+
+### Chain prompts across providers &nbsp;·&nbsp; Full pipeline &nbsp;·&nbsp; `⌃⌘C → R B → T F`
+
+A rough draft typed straight into Gmail: trigger ClipSlop, rewrite for business tone, translate to Finnish, paste back into the same message. Every step is saved as a history node — branch off if you want a different turn.
+
+<p align="center">
+  <video src="https://github.com/mekedron/ClipSlop/raw/main/docs-site/static/demos/videos/prompt-chaining.mp4" controls muted playsinline width="720"></video>
+</p>
+
+▶ [Watch `prompt-chaining.mp4`](docs-site/static/demos/videos/prompt-chaining.mp4) · [open in the docs](https://mekedron.github.io/ClipSlop/docs/use/full-pipeline)
+
+### Analyze any selection on the web &nbsp;·&nbsp; Open & Run &nbsp;·&nbsp; `⌃⌘⌥T → A S`
+
+Open a Finnish news article, highlight a paragraph, translate to English with **Open & Run**, then condense it into a short summary with **Analyze → Summary**. The full pipeline goes anywhere you can highlight text.
+
+<p align="center">
+  <video src="https://github.com/mekedron/ClipSlop/raw/main/docs-site/static/demos/videos/analyze-any-text.mp4" controls muted playsinline width="720"></video>
+</p>
+
+▶ [Watch `analyze-any-text.mp4`](docs-site/static/demos/videos/analyze-any-text.mp4) · [open in the docs](https://mekedron.github.io/ClipSlop/docs/use/open-and-run)
+
+### OCR images, then keep going &nbsp;·&nbsp; Screen OCR &nbsp;·&nbsp; `⇧⌘2 → T E → A S`
+
+Capture a region of the screen. Apple Vision recognises the text on-device, drops it into the panel, and you can keep chaining — translate, then summarise, then copy. Useful when the source is an image, a PDF, or an app that won't let you `⌘C` its text.
+
+<p align="center">
+  <video src="https://github.com/mekedron/ClipSlop/raw/main/docs-site/static/demos/videos/screen-ocr.mp4" controls muted playsinline width="720"></video>
+</p>
+
+▶ [Watch `screen-ocr.mp4`](docs-site/static/demos/videos/screen-ocr.mp4) · [open in the docs](https://mekedron.github.io/ClipSlop/docs/use/screen-ocr)
 
 ## How it works
 

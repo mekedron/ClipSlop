@@ -1,6 +1,7 @@
 import {useEffect, useRef, useState} from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
+import useBaseUrl from '@docusaurus/useBaseUrl';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 
@@ -334,6 +335,95 @@ function Demo() {
         No copying, no tabs, no dialog boxes. Result pastes back where the cursor is.
       </p>
     </div>
+  );
+}
+
+function Demos() {
+  // Real screen recordings — autoplay muted/looped for an overview-at-a-glance,
+  // controls remain available so visitors can pause or scrub.
+  const demos = [
+    {
+      src: useBaseUrl('/demos/videos/inline-run.mp4'),
+      title: 'Run inline anywhere',
+      badge: 'Quick Paste',
+      badgeClass: styles.demoBadgeF,
+      shortcut: '⌃⌘G · ⌃⌘T · ⌃⌘/',
+      description:
+        'Three lines, three global shortcuts. Select the first line — fix grammar. Select the second — translate to English. Select the third (prefixed with //) — run a one-shot custom prompt. The result pastes back where the cursor is, in any app.',
+    },
+    {
+      src: useBaseUrl('/demos/videos/prompt-chaining.mp4'),
+      title: 'Chain prompts across providers',
+      badge: 'Full pipeline',
+      badgeClass: styles.demoBadgeR,
+      shortcut: '⌃⌘C → R B → T F → ⌘C',
+      description:
+        "A rough draft typed into Gmail: rewrite for business tone, then translate to Finnish, then paste back into the same message. Every step lives in history — branch off if you want a different turn.",
+    },
+    {
+      src: useBaseUrl('/demos/videos/analyze-any-text.mp4'),
+      title: 'Analyze any selection on the web',
+      badge: 'Open & Run',
+      badgeClass: styles.demoBadgeA,
+      shortcut: '⌃⌘⌥T → A S',
+      description:
+        'Open a Finnish news article, highlight a paragraph, translate it to English, then condense it into a short summary — all without leaving the browser tab.',
+    },
+    {
+      src: useBaseUrl('/demos/videos/screen-ocr.mp4'),
+      title: 'OCR images, then keep going',
+      badge: 'Screen OCR',
+      badgeClass: styles.demoBadgeD,
+      shortcut: '⇧⌘2 → T E → A S',
+      description:
+        'Capture a region of the screen. Vision recognises the text on-device, drops it in the panel, then you can translate, summarise, or branch — same pipeline, no copy-paste.',
+    },
+  ];
+
+  return (
+    <section className={clsx(styles.sec, styles.secTight)} id="demos">
+      <div className={styles.wrap}>
+        <div className={styles.secHead}>
+          <div className={styles.secEyebrow}>See it in action</div>
+          <h2 className={styles.h2}>
+            Four real workflows. <em>Zero</em> app switches.
+          </h2>
+          <p className={styles.secLede}>
+            Unedited screen recordings of the released app. Global shortcuts in
+            Gmail and Notes, prompt chains across providers, on-device OCR — all
+            running inline.
+          </p>
+        </div>
+        <div className={styles.demoGrid}>
+          {demos.map((d) => (
+            <figure className={styles.demoCard} key={d.src}>
+              <div className={styles.demoCardVideoWrap}>
+                <video
+                  className={styles.demoCardVideo}
+                  src={d.src}
+                  controls
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+              </div>
+              <figcaption className={styles.demoCardCaption}>
+                <div className={styles.demoCardHead}>
+                  <span className={clsx(styles.demoBadge, d.badgeClass)}>
+                    {d.badge}
+                  </span>
+                  <h3 className={styles.demoCardTitle}>{d.title}</h3>
+                </div>
+                <code className={styles.demoCardShortcut}>{d.shortcut}</code>
+                <p className={styles.demoCardDesc}>{d.description}</p>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -701,6 +791,7 @@ export default function Home() {
       <PageBg />
       <main className={styles.landing}>
         <Hero />
+        <Demos />
         <HowItWorks />
         <Terminals />
         <Prompts />
