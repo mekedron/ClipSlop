@@ -339,11 +339,13 @@ function Demo() {
 }
 
 function Demos() {
-  // Real screen recordings — autoplay muted/looped for an overview-at-a-glance,
-  // controls remain available so visitors can pause or scrub.
+  // Real screen recordings. Paused by default with a poster frame so visitors
+  // can read the captions before opting into playback — otherwise four
+  // simultaneously autoplaying clips would be disorienting.
   const demos = [
     {
       src: useBaseUrl('/demos/videos/inline-run.mp4'),
+      poster: useBaseUrl('/demos/videos/inline-run.jpg'),
       title: 'Run inline anywhere',
       badge: 'Quick Paste',
       badgeClass: styles.demoBadgeF,
@@ -353,6 +355,7 @@ function Demos() {
     },
     {
       src: useBaseUrl('/demos/videos/prompt-chaining.mp4'),
+      poster: useBaseUrl('/demos/videos/prompt-chaining.jpg'),
       title: 'Chain prompts across providers',
       badge: 'Full pipeline',
       badgeClass: styles.demoBadgeR,
@@ -362,6 +365,7 @@ function Demos() {
     },
     {
       src: useBaseUrl('/demos/videos/analyze-any-text.mp4'),
+      poster: useBaseUrl('/demos/videos/analyze-any-text.jpg'),
       title: 'Analyze any selection on the web',
       badge: 'Open & Run',
       badgeClass: styles.demoBadgeA,
@@ -371,6 +375,7 @@ function Demos() {
     },
     {
       src: useBaseUrl('/demos/videos/screen-ocr.mp4'),
+      poster: useBaseUrl('/demos/videos/screen-ocr.jpg'),
       title: 'OCR images, then keep going',
       badge: 'Screen OCR',
       badgeClass: styles.demoBadgeD,
@@ -391,7 +396,7 @@ function Demos() {
           <p className={styles.secLede}>
             Unedited screen recordings of the released app. Global shortcuts in
             Gmail and Notes, prompt chains across providers, on-device OCR — all
-            running inline.
+            running inline. <em>Click any clip to play.</em>
           </p>
         </div>
         <div className={styles.demoGrid}>
@@ -401,10 +406,8 @@ function Demos() {
                 <video
                   className={styles.demoCardVideo}
                   src={d.src}
+                  poster={d.poster}
                   controls
-                  autoPlay
-                  loop
-                  muted
                   playsInline
                   preload="metadata"
                 />
