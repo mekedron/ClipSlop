@@ -46,6 +46,21 @@ final class PopupWindow: NSPanel {
         let y = screenFrame.midY - windowFrame.height / 2
         setFrameOrigin(NSPoint(x: x, y: y))
         makeKeyAndOrderFront(nil)
+        // Force ClipSlop to the foreground so the popup gets keyboard focus
+        // when summoned by a global hotkey from another app. The popup is a
+        // `.nonactivatingPanel`, which would normally let us appear without
+        // stealing focus — but `KeyboardShortcuts` callbacks fire in the
+        // source app's context, so without this call the popup opens behind
+        // and our key handlers never see input.
+        //
+        // ⚠️ This activation MUST be paired with a focus yield on dismissal.
+        // ClipSlop is an `.accessory` app, and on macOS 14+ once we become
+        // the frontmost app a plain `NSRunningApplication.activate()` is no
+        // longer enough to hand focus back — see `AppState.dismissPopup` for
+        // the working pattern (`NSApp.hide` / `NSApp.deactivate` + explicit
+        // re-activation of the previous app). If you add another code path
+        // that activates the app, make sure its dismissal goes through
+        // `dismissPopup`, or replicate that yield.
         NSApplication.shared.activate()
     }
 

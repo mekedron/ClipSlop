@@ -745,9 +745,14 @@ final class AppState {
         case .plainText:
             ClipboardService.setText(currentDisplayText)
         }
+        // dismissPopup() now restores focus to the previous app via
+        // lastExternalApp.activate(options:). Give the activation a runloop
+        // turn to land before posting the synthetic Cmd+V — otherwise the
+        // paste can race the focus handoff and miss the target app.
         dismissPopup()
-        lastExternalApp?.activate()
-        ClipboardService.simulatePaste()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            ClipboardService.simulatePaste()
+        }
     }
 
     func transformAgain() {
@@ -775,6 +780,40 @@ final class AppState {
         isPopupVisible = false
         cancelProcessing()
         resetSessionState()
+        // Return focus to the app the user came from.
+        //
+        // ClipSlop is an .accessory app, but `PopupWindow.showAtCenter` calls
+        // `NSApp.activate()` so a popup summoned by a global hotkey gets
+        // keyboard focus. That promotes us to the foreground, and on macOS
+        // Sonoma+/Sequoia the OS refuses any cross-app activation request
+        // that originates from the current frontmost app — so naively calling
+        // `lastExternalApp.activate()` here is a no-op.
+        //
+        // The reliable way out is `NSApp.hide(nil)`: it hides every window we
+        // own and tells AppKit to promote the next visible app. We then
+        // explicitly re-activate `lastExternalApp` so focus lands on the
+        // exact app the user came from rather than whatever else AppKit
+        // happens to pick.
+        //
+        // When Settings or Onboarding is open behind the popup we fall back
+        // to `NSApp.deactivate()` so those windows aren't hidden along with
+        // the popup. With a regular NSWindow visible, ClipSlop is treated as
+        // a normal app and the deactivate is enough for the activate to land.
+        let target = lastExternalApp
+        let hasOtherWindow = NSApp.windows.contains { win in
+            win.isVisible
+                && win !== popupWindow
+                && !(win is ProcessingHUDWindow)
+                && win.className != "NSStatusBarWindow"
+        }
+        if hasOtherWindow {
+            NSApp.deactivate()
+        } else {
+            NSApp.hide(nil)
+        }
+        DispatchQueue.main.async {
+            target?.activate(options: [.activateAllWindows])
+        }
     }
 
     private func resetSessionState() {
