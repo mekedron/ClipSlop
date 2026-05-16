@@ -25,4 +25,9 @@ extension KeyboardShortcuts.Name {
         "triggerOCRToClipboard",
         default: .init(.one, modifiers: [.command, .shift])
     )
+
+    static let triggerQuickAccess = Self(
+        "triggerQuickAccess",
+        default: .init(.space, modifiers: [.option, .shift])
+    )
 }

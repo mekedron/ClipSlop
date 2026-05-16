@@ -27,6 +27,10 @@ struct MenuBarView: View {
             appState.triggerFromScreenCapture()
         }
 
+        menuButton(loc.t("menu.quick_access"), shortcut: .triggerQuickAccess) {
+            appState.showQuickAccess()
+        }
+
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
 
         Divider()
@@ -106,15 +110,17 @@ extension KeyboardShortcuts.Shortcut {
             34: "I", 35: "P", 37: "L", 38: "J", 40: "K", 43: ",", 45: "N",
             46: "M", 24: "=", 27: "-", 30: "]", 33: "[", 39: "'", 41: ";",
             42: "\\", 44: "/", 47: ".",
+            36: "↩", 48: "⇥", 49: "Space", 51: "⌫", 53: "⎋",
+            123: "←", 124: "→", 125: "↓", 126: "↑",
         ]
         parts += keyMap[carbonKeyCode] ?? "?"
         return parts
     }
 
     func swiftUIKeyEquivalent() -> KeyEquivalent? {
-        let code = carbonKeyCode
+        let code = Int(carbonKeyCode)
 
-        let map: [Int: Character] = [
+        let charMap: [Int: Character] = [
             0: "a", 1: "s", 2: "d", 3: "f", 4: "h", 5: "g", 6: "z", 7: "x",
             8: "c", 9: "v", 11: "b", 12: "q", 13: "w", 14: "e", 15: "r",
             16: "y", 17: "t", 18: "1", 19: "2", 20: "3", 21: "4", 22: "6",
@@ -123,9 +129,15 @@ extension KeyboardShortcuts.Shortcut {
             46: "m", 24: "=", 27: "-", 30: "]", 33: "[", 39: "'", 41: ";",
             42: "\\", 44: "/", 47: ".",
         ]
+        if let char = charMap[code] {
+            return KeyEquivalent(char)
+        }
 
-        guard let char = map[Int(code)] else { return nil }
-        return KeyEquivalent(char)
+        let specialMap: [Int: KeyEquivalent] = [
+            36: .return, 48: .tab, 49: .space, 51: .delete, 53: .escape,
+            123: .leftArrow, 124: .rightArrow, 125: .downArrow, 126: .upArrow,
+        ]
+        return specialMap[code]
     }
 
     func swiftUIModifiers() -> SwiftUI.EventModifiers {

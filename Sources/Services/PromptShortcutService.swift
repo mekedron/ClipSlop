@@ -326,11 +326,18 @@ final class PromptShortcutService {
     // MARK: - Quick Paste handler
 
     func handleQuickPaste(promptID: UUID) {
-        guard let appState, !isProcessingInline else { return }
-        guard let prompt = appState.promptStore.findNode(byID: promptID),
-              prompt.isPrompt,
-              let systemPrompt = prompt.systemPrompt
+        guard let appState,
+              let prompt = appState.promptStore.findNode(byID: promptID),
+              prompt.isPrompt
         else { return }
+        runInline(prompt: prompt)
+    }
+
+    /// - Parameter selectAllOverride: When `nil` (default) honors `prompt.selectAllBeforeCapture`.
+    ///   Pass `false` from invocation paths that should never simulate Cmd+A first (e.g. Quick Access tiles).
+    func runInline(prompt: PromptNode, selectAllOverride: Bool? = nil) {
+        guard let appState, !isProcessingInline else { return }
+        guard prompt.isPrompt, let systemPrompt = prompt.systemPrompt else { return }
 
         let provider: AIProviderConfig
         if let id = prompt.providerID,
@@ -343,7 +350,7 @@ final class PromptShortcutService {
         }
 
         isProcessingInline = true
-        let shouldSelectAll = prompt.selectAllBeforeCapture == true
+        let shouldSelectAll = selectAllOverride ?? (prompt.selectAllBeforeCapture == true)
 
         // Save original clipboard
         let originalClipboard = ClipboardService.getText()
@@ -465,10 +472,15 @@ final class PromptShortcutService {
     // MARK: - Open & Run handler
 
     func handleOpenRun(promptID: UUID) {
-        guard let appState else { return }
-        guard let prompt = appState.promptStore.findNode(byID: promptID),
+        guard let appState,
+              let prompt = appState.promptStore.findNode(byID: promptID),
               prompt.isPrompt
         else { return }
+        runOpenInPopup(prompt: prompt)
+    }
+
+    func runOpenInPopup(prompt: PromptNode) {
+        guard let appState, prompt.isPrompt else { return }
 
         if appState.isPopupVisible {
             appState.navigateInto(prompt)

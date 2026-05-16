@@ -352,6 +352,7 @@
 "menu.blank" = "Open Blank Editor";
 "menu.ocr" = "Edit Screen Text";
 "menu.ocr_clipboard" = "Copy Screen Text";
+"menu.quick_access" = "Open Quick Access";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Settings...";
@@ -387,3 +388,18 @@
 "settings.prompts.editor.open_run_help" = "Captures selected text, opens the ClipSlop editor with the result, and lets you review or tweak before copying.";
 "settings.prompts.editor.select_all" = "Select all before capture";
 "settings.prompts.editor.select_all_help" = "Simulates ⌘A before capturing text, useful for replacing entire field contents";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Quick Access";
+"settings.general.shortcuts.quick_access" = "Open Quick Access:";
+"settings.quick_access.columns" = "Columns";
+"settings.quick_access.left_pane_hint" = "Drag prompts into the grid →";
+"settings.quick_access.grid_empty" = "Drop prompts here to add tiles";
+"settings.quick_access.grid_empty_hint" = "Drag any prompt from the left.";
+"settings.quick_access.method.label" = "Action";
+"settings.quick_access.method.inline" = "Inline Run";
+"settings.quick_access.method.open_in_clipslop" = "Run in Editor";
+"settings.quick_access.tile.remove" = "Remove tile";
+"settings.quick_access.tile.in_use_badge" = "In Quick Access";
+"settings.quick_access.tile.missing" = "(deleted prompt)";
+"quick_access.empty_state" = "No tiles configured.\nOpen Settings → Quick Access to add some.";

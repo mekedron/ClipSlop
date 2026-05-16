@@ -15,6 +15,7 @@ final class AppState {
     // Session state
     var currentSession: TransformationSession?
     var isPopupVisible = false
+    var isQuickAccessVisible = false
     var isProcessing = false
     var streamingText = ""
     var errorMessage: String?
@@ -52,6 +53,7 @@ final class AppState {
 
     // Window references — not observed by views, excluded from @Observable tracking
     @ObservationIgnored private var popupWindow: PopupWindow?
+    @ObservationIgnored private var quickAccessWindow: QuickAccessWindow?
     @ObservationIgnored private var settingsWindow: NSWindow?
     @ObservationIgnored private var aboutWindow: NSWindow?
     @ObservationIgnored private var onboardingWindow: OnboardingWindow?
@@ -178,6 +180,14 @@ final class AppState {
         }
         hotkeyService.onTriggerOCRToClipboard = { [weak self] in
             self?.triggerOCRToClipboard()
+        }
+        hotkeyService.onTriggerQuickAccess = { [weak self] in
+            guard let self else { return }
+            if self.isQuickAccessVisible {
+                self.dismissQuickAccess()
+            } else {
+                self.showQuickAccess()
+            }
         }
         hotkeyService.register()
 
@@ -825,6 +835,72 @@ final class AppState {
         isProcessing = false
         isEditing = false
         editingText = ""
+    }
+
+    // MARK: - Quick Access
+
+    func showQuickAccess() {
+        if quickAccessWindow == nil {
+            quickAccessWindow = QuickAccessWindow(appState: self)
+        }
+        quickAccessWindow?.showNearCursor()
+        isQuickAccessVisible = true
+    }
+
+    func dismissQuickAccess() {
+        guard isQuickAccessVisible || quickAccessWindow?.isVisible == true else { return }
+        quickAccessWindow?.close()
+        isQuickAccessVisible = false
+
+        // Mirror dismissPopup's focus-handoff. KeyboardShortcuts callbacks
+        // and the panel's makeKeyAndOrderFront promote ClipSlop to the
+        // foreground; without this we don't return focus to the source app
+        // so a subsequent runInline's synthetic Cmd+C lands in the wrong app.
+        let target = lastExternalApp
+        let hasOtherWindow = NSApp.windows.contains { win in
+            win.isVisible
+                && win !== quickAccessWindow
+                && !(win is ProcessingHUDWindow)
+                && win.className != "NSStatusBarWindow"
+        }
+        if hasOtherWindow {
+            NSApp.deactivate()
+        } else {
+            NSApp.hide(nil)
+        }
+        DispatchQueue.main.async {
+            target?.activate(options: [.activateAllWindows])
+        }
+    }
+
+    func activateQuickAccessTile(_ tile: QuickAccessTile) {
+        guard let prompt = promptStore.findNode(byID: tile.promptID),
+              prompt.isPrompt
+        else {
+            settings.quickAccessTiles.removeAll { $0.id == tile.id }
+            dismissQuickAccess()
+            return
+        }
+
+        dismissQuickAccess()
+
+        let method = tile.method
+        // Yield focus back to the source app before invoking the prompt —
+        // both inline (Cmd+C capture) and open-in-popup (triggerFromSelection's
+        // Cmd+C) need the source app to be frontmost when the synthetic
+        // events fire. 0.1s wasn't enough for the async NSRunningApplication
+        // activation to land reliably, so the Cmd+C ended up in ClipSlop.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            guard let self else { return }
+            switch method {
+            case .inline:
+                // Quick Access tiles always perform a plain selection-capture,
+                // never the optional Cmd+A pre-step that some prompts have set.
+                self.promptShortcutService.runInline(prompt: prompt, selectAllOverride: false)
+            case .openInPopup:
+                self.promptShortcutService.runOpenInPopup(prompt: prompt)
+            }
+        }
     }
 
     // MARK: - Error

@@ -157,6 +157,17 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultPrompts, forKey: "useDefaultPrompts") }
     }
 
+    var quickAccessGridColumns: Int {
+        didSet { UserDefaults.standard.set(quickAccessGridColumns, forKey: "quickAccessGridColumns") }
+    }
+
+    var quickAccessTiles: [QuickAccessTile] {
+        didSet {
+            let data = (try? JSONEncoder().encode(quickAccessTiles)) ?? Data()
+            UserDefaults.standard.set(data, forKey: "quickAccessTiles")
+        }
+    }
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -197,6 +208,15 @@ final class AppSettings {
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
+
+        let storedColumns = (defaults.object(forKey: "quickAccessGridColumns") as? Int) ?? 2
+        quickAccessGridColumns = max(1, min(8, storedColumns))
+        if let data = defaults.data(forKey: "quickAccessTiles"),
+           let decoded = try? JSONDecoder().decode([QuickAccessTile].self, from: data) {
+            quickAccessTiles = decoded
+        } else {
+            quickAccessTiles = []
+        }
     }
 }
 

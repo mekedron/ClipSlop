@@ -62,6 +62,7 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.blank"), name: .triggerBlankEditor)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipboard"), name: .triggerOCRToClipboard)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipslop"), name: .triggerScreenCapture)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.quick_access"), name: .triggerQuickAccess)
             }
 
             Section(loc.t("settings.general.behavior")) {
