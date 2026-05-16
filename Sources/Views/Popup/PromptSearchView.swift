@@ -117,29 +117,36 @@ private struct SearchResultRow: View {
         return .clear
     }
 
+    /// "Folder › Subfolder › Prompt" composed as one `Text` so it truncates
+    /// cleanly when horizontal space runs out. Path segments are rendered
+    /// in a dimmer color than the name but at the same font size, so the
+    /// whole label reads as a single line and saves vertical space.
+    private var label: Text {
+        let chevronColor = Color.secondary.opacity(0.55)
+        var combined = Text("")
+        for component in result.path {
+            combined = combined
+                + Text(component).foregroundColor(.secondary)
+                + Text(" › ").foregroundColor(chevronColor)
+        }
+        return combined + Text(result.node.name).foregroundColor(.primary)
+    }
+
     var body: some View {
         Button(action: onActivate) {
             HStack(spacing: 8) {
-                Image(systemName: "text.bubble")
-                    .font(.caption)
-                    .foregroundStyle(isSelected ? .white : .purple)
-                    .frame(width: 18, height: 18)
-                    .background(isSelected ? Color.accentColor : Color.clear)
+                Text(result.node.mnemonicDisplay)
+                    .font(.system(.caption, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(minWidth: 22, minHeight: 18)
+                    .padding(.horizontal, 4)
+                    .background(Color.purple)
                     .clipShape(RoundedRectangle(cornerRadius: 4))
 
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(result.node.name)
-                        .font(.subheadline)
-                        .lineLimit(1)
-
-                    if !result.path.isEmpty {
-                        Text(result.path.joined(separator: " / "))
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                }
+                label
+                    .font(.subheadline)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
 
                 Spacer()
 
