@@ -405,6 +405,11 @@
 "settings.quick_access.export.help" = "Save the current Quick Access grid to a JSON file.";
 "settings.quick_access.import" = "Import…";
 "settings.quick_access.import.help" = "Replace the current Quick Access grid with the contents of a JSON file.";
+"settings.quick_access.restore" = "Restore defaults";
+"settings.quick_access.restore.help" = "Replace the current grid with the bundled default tiles.";
+"settings.quick_access.restore_title" = "Restore Default Quick Access?";
+"settings.quick_access.restore_message" = "This will replace your current Quick Access grid with the defaults below. This cannot be undone.";
+"settings.quick_access.restore_button" = "Restore Defaults";
 "settings.quick_access.left_pane_hint" = "Drag prompts into the grid →";
 "settings.quick_access.grid_empty" = "Drop prompts here to add tiles";
 "settings.quick_access.grid_empty_hint" = "Drag any prompt from the left.";

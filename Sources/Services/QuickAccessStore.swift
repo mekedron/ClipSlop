@@ -210,7 +210,7 @@ final class QuickAccessStore {
     /// always carry these IDs, so default tiles resolve to real prompts on a
     /// fresh install (and continue to resolve after the user customizes the
     /// prompts library as long as they haven't deleted these specific ones).
-    private static func defaultDocument() -> QuickAccessDocument {
+    static func defaultDocument() -> QuickAccessDocument {
         let yourPrompt = UUID(uuidString: "FD5545B3-C0BE-4D4C-927B-4EC4104C9C3D")!
         let fixGrammar = UUID(uuidString: "3B9EDEAA-8E0F-49E9-BFD4-B30EF9947BBD")!
         let reformat = UUID(uuidString: "541F791B-B1F6-4282-A22B-AE9A63B1742B")!

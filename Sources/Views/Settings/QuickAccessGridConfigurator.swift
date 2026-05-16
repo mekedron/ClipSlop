@@ -6,6 +6,7 @@ struct QuickAccessGridConfigurator: View {
     let appState: AppState
 
     @State private var isPromptDropTargeted: Bool = false
+    @State private var showRestoreDefaults: Bool = false
 
     private let loc = Loc.shared
     private var store: QuickAccessStore { appState.quickAccessStore }
@@ -49,6 +50,13 @@ struct QuickAccessGridConfigurator: View {
 
             footer
         }
+        .sheet(isPresented: $showRestoreDefaults) {
+            RestoreQuickAccessDefaultsSheet(
+                store: store,
+                promptStore: appState.promptStore,
+                isPresented: $showRestoreDefaults
+            )
+        }
     }
 
     private var footer: some View {
@@ -76,6 +84,14 @@ struct QuickAccessGridConfigurator: View {
             }
             .controlSize(.small)
             .help(loc.t("settings.quick_access.export.help"))
+
+            Button {
+                showRestoreDefaults = true
+            } label: {
+                Label(loc.t("settings.quick_access.restore"), systemImage: "arrow.counterclockwise")
+            }
+            .controlSize(.small)
+            .help(loc.t("settings.quick_access.restore.help"))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -284,5 +300,68 @@ struct QuickAccessGridConfigurator: View {
 
     private func removeTile(tileID: UUID) {
         store.removeTile(withID: tileID)
+    }
+}
+
+// MARK: - Restore Defaults Sheet
+
+private struct RestoreQuickAccessDefaultsSheet: View {
+    let store: QuickAccessStore
+    let promptStore: PromptStore
+    @Binding var isPresented: Bool
+
+    private let loc = Loc.shared
+
+    var body: some View {
+        let defaults = QuickAccessStore.defaultDocument()
+
+        VStack(spacing: 16) {
+            Image(systemName: "arrow.counterclockwise")
+                .font(.system(size: 28))
+                .foregroundStyle(.orange)
+
+            Text(loc.t("settings.quick_access.restore_title"))
+                .font(.headline)
+
+            Text(loc.t("settings.quick_access.restore_message"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+
+            // Preview the tiles that will replace the current grid.
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(defaults.tiles) { tile in
+                        HStack(spacing: 8) {
+                            Image(systemName: tile.method.iconName)
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                                .frame(width: 14)
+
+                            Text(promptStore.findNode(byID: tile.promptID)?.name ?? "?")
+                                .font(.caption)
+
+                            Spacer()
+                        }
+                    }
+                }
+                .padding(12)
+            }
+            .frame(maxHeight: 200)
+            .background(.quaternary.opacity(0.3), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+
+            HStack {
+                Button(loc.t("settings.prompts.cancel")) { isPresented = false }
+                Spacer()
+                Button(loc.t("settings.quick_access.restore_button")) {
+                    store.restoreDefaults()
+                    isPresented = false
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(.orange)
+            }
+        }
+        .padding(24)
+        .frame(width: 400)
     }
 }
