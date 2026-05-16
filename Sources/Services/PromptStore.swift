@@ -110,6 +110,16 @@ final class PromptStore {
         return result
     }
 
+    /// Flattened list of every prompt node paired with its folder-name path.
+    /// Folders themselves are excluded; the path is the chain of ancestor folder
+    /// names (empty for root-level prompts). Used by the prompt-search feature
+    /// to display "Folder / Subfolder" subtitles in flat result lists.
+    func allPromptNodesWithPaths() -> [(node: PromptNode, path: [String])] {
+        var result: [(node: PromptNode, path: [String])] = []
+        collectPromptsWithPaths(from: prompts, path: [], into: &result)
+        return result
+    }
+
     func allFolders() -> [(id: UUID, name: String, depth: Int)] {
         var result: [(id: UUID, name: String, depth: Int)] = []
         collectFolders(from: prompts, depth: 0, into: &result)
@@ -200,6 +210,21 @@ final class PromptStore {
             }
             if let children = node.children {
                 collectPrompts(from: children, into: &result)
+            }
+        }
+    }
+
+    private func collectPromptsWithPaths(
+        from nodes: [PromptNode],
+        path: [String],
+        into result: inout [(node: PromptNode, path: [String])]
+    ) {
+        for node in nodes {
+            if node.isPrompt {
+                result.append((node: node, path: path))
+            }
+            if let children = node.children {
+                collectPromptsWithPaths(from: children, path: path + [node.name], into: &result)
             }
         }
     }

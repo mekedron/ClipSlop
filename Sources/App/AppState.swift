@@ -11,6 +11,7 @@ final class AppState {
     let settings = AppSettings.shared
     let syncService = CloudSyncService()
     let findBarState = FindBarState()
+    let promptSearchState = PromptSearchState()
 
     // Session state
     var currentSession: TransformationSession?
@@ -195,6 +196,9 @@ final class AppState {
         promptShortcutService.appState = self
         promptShortcutService.syncFromModel()
         promptShortcutService.registerAll()
+
+        // Wire prompt search to the store so it can read all prompts on demand
+        promptSearchState.promptStore = promptStore
 
         // Wire iCloud sync — deferred by 2s so menu bar renders first
         promptStore.onPromptsChanged = { [weak self] data in
@@ -507,6 +511,19 @@ final class AppState {
         }
     }
 
+    /// Runs the prompt at `index` in the search results and clears the query
+    /// while keeping search mode active, per spec: Enter applies + resets but
+    /// does not close the search overlay.
+    func applySearchResult(at index: Int) {
+        let list = promptSearchState.results
+        guard index >= 0, index < list.count else { return }
+        let node = list[index].node
+        guard node.isPrompt else { return }
+        navigateInto(node)
+        promptSearchState.query = ""
+        promptSearchState.selectedIndex = 0
+    }
+
     func navigateToRoot() {
         navigationPath = []
     }
@@ -786,6 +803,7 @@ final class AppState {
 
     func dismissPopup() {
         findBarState.dismiss()
+        promptSearchState.deactivate()
         popupWindow?.close()
         isPopupVisible = false
         cancelProcessing()

@@ -334,6 +334,12 @@
 "popup.hint.back" = "Back";
 "popup.hint.close" = "Close";
 "popup.hint.find" = "Find";
+"popup.hint.search" = "Search prompts";
+"popup.hint.search_select" = "Select";
+"popup.hint.search_run" = "Run";
+"popup.hint.search_exit" = "Exit search";
+"popup.search.placeholder" = "Search prompts...";
+"popup.search.no_results" = "No matching prompts";
 "popup.processing" = "Processing...";
 "popup.receiving" = "Receiving response...";
 

@@ -103,77 +103,92 @@ struct PopupContentView: View {
                         .frame(height: 8)
                 }
 
-                // Breadcrumb (always visible)
-                HStack(spacing: 4) {
-                Image(systemName: "folder")
-                    .font(.caption2)
-                    .foregroundStyle(.tertiary)
-
-                if appState.navigationPath.isEmpty {
-                    Text(loc.t("popup.prompts"))
-                        .font(.caption.bold())
+                // Search mode replaces the breadcrumb with a search input —
+                // the breadcrumb is meaningless when results span every folder.
+                if appState.promptSearchState.isActive {
+                    PromptSearchBar(searchState: appState.promptSearchState)
                 } else {
-                    Button {
-                        appState.navigateToRoot()
-                    } label: {
+                    HStack(spacing: 4) {
+                    Image(systemName: "folder")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+
+                    if appState.navigationPath.isEmpty {
                         Text(loc.t("popup.prompts"))
+                            .font(.caption.bold())
+                    } else {
+                        Button {
+                            appState.navigateToRoot()
+                        } label: {
+                            Text(loc.t("popup.prompts"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
+
+                        ForEach(Array(appState.navigationPath.enumerated()), id: \.element.id) { i, node in
+                            Image(systemName: "chevron.right")
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                            if i < appState.navigationPath.count - 1 {
+                                Button {
+                                    appState.navigationPath = Array(appState.navigationPath.prefix(i + 1))
+                                } label: {
+                                    Text(node.name)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                Text(node.name)
+                                    .font(.caption.bold())
+                            }
+                        }
+                    }
+
+                    Spacer()
+
+                    if !appState.navigationPath.isEmpty {
+                        Button {
+                            appState.navigateBack()
+                        } label: {
+                            HStack(spacing: 2) {
+                                Image(systemName: "chevron.left")
+                                Text(loc.t("popup.back"))
+                            }
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                }
 
-                    ForEach(Array(appState.navigationPath.enumerated()), id: \.element.id) { i, node in
-                        Image(systemName: "chevron.right")
-                            .font(.caption2)
-                            .foregroundStyle(.tertiary)
-                        if i < appState.navigationPath.count - 1 {
-                            Button {
-                                appState.navigationPath = Array(appState.navigationPath.prefix(i + 1))
-                            } label: {
-                                Text(node.name)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+            // Prompt navigator — "/" toggles between folder grid and flat
+            // scored search across every prompt in the library.
+            Group {
+                if appState.promptSearchState.isActive {
+                    PromptSearchList(
+                        appState: appState,
+                        searchState: appState.promptSearchState
+                    )
+                } else {
+                    ScrollView(.vertical, showsIndicators: true) {
+                        LazyVGrid(
+                            columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
+                            spacing: 6
+                        ) {
+                            ForEach(appState.currentPrompts) { node in
+                                PromptCard(node: node) {
+                                    appState.navigateInto(node)
+                                }
                             }
-                            .buttonStyle(.plain)
-                        } else {
-                            Text(node.name)
-                                .font(.caption.bold())
                         }
+                        .padding(12)
                     }
                 }
-
-                Spacer()
-
-                if !appState.navigationPath.isEmpty {
-                    Button {
-                        appState.navigateBack()
-                    } label: {
-                        HStack(spacing: 2) {
-                            Image(systemName: "chevron.left")
-                            Text(loc.t("popup.back"))
-                        }
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-
-            // Prompt navigator
-            ScrollView(.vertical, showsIndicators: true) {
-                LazyVGrid(
-                    columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
-                    spacing: 6
-                ) {
-                    ForEach(appState.currentPrompts) { node in
-                        PromptCard(node: node) {
-                            appState.navigateInto(node)
-                        }
-                    }
-                }
-                .padding(12)
             }
             .frame(height: clampedHeight)
 
@@ -327,33 +342,48 @@ struct PopupContentView: View {
 
     // MARK: - Shortcuts Hint
 
+    @ViewBuilder
     private var shortcutsHint: some View {
-        HStack(spacing: 16) {
-            // Up/Down walk the history chain (older ↓ / newer ↑).
-            // Page-scrolling is now Space and Shift+Space — the arrow
-            // keys are reserved for chain navigation so a single keypress
-            // never has two meanings depending on caret position.
-            shortcutHint("↑↓", loc.t("popup.hint.history"))
-            shortcutHint("Space", loc.t("popup.hint.page_down"))
-            shortcutHint("⇧Space", loc.t("popup.hint.page_up"))
-
-            if !appState.navigationPath.isEmpty {
-                shortcutHint("⌫", loc.t("popup.hint.back"))
+        if appState.promptSearchState.isActive {
+            HStack(spacing: 16) {
+                shortcutHint("↑↓", loc.t("popup.hint.search_select"))
+                shortcutHint("↩", loc.t("popup.hint.search_run"))
+                shortcutHint("Esc", loc.t("popup.hint.search_exit"))
+                Spacer()
             }
+            .font(.caption2)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(.quaternary.opacity(0.3))
+        } else {
+            HStack(spacing: 16) {
+                // Up/Down walk the history chain (older ↓ / newer ↑).
+                // Page-scrolling is now Space and Shift+Space — the arrow
+                // keys are reserved for chain navigation so a single keypress
+                // never has two meanings depending on caret position.
+                shortcutHint("↑↓", loc.t("popup.hint.history"))
+                shortcutHint("Space", loc.t("popup.hint.page_down"))
+                shortcutHint("⇧Space", loc.t("popup.hint.page_up"))
+                shortcutHint("/", loc.t("popup.hint.search"))
 
-            shortcutHint("Esc", loc.t("popup.hint.close"))
-            shortcutHint("⌘D", loc.t("popup.hint.display"))
+                if !appState.navigationPath.isEmpty {
+                    shortcutHint("⌫", loc.t("popup.hint.back"))
+                }
 
-            Spacer()
+                shortcutHint("Esc", loc.t("popup.hint.close"))
+                shortcutHint("⌘D", loc.t("popup.hint.display"))
 
-            // Mnemonic hint
-            Text(loc.t("popup.mnemonic_hint"))
-                .foregroundStyle(.tertiary)
+                Spacer()
+
+                // Mnemonic hint
+                Text(loc.t("popup.mnemonic_hint"))
+                    .foregroundStyle(.tertiary)
+            }
+            .font(.caption2)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(.quaternary.opacity(0.3))
         }
-        .font(.caption2)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 6)
-        .background(.quaternary.opacity(0.3))
     }
 
     private func shortcutHint(_ key: String, _ label: String) -> some View {
@@ -588,6 +618,30 @@ struct KeyEventHandler: NSViewRepresentable {
             // KeyboardShortcuts handler — don't intercept them here.
             if hasCmd && hasControl { return false }
 
+            // --- Prompt-search overlay ---
+            // When the "/" search is active, only intercept the four
+            // navigation keys; let every other key flow to the focused
+            // TextField (so typing, Cmd+A/C/V, etc. all work normally).
+            if appState.promptSearchState.isActive {
+                if code == KeyCode.escape {
+                    appState.promptSearchState.deactivate()
+                    return true
+                }
+                if code == KeyCode.upArrow {
+                    appState.promptSearchState.selectPrevious()
+                    return true
+                }
+                if code == KeyCode.downArrow {
+                    appState.promptSearchState.selectNext()
+                    return true
+                }
+                if code == KeyCode.enter && !flags.contains(.command) {
+                    appState.applySearchResult(at: appState.promptSearchState.clampedSelectedIndex)
+                    return true
+                }
+                return false
+            }
+
             // --- Find bar shortcuts (both modes) ---
             if hasCmd && code == KeyCode.f {
                 appState.findBarState.show()
@@ -745,6 +799,19 @@ struct KeyEventHandler: NSViewRepresentable {
             // Don't process mnemonic keys when find bar has focus
             if appState.findBarState.isVisible {
                 return false
+            }
+
+            // "/" activates the prompt-search overlay. Match by emitted
+            // character (layout-independent enough for the search key) and
+            // only when no modifiers are held so ⇧/ ("?") and ⌥/ remain
+            // available as future mnemonics.
+            let typed = event.charactersIgnoringModifiers ?? ""
+            if typed == "/"
+                && event.modifierFlags.intersection([.command, .option, .control, .shift]).isEmpty
+                && !appState.isProcessing
+                && appState.errorMessage == nil {
+                appState.promptSearchState.activate()
+                return true
             }
 
             // Mnemonic key navigation
