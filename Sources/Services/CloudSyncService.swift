@@ -9,34 +9,68 @@ enum SyncStatus: Equatable, Sendable {
     case error(String)
 }
 
+/// Syncs a single JSON file in the iCloud Documents container. Parametric on
+/// file name + local URL + how to apply remote data, so we can have one
+/// instance per syncable artifact (prompts library, Quick Access config, …).
 @MainActor
 @Observable
 final class CloudSyncService {
-    private(set) var status: SyncStatus = .disabled
-    private(set) var pendingCloudPrompts: [PromptNode]?
+    /// How to handle the initial-sync case where both sides have data.
+    enum ConflictResolution: Sendable {
+        /// Surface a UI for the user to pick which side to keep. Used for the
+        /// prompts library — the cost of dropping the wrong side is high.
+        case promptUser
+        /// Pick the side with the newer mtime automatically. Used for UI
+        /// state like the Quick Access grid where the cost is low and a
+        /// modal dialog would be intrusive.
+        case newestWins
+    }
 
-    private weak var promptStore: PromptStore?
+    private(set) var status: SyncStatus = .disabled
+    /// Raw cloud data waiting for a `resolveUseCloud()` decision. Only ever
+    /// non-nil when `status == .pendingConflict` and `conflictResolution ==
+    /// .promptUser`.
+    private(set) var pendingConflictData: Data?
+
+    let syncFileName: String
+    let localFileURL: URL
+    private let conflictResolution: ConflictResolution
+
+    /// Called on the main actor when remote data should replace local state.
+    /// The store wired to this closure is responsible for decoding the bytes.
+    var applyRemote: ((Data) -> Void)?
+
     private var metadataQuery: NSMetadataQuery?
     private var containerURL: URL?
     private var debounceTask: Task<Void, Never>?
     private var lastUploadHash: Int?
     private var identityObserver: Any?
 
-    private let syncFileName = "prompts.json"
+    private var initialSyncFlagKey: String {
+        "cloudSync.hasCompletedInitialSync.\(syncFileName)"
+    }
 
     private var hasCompletedInitialSync: Bool {
-        get { UserDefaults.standard.bool(forKey: "cloudSync.hasCompletedInitialSync") }
-        set { UserDefaults.standard.set(newValue, forKey: "cloudSync.hasCompletedInitialSync") }
+        get { UserDefaults.standard.bool(forKey: initialSyncFlagKey) }
+        set { UserDefaults.standard.set(newValue, forKey: initialSyncFlagKey) }
     }
 
     private var documentsURL: URL? { containerURL?.appendingPathComponent("Documents") }
     private var cloudFileURL: URL? { documentsURL?.appendingPathComponent(syncFileName) }
 
+    init(
+        syncFileName: String,
+        localFileURL: URL,
+        conflictResolution: ConflictResolution
+    ) {
+        self.syncFileName = syncFileName
+        self.localFileURL = localFileURL
+        self.conflictResolution = conflictResolution
+    }
+
     // MARK: - Public API
 
-    func start(promptStore: PromptStore) {
-        self.promptStore = promptStore
-
+    func start() {
         guard FileManager.default.ubiquityIdentityToken != nil else {
             status = .unavailable
             return
@@ -68,7 +102,7 @@ final class CloudSyncService {
         debounceTask = nil
         containerURL = nil
         lastUploadHash = nil
-        pendingCloudPrompts = nil
+        pendingConflictData = nil
         if let identityObserver {
             NotificationCenter.default.removeObserver(identityObserver)
         }
@@ -92,19 +126,17 @@ final class CloudSyncService {
     // MARK: - Conflict Resolution
 
     func resolveUseCloud() {
-        guard let nodes = pendingCloudPrompts else { return }
-        pendingCloudPrompts = nil
-        promptStore?.replaceFromSync(nodes)
-        if let data = try? JSONEncoder.pretty.encode(nodes) {
-            uploadToCloudAsync(data)
-        }
+        guard let data = pendingConflictData else { return }
+        pendingConflictData = nil
+        applyRemote?(data)
+        uploadToCloudAsync(data)
         hasCompletedInitialSync = true
         status = .current
     }
 
     func resolveUseLocal() {
-        pendingCloudPrompts = nil
-        if let data = try? Data(contentsOf: Constants.promptsFileURL) {
+        pendingConflictData = nil
+        if let data = try? Data(contentsOf: localFileURL) {
             uploadToCloudAsync(data)
         }
         hasCompletedInitialSync = true
@@ -122,7 +154,7 @@ final class CloudSyncService {
         let fm = FileManager.default
         guard fm.fileExists(atPath: cloudFileURL.path) else {
             // No cloud file — upload local
-            if let data = try? Data(contentsOf: Constants.promptsFileURL) {
+            if let data = try? Data(contentsOf: localFileURL) {
                 uploadToCloudAsync(data)
             }
             hasCompletedInitialSync = true
@@ -134,8 +166,14 @@ final class CloudSyncService {
 
         if hasCompletedInitialSync {
             resolveByDateAsync()
-        } else {
+            return
+        }
+
+        switch conflictResolution {
+        case .promptUser:
             presentConflictChoiceAsync()
+        case .newestWins:
+            resolveByDateAsync()
         }
     }
 
@@ -149,11 +187,11 @@ final class CloudSyncService {
             guard let self else { return }
             switch result {
             case .success(let data):
-                if let nodes = try? JSONDecoder().decode([PromptNode].self, from: data), !nodes.isEmpty {
-                    self.pendingCloudPrompts = nodes
-                    self.status = .pendingConflict
-                } else {
+                if data.isEmpty {
                     self.uploadLocalAndFinish()
+                } else {
+                    self.pendingConflictData = data
+                    self.status = .pendingConflict
                 }
             case .failure(let error):
                 self.status = .error(error.localizedDescription)
@@ -163,6 +201,7 @@ final class CloudSyncService {
 
     private func resolveByDateAsync() {
         guard let cloudFileURL else { return }
+        let localURL = localFileURL
 
         Task { [weak self] in
             let result = await Task.detached {
@@ -171,20 +210,28 @@ final class CloudSyncService {
             guard let self else { return }
             switch result {
             case .success(let cloudData):
-                guard let localData = try? Data(contentsOf: Constants.promptsFileURL) else {
+                let fm = FileManager.default
+                let cloudDate = (try? fm.attributesOfItem(atPath: cloudFileURL.path))?[.modificationDate] as? Date ?? .distantPast
+
+                // If we have no local file at all, just accept the cloud copy.
+                guard fm.fileExists(atPath: localURL.path),
+                      let localData = try? Data(contentsOf: localURL) else {
+                    if !cloudData.isEmpty {
+                        self.applyRemoteData(cloudData)
+                    }
+                    self.hasCompletedInitialSync = true
                     self.status = .current
                     return
                 }
 
-                let fm = FileManager.default
-                let cloudDate = (try? fm.attributesOfItem(atPath: cloudFileURL.path))?[.modificationDate] as? Date ?? .distantPast
-                let localDate = (try? fm.attributesOfItem(atPath: Constants.promptsFileURL.path))?[.modificationDate] as? Date ?? .distantPast
+                let localDate = (try? fm.attributesOfItem(atPath: localURL.path))?[.modificationDate] as? Date ?? .distantPast
 
-                if cloudDate > localDate {
+                if cloudDate > localDate, !cloudData.isEmpty {
                     self.applyRemoteData(cloudData)
                 } else if localDate > cloudDate {
                     self.uploadToCloudAsync(localData)
                 }
+                self.hasCompletedInitialSync = true
                 self.status = .current
 
             case .failure:
@@ -243,9 +290,8 @@ final class CloudSyncService {
     }
 
     private func applyRemoteData(_ data: Data) {
-        guard let nodes = try? JSONDecoder().decode([PromptNode].self, from: data) else { return }
         lastUploadHash = data.hashValue
-        promptStore?.replaceFromSync(nodes)
+        applyRemote?(data)
     }
 
     private func triggerDownloadIfNeeded(_ url: URL) {
@@ -361,7 +407,7 @@ final class CloudSyncService {
     }
 
     private func uploadLocalAndFinish() {
-        if let data = try? Data(contentsOf: Constants.promptsFileURL) {
+        if let data = try? Data(contentsOf: localFileURL) {
             uploadToCloudAsync(data)
         }
         hasCompletedInitialSync = true

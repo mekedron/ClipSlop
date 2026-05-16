@@ -4,12 +4,22 @@ import SwiftUI
 @Observable
 final class AppState {
     let promptStore = PromptStore()
+    let quickAccessStore = QuickAccessStore()
     let providerStore = ProviderStore()
     let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
     let promptShortcutService = PromptShortcutService()
     let settings = AppSettings.shared
-    let syncService = CloudSyncService()
+    let syncService = CloudSyncService(
+        syncFileName: "prompts.json",
+        localFileURL: Constants.promptsFileURL,
+        conflictResolution: .promptUser
+    )
+    let quickAccessSyncService = CloudSyncService(
+        syncFileName: "quick-access.json",
+        localFileURL: Constants.quickAccessFileURL,
+        conflictResolution: .newestWins
+    )
     let findBarState = FindBarState()
     let promptSearchState = PromptSearchState()
 
@@ -200,15 +210,31 @@ final class AppState {
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore
 
-        // Wire iCloud sync — deferred by 2s so menu bar renders first
+        // Wire iCloud sync — deferred by 2s so menu bar renders first.
+        // Each store flows its encoded document to its dedicated sync
+        // service via `onChanged`; the service uploads. Inbound remote data
+        // is routed back to the store via `applyRemote`, decoded there.
         promptStore.onPromptsChanged = { [weak self] data in
             self?.syncService.handleLocalChange(data: data)
             self?.promptShortcutService.refreshShortcuts()
         }
+        syncService.applyRemote = { [weak self] data in
+            guard let nodes = try? JSONDecoder().decode([PromptNode].self, from: data) else { return }
+            self?.promptStore.replaceFromSync(nodes)
+        }
+
+        quickAccessStore.onChanged = { [weak self] data in
+            self?.quickAccessSyncService.handleLocalChange(data: data)
+        }
+        quickAccessSyncService.applyRemote = { [weak self] data in
+            self?.quickAccessStore.replaceFromSync(data)
+        }
+
         if settings.iCloudSyncEnabled {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
                 guard let self else { return }
-                self.syncService.start(promptStore: self.promptStore)
+                self.syncService.start()
+                self.quickAccessSyncService.start()
             }
         }
 
@@ -895,7 +921,7 @@ final class AppState {
         guard let prompt = promptStore.findNode(byID: tile.promptID),
               prompt.isPrompt
         else {
-            settings.quickAccessTiles.removeAll { $0.id == tile.id }
+            quickAccessStore.removeTile(withID: tile.id)
             dismissQuickAccess()
             return
         }

@@ -70,9 +70,9 @@ final class QuickAccessWindow: NSPanel {
 
     @MainActor
     private func sizeToFitGrid() {
-        let settings = appState.settings
-        let tiles = settings.quickAccessTiles
-        let columns = max(1, settings.quickAccessGridColumns)
+        let store = appState.quickAccessStore
+        let tiles = store.tiles
+        let columns = max(1, store.gridColumns)
 
         let cellWidth: CGFloat = 110
         let cellHeight: CGFloat = 70

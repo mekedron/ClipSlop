@@ -9,19 +9,19 @@ struct QuickAccessContentView: View {
     private let loc = Loc.shared
 
     var body: some View {
-        @Bindable var settings = appState.settings
+        let store = appState.quickAccessStore
 
         ZStack {
             VisualEffectBlur(material: .menu, blendingMode: .behindWindow)
                 .ignoresSafeArea()
 
             Group {
-                if settings.quickAccessTiles.isEmpty {
+                if store.tiles.isEmpty {
                     emptyState
                 } else {
                     gridContent(
-                        tiles: settings.quickAccessTiles,
-                        columns: max(1, settings.quickAccessGridColumns)
+                        tiles: store.tiles,
+                        columns: max(1, store.gridColumns)
                     )
                 }
             }
@@ -173,7 +173,7 @@ private struct QuickAccessKeyMonitor: NSViewRepresentable {
         @MainActor
         private func activateTile(matchingKey key: String, modifiers: MnemonicModifiers) -> Bool {
             guard let appState, let onActivate else { return false }
-            for tile in appState.settings.quickAccessTiles {
+            for tile in appState.quickAccessStore.tiles {
                 guard let prompt = appState.promptStore.findNode(byID: tile.promptID),
                       prompt.isPrompt else { continue }
                 if prompt.mnemonicKey.lowercased() == key.lowercased()

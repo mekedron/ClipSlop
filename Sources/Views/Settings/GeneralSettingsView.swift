@@ -30,9 +30,11 @@ struct GeneralSettingsView: View {
                     Toggle(loc.t("settings.general.icloud.toggle"), isOn: $settings.iCloudSyncEnabled)
                         .onChange(of: settings.iCloudSyncEnabled) {
                             if settings.iCloudSyncEnabled {
-                                appState.syncService.start(promptStore: appState.promptStore)
+                                appState.syncService.start()
+                                appState.quickAccessSyncService.start()
                             } else {
                                 appState.syncService.stop()
+                                appState.quickAccessSyncService.stop()
                             }
                         }
 

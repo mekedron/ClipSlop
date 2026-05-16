@@ -96,6 +96,6 @@ struct QuickAccessSettingsView: View {
     }
 
     private func isUsedInQuickAccess(_ promptID: UUID) -> Bool {
-        appState.settings.quickAccessTiles.contains { $0.promptID == promptID }
+        appState.quickAccessStore.tiles.contains { $0.promptID == promptID }
     }
 }

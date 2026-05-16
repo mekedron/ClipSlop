@@ -13,6 +13,7 @@ enum Constants {
 
     static let promptsFileURL: URL = appSupportDirectory.appendingPathComponent("prompts.json")
     static let providersFileURL: URL = appSupportDirectory.appendingPathComponent("providers.json")
+    static let quickAccessFileURL: URL = appSupportDirectory.appendingPathComponent("quick-access.json")
 
     enum Anthropic {
         static let baseURL = "https://api.anthropic.com"

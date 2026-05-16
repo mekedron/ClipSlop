@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -7,26 +8,45 @@ struct QuickAccessGridConfigurator: View {
     @State private var isPromptDropTargeted: Bool = false
 
     private let loc = Loc.shared
+    private var store: QuickAccessStore { appState.quickAccessStore }
 
     var body: some View {
-        @Bindable var settings = appState.settings
-
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 8) {
                 Text(loc.t("settings.quick_access.columns"))
-                Stepper(value: $settings.quickAccessGridColumns, in: 1...8) {
-                    Text("\(settings.quickAccessGridColumns)")
+                Stepper(
+                    value: Binding(
+                        get: { store.gridColumns },
+                        set: { store.setGridColumns($0) }
+                    ),
+                    in: 1...8
+                ) {
+                    Text("\(store.gridColumns)")
                         .monospacedDigit()
                         .frame(minWidth: 24, alignment: .trailing)
                 }
                 .fixedSize()
                 Spacer()
+
+                Button {
+                    exportQuickAccess()
+                } label: {
+                    Label(loc.t("settings.quick_access.export"), systemImage: "square.and.arrow.up")
+                }
+                .help(loc.t("settings.quick_access.export.help"))
+
+                Button {
+                    importQuickAccess()
+                } label: {
+                    Label(loc.t("settings.quick_access.import"), systemImage: "square.and.arrow.down")
+                }
+                .help(loc.t("settings.quick_access.import.help"))
             }
 
-            if settings.quickAccessTiles.isEmpty {
+            if store.tiles.isEmpty {
                 emptyDropZone
             } else {
-                tileGrid(columns: max(1, settings.quickAccessGridColumns))
+                tileGrid(columns: max(1, store.gridColumns))
             }
 
             Spacer(minLength: 0)
@@ -78,7 +98,7 @@ struct QuickAccessGridConfigurator: View {
             columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: columns),
             spacing: 10
         ) {
-            ForEach(appState.settings.quickAccessTiles) { tile in
+            ForEach(store.tiles) { tile in
                 tileCell(for: tile)
             }
         }
@@ -103,6 +123,46 @@ struct QuickAccessGridConfigurator: View {
         }
         .onDrop(of: [.utf8PlainText], isTargeted: nil) { providers, _ in
             handleCellDrop(providers: providers, targetTileID: tile.id)
+        }
+    }
+
+    // MARK: - Import / Export
+
+    private func exportQuickAccess() {
+        guard let data = store.exportJSON() else { return }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "clipslop-quick-access.json"
+        panel.allowedContentTypes = [.json]
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url else { return }
+                try? data.write(to: url)
+            }
+        }
+    }
+
+    private func importQuickAccess() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.json]
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window) { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                try? store.importJSON(from: data)
+            }
+        } else {
+            panel.begin { response in
+                guard response == .OK, let url = panel.url,
+                      let data = try? Data(contentsOf: url)
+                else { return }
+                try? store.importJSON(from: data)
+            }
         }
     }
 
@@ -150,28 +210,28 @@ struct QuickAccessGridConfigurator: View {
 
     private func appendTile(promptID: UUID) -> Bool {
         guard let node = appState.promptStore.findNode(byID: promptID), node.isPrompt else { return false }
-        var tiles = appState.settings.quickAccessTiles
+        var tiles = store.tiles
         guard !tiles.contains(where: { $0.promptID == promptID }) else { return false }
         tiles.append(QuickAccessTile(promptID: promptID))
-        appState.settings.quickAccessTiles = tiles
+        store.updateTiles(tiles)
         return true
     }
 
     private func insertTile(promptID: UUID, before targetID: UUID) -> Bool {
         guard let node = appState.promptStore.findNode(byID: promptID), node.isPrompt else { return false }
-        var tiles = appState.settings.quickAccessTiles
+        var tiles = store.tiles
         guard !tiles.contains(where: { $0.promptID == promptID }) else { return false }
         guard let targetIndex = tiles.firstIndex(where: { $0.id == targetID }) else {
             return appendTile(promptID: promptID)
         }
         tiles.insert(QuickAccessTile(promptID: promptID), at: targetIndex)
-        appState.settings.quickAccessTiles = tiles
+        store.updateTiles(tiles)
         return true
     }
 
     private func moveTile(sourceTileID: UUID, onto targetTileID: UUID) -> Bool {
         guard sourceTileID != targetTileID else { return false }
-        var tiles = appState.settings.quickAccessTiles
+        var tiles = store.tiles
         guard let fromIndex = tiles.firstIndex(where: { $0.id == sourceTileID }),
               let originalTargetIndex = tiles.firstIndex(where: { $0.id == targetTileID })
         else { return false }
@@ -180,7 +240,7 @@ struct QuickAccessGridConfigurator: View {
         let moving = tiles.remove(at: fromIndex)
         guard let postRemovalTargetIndex = tiles.firstIndex(where: { $0.id == targetTileID }) else {
             tiles.append(moving)
-            appState.settings.quickAccessTiles = tiles
+            store.updateTiles(tiles)
             return true
         }
         // Land the dragged tile on the target's visual slot:
@@ -188,18 +248,18 @@ struct QuickAccessGridConfigurator: View {
         //   backward drag → insert BEFORE target (target index unchanged)
         let insertIndex = movingForward ? postRemovalTargetIndex + 1 : postRemovalTargetIndex
         tiles.insert(moving, at: insertIndex)
-        appState.settings.quickAccessTiles = tiles
+        store.updateTiles(tiles)
         return true
     }
 
     private func updateMethod(tileID: UUID, method: QuickAccessMethod) {
-        var tiles = appState.settings.quickAccessTiles
+        var tiles = store.tiles
         guard let index = tiles.firstIndex(where: { $0.id == tileID }) else { return }
         tiles[index].method = method
-        appState.settings.quickAccessTiles = tiles
+        store.updateTiles(tiles)
     }
 
     private func removeTile(tileID: UUID) {
-        appState.settings.quickAccessTiles.removeAll { $0.id == tileID }
+        store.removeTile(withID: tileID)
     }
 }

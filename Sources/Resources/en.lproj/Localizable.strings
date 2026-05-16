@@ -399,6 +399,10 @@
 "settings.tab.quick_access" = "Quick Access";
 "settings.general.shortcuts.quick_access" = "Open Quick Access:";
 "settings.quick_access.columns" = "Columns";
+"settings.quick_access.export" = "Export…";
+"settings.quick_access.export.help" = "Save the current Quick Access grid to a JSON file.";
+"settings.quick_access.import" = "Import…";
+"settings.quick_access.import.help" = "Replace the current Quick Access grid with the contents of a JSON file.";
 "settings.quick_access.left_pane_hint" = "Drag prompts into the grid →";
 "settings.quick_access.grid_empty" = "Drop prompts here to add tiles";
 "settings.quick_access.grid_empty_hint" = "Drag any prompt from the left.";
