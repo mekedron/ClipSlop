@@ -69,32 +69,35 @@ struct QuickAccessGridConfigurator: View {
 
             Spacer()
 
-            Button {
-                importQuickAccess()
-            } label: {
-                Label(loc.t("settings.quick_access.import"), systemImage: "square.and.arrow.down")
+            Button { importQuickAccess() } label: {
+                Image(systemName: "square.and.arrow.down")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
             }
-            .controlSize(.small)
+            .buttonStyle(.borderless)
+            .frame(width: 32, height: 28)
             .help(loc.t("settings.quick_access.import.help"))
 
-            Button {
-                exportQuickAccess()
-            } label: {
-                Label(loc.t("settings.quick_access.export"), systemImage: "square.and.arrow.up")
+            Button { exportQuickAccess() } label: {
+                Image(systemName: "square.and.arrow.up")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
             }
-            .controlSize(.small)
+            .buttonStyle(.borderless)
+            .frame(width: 32, height: 28)
             .help(loc.t("settings.quick_access.export.help"))
 
-            Button {
-                showRestoreDefaults = true
-            } label: {
-                Label(loc.t("settings.quick_access.restore"), systemImage: "arrow.counterclockwise")
+            Button { showRestoreDefaults = true } label: {
+                Image(systemName: "arrow.counterclockwise")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(Rectangle())
             }
-            .controlSize(.small)
+            .buttonStyle(.borderless)
+            .frame(width: 32, height: 28)
             .help(loc.t("settings.quick_access.restore.help"))
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
