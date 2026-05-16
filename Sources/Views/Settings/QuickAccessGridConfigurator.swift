@@ -11,52 +11,75 @@ struct QuickAccessGridConfigurator: View {
     private var store: QuickAccessStore { appState.quickAccessStore }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
-                Text(loc.t("settings.quick_access.columns"))
-                Stepper(
-                    value: Binding(
-                        get: { store.gridColumns },
-                        set: { store.setGridColumns($0) }
-                    ),
-                    in: 1...8
-                ) {
-                    Text("\(store.gridColumns)")
-                        .monospacedDigit()
-                        .frame(minWidth: 24, alignment: .trailing)
+        VStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    Text(loc.t("settings.quick_access.columns"))
+                    Stepper(
+                        value: Binding(
+                            get: { store.gridColumns },
+                            set: { store.setGridColumns($0) }
+                        ),
+                        in: 1...8
+                    ) {
+                        Text("\(store.gridColumns)")
+                            .monospacedDigit()
+                            .frame(minWidth: 24, alignment: .trailing)
+                    }
+                    .fixedSize()
+                    Spacer()
                 }
-                .fixedSize()
-                Spacer()
 
-                Button {
-                    exportQuickAccess()
-                } label: {
-                    Label(loc.t("settings.quick_access.export"), systemImage: "square.and.arrow.up")
+                if store.tiles.isEmpty {
+                    emptyDropZone
+                } else {
+                    tileGrid(columns: max(1, store.gridColumns))
                 }
-                .help(loc.t("settings.quick_access.export.help"))
 
-                Button {
-                    importQuickAccess()
-                } label: {
-                    Label(loc.t("settings.quick_access.import"), systemImage: "square.and.arrow.down")
-                }
-                .help(loc.t("settings.quick_access.import.help"))
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .contentShape(Rectangle())
+            .onDrop(of: [.utf8PlainText], isTargeted: $isPromptDropTargeted) { providers, _ in
+                handlePromptDrop(providers: providers, before: nil)
             }
 
-            if store.tiles.isEmpty {
-                emptyDropZone
-            } else {
-                tileGrid(columns: max(1, store.gridColumns))
-            }
+            Divider()
 
-            Spacer(minLength: 0)
+            footer
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .contentShape(Rectangle())
-        .onDrop(of: [.utf8PlainText], isTargeted: $isPromptDropTargeted) { providers, _ in
-            handlePromptDrop(providers: providers, before: nil)
+    }
+
+    private var footer: some View {
+        @Bindable var settings = appState.settings
+
+        return HStack(spacing: 10) {
+            Toggle(loc.t("settings.quick_access.auto_update"), isOn: $settings.useDefaultQuickAccess)
+                .controlSize(.small)
+                .help(loc.t("settings.quick_access.auto_update_help"))
+
+            Spacer()
+
+            Button {
+                importQuickAccess()
+            } label: {
+                Label(loc.t("settings.quick_access.import"), systemImage: "square.and.arrow.down")
+            }
+            .controlSize(.small)
+            .help(loc.t("settings.quick_access.import.help"))
+
+            Button {
+                exportQuickAccess()
+            } label: {
+                Label(loc.t("settings.quick_access.export"), systemImage: "square.and.arrow.up")
+            }
+            .controlSize(.small)
+            .help(loc.t("settings.quick_access.export.help"))
         }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var emptyDropZone: some View {

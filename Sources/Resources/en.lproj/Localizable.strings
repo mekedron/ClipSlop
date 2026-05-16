@@ -399,6 +399,8 @@
 "settings.tab.quick_access" = "Quick Access";
 "settings.general.shortcuts.quick_access" = "Open Quick Access:";
 "settings.quick_access.columns" = "Columns";
+"settings.quick_access.auto_update" = "Auto-update with app";
+"settings.quick_access.auto_update_help" = "Keep the default Quick Access tiles up to date when the app is updated. Automatically disabled when you customize the grid.";
 "settings.quick_access.export" = "Export…";
 "settings.quick_access.export.help" = "Save the current Quick Access grid to a JSON file.";
 "settings.quick_access.import" = "Import…";

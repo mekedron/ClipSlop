@@ -157,6 +157,10 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultPrompts, forKey: "useDefaultPrompts") }
     }
 
+    var useDefaultQuickAccess: Bool {
+        didSet { UserDefaults.standard.set(useDefaultQuickAccess, forKey: "useDefaultQuickAccess") }
+    }
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -197,6 +201,7 @@ final class AppSettings {
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
+        useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
         // and the store performs a one-shot migration on first launch.
