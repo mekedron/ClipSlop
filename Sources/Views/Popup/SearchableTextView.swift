@@ -13,7 +13,23 @@ struct SearchableTextView: NSViewRepresentable {
         scrollView.autohidesScrollers = true
         scrollView.drawsBackground = false
 
-        let textView = NSTextView()
+        // Build the TextKit 1 stack explicitly. On macOS 26 the default
+        // NSTextView() init creates a TextKit 2 stack whose selection
+        // tracker (`_bellerophonTrackMouseWithMouseDownEvent`) can spin in
+        // `synchronizeTextLayoutManagers` and freeze the main thread —
+        // observed in this app with a `sample` capture showing the main
+        // queue stuck on `os_unfair_recursive_lock_lock_with_options`.
+        // TextKit 1 (NSLayoutManager) doesn't hit that path.
+        let textStorage = NSTextStorage()
+        let layoutManager = NSLayoutManager()
+        textStorage.addLayoutManager(layoutManager)
+        let textContainer = NSTextContainer(
+            containerSize: NSSize(width: 0, height: CGFloat.greatestFiniteMagnitude)
+        )
+        textContainer.widthTracksTextView = true
+        layoutManager.addTextContainer(textContainer)
+
+        let textView = NSTextView(frame: .zero, textContainer: textContainer)
         textView.isEditable = false
         textView.isSelectable = true
         textView.isRichText = false
@@ -22,12 +38,6 @@ struct SearchableTextView: NSViewRepresentable {
         textView.drawsBackground = false
         textView.string = text
 
-        // Text wrapping
-        textView.textContainer?.widthTracksTextView = true
-        textView.textContainer?.containerSize = NSSize(
-            width: 0,
-            height: CGFloat.greatestFiniteMagnitude
-        )
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
