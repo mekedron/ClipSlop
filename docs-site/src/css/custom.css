@@ -539,11 +539,12 @@ hr {
 }
 
 /* When a hash link (e.g. the navbar's Download pill targeting
-   /#download) scrolls to a section, leave room for the sticky navbar
-   so the heading isn't tucked underneath it. The home page has a fixed
-   ~60px navbar; the install section's anchor gets a comfortable buffer. */
+   /#download, or the left-nav section anchors) scrolls to a section,
+   leave room for the sticky navbar so the heading isn't tucked
+   underneath it. The home page has a fixed ~60px navbar; section
+   anchors get a comfortable 80px buffer. */
 html { scroll-behavior: smooth; }
-#download, #support {
+#demos, #how, #prompts, #compare, #download, #support {
   scroll-margin-top: 80px;
 }
 

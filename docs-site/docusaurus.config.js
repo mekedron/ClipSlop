@@ -88,21 +88,21 @@ const config = {
           src: 'img/logo.png',
         },
         items: [
+          // Left side mirrors the landing page sections so visitors can
+          // jump to whichever feature they care about without scrolling
+          // the whole page. `to: '/#anchor'` lets Docusaurus prepend the
+          // baseUrl correctly and keeps SPA routing when the click
+          // originates from a docs page. Documentation comes last so
+          // the section anchors read as a single grouped TOC.
+          {to: '/#demos', label: 'Demos', position: 'left'},
+          {to: '/#how', label: 'How it works', position: 'left'},
+          {to: '/#prompts', label: 'Prompts', position: 'left'},
+          {to: '/#compare', label: 'Compare', position: 'left'},
           {
             type: 'docSidebar',
             sidebarId: 'tutorialSidebar',
             position: 'left',
             label: 'Documentation',
-          },
-          {
-            to: '/docs/install',
-            label: 'Install',
-            position: 'left',
-          },
-          {
-            to: '/docs/reference/built-in-prompts',
-            label: 'Prompts',
-            position: 'left',
           },
           {
             // Pill-styled Download button matching the GitHub and Donate
