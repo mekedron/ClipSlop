@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Tastaturkürzel";
-"settings.general.shortcuts.trigger" = "ClipSlop auslösen:";
-"settings.general.shortcuts.clipboard" = "Aus Zwischenablage:";
-"settings.general.shortcuts.blank" = "Leerer Editor:";
-"settings.general.shortcuts.ocr" = "OCR + Bearbeiten:";
+"settings.general.shortcuts.trigger" = "Markierten Text bearbeiten:";
+"settings.general.shortcuts.clipboard" = "Zwischenablage bearbeiten:";
+"settings.general.shortcuts.blank" = "Leeren Editor öffnen:";
+"settings.general.shortcuts.ocr" = "Bildschirmtext bearbeiten:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Verhalten";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Schließen";
 
 /* Menu Bar */
-"menu.trigger" = "Auslösen";
-"menu.clipboard" = "Aus Zwischenablage";
-"menu.blank" = "Leerer Editor";
-"menu.ocr" = "OCR + Bearbeiten";
-"menu.ocr_clipboard" = "OCR in Zwischenablage";
+"menu.trigger" = "Markierten Text bearbeiten";
+"menu.clipboard" = "Zwischenablage bearbeiten";
+"menu.blank" = "Leeren Editor öffnen";
+"menu.ocr" = "Bildschirmtext bearbeiten";
+"menu.ocr_clipboard" = "Bildschirmtext kopieren";
 "menu.provider" = "Anbieter: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Einstellungen...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Bilder im Markdown-Vorschaumodus laden und anzeigen";
 "settings.general.behavior.preserve_image_widths" = "Bildbreiten beibehalten";
 "settings.general.behavior.preserve_image_widths_help" = "width und max-width aus HTML-Image-Tags beim Rendern von Markdown beibehalten";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Bildschirmtext kopieren:";
+"settings.general.shortcuts.ocr_clipslop" = "Bildschirmtext bearbeiten:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR in Zwischenablage";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + in ClipSlop öffnen";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globale Kurzbefehle";
-"settings.prompts.editor.quick_paste" = "Schnell einfügen:";
-"settings.prompts.editor.quick_paste_help" = "Erfasst markierten Text, verarbeitet ihn mit diesem Prompt und fügt das Ergebnis ein";
-"settings.prompts.editor.open_run" = "Öffnen und ausführen:";
-"settings.prompts.editor.open_run_help" = "Erfasst markierten Text, öffnet ClipSlop und wendet diesen Prompt automatisch an";
+"settings.prompts.editor.quick_paste" = "Inline ausführen:";
+"settings.prompts.editor.quick_paste_help" = "Führt den Prompt auf dem aktuell markierten Text aus und ersetzt ihn durch das Ergebnis — kein Popup, einfach an Ort und Stelle transformiert.";
+"settings.prompts.editor.open_run" = "In Editor ausführen:";
+"settings.prompts.editor.open_run_help" = "Erfasst markierten Text, öffnet den ClipSlop-Editor mit dem Ergebnis und lässt dich überprüfen oder anpassen, bevor du es kopierst.";
 "settings.prompts.editor.select_all" = "Alles auswählen vor Erfassung";
 "settings.prompts.editor.select_all_help" = "Simuliert ⌘A vor der Texterfassung, nützlich zum Ersetzen des gesamten Feldinhalts";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Schnellzugriff öffnen";
-"menu.prompt_shortcuts.open_run" = "Öffnen und ausführen";
-"menu.prompt_shortcuts.quick_paste" = "Schnell einfügen";
+"menu.prompt_shortcuts.open_run" = "In Editor ausführen";
+"menu.prompt_shortcuts.quick_paste" = "Inline ausführen";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Öffnen und ausführen";
-"settings.prompts.field.quick_paste" = "Schnell einfügen";
+"settings.prompts.field.open_run" = "In Editor ausführen";
+"settings.prompts.field.quick_paste" = "Inline ausführen";
 "settings.prompts.mnemonic_conflict_tooltip" = "Doppelte Mnemonik in diesem Ordner";
 "settings.prompts.shortcut_conflict_title" = "Tastenkürzel bereits vergeben";
 "settings.prompts.shortcut_conflict_message" = "%1$@ ist derzeit „%2$@“ (%3$@) zugewiesen. Diesem Prompt zuweisen oder abbrechen?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Prompts hierher ziehen, um Kacheln hinzuzufügen";
 "settings.quick_access.grid_empty_hint" = "Beliebigen Prompt von links ziehen.";
 "settings.quick_access.method.label" = "Aktion";
-"settings.quick_access.method.inline" = "Schnell einfügen";
-"settings.quick_access.method.open_in_clipslop" = "Öffnen und ausführen";
+"settings.quick_access.method.inline" = "Inline ausführen";
+"settings.quick_access.method.open_in_clipslop" = "In Editor ausführen";
 "settings.quick_access.tile.remove" = "Kachel entfernen";
 "settings.quick_access.tile.in_use_badge" = "Im Schnellzugriff";
 "settings.quick_access.tile.missing" = "(gelöschter Prompt)";

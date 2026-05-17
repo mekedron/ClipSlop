@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Skróty klawiszowe";
-"settings.general.shortcuts.trigger" = "Uruchom ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Ze schowka:";
-"settings.general.shortcuts.blank" = "Pusty edytor:";
-"settings.general.shortcuts.ocr" = "OCR + Edytuj:";
+"settings.general.shortcuts.trigger" = "Edytuj zaznaczony tekst:";
+"settings.general.shortcuts.clipboard" = "Edytuj schowek:";
+"settings.general.shortcuts.blank" = "Otwórz pusty edytor:";
+"settings.general.shortcuts.ocr" = "Edytuj tekst z ekranu:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Zachowanie";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Zamknij";
 
 /* Menu Bar */
-"menu.trigger" = "Uruchom";
-"menu.clipboard" = "Ze schowka";
-"menu.blank" = "Pusty edytor";
-"menu.ocr" = "OCR + Edytuj";
-"menu.ocr_clipboard" = "OCR do schowka";
+"menu.trigger" = "Edytuj zaznaczony tekst";
+"menu.clipboard" = "Edytuj schowek";
+"menu.blank" = "Otwórz pusty edytor";
+"menu.ocr" = "Edytuj tekst z ekranu";
+"menu.ocr_clipboard" = "Skopiuj tekst z ekranu";
 "menu.provider" = "Dostawca: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Ustawienia...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Wczytuj i wyświetlaj obrazy w trybie podglądu Markdown";
 "settings.general.behavior.preserve_image_widths" = "Zachowaj szerokość obrazów";
 "settings.general.behavior.preserve_image_widths_help" = "Zachowaj width i max-width z tagów obrazów HTML podczas renderowania Markdown";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Skopiuj tekst z ekranu:";
+"settings.general.shortcuts.ocr_clipslop" = "Edytuj tekst z ekranu:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR do schowka";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + otwórz w ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globalne skróty";
-"settings.prompts.editor.quick_paste" = "Szybkie wklejenie:";
-"settings.prompts.editor.quick_paste_help" = "Przechwytuje zaznaczony tekst, przetwarza go tym promptem i wkleja wynik";
-"settings.prompts.editor.open_run" = "Otwórz i uruchom:";
-"settings.prompts.editor.open_run_help" = "Przechwytuje zaznaczony tekst, otwiera ClipSlop i automatycznie stosuje ten prompt";
+"settings.prompts.editor.quick_paste" = "Uruchom w miejscu:";
+"settings.prompts.editor.quick_paste_help" = "Uruchamia prompt na aktualnie zaznaczonym tekście i zastępuje go wynikiem — bez wyskakującego okienka, transformacja w miejscu.";
+"settings.prompts.editor.open_run" = "Uruchom w edytorze:";
+"settings.prompts.editor.open_run_help" = "Przechwytuje zaznaczony tekst, otwiera edytor ClipSlop z wynikiem i pozwala przejrzeć lub poprawić przed skopiowaniem.";
 "settings.prompts.editor.select_all" = "Zaznacz wszystko przed przechwyceniem";
 "settings.prompts.editor.select_all_help" = "Symuluje ⌘A przed przechwyceniem tekstu, przydatne do zastąpienia całej zawartości pola";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Otwórz Szybki dostęp";
-"menu.prompt_shortcuts.open_run" = "Otwórz i uruchom";
-"menu.prompt_shortcuts.quick_paste" = "Szybkie wklejenie";
+"menu.prompt_shortcuts.open_run" = "Uruchom w edytorze";
+"menu.prompt_shortcuts.quick_paste" = "Uruchom w miejscu";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Otwórz i uruchom";
-"settings.prompts.field.quick_paste" = "Szybkie wklejenie";
+"settings.prompts.field.open_run" = "Uruchom w edytorze";
+"settings.prompts.field.quick_paste" = "Uruchom w miejscu";
 "settings.prompts.mnemonic_conflict_tooltip" = "Zduplikowana mnemonika w tym folderze";
 "settings.prompts.shortcut_conflict_title" = "Skrót jest już używany";
 "settings.prompts.shortcut_conflict_message" = "%1$@ jest obecnie przypisany do „%2$@” (%3$@). Przypisać do tego promptu czy anulować?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Upuść tutaj prompty, aby dodać kafelki";
 "settings.quick_access.grid_empty_hint" = "Przeciągnij dowolny prompt z lewej strony.";
 "settings.quick_access.method.label" = "Akcja";
-"settings.quick_access.method.inline" = "Szybkie wklejenie";
-"settings.quick_access.method.open_in_clipslop" = "Otwórz i uruchom";
+"settings.quick_access.method.inline" = "Uruchom w miejscu";
+"settings.quick_access.method.open_in_clipslop" = "Uruchom w edytorze";
 "settings.quick_access.tile.remove" = "Usuń kafelek";
 "settings.quick_access.tile.in_use_badge" = "W Szybkim dostępie";
 "settings.quick_access.tile.missing" = "(usunięty prompt)";

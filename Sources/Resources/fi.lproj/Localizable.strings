@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Pikanäppäimet";
-"settings.general.shortcuts.trigger" = "Käynnistä ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Leikepöydältä:";
-"settings.general.shortcuts.blank" = "Tyhjä editori:";
-"settings.general.shortcuts.ocr" = "OCR + Muokkaa:";
+"settings.general.shortcuts.trigger" = "Muokkaa valittua tekstiä:";
+"settings.general.shortcuts.clipboard" = "Muokkaa leikepöytää:";
+"settings.general.shortcuts.blank" = "Avaa tyhjä editori:";
+"settings.general.shortcuts.ocr" = "Muokkaa näytön tekstiä:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Toiminta";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Sulje";
 
 /* Menu Bar */
-"menu.trigger" = "Käynnistä";
-"menu.clipboard" = "Leikepöydältä";
-"menu.blank" = "Tyhjä editori";
-"menu.ocr" = "OCR + Muokkaa";
-"menu.ocr_clipboard" = "OCR leikepöydälle";
+"menu.trigger" = "Muokkaa valittua tekstiä";
+"menu.clipboard" = "Muokkaa leikepöytää";
+"menu.blank" = "Avaa tyhjä editori";
+"menu.ocr" = "Muokkaa näytön tekstiä";
+"menu.ocr_clipboard" = "Kopioi näytön teksti";
 "menu.provider" = "Palvelu: %@";
 "menu.model" = "Malli: %@";
 "menu.settings" = "Asetukset...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Lataa ja näytä kuvat Markdownin esikatselutilassa";
 "settings.general.behavior.preserve_image_widths" = "Säilytä kuvien leveydet";
 "settings.general.behavior.preserve_image_widths_help" = "Säilytä width ja max-width HTML-kuvatageista Markdownia renderöitäessä";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Kopioi näytön teksti:";
+"settings.general.shortcuts.ocr_clipslop" = "Muokkaa näytön tekstiä:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR leikepöydälle";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + avaa ClipSlopissa";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Yleiset pikanäppäimet";
-"settings.prompts.editor.quick_paste" = "Pikaliimatsu:";
-"settings.prompts.editor.quick_paste_help" = "Kaappaa valitun tekstin, käsittelee sen tällä kehotteella ja liittää tuloksen";
-"settings.prompts.editor.open_run" = "Avaa ja suorita:";
-"settings.prompts.editor.open_run_help" = "Kaappaa valitun tekstin, avaa ClipSlopin ja soveltaa automaattisesti tätä kehotetta";
+"settings.prompts.editor.quick_paste" = "Suorita paikalla:";
+"settings.prompts.editor.quick_paste_help" = "Suorittaa kehotteen valittuun tekstiin ja korvaa sen tuloksella — ei ponnahdusikkunaa, vain muunnos paikallaan.";
+"settings.prompts.editor.open_run" = "Suorita editorissa:";
+"settings.prompts.editor.open_run_help" = "Kaappaa valitun tekstin, avaa ClipSlop-editorin tuloksen kanssa ja antaa sinun tarkistaa tai säätää ennen kopiointia.";
 "settings.prompts.editor.select_all" = "Valitse kaikki ennen kaappausta";
 "settings.prompts.editor.select_all_help" = "Simuloi ⌘A ennen tekstin kaappausta, hyödyllinen koko kentän sisällön korvaamiseen";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Avaa Pikakäyttö";
-"menu.prompt_shortcuts.open_run" = "Avaa ja suorita";
-"menu.prompt_shortcuts.quick_paste" = "Pikaliimatsu";
+"menu.prompt_shortcuts.open_run" = "Suorita editorissa";
+"menu.prompt_shortcuts.quick_paste" = "Suorita paikalla";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Avaa ja suorita";
-"settings.prompts.field.quick_paste" = "Pikaliimatsu";
+"settings.prompts.field.open_run" = "Suorita editorissa";
+"settings.prompts.field.quick_paste" = "Suorita paikalla";
 "settings.prompts.mnemonic_conflict_tooltip" = "Päällekkäinen muistisääntö tässä kansiossa";
 "settings.prompts.shortcut_conflict_title" = "Pikanäppäin on jo käytössä";
 "settings.prompts.shortcut_conflict_message" = "%1$@ on tällä hetkellä määritetty kehotteelle ”%2$@” (%3$@). Siirretäänkö tähän kehotteeseen vai peruutetaanko?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Pudota kehotteet tähän lisätäksesi ruutuja";
 "settings.quick_access.grid_empty_hint" = "Vedä mikä tahansa kehote vasemmalta.";
 "settings.quick_access.method.label" = "Toiminto";
-"settings.quick_access.method.inline" = "Pikaliimatsu";
-"settings.quick_access.method.open_in_clipslop" = "Avaa ja suorita";
+"settings.quick_access.method.inline" = "Suorita paikalla";
+"settings.quick_access.method.open_in_clipslop" = "Suorita editorissa";
 "settings.quick_access.tile.remove" = "Poista ruutu";
 "settings.quick_access.tile.in_use_badge" = "Pikakäytössä";
 "settings.quick_access.tile.missing" = "(poistettu kehote)";

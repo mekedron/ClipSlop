@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Billentyűkombinációk";
-"settings.general.shortcuts.trigger" = "ClipSlop indítása:";
-"settings.general.shortcuts.clipboard" = "Vágólapról:";
-"settings.general.shortcuts.blank" = "Üres szerkesztő:";
-"settings.general.shortcuts.ocr" = "OCR + Szerkesztés:";
+"settings.general.shortcuts.trigger" = "Kijelölt szöveg szerkesztése:";
+"settings.general.shortcuts.clipboard" = "Vágólap szerkesztése:";
+"settings.general.shortcuts.blank" = "Üres szerkesztő megnyitása:";
+"settings.general.shortcuts.ocr" = "Képernyő szövegének szerkesztése:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Viselkedés";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Bezárás";
 
 /* Menu Bar */
-"menu.trigger" = "Indítás";
-"menu.clipboard" = "Vágólapról";
-"menu.blank" = "Üres szerkesztő";
-"menu.ocr" = "OCR + Szerkesztés";
-"menu.ocr_clipboard" = "OCR a vágólapra";
+"menu.trigger" = "Kijelölt szöveg szerkesztése";
+"menu.clipboard" = "Vágólap szerkesztése";
+"menu.blank" = "Üres szerkesztő megnyitása";
+"menu.ocr" = "Képernyő szövegének szerkesztése";
+"menu.ocr_clipboard" = "Képernyő szövegének másolása";
 "menu.provider" = "Szolgáltató: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Beállítások...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Képek betöltése és megjelenítése Markdown-előnézeti módban";
 "settings.general.behavior.preserve_image_widths" = "Képszélességek megőrzése";
 "settings.general.behavior.preserve_image_widths_help" = "A width és max-width attribútumok megtartása HTML img tagekből Markdown renderelésekor";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Képernyő szövegének másolása:";
+"settings.general.shortcuts.ocr_clipslop" = "Képernyő szövegének szerkesztése:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR a vágólapra";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + megnyitás ClipSlopban";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globális billentyűparancsok";
-"settings.prompts.editor.quick_paste" = "Gyors beillesztés:";
-"settings.prompts.editor.quick_paste_help" = "Rögzíti a kijelölt szöveget, feldolgozza ezzel a prompttal, és beilleszti az eredményt";
-"settings.prompts.editor.open_run" = "Megnyitás és futtatás:";
-"settings.prompts.editor.open_run_help" = "Rögzíti a kijelölt szöveget, megnyitja a ClipSlop-ot és automatikusan alkalmazza ezt a promptot";
+"settings.prompts.editor.quick_paste" = "Beágyazott futtatás:";
+"settings.prompts.editor.quick_paste_help" = "Lefuttatja a promptot az éppen kijelölt szövegen és lecseréli az eredménnyel — felugró ablak nélkül, helyben átalakítva.";
+"settings.prompts.editor.open_run" = "Futtatás a szerkesztőben:";
+"settings.prompts.editor.open_run_help" = "Rögzíti a kijelölt szöveget, megnyitja a ClipSlop szerkesztőt az eredménnyel, és lehetővé teszi az átnézést vagy módosítást másolás előtt.";
 "settings.prompts.editor.select_all" = "Mindent kijelöl rögzítés előtt";
 "settings.prompts.editor.select_all_help" = "⌘A szimulálása a szöveg rögzítése előtt, hasznos a teljes mezőtartalom cseréjéhez";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Gyors hozzáférés megnyitása";
-"menu.prompt_shortcuts.open_run" = "Megnyitás és futtatás";
-"menu.prompt_shortcuts.quick_paste" = "Gyors beillesztés";
+"menu.prompt_shortcuts.open_run" = "Futtatás a szerkesztőben";
+"menu.prompt_shortcuts.quick_paste" = "Beágyazott futtatás";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Megnyitás és futtatás";
-"settings.prompts.field.quick_paste" = "Gyors beillesztés";
+"settings.prompts.field.open_run" = "Futtatás a szerkesztőben";
+"settings.prompts.field.quick_paste" = "Beágyazott futtatás";
 "settings.prompts.mnemonic_conflict_tooltip" = "Duplikált mnemonik ebben a mappában";
 "settings.prompts.shortcut_conflict_title" = "A gyorsbillentyű már használatban van";
 "settings.prompts.shortcut_conflict_message" = "%1$@ jelenleg a következő prompthoz van rendelve: „%2$@” (%3$@). Átrendelnéd ehhez a prompthoz, vagy mégsem?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Engedj ide promptokat csempék hozzáadásához";
 "settings.quick_access.grid_empty_hint" = "Húzd bármelyik promptot a bal oldalról.";
 "settings.quick_access.method.label" = "Művelet";
-"settings.quick_access.method.inline" = "Gyors beillesztés";
-"settings.quick_access.method.open_in_clipslop" = "Megnyitás és futtatás";
+"settings.quick_access.method.inline" = "Beágyazott futtatás";
+"settings.quick_access.method.open_in_clipslop" = "Futtatás a szerkesztőben";
 "settings.quick_access.tile.remove" = "Csempe eltávolítása";
 "settings.quick_access.tile.in_use_badge" = "A Gyors hozzáférésben";
 "settings.quick_access.tile.missing" = "(törölt prompt)";

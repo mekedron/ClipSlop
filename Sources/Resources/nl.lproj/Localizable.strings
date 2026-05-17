@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Sneltoetsen";
-"settings.general.shortcuts.trigger" = "ClipSlop activeren:";
-"settings.general.shortcuts.clipboard" = "Vanuit klembord:";
-"settings.general.shortcuts.blank" = "Lege editor:";
-"settings.general.shortcuts.ocr" = "OCR + Bewerken:";
+"settings.general.shortcuts.trigger" = "Geselecteerde tekst bewerken:";
+"settings.general.shortcuts.clipboard" = "Klembord bewerken:";
+"settings.general.shortcuts.blank" = "Lege editor openen:";
+"settings.general.shortcuts.ocr" = "Schermtekst bewerken:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Gedrag";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Sluiten";
 
 /* Menu Bar */
-"menu.trigger" = "Activeren";
-"menu.clipboard" = "Vanuit klembord";
-"menu.blank" = "Lege editor";
-"menu.ocr" = "OCR + Bewerken";
-"menu.ocr_clipboard" = "OCR naar klembord";
+"menu.trigger" = "Geselecteerde tekst bewerken";
+"menu.clipboard" = "Klembord bewerken";
+"menu.blank" = "Lege editor openen";
+"menu.ocr" = "Schermtekst bewerken";
+"menu.ocr_clipboard" = "Schermtekst kopiëren";
 "menu.provider" = "Aanbieder: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Instellingen...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Afbeeldingen laden en weergeven in Markdown-voorbeeldweergave";
 "settings.general.behavior.preserve_image_widths" = "Afbeeldingsbreedten behouden";
 "settings.general.behavior.preserve_image_widths_help" = "width en max-width van HTML-afbeeldings-tags behouden bij Markdown-rendering";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Schermtekst kopiëren:";
+"settings.general.shortcuts.ocr_clipslop" = "Schermtekst bewerken:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR naar klembord";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + openen in ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globale sneltoetsen";
-"settings.prompts.editor.quick_paste" = "Snel plakken:";
-"settings.prompts.editor.quick_paste_help" = "Vangt geselecteerde tekst, verwerkt deze met dit prompt en plakt het resultaat";
-"settings.prompts.editor.open_run" = "Openen en uitvoeren:";
-"settings.prompts.editor.open_run_help" = "Vangt geselecteerde tekst, opent ClipSlop en past automatisch dit prompt toe";
+"settings.prompts.editor.quick_paste" = "Inline uitvoeren:";
+"settings.prompts.editor.quick_paste_help" = "Voert de prompt uit op de geselecteerde tekst en vervangt deze door het resultaat — geen popup, gewoon transformatie ter plaatse.";
+"settings.prompts.editor.open_run" = "Uitvoeren in editor:";
+"settings.prompts.editor.open_run_help" = "Vangt geselecteerde tekst, opent de ClipSlop-editor met het resultaat en laat je controleren of aanpassen voor het kopiëren.";
 "settings.prompts.editor.select_all" = "Alles selecteren voor vastlegging";
 "settings.prompts.editor.select_all_help" = "Simuleert ⌘A voor het vastleggen van tekst, handig om de hele veldinhoud te vervangen";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Snelle toegang openen";
-"menu.prompt_shortcuts.open_run" = "Openen en uitvoeren";
-"menu.prompt_shortcuts.quick_paste" = "Snel plakken";
+"menu.prompt_shortcuts.open_run" = "Uitvoeren in editor";
+"menu.prompt_shortcuts.quick_paste" = "Inline uitvoeren";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Openen en uitvoeren";
-"settings.prompts.field.quick_paste" = "Snel plakken";
+"settings.prompts.field.open_run" = "Uitvoeren in editor";
+"settings.prompts.field.quick_paste" = "Inline uitvoeren";
 "settings.prompts.mnemonic_conflict_tooltip" = "Dubbele mnemonic in deze map";
 "settings.prompts.shortcut_conflict_title" = "Sneltoets al in gebruik";
 "settings.prompts.shortcut_conflict_message" = "%1$@ is momenteel toegewezen aan ‘%2$@’ (%3$@). Toewijzen aan deze prompt of annuleren?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Sleep prompts hierheen om tegels toe te voegen";
 "settings.quick_access.grid_empty_hint" = "Sleep een willekeurige prompt van links.";
 "settings.quick_access.method.label" = "Actie";
-"settings.quick_access.method.inline" = "Snel plakken";
-"settings.quick_access.method.open_in_clipslop" = "Openen en uitvoeren";
+"settings.quick_access.method.inline" = "Inline uitvoeren";
+"settings.quick_access.method.open_in_clipslop" = "Uitvoeren in editor";
 "settings.quick_access.tile.remove" = "Tegel verwijderen";
 "settings.quick_access.tile.in_use_badge" = "In Snelle toegang";
 "settings.quick_access.tile.missing" = "(verwijderde prompt)";
