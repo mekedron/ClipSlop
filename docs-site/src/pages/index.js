@@ -732,9 +732,28 @@ function Compare() {
   );
 }
 
-function CTA() {
+const INSTALL_CMDS = {
+  brew: 'brew tap mekedron/tap && brew install --cask clipslop',
+  // Fully scripted .dmg install: hit the GitHub API for the latest
+  // release, download the .dmg, mount it headlessly, copy the .app to
+  // /Applications, unmount, and clean up. Assumes the .dmg volume
+  // mounts at /Volumes/ClipSlop and contains ClipSlop.app — true for
+  // all current releases. Falls back to the "Open releases" button
+  // below the code row for users who'd rather drag-to-Applications.
+  dmg:
+    'URL=$(curl -fsSL https://api.github.com/repos/mekedron/ClipSlop/releases/latest ' +
+    "| grep browser_download_url | grep .dmg | head -1 | cut -d'\"' -f4) " +
+    '&& curl -fsSLO "$URL" ' +
+    '&& hdiutil attach -nobrowse -quiet "${URL##*/}" ' +
+    '&& cp -R /Volumes/ClipSlop/ClipSlop.app /Applications/ ' +
+    '&& hdiutil detach -quiet /Volumes/ClipSlop ' +
+    '&& rm "${URL##*/}"',
+};
+
+function InstallTabs() {
+  const [tab, setTab] = useState('brew');
   const [copied, setCopied] = useState(false);
-  const cmd = 'brew tap mekedron/tap && brew install --cask clipslop';
+  const cmd = INSTALL_CMDS[tab];
 
   const copy = async () => {
     try {
@@ -751,6 +770,76 @@ function CTA() {
     setTimeout(() => setCopied(false), 1800);
   };
 
+  const switchTab = (next) => {
+    setTab(next);
+    setCopied(false);
+  };
+
+  return (
+    <div className={styles.installCard}>
+      <div
+        className={styles.installTabs}
+        role="tablist"
+        aria-label="Install method">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'brew'}
+          className={clsx(styles.installTab, tab === 'brew' && styles.installTabActive)}
+          onClick={() => switchTab('brew')}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 10h12v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9z" />
+            <path d="M16 12h2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2" />
+            <path d="M7 5v2M10 5v2M13 5v2" />
+          </svg>
+          Homebrew
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={tab === 'dmg'}
+          className={clsx(styles.installTab, tab === 'dmg' && styles.installTabActive)}
+          onClick={() => switchTab('dmg')}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Direct .dmg
+        </button>
+      </div>
+      <div className={styles.installPanel} role="tabpanel">
+        <div className={styles.install}>
+          <code className={styles.installCode}>
+            <span className={styles.installGrey}>$</span> {cmd}
+          </code>
+          <button
+            type="button"
+            onClick={copy}
+            className={clsx(styles.copyBtn, copied && styles.copyBtnCopied)}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+            </svg>
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
+        {tab === 'dmg' && (
+          <div className={styles.installFoot}>
+            <Link
+              className={styles.installFootLink}
+              href="https://github.com/mekedron/ClipSlop/releases/latest">
+              Prefer to download manually? Open the releases page{' '}
+              <span className={styles.arrow}>→</span>
+            </Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CTA() {
   return (
     <section
       className={clsx(styles.sec, styles.secTight, styles.secFlushBelow)}
@@ -769,45 +858,11 @@ function CTA() {
             you only ever pay your AI provider — or use the free ChatGPT sign-in.
           </p>
 
-          <div className={styles.installLabel}>
-            <span className={styles.installLabelBadge}>Recommended</span>
-            <span>Install with Homebrew</span>
-          </div>
-          <div className={styles.install}>
-            <code className={styles.installCode}>
-              <span className={styles.installGrey}>$</span> {cmd}
-            </code>
-            <button
-              type="button"
-              onClick={copy}
-              className={clsx(styles.copyBtn, copied && styles.copyBtnCopied)}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-              </svg>
-              {copied ? 'Copied!' : 'Copy'}
-            </button>
-          </div>
+          <InstallTabs />
 
-          <div className={styles.installDivider} aria-hidden="true">
-            <span>or</span>
-          </div>
-
-          <div className={styles.installAlt}>
-            <Link
-              className={clsx(styles.btn, styles.btnGhost, styles.btnDmg)}
-              href="https://github.com/mekedron/ClipSlop/releases/latest">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download the .dmg
-            </Link>
-            <span className={styles.installAltMeta}>
-              No Homebrew needed · ~12 MB · macOS 14 Sonoma+
-            </span>
-          </div>
+          <p className={styles.installMeta}>
+            ~12 MB · macOS 14 Sonoma+ · MIT licensed
+          </p>
         </div>
       </div>
     </section>

@@ -985,86 +985,100 @@
   font-size: 17px;
 }
 
-.installLabel {
-  margin: 32px auto 12px;
-  max-width: 600px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  color: var(--fg-2);
-  font-size: 13.5px;
-  font-weight: 600;
-}
-.installLabelBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 14%, transparent);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.install {
-  margin: 0 auto;
+/* Tabbed install card — Homebrew | Direct .dmg. Squashes the previous
+   label + brew row + divider + dmg row stack into one compact widget,
+   which keeps the download section short enough for the joined Support
+   panel below to stay visible without scrolling. */
+.installCard {
+  margin: 32px auto 0;
   max-width: 600px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  text-align: left;
+}
+.installTabs {
+  display: flex;
+  background: color-mix(in srgb, var(--bg-sunken, var(--bg-card)) 70%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+.installTab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 14px;
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  color: var(--fg-2);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+.installTab:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent-soft) 40%, transparent);
+}
+.installTabActive {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: var(--bg);
+}
+.installTabActive:hover { background: var(--bg); }
+.installTab svg { flex: 0 0 auto; }
+
+.installPanel {
   padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+
+/* Code row inside the tab card. No outer border/shadow — the card
+   owns those — just an inner padding and the flex layout for code +
+   copy button. */
+.install {
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: var(--shadow-md);
 }
 
-/* "or" divider between the brew block and the .dmg fallback. The rule
-   uses a flex layout with two ::before/::after lines so it scales with
-   the surrounding container width. */
-.installDivider {
-  margin: 24px auto 20px;
-  max-width: 600px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: var(--fg-3);
+/* DMG-tab fallback footer — small inline link to the GitHub releases
+   page for users who prefer to download and drag-to-Applications by
+   hand instead of running the scripted curl/hdiutil one-liner above. */
+.installFoot {
+  border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  padding: 8px 12px;
+  text-align: center;
+}
+.installFootLink {
   font-size: 12.5px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  color: var(--fg-2);
+  text-decoration: none;
 }
-.installDivider::before,
-.installDivider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
+.installFootLink:hover {
+  color: var(--accent);
+  text-decoration: none;
 }
+.installFootLink .arrow {
+  transition: transform 0.2s ease;
+  display: inline-block;
+}
+.installFootLink:hover .arrow { transform: translateX(3px); }
 
-.installAlt {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.installAltMeta {
+/* Single meta line below the tabs — replaces the per-tab "~12 MB ..."
+   caption from the previous design. */
+.installMeta {
+  margin: 14px 0 0;
   color: var(--fg-3);
   font-size: 13px;
-}
-
-/* .btnDmg — a slightly more present ghost button than the default,
-   to anchor the secondary download path without competing with the
-   homebrew block above. */
-.btnDmg {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
-}
-.btnDmg:hover {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
-  background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg-card));
 }
 .installCode {
   flex: 1;
