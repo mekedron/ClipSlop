@@ -30,6 +30,7 @@ ClipSlop is a free, open-source AI writing tool for macOS that works in any app.
 - [Comparison with other AI writing tools](#comparison-with-other-ai-writing-tools)
 - [Install](#install)
 - [Requirements](#requirements)
+- [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 - [License](#license)
 - [Support](#support)
@@ -257,6 +258,30 @@ Requires macOS 14+ and Xcode with Swift 6.0+.
 
 - macOS 14.0+
 - An AI provider: sign in with ChatGPT (free), API key (Anthropic, OpenAI), local Ollama, or CLI tools
+
+## Contributing
+
+### Pre-commit hooks (required)
+
+ClipSlop ships with a pre-commit hook that blocks commits when any localization key is missing in any of the 16 translated languages. **Install it once after cloning** — `.git/hooks/` is not versioned, so the hook is not active out of the box:
+
+```bash
+./Scripts/install-hooks.sh
+```
+
+What the hook does:
+
+- Runs only when a `*.lproj/Localizable.strings` file is in the commit.
+- Compares every key in `en.lproj/Localizable.strings` against the other 16 languages.
+- Blocks the commit if any translation is missing, and prints the offending keys per language.
+
+To check translations manually at any time:
+
+```bash
+./Scripts/check-localizations.sh
+```
+
+Re-run `./Scripts/install-hooks.sh` whenever the contents of `Scripts/hooks/` change. Bypassing the hook with `--no-verify` is strongly discouraged — missing translations break the UI for users of those languages.
 
 ## Acknowledgements
 

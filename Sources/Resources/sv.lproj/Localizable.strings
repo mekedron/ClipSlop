@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Fångar markerad text, öppnar ClipSlop och tillämpar automatiskt denna prompt";
 "settings.prompts.editor.select_all" = "Markera allt före fångst";
 "settings.prompts.editor.select_all_help" = "Simulerar ⌘A före textfångst, användbart för att ersätta hela fältinnehållet";
+
+/* Popup - Search */
+"popup.hint.search" = "Sök prompter";
+"popup.hint.search_select" = "Välj";
+"popup.hint.search_run" = "Kör";
+"popup.hint.search_exit" = "Avsluta sökning";
+"popup.search.placeholder" = "Sök prompter...";
+"popup.search.no_results" = "Inga matchande prompter";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Öppna Snabbåtkomst";
+"menu.prompt_shortcuts.open_run" = "Öppna och kör";
+"menu.prompt_shortcuts.quick_paste" = "Snabbklistra";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Öppna och kör";
+"settings.prompts.field.quick_paste" = "Snabbklistra";
+"settings.prompts.mnemonic_conflict_tooltip" = "Duplicerat mnemonik i den här mappen";
+"settings.prompts.shortcut_conflict_title" = "Kortkommando används redan";
+"settings.prompts.shortcut_conflict_message" = "%1$@ är för närvarande tilldelat ”%2$@” (%3$@). Tilldela den här prompten eller avbryta?";
+"settings.prompts.shortcut_conflict_replace" = "Ersätt";
+"settings.prompts.editor.mnemonic_conflict" = "En annan prompt i den här mappen använder samma mnemonik (%@). Endast en kommer att vara åtkomlig via menyn — ändra tangenten här eller på den andra prompten.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Snabbåtkomst";
+"settings.general.shortcuts.quick_access" = "Öppna Snabbåtkomst:";
+"settings.quick_access.columns" = "Kolumner";
+"settings.quick_access.auto_update" = "Uppdatera med appen";
+"settings.quick_access.auto_update_help" = "Håll Snabbåtkomstens standardpaneler uppdaterade när appen uppdateras. Stängs av automatiskt när du anpassar rutnätet.";
+"settings.quick_access.export" = "Exportera…";
+"settings.quick_access.export.help" = "Spara det aktuella Snabbåtkomst-rutnätet till en JSON-fil.";
+"settings.quick_access.import" = "Importera…";
+"settings.quick_access.import.help" = "Ersätt det aktuella Snabbåtkomst-rutnätet med innehållet i en JSON-fil.";
+"settings.quick_access.restore" = "Återställ standard";
+"settings.quick_access.restore.help" = "Ersätt det aktuella rutnätet med de medföljande standardpanelerna.";
+"settings.quick_access.restore_title" = "Återställa standard Snabbåtkomst?";
+"settings.quick_access.restore_message" = "Detta ersätter ditt aktuella Snabbåtkomst-rutnät med standardvärdena nedan. Detta kan inte ångras.";
+"settings.quick_access.restore_button" = "Återställ standard";
+"settings.quick_access.left_pane_hint" = "Dra prompter till rutnätet →";
+"settings.quick_access.grid_empty" = "Släpp prompter här för att lägga till paneler";
+"settings.quick_access.grid_empty_hint" = "Dra valfri prompt från vänster.";
+"settings.quick_access.method.label" = "Åtgärd";
+"settings.quick_access.method.inline" = "Snabbklistra";
+"settings.quick_access.method.open_in_clipslop" = "Öppna och kör";
+"settings.quick_access.tile.remove" = "Ta bort panel";
+"settings.quick_access.tile.in_use_badge" = "I Snabbåtkomst";
+"settings.quick_access.tile.missing" = "(borttagen prompt)";
+"quick_access.empty_state" = "Inga paneler konfigurerade.\nÖppna Inställningar → Snabbåtkomst för att lägga till några.";

@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Fanger markert tekst, åpner ClipSlop og bruker automatisk denne prompten";
 "settings.prompts.editor.select_all" = "Velg alt før fangst";
 "settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstfangst, nyttig for å erstatte hele feltinnholdet";
+
+/* Popup - Search */
+"popup.hint.search" = "Søk i prompts";
+"popup.hint.search_select" = "Velg";
+"popup.hint.search_run" = "Kjør";
+"popup.hint.search_exit" = "Avslutt søk";
+"popup.search.placeholder" = "Søk i prompts...";
+"popup.search.no_results" = "Ingen samsvarende prompts";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Åpne Hurtigtilgang";
+"menu.prompt_shortcuts.open_run" = "Åpne og kjøre";
+"menu.prompt_shortcuts.quick_paste" = "Hurtiglim";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Åpne og kjøre";
+"settings.prompts.field.quick_paste" = "Hurtiglim";
+"settings.prompts.mnemonic_conflict_tooltip" = "Duplikat mnemonikk i denne mappen";
+"settings.prompts.shortcut_conflict_title" = "Snarvei er allerede i bruk";
+"settings.prompts.shortcut_conflict_message" = "%1$@ er for øyeblikket tildelt «%2$@» (%3$@). Tildel til denne prompten eller avbryt?";
+"settings.prompts.shortcut_conflict_replace" = "Erstatt";
+"settings.prompts.editor.mnemonic_conflict" = "En annen prompt i denne mappen bruker samme mnemonikk (%@). Bare én vil være tilgjengelig via menyen — endre tasten her eller på den andre prompten.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Hurtigtilgang";
+"settings.general.shortcuts.quick_access" = "Åpne Hurtigtilgang:";
+"settings.quick_access.columns" = "Kolonner";
+"settings.quick_access.auto_update" = "Oppdater med app";
+"settings.quick_access.auto_update_help" = "Hold standardfliser i Hurtigtilgang oppdatert når appen oppdateres. Slås av automatisk når du tilpasser rutenettet.";
+"settings.quick_access.export" = "Eksporter…";
+"settings.quick_access.export.help" = "Lagre gjeldende Hurtigtilgang-rutenett til en JSON-fil.";
+"settings.quick_access.import" = "Importer…";
+"settings.quick_access.import.help" = "Erstatt gjeldende Hurtigtilgang-rutenett med innholdet i en JSON-fil.";
+"settings.quick_access.restore" = "Gjenopprett standarder";
+"settings.quick_access.restore.help" = "Erstatt gjeldende rutenett med de medfølgende standardflisene.";
+"settings.quick_access.restore_title" = "Gjenopprette standard Hurtigtilgang?";
+"settings.quick_access.restore_message" = "Dette erstatter ditt gjeldende Hurtigtilgang-rutenett med standardene nedenfor. Dette kan ikke angres.";
+"settings.quick_access.restore_button" = "Gjenopprett standarder";
+"settings.quick_access.left_pane_hint" = "Dra prompts inn i rutenettet →";
+"settings.quick_access.grid_empty" = "Slipp prompts her for å legge til fliser";
+"settings.quick_access.grid_empty_hint" = "Dra hvilken som helst prompt fra venstre.";
+"settings.quick_access.method.label" = "Handling";
+"settings.quick_access.method.inline" = "Hurtiglim";
+"settings.quick_access.method.open_in_clipslop" = "Åpne og kjøre";
+"settings.quick_access.tile.remove" = "Fjern flis";
+"settings.quick_access.tile.in_use_badge" = "I Hurtigtilgang";
+"settings.quick_access.tile.missing" = "(slettet prompt)";
+"quick_access.empty_state" = "Ingen fliser konfigurert.\nÅpne Innstillinger → Hurtigtilgang for å legge til.";

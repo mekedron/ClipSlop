@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Cattura il testo selezionato, apre ClipSlop e applica automaticamente questo prompt";
 "settings.prompts.editor.select_all" = "Seleziona tutto prima della cattura";
 "settings.prompts.editor.select_all_help" = "Simula ⌘A prima della cattura del testo, utile per sostituire l'intero contenuto del campo";
+
+/* Popup - Search */
+"popup.hint.search" = "Cerca prompt";
+"popup.hint.search_select" = "Seleziona";
+"popup.hint.search_run" = "Esegui";
+"popup.hint.search_exit" = "Esci dalla ricerca";
+"popup.search.placeholder" = "Cerca prompt...";
+"popup.search.no_results" = "Nessun prompt corrispondente";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Apri Accesso rapido";
+"menu.prompt_shortcuts.open_run" = "Apri ed esegui";
+"menu.prompt_shortcuts.quick_paste" = "Incolla rapido";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Apri ed esegui";
+"settings.prompts.field.quick_paste" = "Incolla rapido";
+"settings.prompts.mnemonic_conflict_tooltip" = "Mnemonico duplicato in questa cartella";
+"settings.prompts.shortcut_conflict_title" = "Scorciatoia già in uso";
+"settings.prompts.shortcut_conflict_message" = "%1$@ è attualmente assegnata a «%2$@» (%3$@). Riassegnarla a questo prompt o annullare?";
+"settings.prompts.shortcut_conflict_replace" = "Sostituisci";
+"settings.prompts.editor.mnemonic_conflict" = "Un altro prompt in questa cartella usa lo stesso mnemonico (%@). Solo uno sarà raggiungibile dal menu — cambia il tasto qui o sull’altro prompt.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Accesso rapido";
+"settings.general.shortcuts.quick_access" = "Apri Accesso rapido:";
+"settings.quick_access.columns" = "Colonne";
+"settings.quick_access.auto_update" = "Aggiorna con l’app";
+"settings.quick_access.auto_update_help" = "Mantieni aggiornati i riquadri predefiniti dell’Accesso rapido quando l’app viene aggiornata. Si disattiva automaticamente quando personalizzi la griglia.";
+"settings.quick_access.export" = "Esporta…";
+"settings.quick_access.export.help" = "Salva la griglia attuale dell’Accesso rapido in un file JSON.";
+"settings.quick_access.import" = "Importa…";
+"settings.quick_access.import.help" = "Sostituisci la griglia attuale dell’Accesso rapido con il contenuto di un file JSON.";
+"settings.quick_access.restore" = "Ripristina valori predefiniti";
+"settings.quick_access.restore.help" = "Sostituisci la griglia attuale con i riquadri predefiniti inclusi.";
+"settings.quick_access.restore_title" = "Ripristinare l’Accesso rapido predefinito?";
+"settings.quick_access.restore_message" = "Questo sostituirà la griglia attuale dell’Accesso rapido con quella predefinita mostrata sotto. L’operazione non può essere annullata.";
+"settings.quick_access.restore_button" = "Ripristina valori predefiniti";
+"settings.quick_access.left_pane_hint" = "Trascina i prompt nella griglia →";
+"settings.quick_access.grid_empty" = "Rilascia i prompt qui per aggiungere riquadri";
+"settings.quick_access.grid_empty_hint" = "Trascina un prompt qualsiasi da sinistra.";
+"settings.quick_access.method.label" = "Azione";
+"settings.quick_access.method.inline" = "Incolla rapido";
+"settings.quick_access.method.open_in_clipslop" = "Apri ed esegui";
+"settings.quick_access.tile.remove" = "Rimuovi riquadro";
+"settings.quick_access.tile.in_use_badge" = "Nell’Accesso rapido";
+"settings.quick_access.tile.missing" = "(prompt eliminato)";
+"quick_access.empty_state" = "Nessun riquadro configurato.\nApri Impostazioni → Accesso rapido per aggiungerne.";

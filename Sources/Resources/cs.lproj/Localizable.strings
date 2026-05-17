@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Zachytí vybraný text, otevře ClipSlop a automaticky aplikuje tento prompt";
 "settings.prompts.editor.select_all" = "Vybrat vše před zachycením";
 "settings.prompts.editor.select_all_help" = "Simuluje ⌘A před zachycením textu, užitečné pro nahrazení celého obsahu pole";
+
+/* Popup - Search */
+"popup.hint.search" = "Hledat prompty";
+"popup.hint.search_select" = "Vybrat";
+"popup.hint.search_run" = "Spustit";
+"popup.hint.search_exit" = "Ukončit hledání";
+"popup.search.placeholder" = "Hledat prompty...";
+"popup.search.no_results" = "Žádné odpovídající prompty";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Otevřít Rychlý přístup";
+"menu.prompt_shortcuts.open_run" = "Otevřít a spustit";
+"menu.prompt_shortcuts.quick_paste" = "Rychlé vložení";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Otevřít a spustit";
+"settings.prompts.field.quick_paste" = "Rychlé vložení";
+"settings.prompts.mnemonic_conflict_tooltip" = "Duplicitní mnemonika v této složce";
+"settings.prompts.shortcut_conflict_title" = "Klávesová zkratka se již používá";
+"settings.prompts.shortcut_conflict_message" = "%1$@ je aktuálně přiřazeno k „%2$@“ (%3$@). Přiřadit k tomuto promptu, nebo zrušit?";
+"settings.prompts.shortcut_conflict_replace" = "Nahradit";
+"settings.prompts.editor.mnemonic_conflict" = "Jiný prompt v této složce používá stejnou mnemoniku (%@). V nabídce bude dostupný jen jeden — změňte klávesu zde nebo u druhého promptu.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Rychlý přístup";
+"settings.general.shortcuts.quick_access" = "Otevřít Rychlý přístup:";
+"settings.quick_access.columns" = "Sloupce";
+"settings.quick_access.auto_update" = "Aktualizovat s aplikací";
+"settings.quick_access.auto_update_help" = "Udržovat výchozí dlaždice Rychlého přístupu aktuální při aktualizaci aplikace. Automaticky se vypne při úpravě mřížky.";
+"settings.quick_access.export" = "Exportovat…";
+"settings.quick_access.export.help" = "Uložit aktuální mřížku Rychlého přístupu do souboru JSON.";
+"settings.quick_access.import" = "Importovat…";
+"settings.quick_access.import.help" = "Nahradit aktuální mřížku Rychlého přístupu obsahem souboru JSON.";
+"settings.quick_access.restore" = "Obnovit výchozí";
+"settings.quick_access.restore.help" = "Nahradit aktuální mřížku dodanými výchozími dlaždicemi.";
+"settings.quick_access.restore_title" = "Obnovit výchozí Rychlý přístup?";
+"settings.quick_access.restore_message" = "Aktuální mřížka Rychlého přístupu bude nahrazena výchozí níže. Tuto akci nelze vrátit.";
+"settings.quick_access.restore_button" = "Obnovit výchozí";
+"settings.quick_access.left_pane_hint" = "Přetáhněte prompty do mřížky →";
+"settings.quick_access.grid_empty" = "Sem přetáhněte prompty pro přidání dlaždic";
+"settings.quick_access.grid_empty_hint" = "Přetáhněte jakýkoli prompt zleva.";
+"settings.quick_access.method.label" = "Akce";
+"settings.quick_access.method.inline" = "Rychlé vložení";
+"settings.quick_access.method.open_in_clipslop" = "Otevřít a spustit";
+"settings.quick_access.tile.remove" = "Odebrat dlaždici";
+"settings.quick_access.tile.in_use_badge" = "V Rychlém přístupu";
+"settings.quick_access.tile.missing" = "(smazaný prompt)";
+"quick_access.empty_state" = "Žádné dlaždice nejsou nakonfigurované.\nOtevřete Nastavení → Rychlý přístup pro přidání.";

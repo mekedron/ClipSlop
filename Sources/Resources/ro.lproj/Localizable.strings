@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Captează textul selectat, deschide ClipSlop și aplică automat acest prompt";
 "settings.prompts.editor.select_all" = "Selectează tot înainte de captură";
 "settings.prompts.editor.select_all_help" = "Simulează ⌘A înainte de captura textului, util pentru înlocuirea întregului conținut al câmpului";
+
+/* Popup - Search */
+"popup.hint.search" = "Caută prompt-uri";
+"popup.hint.search_select" = "Selectează";
+"popup.hint.search_run" = "Rulează";
+"popup.hint.search_exit" = "Ieșire din căutare";
+"popup.search.placeholder" = "Caută prompt-uri...";
+"popup.search.no_results" = "Niciun prompt corespunzător";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Deschide Acces rapid";
+"menu.prompt_shortcuts.open_run" = "Deschide și rulează";
+"menu.prompt_shortcuts.quick_paste" = "Lipire rapidă";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Deschide și rulează";
+"settings.prompts.field.quick_paste" = "Lipire rapidă";
+"settings.prompts.mnemonic_conflict_tooltip" = "Mnemonic duplicat în acest folder";
+"settings.prompts.shortcut_conflict_title" = "Scurtătura este deja folosită";
+"settings.prompts.shortcut_conflict_message" = "%1$@ este atribuită în prezent prompt-ului „%2$@” (%3$@). Reatribui acestui prompt sau anulezi?";
+"settings.prompts.shortcut_conflict_replace" = "Înlocuiește";
+"settings.prompts.editor.mnemonic_conflict" = "Un alt prompt din acest folder folosește același mnemonic (%@). Doar unul va fi accesibil din meniu — schimbă tasta aici sau la celălalt prompt.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Acces rapid";
+"settings.general.shortcuts.quick_access" = "Deschide Acces rapid:";
+"settings.quick_access.columns" = "Coloane";
+"settings.quick_access.auto_update" = "Actualizează odată cu aplicația";
+"settings.quick_access.auto_update_help" = "Menține plăcile implicite din Acces rapid actualizate la actualizarea aplicației. Se dezactivează automat când personalizezi grila.";
+"settings.quick_access.export" = "Exportă…";
+"settings.quick_access.export.help" = "Salvează grila curentă Acces rapid într-un fișier JSON.";
+"settings.quick_access.import" = "Importă…";
+"settings.quick_access.import.help" = "Înlocuiește grila curentă Acces rapid cu conținutul unui fișier JSON.";
+"settings.quick_access.restore" = "Restaurează valorile implicite";
+"settings.quick_access.restore.help" = "Înlocuiește grila curentă cu plăcile implicite incluse.";
+"settings.quick_access.restore_title" = "Restaurezi Acces rapid implicit?";
+"settings.quick_access.restore_message" = "Aceasta va înlocui grila curentă Acces rapid cu valorile implicite de mai jos. Această acțiune nu poate fi anulată.";
+"settings.quick_access.restore_button" = "Restaurează valorile implicite";
+"settings.quick_access.left_pane_hint" = "Trage prompt-uri în grilă →";
+"settings.quick_access.grid_empty" = "Aruncă prompt-uri aici pentru a adăuga plăci";
+"settings.quick_access.grid_empty_hint" = "Trage orice prompt din partea stângă.";
+"settings.quick_access.method.label" = "Acțiune";
+"settings.quick_access.method.inline" = "Lipire rapidă";
+"settings.quick_access.method.open_in_clipslop" = "Deschide și rulează";
+"settings.quick_access.tile.remove" = "Elimină placa";
+"settings.quick_access.tile.in_use_badge" = "În Acces rapid";
+"settings.quick_access.tile.missing" = "(prompt șters)";
+"quick_access.empty_state" = "Nicio placă configurată.\nDeschide Setări → Acces rapid pentru a adăuga.";

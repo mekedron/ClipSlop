@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Vangt geselecteerde tekst, opent ClipSlop en past automatisch dit prompt toe";
 "settings.prompts.editor.select_all" = "Alles selecteren voor vastlegging";
 "settings.prompts.editor.select_all_help" = "Simuleert ⌘A voor het vastleggen van tekst, handig om de hele veldinhoud te vervangen";
+
+/* Popup - Search */
+"popup.hint.search" = "Prompts zoeken";
+"popup.hint.search_select" = "Selecteren";
+"popup.hint.search_run" = "Uitvoeren";
+"popup.hint.search_exit" = "Zoeken afsluiten";
+"popup.search.placeholder" = "Prompts zoeken...";
+"popup.search.no_results" = "Geen overeenkomende prompts";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Snelle toegang openen";
+"menu.prompt_shortcuts.open_run" = "Openen en uitvoeren";
+"menu.prompt_shortcuts.quick_paste" = "Snel plakken";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Openen en uitvoeren";
+"settings.prompts.field.quick_paste" = "Snel plakken";
+"settings.prompts.mnemonic_conflict_tooltip" = "Dubbele mnemonic in deze map";
+"settings.prompts.shortcut_conflict_title" = "Sneltoets al in gebruik";
+"settings.prompts.shortcut_conflict_message" = "%1$@ is momenteel toegewezen aan ‘%2$@’ (%3$@). Toewijzen aan deze prompt of annuleren?";
+"settings.prompts.shortcut_conflict_replace" = "Vervangen";
+"settings.prompts.editor.mnemonic_conflict" = "Een andere prompt in deze map gebruikt dezelfde mnemonic (%@). Slechts één is bereikbaar via het menu — wijzig de toets hier of op de andere prompt.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Snelle toegang";
+"settings.general.shortcuts.quick_access" = "Snelle toegang openen:";
+"settings.quick_access.columns" = "Kolommen";
+"settings.quick_access.auto_update" = "Bijwerken met app";
+"settings.quick_access.auto_update_help" = "Houd de standaardtegels van Snelle toegang up-to-date wanneer de app wordt bijgewerkt. Wordt automatisch uitgeschakeld zodra je het raster aanpast.";
+"settings.quick_access.export" = "Exporteren…";
+"settings.quick_access.export.help" = "Sla het huidige Snelle toegang-raster op in een JSON-bestand.";
+"settings.quick_access.import" = "Importeren…";
+"settings.quick_access.import.help" = "Vervang het huidige Snelle toegang-raster door de inhoud van een JSON-bestand.";
+"settings.quick_access.restore" = "Standaardinstellingen herstellen";
+"settings.quick_access.restore.help" = "Vervang het huidige raster door de meegeleverde standaardtegels.";
+"settings.quick_access.restore_title" = "Standaard Snelle toegang herstellen?";
+"settings.quick_access.restore_message" = "Dit vervangt je huidige Snelle toegang-raster door de onderstaande standaardinstellingen. Dit kan niet ongedaan worden gemaakt.";
+"settings.quick_access.restore_button" = "Standaardinstellingen herstellen";
+"settings.quick_access.left_pane_hint" = "Sleep prompts naar het raster →";
+"settings.quick_access.grid_empty" = "Sleep prompts hierheen om tegels toe te voegen";
+"settings.quick_access.grid_empty_hint" = "Sleep een willekeurige prompt van links.";
+"settings.quick_access.method.label" = "Actie";
+"settings.quick_access.method.inline" = "Snel plakken";
+"settings.quick_access.method.open_in_clipslop" = "Openen en uitvoeren";
+"settings.quick_access.tile.remove" = "Tegel verwijderen";
+"settings.quick_access.tile.in_use_badge" = "In Snelle toegang";
+"settings.quick_access.tile.missing" = "(verwijderde prompt)";
+"quick_access.empty_state" = "Geen tegels geconfigureerd.\nOpen Instellingen → Snelle toegang om er toe te voegen.";

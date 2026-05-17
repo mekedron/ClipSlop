@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Rögzíti a kijelölt szöveget, megnyitja a ClipSlop-ot és automatikusan alkalmazza ezt a promptot";
 "settings.prompts.editor.select_all" = "Mindent kijelöl rögzítés előtt";
 "settings.prompts.editor.select_all_help" = "⌘A szimulálása a szöveg rögzítése előtt, hasznos a teljes mezőtartalom cseréjéhez";
+
+/* Popup - Search */
+"popup.hint.search" = "Promptok keresése";
+"popup.hint.search_select" = "Kiválasztás";
+"popup.hint.search_run" = "Futtatás";
+"popup.hint.search_exit" = "Kilépés a keresésből";
+"popup.search.placeholder" = "Promptok keresése...";
+"popup.search.no_results" = "Nincs egyező prompt";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Gyors hozzáférés megnyitása";
+"menu.prompt_shortcuts.open_run" = "Megnyitás és futtatás";
+"menu.prompt_shortcuts.quick_paste" = "Gyors beillesztés";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Megnyitás és futtatás";
+"settings.prompts.field.quick_paste" = "Gyors beillesztés";
+"settings.prompts.mnemonic_conflict_tooltip" = "Duplikált mnemonik ebben a mappában";
+"settings.prompts.shortcut_conflict_title" = "A gyorsbillentyű már használatban van";
+"settings.prompts.shortcut_conflict_message" = "%1$@ jelenleg a következő prompthoz van rendelve: „%2$@” (%3$@). Átrendelnéd ehhez a prompthoz, vagy mégsem?";
+"settings.prompts.shortcut_conflict_replace" = "Csere";
+"settings.prompts.editor.mnemonic_conflict" = "Egy másik prompt ebben a mappában ugyanazt a mnemonikát használja (%@). A menüből csak az egyik lesz elérhető — módosítsd a billentyűt itt vagy a másik promptnál.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Gyors hozzáférés";
+"settings.general.shortcuts.quick_access" = "Gyors hozzáférés megnyitása:";
+"settings.quick_access.columns" = "Oszlopok";
+"settings.quick_access.auto_update" = "Frissítés az alkalmazással";
+"settings.quick_access.auto_update_help" = "Tartsd naprakészen a Gyors hozzáférés alapértelmezett csempéit az alkalmazás frissítésekor. Automatikusan kikapcsol, ha testreszabod a rácsot.";
+"settings.quick_access.export" = "Exportálás…";
+"settings.quick_access.export.help" = "Mentsd a jelenlegi Gyors hozzáférés rácsot egy JSON fájlba.";
+"settings.quick_access.import" = "Importálás…";
+"settings.quick_access.import.help" = "Cseréld le a jelenlegi Gyors hozzáférés rácsot egy JSON fájl tartalmával.";
+"settings.quick_access.restore" = "Alapértelmezések visszaállítása";
+"settings.quick_access.restore.help" = "Cseréld le a jelenlegi rácsot a beépített alapértelmezett csempékkel.";
+"settings.quick_access.restore_title" = "Visszaállítod az alapértelmezett Gyors hozzáférést?";
+"settings.quick_access.restore_message" = "Ez lecseréli a jelenlegi Gyors hozzáférés rácsodat az alábbi alapértelmezésekre. Ez a művelet nem visszavonható.";
+"settings.quick_access.restore_button" = "Alapértelmezések visszaállítása";
+"settings.quick_access.left_pane_hint" = "Húzd a promptokat a rácsba →";
+"settings.quick_access.grid_empty" = "Engedj ide promptokat csempék hozzáadásához";
+"settings.quick_access.grid_empty_hint" = "Húzd bármelyik promptot a bal oldalról.";
+"settings.quick_access.method.label" = "Művelet";
+"settings.quick_access.method.inline" = "Gyors beillesztés";
+"settings.quick_access.method.open_in_clipslop" = "Megnyitás és futtatás";
+"settings.quick_access.tile.remove" = "Csempe eltávolítása";
+"settings.quick_access.tile.in_use_badge" = "A Gyors hozzáférésben";
+"settings.quick_access.tile.missing" = "(törölt prompt)";
+"quick_access.empty_state" = "Nincsenek beállított csempék.\nNyisd meg a Beállítások → Gyors hozzáférés menüt hozzáadáshoz.";

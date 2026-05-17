@@ -1,0 +1,28 @@
+#!/bin/bash
+# Pre-commit hook: validate that every English localization key has a translation
+# in every other language. Runs only when Localizable.strings files are staged.
+#
+# Install with: ./Scripts/install-hooks.sh
+
+set -o pipefail
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.lproj/Localizable\.strings$' || true)
+if [ -z "$STAGED" ]; then
+    exit 0
+fi
+
+echo "Checking localizations..."
+./Scripts/check-localizations.sh 2>&1 | grep -v "perl: warning"
+RC=${PIPESTATUS[0]}
+
+if [ "$RC" -ne 0 ]; then
+    echo ""
+    echo "Commit blocked: missing localization keys."
+    echo "Add the missing translations or run with --no-verify to bypass (not recommended)."
+    exit 1
+fi
+
+exit 0

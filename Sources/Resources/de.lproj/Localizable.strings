@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Erfasst markierten Text, öffnet ClipSlop und wendet diesen Prompt automatisch an";
 "settings.prompts.editor.select_all" = "Alles auswählen vor Erfassung";
 "settings.prompts.editor.select_all_help" = "Simuliert ⌘A vor der Texterfassung, nützlich zum Ersetzen des gesamten Feldinhalts";
+
+/* Popup - Search */
+"popup.hint.search" = "Prompts suchen";
+"popup.hint.search_select" = "Auswählen";
+"popup.hint.search_run" = "Ausführen";
+"popup.hint.search_exit" = "Suche beenden";
+"popup.search.placeholder" = "Prompts suchen...";
+"popup.search.no_results" = "Keine passenden Prompts";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Schnellzugriff öffnen";
+"menu.prompt_shortcuts.open_run" = "Öffnen und ausführen";
+"menu.prompt_shortcuts.quick_paste" = "Schnell einfügen";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Öffnen und ausführen";
+"settings.prompts.field.quick_paste" = "Schnell einfügen";
+"settings.prompts.mnemonic_conflict_tooltip" = "Doppelte Mnemonik in diesem Ordner";
+"settings.prompts.shortcut_conflict_title" = "Tastenkürzel bereits vergeben";
+"settings.prompts.shortcut_conflict_message" = "%1$@ ist derzeit „%2$@“ (%3$@) zugewiesen. Diesem Prompt zuweisen oder abbrechen?";
+"settings.prompts.shortcut_conflict_replace" = "Ersetzen";
+"settings.prompts.editor.mnemonic_conflict" = "Ein anderer Prompt in diesem Ordner verwendet dieselbe Mnemonik (%@). Nur einer ist über das Menü erreichbar — ändere die Taste hier oder am anderen Prompt.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Schnellzugriff";
+"settings.general.shortcuts.quick_access" = "Schnellzugriff öffnen:";
+"settings.quick_access.columns" = "Spalten";
+"settings.quick_access.auto_update" = "Mit App aktualisieren";
+"settings.quick_access.auto_update_help" = "Standard-Kacheln des Schnellzugriffs bei App-Updates aktuell halten. Wird automatisch deaktiviert, sobald du das Raster anpasst.";
+"settings.quick_access.export" = "Exportieren…";
+"settings.quick_access.export.help" = "Aktuelles Schnellzugriff-Raster als JSON-Datei speichern.";
+"settings.quick_access.import" = "Importieren…";
+"settings.quick_access.import.help" = "Aktuelles Schnellzugriff-Raster durch Inhalt einer JSON-Datei ersetzen.";
+"settings.quick_access.restore" = "Standard wiederherstellen";
+"settings.quick_access.restore.help" = "Aktuelles Raster durch die mitgelieferten Standardkacheln ersetzen.";
+"settings.quick_access.restore_title" = "Standard-Schnellzugriff wiederherstellen?";
+"settings.quick_access.restore_message" = "Dein aktuelles Schnellzugriff-Raster wird durch die unten angezeigten Standardwerte ersetzt. Dieser Vorgang kann nicht rückgängig gemacht werden.";
+"settings.quick_access.restore_button" = "Standard wiederherstellen";
+"settings.quick_access.left_pane_hint" = "Prompts ins Raster ziehen →";
+"settings.quick_access.grid_empty" = "Prompts hierher ziehen, um Kacheln hinzuzufügen";
+"settings.quick_access.grid_empty_hint" = "Beliebigen Prompt von links ziehen.";
+"settings.quick_access.method.label" = "Aktion";
+"settings.quick_access.method.inline" = "Schnell einfügen";
+"settings.quick_access.method.open_in_clipslop" = "Öffnen und ausführen";
+"settings.quick_access.tile.remove" = "Kachel entfernen";
+"settings.quick_access.tile.in_use_badge" = "Im Schnellzugriff";
+"settings.quick_access.tile.missing" = "(gelöschter Prompt)";
+"quick_access.empty_state" = "Keine Kacheln konfiguriert.\nÖffne Einstellungen → Schnellzugriff, um welche hinzuzufügen.";

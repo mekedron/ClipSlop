@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Kaappaa valitun tekstin, avaa ClipSlopin ja soveltaa automaattisesti tätä kehotetta";
 "settings.prompts.editor.select_all" = "Valitse kaikki ennen kaappausta";
 "settings.prompts.editor.select_all_help" = "Simuloi ⌘A ennen tekstin kaappausta, hyödyllinen koko kentän sisällön korvaamiseen";
+
+/* Popup - Search */
+"popup.hint.search" = "Etsi kehotteita";
+"popup.hint.search_select" = "Valitse";
+"popup.hint.search_run" = "Suorita";
+"popup.hint.search_exit" = "Poistu haku";
+"popup.search.placeholder" = "Etsi kehotteita...";
+"popup.search.no_results" = "Ei vastaavia kehotteita";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Avaa Pikakäyttö";
+"menu.prompt_shortcuts.open_run" = "Avaa ja suorita";
+"menu.prompt_shortcuts.quick_paste" = "Pikaliimatsu";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Avaa ja suorita";
+"settings.prompts.field.quick_paste" = "Pikaliimatsu";
+"settings.prompts.mnemonic_conflict_tooltip" = "Päällekkäinen muistisääntö tässä kansiossa";
+"settings.prompts.shortcut_conflict_title" = "Pikanäppäin on jo käytössä";
+"settings.prompts.shortcut_conflict_message" = "%1$@ on tällä hetkellä määritetty kehotteelle ”%2$@” (%3$@). Siirretäänkö tähän kehotteeseen vai peruutetaanko?";
+"settings.prompts.shortcut_conflict_replace" = "Korvaa";
+"settings.prompts.editor.mnemonic_conflict" = "Toinen kehote tässä kansiossa käyttää samaa muistisääntöä (%@). Vain yksi on tavoitettavissa valikon kautta — vaihda näppäin täällä tai toisessa kehotteessa.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Pikakäyttö";
+"settings.general.shortcuts.quick_access" = "Avaa Pikakäyttö:";
+"settings.quick_access.columns" = "Sarakkeet";
+"settings.quick_access.auto_update" = "Päivitä sovelluksen mukana";
+"settings.quick_access.auto_update_help" = "Pidä Pikakäytön oletusruudut ajan tasalla sovelluksen päivittyessä. Poistuu käytöstä automaattisesti, kun mukautat ruudukkoa.";
+"settings.quick_access.export" = "Vie…";
+"settings.quick_access.export.help" = "Tallenna nykyinen Pikakäytön ruudukko JSON-tiedostoon.";
+"settings.quick_access.import" = "Tuo…";
+"settings.quick_access.import.help" = "Korvaa nykyinen Pikakäytön ruudukko JSON-tiedoston sisällöllä.";
+"settings.quick_access.restore" = "Palauta oletukset";
+"settings.quick_access.restore.help" = "Korvaa nykyinen ruudukko mukana toimitetuilla oletusruuduilla.";
+"settings.quick_access.restore_title" = "Palautetaanko Pikakäytön oletukset?";
+"settings.quick_access.restore_message" = "Tämä korvaa nykyisen Pikakäytön ruudukon alla näkyvillä oletuksilla. Toimintoa ei voi peruuttaa.";
+"settings.quick_access.restore_button" = "Palauta oletukset";
+"settings.quick_access.left_pane_hint" = "Vedä kehotteita ruudukkoon →";
+"settings.quick_access.grid_empty" = "Pudota kehotteet tähän lisätäksesi ruutuja";
+"settings.quick_access.grid_empty_hint" = "Vedä mikä tahansa kehote vasemmalta.";
+"settings.quick_access.method.label" = "Toiminto";
+"settings.quick_access.method.inline" = "Pikaliimatsu";
+"settings.quick_access.method.open_in_clipslop" = "Avaa ja suorita";
+"settings.quick_access.tile.remove" = "Poista ruutu";
+"settings.quick_access.tile.in_use_badge" = "Pikakäytössä";
+"settings.quick_access.tile.missing" = "(poistettu kehote)";
+"quick_access.empty_state" = "Ei määriteltyjä ruutuja.\nAvaa Asetukset → Pikakäyttö lisätäksesi.";

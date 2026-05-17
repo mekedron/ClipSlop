@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Fanger markeret tekst, åbner ClipSlop og anvender automatisk denne prompt";
 "settings.prompts.editor.select_all" = "Vælg alt før optagelse";
 "settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstoptagelse, nyttigt til at erstatte hele feltindholdet";
+
+/* Popup - Search */
+"popup.hint.search" = "Søg i prompts";
+"popup.hint.search_select" = "Vælg";
+"popup.hint.search_run" = "Kør";
+"popup.hint.search_exit" = "Afslut søgning";
+"popup.search.placeholder" = "Søg i prompts...";
+"popup.search.no_results" = "Ingen matchende prompts";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Åbn Hurtig adgang";
+"menu.prompt_shortcuts.open_run" = "Åbn og kør";
+"menu.prompt_shortcuts.quick_paste" = "Hurtig indsæt";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Åbn og kør";
+"settings.prompts.field.quick_paste" = "Hurtig indsæt";
+"settings.prompts.mnemonic_conflict_tooltip" = "Dobbelt mnemonik i denne mappe";
+"settings.prompts.shortcut_conflict_title" = "Genvej er allerede i brug";
+"settings.prompts.shortcut_conflict_message" = "%1$@ er i øjeblikket tildelt »%2$@« (%3$@). Tildel til denne prompt eller annullér?";
+"settings.prompts.shortcut_conflict_replace" = "Erstat";
+"settings.prompts.editor.mnemonic_conflict" = "En anden prompt i denne mappe bruger samme mnemonik (%@). Kun én vil være tilgængelig via menuen — skift tasten her eller på den anden prompt.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Hurtig adgang";
+"settings.general.shortcuts.quick_access" = "Åbn Hurtig adgang:";
+"settings.quick_access.columns" = "Kolonner";
+"settings.quick_access.auto_update" = "Opdatér med app";
+"settings.quick_access.auto_update_help" = "Hold standardfliserne i Hurtig adgang opdaterede, når appen opdateres. Slås automatisk fra, når du tilpasser gitteret.";
+"settings.quick_access.export" = "Eksportér…";
+"settings.quick_access.export.help" = "Gem det aktuelle Hurtig adgang-gitter til en JSON-fil.";
+"settings.quick_access.import" = "Importér…";
+"settings.quick_access.import.help" = "Erstat det aktuelle Hurtig adgang-gitter med indholdet af en JSON-fil.";
+"settings.quick_access.restore" = "Gendan standarder";
+"settings.quick_access.restore.help" = "Erstat det aktuelle gitter med de medfølgende standardfliser.";
+"settings.quick_access.restore_title" = "Gendan standard Hurtig adgang?";
+"settings.quick_access.restore_message" = "Dette erstatter dit aktuelle Hurtig adgang-gitter med standarderne nedenfor. Dette kan ikke fortrydes.";
+"settings.quick_access.restore_button" = "Gendan standarder";
+"settings.quick_access.left_pane_hint" = "Træk prompts ind i gitteret →";
+"settings.quick_access.grid_empty" = "Slip prompts her for at tilføje fliser";
+"settings.quick_access.grid_empty_hint" = "Træk en hvilken som helst prompt fra venstre.";
+"settings.quick_access.method.label" = "Handling";
+"settings.quick_access.method.inline" = "Hurtig indsæt";
+"settings.quick_access.method.open_in_clipslop" = "Åbn og kør";
+"settings.quick_access.tile.remove" = "Fjern flise";
+"settings.quick_access.tile.in_use_badge" = "I Hurtig adgang";
+"settings.quick_access.tile.missing" = "(slettet prompt)";
+"quick_access.empty_state" = "Ingen fliser konfigureret.\nÅbn Indstillinger → Hurtig adgang for at tilføje nogle.";

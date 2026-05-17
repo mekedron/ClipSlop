@@ -380,3 +380,51 @@
 "settings.prompts.editor.open_run_help" = "Захоплює виділений текст, відкриває ClipSlop і автоматично застосовує цей промпт";
 "settings.prompts.editor.select_all" = "Виділити все перед захопленням";
 "settings.prompts.editor.select_all_help" = "Симулює ⌘A перед захопленням тексту, корисно для заміни всього вмісту поля";
+
+/* Popup - Search */
+"popup.hint.search" = "Пошук промптів";
+"popup.hint.search_select" = "Вибрати";
+"popup.hint.search_run" = "Виконати";
+"popup.hint.search_exit" = "Вийти з пошуку";
+"popup.search.placeholder" = "Пошук промптів...";
+"popup.search.no_results" = "Відповідних промптів немає";
+
+/* Menu Bar - Quick Access */
+"menu.quick_access" = "Відкрити швидкий доступ";
+"menu.prompt_shortcuts.open_run" = "Відкрити і виконати";
+"menu.prompt_shortcuts.quick_paste" = "Швидка вставка";
+
+/* Settings - Prompts - Conflicts */
+"settings.prompts.field.open_run" = "Відкрити і виконати";
+"settings.prompts.field.quick_paste" = "Швидка вставка";
+"settings.prompts.mnemonic_conflict_tooltip" = "Конфлікт мнемоніки в цій теці";
+"settings.prompts.shortcut_conflict_title" = "Сполучення клавіш уже використовується";
+"settings.prompts.shortcut_conflict_message" = "%1$@ зараз призначено промпту «%2$@» (%3$@). Перепризначити на поточний чи скасувати?";
+"settings.prompts.shortcut_conflict_replace" = "Перепризначити";
+"settings.prompts.editor.mnemonic_conflict" = "Інший промпт у цій теці використовує ту саму мнемоніку (%@). Через меню буде доступний лише один — змініть клавішу тут або в іншого промпта.";
+
+/* Settings - Quick Access */
+"settings.tab.quick_access" = "Швидкий доступ";
+"settings.general.shortcuts.quick_access" = "Відкрити швидкий доступ:";
+"settings.quick_access.columns" = "Стовпці";
+"settings.quick_access.auto_update" = "Оновлювати разом із застосунком";
+"settings.quick_access.auto_update_help" = "Підтримувати стандартні плитки Швидкого доступу в актуальному стані під час оновлення застосунку. Автоматично вимикається при зміні сітки.";
+"settings.quick_access.export" = "Експорт…";
+"settings.quick_access.export.help" = "Зберегти поточну сітку Швидкого доступу у файл JSON.";
+"settings.quick_access.import" = "Імпорт…";
+"settings.quick_access.import.help" = "Замінити поточну сітку Швидкого доступу вмістом файла JSON.";
+"settings.quick_access.restore" = "Відновити стандартні";
+"settings.quick_access.restore.help" = "Замінити поточну сітку стандартними плитками з комплекту.";
+"settings.quick_access.restore_title" = "Відновити Швидкий доступ за замовчуванням?";
+"settings.quick_access.restore_message" = "Поточну сітку Швидкого доступу буде замінено на стандартну, показану нижче. Цю дію не можна скасувати.";
+"settings.quick_access.restore_button" = "Відновити";
+"settings.quick_access.left_pane_hint" = "Перетягніть промпти в сітку →";
+"settings.quick_access.grid_empty" = "Перетягніть сюди промпти, щоб додати плитки";
+"settings.quick_access.grid_empty_hint" = "Перетягніть будь-який промпт зліва.";
+"settings.quick_access.method.label" = "Дія";
+"settings.quick_access.method.inline" = "Швидка вставка";
+"settings.quick_access.method.open_in_clipslop" = "Відкрити і виконати";
+"settings.quick_access.tile.remove" = "Видалити плитку";
+"settings.quick_access.tile.in_use_badge" = "У Швидкому доступі";
+"settings.quick_access.tile.missing" = "(промпт видалено)";
+"quick_access.empty_state" = "Плитки не налаштовано.\nВідкрийте Налаштування → Швидкий доступ, щоб додати.";
