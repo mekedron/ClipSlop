@@ -987,7 +987,7 @@
 
 .installLabel {
   margin: 32px auto 12px;
-  max-width: 520px;
+  max-width: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1011,7 +1011,7 @@
 
 .install {
   margin: 0 auto;
-  max-width: 520px;
+  max-width: 600px;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -1027,7 +1027,7 @@
    the surrounding container width. */
 .installDivider {
   margin: 24px auto 20px;
-  max-width: 520px;
+  max-width: 600px;
   display: flex;
   align-items: center;
   gap: 14px;
@@ -1130,7 +1130,11 @@
 .secFlushBelow { padding-bottom: 0; }
 .secFlushAbove { padding-top: 0; }
 
-.ctaJoined {
+/* Compound selectors used so these "joined" overrides win regardless of
+   source order — the base .cta / .support rules below declare the
+   `border-radius` shorthand, which would otherwise reset our per-corner
+   zeros if they appeared later in the cascade. */
+.cta.ctaJoined {
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   border-bottom: 0;
@@ -1139,11 +1143,11 @@
      bottom shadow for the combined stack. */
   box-shadow: 0 -8px 24px -16px rgba(34, 28, 18, 0.10);
 }
-[data-theme='dark'] .ctaJoined {
+[data-theme='dark'] .cta.ctaJoined {
   box-shadow: 0 -8px 24px -16px rgba(0, 0, 0, 0.4);
 }
 
-.supportJoined {
+.support.supportJoined {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
   /* Single seam line that ties both rooms together without doubling up
@@ -1157,7 +1161,7 @@
     color-mix(in srgb, #F4A93B 9%, var(--bg-card));
   box-shadow: var(--shadow-lg);
 }
-[data-theme='dark'] .supportJoined {
+[data-theme='dark'] .support.supportJoined {
   border-top-color: color-mix(in srgb, #F4A93B 28%, var(--border));
   background:
     radial-gradient(900px 320px at 50% 0%, color-mix(in srgb, #F4A93B 28%, transparent), transparent 60%),
