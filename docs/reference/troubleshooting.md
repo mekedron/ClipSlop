@@ -42,7 +42,7 @@ Cause: **Screen Recording** permission is missing or was revoked.
 
 Fix: **System Settings → Privacy & Security → Screen Recording** → re-add ClipSlop. Restart the app.
 
-## Quick Paste pastes the *wrong* text
+## Inline Run pastes the *wrong* text
 
 Symptom: the result pastes somewhere unexpected, or pastes the original text instead of the transformed result.
 
@@ -50,7 +50,7 @@ Common causes:
 
 - **The frontmost app changed** between when you pressed the hotkey and when ClipSlop pasted. ClipSlop pastes into whichever text field is focused at paste time, not at trigger time.
 - **The frontmost app uses non-standard text fields** that don't accept simulated <kbd>⌘V</kbd>. Some Electron and game apps fall into this bucket.
-- **The clipboard restoration race.** Very rare — if your input was tiny and the model was instant, the restored clipboard can briefly overlap with the paste. Use [Open & Run](../use/open-and-run.mdx) instead and copy manually.
+- **The clipboard restoration race.** Very rare — if your input was tiny and the model was instant, the restored clipboard can briefly overlap with the paste. Use [Run in Editor](../use/open-and-run.mdx) instead and copy manually.
 
 ## Ollama returns "connection refused"
 

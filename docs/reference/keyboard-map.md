@@ -23,13 +23,13 @@ Default per-prompt global shortcuts:
 
 | Shortcut    | Prompt                | Mode        |
 |-------------|-----------------------|-------------|
-| `⌃⌘/`       | // Your prompt        | Quick Paste |
-| `⌃⌘⌥/`      | // Your prompt        | Open & Run  |
-| `⌃⌘G`       | Fix Grammar           | Quick Paste |
-| `⌃⌘F`       | Reformat              | Quick Paste |
-| `⌃⌘T`       | Translate → English   | Quick Paste |
-| `⌃⌘⌥T`      | Translate → English   | Open & Run  |
-| `⌃⌘⌥A`      | Explain Simply        | Open & Run  |
+| `⌃⌘/`       | // Your prompt        | Inline Run |
+| `⌃⌘⌥/`      | // Your prompt        | Run in Editor  |
+| `⌃⌘G`       | Fix Grammar           | Inline Run |
+| `⌃⌘F`       | Reformat              | Inline Run |
+| `⌃⌘T`       | Translate → English   | Inline Run |
+| `⌃⌘⌥T`      | Translate → English   | Run in Editor  |
+| `⌃⌘⌥A`      | Explain Simply        | Run in Editor  |
 
 ## Inside the panel
 
@@ -60,8 +60,8 @@ Inside the prompt tree:
 
 The patterns underneath the defaults:
 
-- `⌃⌘<letter>` runs a per-prompt **Quick Paste**.
-- `⌃⌘⌥<letter>` runs the **Open & Run** variant of the same prompt.
+- `⌃⌘<letter>` runs a per-prompt **Inline Run**.
+- `⌃⌘⌥<letter>` runs the **Run in Editor** variant of the same prompt.
 - `⌃⌘<symbol>` triggers an app-level action (`C` = trigger, `V` = clipboard, `N` = blank, `/` = custom).
 - `⇧⌘<digit>` for screen actions (mirrors macOS conventions — `⇧⌘3`/`⇧⌘4` already taken by macOS).
 

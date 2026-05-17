@@ -10,7 +10,7 @@ description: ClipSlop is a free, open-source AI writing tool for macOS. Fix gram
 ClipSlop sits in your menu bar and makes any AI prompt feel like a native macOS shortcut. Select text in any app, press a hotkey, get the result back where the cursor is — that's the whole pitch.
 
 - **Keyboard-first.** Every prompt has a single-letter mnemonic. Every action has a shortcut. The mouse is optional.
-- **Inline.** Quick Paste captures the selection, runs a prompt, and pastes the result back — without ever leaving the app you're typing in.
+- **Inline.** Inline Run captures the selection, runs a prompt, and pastes the result back — without ever leaving the app you're typing in.
 - **Composable.** Chain unlimited transformations. Translate, then rewrite, then format. Branch from any history step.
 - **Provider-agnostic.** Sign in with ChatGPT for free, bring your own OpenAI / Anthropic key, or run locally with Ollama.
 
@@ -43,7 +43,7 @@ on hotkey ⌃⌘G:
 # 2. Total round-trip: ~600ms with ChatGPT, ~200ms with Ollama
 ```
 
-The clipboard is restored to whatever was on it before the run. Streaming output is supported — the result appears progressively if you use [Open &amp; Run](./use/open-and-run.mdx) instead of Quick Paste.
+The clipboard is restored to whatever was on it before the run. Streaming output is supported — the result appears progressively if you use [Run in Editor](./use/open-and-run.mdx) instead of Inline Run.
 
 ## Where to *next*
 
@@ -53,8 +53,8 @@ Pick a path based on what you want to do.
   <DocCard to="/docs/install" keyLabel="1" color="p" title="I just want to install it" cta="Install &amp; first run">
     Three steps: download, grant Accessibility, sign into ChatGPT. Done.
   </DocCard>
-  <DocCard to="/docs/use/quick-paste" keyLabel="F" color="f" title="I want to fix grammar with a hotkey" cta="Quick Paste">
-    Quick Paste does it inline. <kbd>⌃⌘G</kbd> by default; rebind in Settings.
+  <DocCard to="/docs/use/quick-paste" keyLabel="F" color="f" title="I want to fix grammar with a hotkey" cta="Inline Run">
+    Inline Run does it inline. <kbd>⌃⌘G</kbd> by default; rebind in Settings.
   </DocCard>
   <DocCard to="/docs/configure/providers/chatgpt" keyLabel="T" color="t" title="I want to translate text" cta="Pick a provider">
     18 languages out of the box. Hotkey or pipeline. Mix providers per language.

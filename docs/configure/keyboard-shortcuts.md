@@ -1,7 +1,7 @@
 ---
 sidebar_position: 2
 title: Keyboard shortcuts
-description: "Customise every shortcut — the four global app actions plus per-prompt Quick Paste and Open & Run bindings."
+description: "Customise every shortcut — the four global app actions plus per-prompt Inline Run and Run in Editor bindings."
 ---
 
 # Keyboard shortcuts
@@ -13,7 +13,7 @@ This page is about **customising** shortcuts. For the full read-only reference o
 ClipSlop has two layers of shortcuts:
 
 1. **Four global app actions** — Trigger, Process clipboard, Blank editor, Screen OCR. Configure in **Settings → Keyboard**.
-2. **Per-prompt global shortcuts** — every prompt can have its own Quick Paste and Open &amp; Run binding. Configure in **Settings → Prompts**.
+2. **Per-prompt global shortcuts** — every prompt can have its own Inline Run and Run in Editor binding. Configure in **Settings → Prompts**.
 
 ## Global app actions
 
@@ -32,13 +32,13 @@ Press the new combination to record it; press <kbd>Esc</kbd> to clear the bindin
 
 Each prompt in the library can have:
 
-- **Quick Paste** — runs the prompt inline without opening the panel. See [Quick Paste](../use/quick-paste.mdx).
-- **Open &amp; Run** — opens the panel with the result so you can review or chain. See [Open &amp; Run](../use/open-and-run.mdx).
+- **Inline Run** — runs the prompt inline without opening the panel. See [Inline Run](../use/quick-paste.mdx).
+- **Run in Editor** — opens the panel with the result so you can review or chain. See [Run in Editor](../use/open-and-run.mdx).
 
 Open **Settings → Prompts**, pick a prompt, scroll to the **Shortcuts** section, and assign one or both bindings.
 
 <Callout type="tip">
-  Free conventions: <kbd>⌃⌘&lt;letter&gt;</kbd> for Quick Paste, <kbd>⌃⌘⌥&lt;letter&gt;</kbd> for the Open &amp; Run variant of the same prompt. Pairs of bindings keep your muscle memory consistent.
+  Free conventions: <kbd>⌃⌘&lt;letter&gt;</kbd> for Inline Run, <kbd>⌃⌘⌥&lt;letter&gt;</kbd> for the Run in Editor variant of the same prompt. Pairs of bindings keep your muscle memory consistent.
 </Callout>
 
 ## Inside the panel

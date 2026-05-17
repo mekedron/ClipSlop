@@ -19,7 +19,7 @@ const PROMPTS = [
 const COMPARE_ROWS = [
   {label: 'Inline (no app switch)',
     cells: [
-      {kind: 'yes', text: '✓ Quick Paste'},
+      {kind: 'yes', text: '✓ Inline Run'},
       {kind: 'yes', text: '✓'},
       {kind: 'maybe', text: '≈ launcher'},
       {kind: 'yes', text: '✓'},
@@ -390,7 +390,7 @@ function Demos() {
       src: useBaseUrl('/demos/videos/inline-run.mp4'),
       poster: useBaseUrl('/demos/videos/inline-run.jpg'),
       title: 'Run inline anywhere',
-      badge: 'Quick Paste',
+      badge: 'Inline Run',
       badgeClass: styles.demoBadgeF,
       shortcut: '⌃⌘G · ⌃⌘T · ⌃⌘/',
       description:
@@ -410,7 +410,7 @@ function Demos() {
       src: useBaseUrl('/demos/videos/analyze-any-text.mp4'),
       poster: useBaseUrl('/demos/videos/analyze-any-text.jpg'),
       title: 'Analyze any selection on the web',
-      badge: 'Open & Run',
+      badge: 'Run in Editor',
       badgeClass: styles.demoBadgeA,
       shortcut: '⌃⌘⌥T → A S',
       description:
@@ -488,7 +488,7 @@ function HowItWorks() {
                 <path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9" />
               </svg>
             </div>
-            <h3>Quick Paste</h3>
+            <h3>Inline Run</h3>
             <p>
               Bind any prompt to a global hotkey. ClipSlop captures the selection,
               transforms it, pastes it back — entirely in the background.

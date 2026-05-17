@@ -46,7 +46,7 @@ Most AI writing tools make you copy text, switch to a browser, paste, wait, copy
 select text → ⌃⌘G → grammar is fixed in place. Done.
 ```
 
-That's **Quick Paste** — assign any prompt to a global hotkey, and it runs inline: captures the selected text, transforms it, pastes the result back. You never leave your app.
+That's **Inline Run** — assign any prompt to a global hotkey, and it runs inline: captures the selected text, transforms it, pastes the result back. You never leave your app.
 
 **Need more than one step?** Chain transformations into a pipeline:
 
@@ -61,20 +61,20 @@ Free, open-source, works with any AI provider — ChatGPT, Claude, Ollama, or yo
 ---
 
 <p align="center">
-  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI text transformations for macOS with prompt tree, Quick Paste, transformation history, and search">
+  <img src="docs/screenshot.png?v=2" width="680" alt="ClipSlop — AI text transformations for macOS with prompt tree, Inline Run, transformation history, and search">
 </p>
 
 ## Demos
 
 Unedited screen recordings of the released app.
 
-### Run inline anywhere &nbsp;·&nbsp; Quick Paste &nbsp;·&nbsp; `⌃⌘G` · `⌃⌘T` · `⌃⌘/`
+### Run inline anywhere &nbsp;·&nbsp; Inline Run &nbsp;·&nbsp; `⌃⌘G` · `⌃⌘T` · `⌃⌘/`
 
 Three lines, three global shortcuts. Select the first line — **Fix Grammar**. Select the second — **Translate → English**. Select the third (prefixed with `//`) — **Run Custom Prompt** with the instruction typed inline after `//`. Every result pastes back where the cursor is.
 
 https://github.com/user-attachments/assets/456456ff-75af-4920-a2f9-e7b5b6d3de4f
 
-> More on this mode in the docs: [Quick Paste](https://mekedron.github.io/ClipSlop/docs/use/quick-paste).
+> More on this mode in the docs: [Inline Run](https://mekedron.github.io/ClipSlop/docs/use/quick-paste).
 
 ### Chain prompts across providers &nbsp;·&nbsp; Full pipeline &nbsp;·&nbsp; `⌃⌘C → R B → T F`
 
@@ -84,13 +84,13 @@ https://github.com/user-attachments/assets/7964a98f-84a3-4194-93df-98e9cd85f2b1
 
 > More on this mode in the docs: [The full pipeline](https://mekedron.github.io/ClipSlop/docs/use/full-pipeline).
 
-### Analyze any selection on the web &nbsp;·&nbsp; Open & Run &nbsp;·&nbsp; `⌃⌘⌥T → A S`
+### Analyze any selection on the web &nbsp;·&nbsp; Run in Editor &nbsp;·&nbsp; `⌃⌘⌥T → A S`
 
-Open a Finnish news article, highlight a paragraph, translate to English with **Open & Run**, then condense it into a short summary with **Analyze → Summary**. The full pipeline goes anywhere you can highlight text.
+Open a Finnish news article, highlight a paragraph, translate to English with **Run in Editor**, then condense it into a short summary with **Analyze → Summary**. The full pipeline goes anywhere you can highlight text.
 
 https://github.com/user-attachments/assets/c323d995-c262-4f9c-ad39-8e62065e4170
 
-> More on this mode in the docs: [Open & Run](https://mekedron.github.io/ClipSlop/docs/use/open-and-run).
+> More on this mode in the docs: [Run in Editor](https://mekedron.github.io/ClipSlop/docs/use/open-and-run).
 
 ### OCR images, then keep going &nbsp;·&nbsp; Screen OCR &nbsp;·&nbsp; `⇧⌘2 → T E → A S`
 
@@ -102,7 +102,7 @@ https://github.com/user-attachments/assets/74a685ae-9561-4fa0-a73f-856652bcc18e
 
 ## How it works
 
-### Quick Paste (fastest)
+### Inline Run (fastest)
 
 ```
 Select text → ⌃⌘G → grammar fixed in place
@@ -124,8 +124,8 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 
 ## Features
 
-- **Quick Paste** — Assign a global hotkey to any prompt. Captures selected text, runs the prompt, pastes the result inline — you never leave your app
-- **Open & Run** — Like Quick Paste, but opens ClipSlop and auto-runs the prompt so you can review, edit, or keep chaining
+- **Inline Run** — Assign a global hotkey to any prompt. Captures selected text, runs the prompt, pastes the result inline — you never leave your app
+- **Run in Editor** — Like Inline Run, but opens ClipSlop and auto-runs the prompt so you can review, edit, or keep chaining
 - **Prompt shortcuts** — Configure per-prompt in Settings → Prompts; shortcuts appear in the menu bar organized by folder
 - **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
 - **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
@@ -156,17 +156,17 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 [C]  Convert     → HTML, Markdown
 ```
 
-Some prompts ship with default global keyboard shortcuts (Quick Paste pastes the result inline, Open & Run opens ClipSlop):
+Some prompts ship with default global keyboard shortcuts (Inline Run pastes the result inline, Run in Editor opens ClipSlop):
 
 | Shortcut | Prompt | Mode |
 |----------|--------|------|
-| `⌃⌘/` | // Your prompt | Quick Paste |
-| `⌃⌘⌥/` | // Your prompt | Open & Run |
-| `⌃⌘G` | Fix Grammar | Quick Paste |
-| `⌃⌘F` | Reformat | Quick Paste |
-| `⌃⌘T` | Translate → English | Quick Paste |
-| `⌃⌘⌥T` | Translate → English | Open & Run |
-| `⌃⌘⌥A` | Explain Simply | Open & Run |
+| `⌃⌘/` | // Your prompt | Inline Run |
+| `⌃⌘⌥/` | // Your prompt | Run in Editor |
+| `⌃⌘G` | Fix Grammar | Inline Run |
+| `⌃⌘F` | Reformat | Inline Run |
+| `⌃⌘T` | Translate → English | Inline Run |
+| `⌃⌘⌥T` | Translate → English | Run in Editor |
+| `⌃⌘⌥A` | Explain Simply | Run in Editor |
 
 Fully customizable — add your own prompts, folders, mnemonics, and global shortcuts in Settings → Prompts.
 
@@ -194,7 +194,7 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 | | ClipSlop | RewriteBar | WritingTools | Cai | ClipboardAI | WritersBrew | Elephas | Fixkey | ShortcutAI | Raycast AI | PopClip | ChatGPT (web) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **Prompt chaining** | ✅ Unlimited chaining, full history | ⚠️ Sequential action flow, no history | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ❌ One action | ⚠️ Limited, no true pipeline | ❌ One action | ❌ Manual workflow |
-| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Quick Paste, Open & Run) and on-screen text (OCR) | ⚠️ Shortcut + action picker | ⚠️ Hotkey + action picker | ⚠️ ⌥C hotkey + action list | ⚠️ Per-prompt shortcuts | ⚠️ Shortcut + menu | ⚠️ Super Command shortcut | ⚠️ Custom shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
+| **Keyboard-first** | ✅ Single-key mnemonics, full pipeline navigation, global shortcuts for text fields (Inline Run, Run in Editor) and on-screen text (OCR) | ⚠️ Shortcut + action picker | ⚠️ Hotkey + action picker | ⚠️ ⌥C hotkey + action list | ⚠️ Per-prompt shortcuts | ⚠️ Shortcut + menu | ⚠️ Super Command shortcut | ⚠️ Custom shortcuts | ⚠️ Shortcuts + `//` text commands | ⚠️ Launcher, menu-based AI | ❌ Mouse-driven | ❌ Browser UI |
 | **Prompt organization** | ✅ Nested folders with mnemonics | ⚠️ Flat action list | ⚠️ Fixed presets + custom instructions | ⚠️ Flat action list | ⚠️ Flat list | ⚠️ Flat preset list | ⚠️ Flat snippets | ⚠️ Flat list | ⚠️ Flat list | ⚠️ Flat command list | ⚠️ Flat list | ❌ Chat history |
 | **Step history** | ✅ Navigate back/forward, branch from any step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ⚠️ Scroll up |
 | **Branching history** | ✅ Branch from any intermediate step | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No | ❌ No |
