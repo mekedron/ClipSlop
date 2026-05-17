@@ -985,8 +985,32 @@
   font-size: 17px;
 }
 
+.installLabel {
+  margin: 32px auto 12px;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--fg-2);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.installLabelBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .install {
-  margin: 32px auto 0;
+  margin: 0 auto;
   max-width: 520px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -996,6 +1020,51 @@
   align-items: center;
   gap: 4px;
   box-shadow: var(--shadow-md);
+}
+
+/* "or" divider between the brew block and the .dmg fallback. The rule
+   uses a flex layout with two ::before/::after lines so it scales with
+   the surrounding container width. */
+.installDivider {
+  margin: 24px auto 20px;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--fg-3);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.installDivider::before,
+.installDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.installAlt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.installAltMeta {
+  color: var(--fg-3);
+  font-size: 13px;
+}
+
+/* .btnDmg — a slightly more present ghost button than the default,
+   to anchor the secondary download path without competing with the
+   homebrew block above. */
+.btnDmg {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+.btnDmg:hover {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--border));
+  background: color-mix(in srgb, var(--accent-soft) 55%, var(--bg-card));
 }
 .installCode {
   flex: 1;
