@@ -752,9 +752,11 @@ function CTA() {
   };
 
   return (
-    <section className={clsx(styles.sec, styles.secTight)} id="download">
+    <section
+      className={clsx(styles.sec, styles.secTight, styles.secFlushBelow)}
+      id="download">
       <div className={styles.wrap}>
-        <div className={styles.cta}>
+        <div className={clsx(styles.cta, styles.ctaJoined)}>
           <Sparkle className={styles.sparkle} style={{top: 30, left: '8%'}} />
           <Sparkle className={clsx(styles.sparkle, styles.sparkleS2)} style={{top: 60, right: '12%'}} />
           <Sparkle className={clsx(styles.sparkle, styles.sparkleS3)} style={{bottom: 40, left: '14%'}} />
@@ -814,9 +816,11 @@ function CTA() {
 
 function Support() {
   return (
-    <section className={clsx(styles.sec, styles.secTight)} id="support">
+    <section
+      className={clsx(styles.sec, styles.secTight, styles.secFlushAbove)}
+      id="support">
       <div className={styles.wrap}>
-        <div className={styles.support}>
+        <div className={clsx(styles.support, styles.supportJoined)}>
           <div className={styles.supportEyebrow}>Support the project</div>
           <h2 className={styles.supportH}>
             Like ClipSlop? <em>Keep it caffeinated.</em>

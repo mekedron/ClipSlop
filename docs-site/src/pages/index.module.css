@@ -1121,6 +1121,50 @@
   50%      { transform: scale(1.1) rotate(20deg); opacity: 1; }
 }
 
+/* ----------- Download ↔ Support join -----------
+   The Download (CTA) and Support panels are stacked into one visual
+   block — a single rounded shell with two rooms. The seam between
+   them is intentional: square corners + no padding gap make them read
+   as one piece, while a contrasting amber on the bottom room pulls
+   attention down once the user has clicked Download. */
+.secFlushBelow { padding-bottom: 0; }
+.secFlushAbove { padding-top: 0; }
+
+.ctaJoined {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom: 0;
+  /* Drop the bottom-spreading half of the shadow so it doesn't ghost
+     through the Support panel below. The Support panel carries the
+     bottom shadow for the combined stack. */
+  box-shadow: 0 -8px 24px -16px rgba(34, 28, 18, 0.10);
+}
+[data-theme='dark'] .ctaJoined {
+  box-shadow: 0 -8px 24px -16px rgba(0, 0, 0, 0.4);
+}
+
+.supportJoined {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  /* Single seam line that ties both rooms together without doubling up
+     with the CTA's removed bottom border. */
+  border-top: 1px solid color-mix(in srgb, #F4A93B 40%, var(--border));
+  /* Bumped contrast vs. the standalone .support background: deeper
+     amber wash, sturdier shadow at the bottom of the stack. */
+  background:
+    radial-gradient(900px 320px at 50% 0%, color-mix(in srgb, #F4A93B 28%, transparent), transparent 60%),
+    radial-gradient(circle at 80% 90%, color-mix(in srgb, #F4A93B 10%, transparent), transparent 50%),
+    color-mix(in srgb, #F4A93B 9%, var(--bg-card));
+  box-shadow: var(--shadow-lg);
+}
+[data-theme='dark'] .supportJoined {
+  border-top-color: color-mix(in srgb, #F4A93B 28%, var(--border));
+  background:
+    radial-gradient(900px 320px at 50% 0%, color-mix(in srgb, #F4A93B 28%, transparent), transparent 60%),
+    radial-gradient(circle at 80% 90%, color-mix(in srgb, #F4A93B 14%, transparent), transparent 50%),
+    color-mix(in srgb, #F4A93B 16%, var(--bg-card));
+}
+
 /* ----------- Support section ----------- */
 .support {
   text-align: center;
