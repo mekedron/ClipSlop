@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Tastaturgenveje";
-"settings.general.shortcuts.trigger" = "Aktiver ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Fra udklipsholder:";
-"settings.general.shortcuts.blank" = "Tom editor:";
-"settings.general.shortcuts.ocr" = "OCR + Rediger:";
+"settings.general.shortcuts.trigger" = "Rediger markeret tekst:";
+"settings.general.shortcuts.clipboard" = "Rediger udklipsholderen:";
+"settings.general.shortcuts.blank" = "Åbn tom editor:";
+"settings.general.shortcuts.ocr" = "Rediger skærmtekst:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Adfærd";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Luk";
 
 /* Menu Bar */
-"menu.trigger" = "Aktiver";
-"menu.clipboard" = "Fra udklipsholder";
-"menu.blank" = "Tom editor";
-"menu.ocr" = "OCR + Rediger";
-"menu.ocr_clipboard" = "OCR til udklipsholder";
+"menu.trigger" = "Rediger markeret tekst";
+"menu.clipboard" = "Rediger udklipsholderen";
+"menu.blank" = "Åbn tom editor";
+"menu.ocr" = "Rediger skærmtekst";
+"menu.ocr_clipboard" = "Kopier skærmtekst";
 "menu.provider" = "Udbyder: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Indstillinger...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Indlæs og vis billeder i Markdown-forhåndsvisning";
 "settings.general.behavior.preserve_image_widths" = "Bevar billedbredder";
 "settings.general.behavior.preserve_image_widths_help" = "Bevar width og max-width fra HTML-billed-tags ved Markdown-rendering";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Kopier skærmtekst:";
+"settings.general.shortcuts.ocr_clipslop" = "Rediger skærmtekst:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR til udklipsholder";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + åbn i ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globale genveje";
-"settings.prompts.editor.quick_paste" = "Hurtig indsæt:";
-"settings.prompts.editor.quick_paste_help" = "Fanger markeret tekst, behandler den med denne prompt og indsætter resultatet";
-"settings.prompts.editor.open_run" = "Åbn og kør:";
-"settings.prompts.editor.open_run_help" = "Fanger markeret tekst, åbner ClipSlop og anvender automatisk denne prompt";
+"settings.prompts.editor.quick_paste" = "Inline kørsel:";
+"settings.prompts.editor.quick_paste_help" = "Kører prompten på den aktuelt markerede tekst og erstatter den med resultatet — ingen pop-up, blot en omdannelse på stedet.";
+"settings.prompts.editor.open_run" = "Kør i editor:";
+"settings.prompts.editor.open_run_help" = "Fanger markeret tekst, åbner ClipSlop-editoren med resultatet og lader dig gennemse eller justere før kopiering.";
 "settings.prompts.editor.select_all" = "Vælg alt før optagelse";
 "settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstoptagelse, nyttigt til at erstatte hele feltindholdet";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Åbn Hurtig adgang";
-"menu.prompt_shortcuts.open_run" = "Åbn og kør";
-"menu.prompt_shortcuts.quick_paste" = "Hurtig indsæt";
+"menu.prompt_shortcuts.open_run" = "Kør i editor";
+"menu.prompt_shortcuts.quick_paste" = "Inline kørsel";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Åbn og kør";
-"settings.prompts.field.quick_paste" = "Hurtig indsæt";
+"settings.prompts.field.open_run" = "Kør i editor";
+"settings.prompts.field.quick_paste" = "Inline kørsel";
 "settings.prompts.mnemonic_conflict_tooltip" = "Dobbelt mnemonik i denne mappe";
 "settings.prompts.shortcut_conflict_title" = "Genvej er allerede i brug";
 "settings.prompts.shortcut_conflict_message" = "%1$@ er i øjeblikket tildelt »%2$@« (%3$@). Tildel til denne prompt eller annullér?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Slip prompts her for at tilføje fliser";
 "settings.quick_access.grid_empty_hint" = "Træk en hvilken som helst prompt fra venstre.";
 "settings.quick_access.method.label" = "Handling";
-"settings.quick_access.method.inline" = "Hurtig indsæt";
-"settings.quick_access.method.open_in_clipslop" = "Åbn og kør";
+"settings.quick_access.method.inline" = "Inline kørsel";
+"settings.quick_access.method.open_in_clipslop" = "Kør i editor";
 "settings.quick_access.tile.remove" = "Fjern flise";
 "settings.quick_access.tile.in_use_badge" = "I Hurtig adgang";
 "settings.quick_access.tile.missing" = "(slettet prompt)";

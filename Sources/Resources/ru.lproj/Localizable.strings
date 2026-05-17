@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Сочетания клавиш";
-"settings.general.shortcuts.trigger" = "Вызвать ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Из буфера обмена:";
-"settings.general.shortcuts.blank" = "Пустой редактор:";
-"settings.general.shortcuts.ocr" = "OCR + Редактировать:";
+"settings.general.shortcuts.trigger" = "Редактировать выделенный текст:";
+"settings.general.shortcuts.clipboard" = "Редактировать буфер обмена:";
+"settings.general.shortcuts.blank" = "Открыть пустой редактор:";
+"settings.general.shortcuts.ocr" = "Редактировать текст с экрана:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Поведение";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Закрыть";
 
 /* Menu Bar */
-"menu.trigger" = "Вызвать";
-"menu.clipboard" = "Из буфера обмена";
-"menu.blank" = "Пустой редактор";
-"menu.ocr" = "OCR + Редактировать";
-"menu.ocr_clipboard" = "OCR в буфер обмена";
+"menu.trigger" = "Редактировать выделенный текст";
+"menu.clipboard" = "Редактировать буфер обмена";
+"menu.blank" = "Открыть пустой редактор";
+"menu.ocr" = "Редактировать текст с экрана";
+"menu.ocr_clipboard" = "Скопировать текст с экрана";
 "menu.provider" = "Провайдер: %@";
 "menu.model" = "Модель: %@";
 "menu.settings" = "Настройки...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Загружать и показывать изображения в режиме предпросмотра Markdown";
 "settings.general.behavior.preserve_image_widths" = "Сохранять ширину изображений";
 "settings.general.behavior.preserve_image_widths_help" = "Сохранять width и max-width из HTML-тегов img при рендеринге Markdown";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Скопировать текст с экрана:";
+"settings.general.shortcuts.ocr_clipslop" = "Редактировать текст с экрана:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR в буфер обмена";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + открыть в ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Глобальные горячие клавиши";
-"settings.prompts.editor.quick_paste" = "Быстрая вставка:";
-"settings.prompts.editor.quick_paste_help" = "Захватывает выделенный текст, обрабатывает его этим промптом и вставляет результат обратно";
-"settings.prompts.editor.open_run" = "Открыть и выполнить:";
-"settings.prompts.editor.open_run_help" = "Захватывает выделенный текст, открывает ClipSlop и автоматически применяет этот промпт";
+"settings.prompts.editor.quick_paste" = "Выполнить на месте:";
+"settings.prompts.editor.quick_paste_help" = "Запускает промпт на выделенном тексте и заменяет его результатом — без попапа, просто преобразует на месте.";
+"settings.prompts.editor.open_run" = "Выполнить в редакторе:";
+"settings.prompts.editor.open_run_help" = "Захватывает выделенный текст, открывает редактор ClipSlop с результатом и позволяет проверить или подправить перед копированием.";
 "settings.prompts.editor.select_all" = "Выделить всё перед захватом";
 "settings.prompts.editor.select_all_help" = "Симулирует ⌘A перед захватом текста, полезно для замены всего содержимого поля";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Открыть быстрый доступ";
-"menu.prompt_shortcuts.open_run" = "Открыть и выполнить";
-"menu.prompt_shortcuts.quick_paste" = "Быстрая вставка";
+"menu.prompt_shortcuts.open_run" = "Выполнить в редакторе";
+"menu.prompt_shortcuts.quick_paste" = "Выполнить на месте";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Открыть и выполнить";
-"settings.prompts.field.quick_paste" = "Быстрая вставка";
+"settings.prompts.field.open_run" = "Выполнить в редакторе";
+"settings.prompts.field.quick_paste" = "Выполнить на месте";
 "settings.prompts.mnemonic_conflict_tooltip" = "Конфликт мнемоники в этой папке";
 "settings.prompts.shortcut_conflict_title" = "Сочетание клавиш уже используется";
 "settings.prompts.shortcut_conflict_message" = "%1$@ сейчас назначено промпту «%2$@» (%3$@). Переназначить на текущий или отменить?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Перетащите сюда промпты, чтобы добавить плитки";
 "settings.quick_access.grid_empty_hint" = "Перетащите любой промпт слева.";
 "settings.quick_access.method.label" = "Действие";
-"settings.quick_access.method.inline" = "Быстрая вставка";
-"settings.quick_access.method.open_in_clipslop" = "Открыть и выполнить";
+"settings.quick_access.method.inline" = "Выполнить на месте";
+"settings.quick_access.method.open_in_clipslop" = "Выполнить в редакторе";
 "settings.quick_access.tile.remove" = "Удалить плитку";
 "settings.quick_access.tile.in_use_badge" = "В Быстром доступе";
 "settings.quick_access.tile.missing" = "(промпт удалён)";

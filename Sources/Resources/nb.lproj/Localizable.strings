@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Tastatursnarveier";
-"settings.general.shortcuts.trigger" = "Utlos ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Fra utklippstavlen:";
-"settings.general.shortcuts.blank" = "Tom editor:";
-"settings.general.shortcuts.ocr" = "OCR + Rediger:";
+"settings.general.shortcuts.trigger" = "Rediger markert tekst:";
+"settings.general.shortcuts.clipboard" = "Rediger utklippstavlen:";
+"settings.general.shortcuts.blank" = "Åpne tom editor:";
+"settings.general.shortcuts.ocr" = "Rediger skjermtekst:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Oppforsel";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Lukk";
 
 /* Menu Bar */
-"menu.trigger" = "Utlos";
-"menu.clipboard" = "Fra utklippstavlen";
-"menu.blank" = "Tom editor";
-"menu.ocr" = "OCR + Rediger";
-"menu.ocr_clipboard" = "OCR til utklippstavle";
+"menu.trigger" = "Rediger markert tekst";
+"menu.clipboard" = "Rediger utklippstavlen";
+"menu.blank" = "Åpne tom editor";
+"menu.ocr" = "Rediger skjermtekst";
+"menu.ocr_clipboard" = "Kopier skjermtekst";
 "menu.provider" = "Leverandor: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Innstillinger...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Last inn og vis bilder i Markdown-forhåndsvisning";
 "settings.general.behavior.preserve_image_widths" = "Behold bildebredder";
 "settings.general.behavior.preserve_image_widths_help" = "Behold width og max-width fra HTML-bildetagger ved Markdown-rendering";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Kopier skjermtekst:";
+"settings.general.shortcuts.ocr_clipslop" = "Rediger skjermtekst:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR til utklippstavle";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + åpne i ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globale snarveier";
-"settings.prompts.editor.quick_paste" = "Hurtiglim:";
-"settings.prompts.editor.quick_paste_help" = "Fanger markert tekst, behandler den med denne prompten og limer inn resultatet";
-"settings.prompts.editor.open_run" = "Åpne og kjøre:";
-"settings.prompts.editor.open_run_help" = "Fanger markert tekst, åpner ClipSlop og bruker automatisk denne prompten";
+"settings.prompts.editor.quick_paste" = "Inline-kjøring:";
+"settings.prompts.editor.quick_paste_help" = "Kjører prompten på den markerte teksten og erstatter den med resultatet — ingen popup, bare en omdanning på stedet.";
+"settings.prompts.editor.open_run" = "Kjør i editor:";
+"settings.prompts.editor.open_run_help" = "Fanger markert tekst, åpner ClipSlop-editoren med resultatet og lar deg gjennomgå eller justere før kopiering.";
 "settings.prompts.editor.select_all" = "Velg alt før fangst";
 "settings.prompts.editor.select_all_help" = "Simulerer ⌘A før tekstfangst, nyttig for å erstatte hele feltinnholdet";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Åpne Hurtigtilgang";
-"menu.prompt_shortcuts.open_run" = "Åpne og kjøre";
-"menu.prompt_shortcuts.quick_paste" = "Hurtiglim";
+"menu.prompt_shortcuts.open_run" = "Kjør i editor";
+"menu.prompt_shortcuts.quick_paste" = "Inline-kjøring";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Åpne og kjøre";
-"settings.prompts.field.quick_paste" = "Hurtiglim";
+"settings.prompts.field.open_run" = "Kjør i editor";
+"settings.prompts.field.quick_paste" = "Inline-kjøring";
 "settings.prompts.mnemonic_conflict_tooltip" = "Duplikat mnemonikk i denne mappen";
 "settings.prompts.shortcut_conflict_title" = "Snarvei er allerede i bruk";
 "settings.prompts.shortcut_conflict_message" = "%1$@ er for øyeblikket tildelt «%2$@» (%3$@). Tildel til denne prompten eller avbryt?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Slipp prompts her for å legge til fliser";
 "settings.quick_access.grid_empty_hint" = "Dra hvilken som helst prompt fra venstre.";
 "settings.quick_access.method.label" = "Handling";
-"settings.quick_access.method.inline" = "Hurtiglim";
-"settings.quick_access.method.open_in_clipslop" = "Åpne og kjøre";
+"settings.quick_access.method.inline" = "Inline-kjøring";
+"settings.quick_access.method.open_in_clipslop" = "Kjør i editor";
 "settings.quick_access.tile.remove" = "Fjern flis";
 "settings.quick_access.tile.in_use_badge" = "I Hurtigtilgang";
 "settings.quick_access.tile.missing" = "(slettet prompt)";

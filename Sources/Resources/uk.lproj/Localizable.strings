@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Комбінації клавіш";
-"settings.general.shortcuts.trigger" = "Запустити ClipSlop:";
-"settings.general.shortcuts.clipboard" = "З буфера обміну:";
-"settings.general.shortcuts.blank" = "Порожній редактор:";
-"settings.general.shortcuts.ocr" = "OCR + Редагувати:";
+"settings.general.shortcuts.trigger" = "Редагувати виділений текст:";
+"settings.general.shortcuts.clipboard" = "Редагувати буфер обміну:";
+"settings.general.shortcuts.blank" = "Відкрити порожній редактор:";
+"settings.general.shortcuts.ocr" = "Редагувати текст з екрана:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Поведінка";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Закрити";
 
 /* Menu Bar */
-"menu.trigger" = "Запустити";
-"menu.clipboard" = "З буфера обміну";
-"menu.blank" = "Порожній редактор";
-"menu.ocr" = "OCR + Редагувати";
-"menu.ocr_clipboard" = "OCR до буфера обміну";
+"menu.trigger" = "Редагувати виділений текст";
+"menu.clipboard" = "Редагувати буфер обміну";
+"menu.blank" = "Відкрити порожній редактор";
+"menu.ocr" = "Редагувати текст з екрана";
+"menu.ocr_clipboard" = "Скопіювати текст з екрана";
 "menu.provider" = "Провайдер: %@";
 "menu.model" = "Модель: %@";
 "menu.settings" = "Параметри...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Завантажувати та показувати зображення в режимі попереднього перегляду Markdown";
 "settings.general.behavior.preserve_image_widths" = "Зберігати ширину зображень";
 "settings.general.behavior.preserve_image_widths_help" = "Зберігати width і max-width із HTML-тегів img під час рендерингу Markdown";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Скопіювати текст з екрана:";
+"settings.general.shortcuts.ocr_clipslop" = "Редагувати текст з екрана:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR у буфер обміну";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + відкрити в ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Глобальні гарячі клавіші";
-"settings.prompts.editor.quick_paste" = "Швидка вставка:";
-"settings.prompts.editor.quick_paste_help" = "Захоплює виділений текст, обробляє його цим промптом і вставляє результат назад";
-"settings.prompts.editor.open_run" = "Відкрити і виконати:";
-"settings.prompts.editor.open_run_help" = "Захоплює виділений текст, відкриває ClipSlop і автоматично застосовує цей промпт";
+"settings.prompts.editor.quick_paste" = "Виконати на місці:";
+"settings.prompts.editor.quick_paste_help" = "Запускає промпт на виділеному тексті і замінює його результатом — без спливаючого вікна, перетворює просто на місці.";
+"settings.prompts.editor.open_run" = "Виконати в редакторі:";
+"settings.prompts.editor.open_run_help" = "Захоплює виділений текст, відкриває редактор ClipSlop з результатом і дозволяє переглянути або відредагувати перед копіюванням.";
 "settings.prompts.editor.select_all" = "Виділити все перед захопленням";
 "settings.prompts.editor.select_all_help" = "Симулює ⌘A перед захопленням тексту, корисно для заміни всього вмісту поля";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Відкрити швидкий доступ";
-"menu.prompt_shortcuts.open_run" = "Відкрити і виконати";
-"menu.prompt_shortcuts.quick_paste" = "Швидка вставка";
+"menu.prompt_shortcuts.open_run" = "Виконати в редакторі";
+"menu.prompt_shortcuts.quick_paste" = "Виконати на місці";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Відкрити і виконати";
-"settings.prompts.field.quick_paste" = "Швидка вставка";
+"settings.prompts.field.open_run" = "Виконати в редакторі";
+"settings.prompts.field.quick_paste" = "Виконати на місці";
 "settings.prompts.mnemonic_conflict_tooltip" = "Конфлікт мнемоніки в цій теці";
 "settings.prompts.shortcut_conflict_title" = "Сполучення клавіш уже використовується";
 "settings.prompts.shortcut_conflict_message" = "%1$@ зараз призначено промпту «%2$@» (%3$@). Перепризначити на поточний чи скасувати?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Перетягніть сюди промпти, щоб додати плитки";
 "settings.quick_access.grid_empty_hint" = "Перетягніть будь-який промпт зліва.";
 "settings.quick_access.method.label" = "Дія";
-"settings.quick_access.method.inline" = "Швидка вставка";
-"settings.quick_access.method.open_in_clipslop" = "Відкрити і виконати";
+"settings.quick_access.method.inline" = "Виконати на місці";
+"settings.quick_access.method.open_in_clipslop" = "Виконати в редакторі";
 "settings.quick_access.tile.remove" = "Видалити плитку";
 "settings.quick_access.tile.in_use_badge" = "У Швидкому доступі";
 "settings.quick_access.tile.missing" = "(промпт видалено)";

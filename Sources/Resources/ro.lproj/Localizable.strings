@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Scurtături de tastatură";
-"settings.general.shortcuts.trigger" = "Activează ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Din clipboard:";
-"settings.general.shortcuts.blank" = "Editor gol:";
-"settings.general.shortcuts.ocr" = "OCR + Editare:";
+"settings.general.shortcuts.trigger" = "Editează textul selectat:";
+"settings.general.shortcuts.clipboard" = "Editează clipboard-ul:";
+"settings.general.shortcuts.blank" = "Deschide editor gol:";
+"settings.general.shortcuts.ocr" = "Editează textul de pe ecran:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Comportament";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Închide";
 
 /* Menu Bar */
-"menu.trigger" = "Activează";
-"menu.clipboard" = "Din clipboard";
-"menu.blank" = "Editor gol";
-"menu.ocr" = "OCR + Editare";
-"menu.ocr_clipboard" = "OCR în clipboard";
+"menu.trigger" = "Editează textul selectat";
+"menu.clipboard" = "Editează clipboard-ul";
+"menu.blank" = "Deschide editor gol";
+"menu.ocr" = "Editează textul de pe ecran";
+"menu.ocr_clipboard" = "Copiază textul de pe ecran";
 "menu.provider" = "Furnizor: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Setări...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Încarcă și afișează imagini în modul previzualizare Markdown";
 "settings.general.behavior.preserve_image_widths" = "Păstrează lățimile imaginilor";
 "settings.general.behavior.preserve_image_widths_help" = "Păstrează width și max-width din tagurile de imagine HTML la randarea Markdown";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Copiază textul de pe ecran:";
+"settings.general.shortcuts.ocr_clipslop" = "Editează textul de pe ecran:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR în clipboard";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + deschide în ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Scurtături globale";
-"settings.prompts.editor.quick_paste" = "Lipire rapidă:";
-"settings.prompts.editor.quick_paste_help" = "Captează textul selectat, îl procesează cu acest prompt și lipește rezultatul";
-"settings.prompts.editor.open_run" = "Deschide și rulează:";
-"settings.prompts.editor.open_run_help" = "Captează textul selectat, deschide ClipSlop și aplică automat acest prompt";
+"settings.prompts.editor.quick_paste" = "Rulează pe loc:";
+"settings.prompts.editor.quick_paste_help" = "Rulează promptul pe textul selectat actual și îl înlocuiește cu rezultatul — fără popup, doar transformare pe loc.";
+"settings.prompts.editor.open_run" = "Rulează în editor:";
+"settings.prompts.editor.open_run_help" = "Captează textul selectat, deschide editorul ClipSlop cu rezultatul și îți permite să verifici sau să ajustezi înainte de copiere.";
 "settings.prompts.editor.select_all" = "Selectează tot înainte de captură";
 "settings.prompts.editor.select_all_help" = "Simulează ⌘A înainte de captura textului, util pentru înlocuirea întregului conținut al câmpului";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Deschide Acces rapid";
-"menu.prompt_shortcuts.open_run" = "Deschide și rulează";
-"menu.prompt_shortcuts.quick_paste" = "Lipire rapidă";
+"menu.prompt_shortcuts.open_run" = "Rulează în editor";
+"menu.prompt_shortcuts.quick_paste" = "Rulează pe loc";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Deschide și rulează";
-"settings.prompts.field.quick_paste" = "Lipire rapidă";
+"settings.prompts.field.open_run" = "Rulează în editor";
+"settings.prompts.field.quick_paste" = "Rulează pe loc";
 "settings.prompts.mnemonic_conflict_tooltip" = "Mnemonic duplicat în acest folder";
 "settings.prompts.shortcut_conflict_title" = "Scurtătura este deja folosită";
 "settings.prompts.shortcut_conflict_message" = "%1$@ este atribuită în prezent prompt-ului „%2$@” (%3$@). Reatribui acestui prompt sau anulezi?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Aruncă prompt-uri aici pentru a adăuga plăci";
 "settings.quick_access.grid_empty_hint" = "Trage orice prompt din partea stângă.";
 "settings.quick_access.method.label" = "Acțiune";
-"settings.quick_access.method.inline" = "Lipire rapidă";
-"settings.quick_access.method.open_in_clipslop" = "Deschide și rulează";
+"settings.quick_access.method.inline" = "Rulează pe loc";
+"settings.quick_access.method.open_in_clipslop" = "Rulează în editor";
 "settings.quick_access.tile.remove" = "Elimină placa";
 "settings.quick_access.tile.in_use_badge" = "În Acces rapid";
 "settings.quick_access.tile.missing" = "(prompt șters)";

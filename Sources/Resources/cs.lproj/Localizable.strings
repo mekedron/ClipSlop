@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Klávesové zkratky";
-"settings.general.shortcuts.trigger" = "Spustit ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Ze schránky:";
-"settings.general.shortcuts.blank" = "Prázdný editor:";
-"settings.general.shortcuts.ocr" = "OCR + Upravit:";
+"settings.general.shortcuts.trigger" = "Upravit vybraný text:";
+"settings.general.shortcuts.clipboard" = "Upravit schránku:";
+"settings.general.shortcuts.blank" = "Otevřít prázdný editor:";
+"settings.general.shortcuts.ocr" = "Upravit text z obrazovky:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Chování";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Zavřít";
 
 /* Menu Bar */
-"menu.trigger" = "Spustit";
-"menu.clipboard" = "Ze schránky";
-"menu.blank" = "Prázdný editor";
-"menu.ocr" = "OCR + Upravit";
-"menu.ocr_clipboard" = "OCR do schránky";
+"menu.trigger" = "Upravit vybraný text";
+"menu.clipboard" = "Upravit schránku";
+"menu.blank" = "Otevřít prázdný editor";
+"menu.ocr" = "Upravit text z obrazovky";
+"menu.ocr_clipboard" = "Zkopírovat text z obrazovky";
 "menu.provider" = "Poskytovatel: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Nastavení...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Načítat a zobrazovat obrázky v režimu náhledu Markdown";
 "settings.general.behavior.preserve_image_widths" = "Zachovat šířky obrázků";
 "settings.general.behavior.preserve_image_widths_help" = "Zachovat width a max-width z HTML značek obrázků při vykreslování Markdownu";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Zkopírovat text z obrazovky:";
+"settings.general.shortcuts.ocr_clipslop" = "Upravit text z obrazovky:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR do schránky";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + otevřít v ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globální zkratky";
-"settings.prompts.editor.quick_paste" = "Rychlé vložení:";
-"settings.prompts.editor.quick_paste_help" = "Zachytí vybraný text, zpracuje jej tímto promptem a vloží výsledek zpět";
-"settings.prompts.editor.open_run" = "Otevřít a spustit:";
-"settings.prompts.editor.open_run_help" = "Zachytí vybraný text, otevře ClipSlop a automaticky aplikuje tento prompt";
+"settings.prompts.editor.quick_paste" = "Spustit na místě:";
+"settings.prompts.editor.quick_paste_help" = "Spustí prompt na aktuálně vybraném textu a nahradí jej výsledkem — bez vyskakovacího okna, prostě transformuje na místě.";
+"settings.prompts.editor.open_run" = "Spustit v editoru:";
+"settings.prompts.editor.open_run_help" = "Zachytí vybraný text, otevře editor ClipSlop s výsledkem a umožní jej zkontrolovat nebo upravit před zkopírováním.";
 "settings.prompts.editor.select_all" = "Vybrat vše před zachycením";
 "settings.prompts.editor.select_all_help" = "Simuluje ⌘A před zachycením textu, užitečné pro nahrazení celého obsahu pole";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Otevřít Rychlý přístup";
-"menu.prompt_shortcuts.open_run" = "Otevřít a spustit";
-"menu.prompt_shortcuts.quick_paste" = "Rychlé vložení";
+"menu.prompt_shortcuts.open_run" = "Spustit v editoru";
+"menu.prompt_shortcuts.quick_paste" = "Spustit na místě";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Otevřít a spustit";
-"settings.prompts.field.quick_paste" = "Rychlé vložení";
+"settings.prompts.field.open_run" = "Spustit v editoru";
+"settings.prompts.field.quick_paste" = "Spustit na místě";
 "settings.prompts.mnemonic_conflict_tooltip" = "Duplicitní mnemonika v této složce";
 "settings.prompts.shortcut_conflict_title" = "Klávesová zkratka se již používá";
 "settings.prompts.shortcut_conflict_message" = "%1$@ je aktuálně přiřazeno k „%2$@“ (%3$@). Přiřadit k tomuto promptu, nebo zrušit?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Sem přetáhněte prompty pro přidání dlaždic";
 "settings.quick_access.grid_empty_hint" = "Přetáhněte jakýkoli prompt zleva.";
 "settings.quick_access.method.label" = "Akce";
-"settings.quick_access.method.inline" = "Rychlé vložení";
-"settings.quick_access.method.open_in_clipslop" = "Otevřít a spustit";
+"settings.quick_access.method.inline" = "Spustit na místě";
+"settings.quick_access.method.open_in_clipslop" = "Spustit v editoru";
 "settings.quick_access.tile.remove" = "Odebrat dlaždici";
 "settings.quick_access.tile.in_use_badge" = "V Rychlém přístupu";
 "settings.quick_access.tile.missing" = "(smazaný prompt)";

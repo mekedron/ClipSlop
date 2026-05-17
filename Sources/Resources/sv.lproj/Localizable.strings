@@ -107,10 +107,10 @@
 
 /* Settings - General - Shortcuts */
 "settings.general.shortcuts" = "Kortkommandon";
-"settings.general.shortcuts.trigger" = "Aktivera ClipSlop:";
-"settings.general.shortcuts.clipboard" = "Från urklipp:";
-"settings.general.shortcuts.blank" = "Tom redigerare:";
-"settings.general.shortcuts.ocr" = "OCR + Redigera:";
+"settings.general.shortcuts.trigger" = "Redigera markerad text:";
+"settings.general.shortcuts.clipboard" = "Redigera urklipp:";
+"settings.general.shortcuts.blank" = "Öppna tom redigerare:";
+"settings.general.shortcuts.ocr" = "Redigera skärmtext:";
 
 /* Settings - General - Behavior */
 "settings.general.behavior" = "Beteende";
@@ -302,11 +302,11 @@
 "popup.navigator.close" = "Stäng";
 
 /* Menu Bar */
-"menu.trigger" = "Aktivera";
-"menu.clipboard" = "Från urklipp";
-"menu.blank" = "Tom redigerare";
-"menu.ocr" = "OCR + Redigera";
-"menu.ocr_clipboard" = "OCR till urklipp";
+"menu.trigger" = "Redigera markerad text";
+"menu.clipboard" = "Redigera urklipp";
+"menu.blank" = "Öppna tom redigerare";
+"menu.ocr" = "Redigera skärmtext";
+"menu.ocr_clipboard" = "Kopiera skärmtext";
 "menu.provider" = "Leverantör: %@";
 "menu.model" = "Modell: %@";
 "menu.settings" = "Inställningar...";
@@ -364,8 +364,8 @@
 "settings.general.behavior.show_images_markdown_help" = "Läs in och visa bilder i Markdown-förhandsvisning";
 "settings.general.behavior.preserve_image_widths" = "Behåll bildbredder";
 "settings.general.behavior.preserve_image_widths_help" = "Behåll width och max-width från HTML-bildtaggar vid Markdown-rendering";
-"settings.general.shortcuts.ocr_clipboard" = "OCR to clipboard:";
-"settings.general.shortcuts.ocr_clipslop" = "OCR + open in ClipSlop:";
+"settings.general.shortcuts.ocr_clipboard" = "Kopiera skärmtext:";
+"settings.general.shortcuts.ocr_clipslop" = "Redigera skärmtext:";
 "onboarding.shortcuts.ocr_clipboard" = "OCR till urklipp";
 "onboarding.shortcuts.ocr_clipslop" = "OCR + öppna i ClipSlop";
 
@@ -374,10 +374,10 @@
 
 /* Settings - Prompt Editor - Global Shortcuts */
 "settings.prompts.editor.global_shortcuts" = "Globala genvägar";
-"settings.prompts.editor.quick_paste" = "Snabbklistra:";
-"settings.prompts.editor.quick_paste_help" = "Fångar markerad text, bearbetar den med denna prompt och klistrar in resultatet";
-"settings.prompts.editor.open_run" = "Öppna och kör:";
-"settings.prompts.editor.open_run_help" = "Fångar markerad text, öppnar ClipSlop och tillämpar automatiskt denna prompt";
+"settings.prompts.editor.quick_paste" = "Inline-körning:";
+"settings.prompts.editor.quick_paste_help" = "Kör prompten på den aktuella markerade texten och ersätter den med resultatet — ingen popup, bara transformation på plats.";
+"settings.prompts.editor.open_run" = "Kör i redigeraren:";
+"settings.prompts.editor.open_run_help" = "Fångar markerad text, öppnar ClipSlop-redigeraren med resultatet och låter dig granska eller justera innan kopiering.";
 "settings.prompts.editor.select_all" = "Markera allt före fångst";
 "settings.prompts.editor.select_all_help" = "Simulerar ⌘A före textfångst, användbart för att ersätta hela fältinnehållet";
 
@@ -391,12 +391,12 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Öppna Snabbåtkomst";
-"menu.prompt_shortcuts.open_run" = "Öppna och kör";
-"menu.prompt_shortcuts.quick_paste" = "Snabbklistra";
+"menu.prompt_shortcuts.open_run" = "Kör i redigeraren";
+"menu.prompt_shortcuts.quick_paste" = "Inline-körning";
 
 /* Settings - Prompts - Conflicts */
-"settings.prompts.field.open_run" = "Öppna och kör";
-"settings.prompts.field.quick_paste" = "Snabbklistra";
+"settings.prompts.field.open_run" = "Kör i redigeraren";
+"settings.prompts.field.quick_paste" = "Inline-körning";
 "settings.prompts.mnemonic_conflict_tooltip" = "Duplicerat mnemonik i den här mappen";
 "settings.prompts.shortcut_conflict_title" = "Kortkommando används redan";
 "settings.prompts.shortcut_conflict_message" = "%1$@ är för närvarande tilldelat ”%2$@” (%3$@). Tilldela den här prompten eller avbryta?";
@@ -422,8 +422,8 @@
 "settings.quick_access.grid_empty" = "Släpp prompter här för att lägga till paneler";
 "settings.quick_access.grid_empty_hint" = "Dra valfri prompt från vänster.";
 "settings.quick_access.method.label" = "Åtgärd";
-"settings.quick_access.method.inline" = "Snabbklistra";
-"settings.quick_access.method.open_in_clipslop" = "Öppna och kör";
+"settings.quick_access.method.inline" = "Inline-körning";
+"settings.quick_access.method.open_in_clipslop" = "Kör i redigeraren";
 "settings.quick_access.tile.remove" = "Ta bort panel";
 "settings.quick_access.tile.in_use_badge" = "I Snabbåtkomst";
 "settings.quick_access.tile.missing" = "(borttagen prompt)";
