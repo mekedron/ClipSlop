@@ -110,24 +110,38 @@ const config = {
             position: 'right',
           },
           {
-            href: 'https://github.com/mekedron/ClipSlop',
-            label: 'GitHub',
-            position: 'right',
-          },
-          {
-            // Live star count, hydrated client-side by
+            // GitHub link with live star count, hydrated client-side by
             // src/clientModules/github-stars.js. The placeholder "—" is
             // what visitors see during the first paint and on offline /
-            // rate-limited fetches.
+            // rate-limited fetches. This pill doubles as the GitHub link
+            // — no separate text-only "GitHub" entry, to keep the navbar
+            // to four items on the right.
             type: 'html',
             position: 'right',
             value:
-              '<a class="navbar-stars" href="https://github.com/mekedron/ClipSlop/stargazers" target="_blank" rel="noopener noreferrer" aria-label="Star ClipSlop on GitHub">' +
+              '<a class="navbar-stars" href="https://github.com/mekedron/ClipSlop" target="_blank" rel="noopener noreferrer" aria-label="ClipSlop on GitHub — view repo and star count">' +
               '<svg class="navbar-stars__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
               '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' +
               '</svg>' +
-              '<span class="navbar-stars__label">Star</span>' +
+              '<span class="navbar-stars__label">GitHub</span>' +
               '<span class="navbar-stars__count" data-github-stars>—</span>' +
+              '</a>',
+          },
+          {
+            // Yellow Donate pill — primary call to support the project.
+            // Styled in src/css/custom.css via .navbar-donate.
+            type: 'html',
+            position: 'right',
+            value:
+              '<a class="navbar-donate" href="https://buymeacoffee.com/mekedron" target="_blank" rel="noopener noreferrer" aria-label="Donate via Buy Me a Coffee">' +
+              '<svg class="navbar-donate__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>' +
+              '<path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>' +
+              '<line x1="6" y1="1" x2="6" y2="4"></line>' +
+              '<line x1="10" y1="1" x2="10" y2="4"></line>' +
+              '<line x1="14" y1="1" x2="14" y2="4"></line>' +
+              '</svg>' +
+              '<span class="navbar-donate__label">Donate</span>' +
               '</a>',
           },
         ],

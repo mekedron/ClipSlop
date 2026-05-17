@@ -538,6 +538,59 @@ hr {
   .navbar-stars__count { padding-left: 0; margin-left: 0; border-left: 0; }
 }
 
+/* Yellow Donate pill in the navbar. The color is intentionally loud —
+   it should read as a clear, friendly call to support without competing
+   with the primary Download CTA (which lives in the hero). */
+.navbar-donate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 10px;
+  margin-left: 6px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #F4A93B 65%, #b07a14);
+  background: linear-gradient(180deg, #FFCB57 0%, #F4A93B 100%);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 6px 14px -4px rgba(244, 169, 59, 0.55);
+  color: #2a1a05;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+.navbar-donate:hover,
+.navbar-donate:focus-visible {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 10px 22px -6px rgba(244, 169, 59, 0.7);
+  color: #2a1a05;
+  text-decoration: none;
+}
+.navbar-donate__icon { flex: 0 0 auto; }
+
+[data-theme='dark'] .navbar-donate {
+  /* Same yellow in dark mode — the contrast against the dark navbar is
+     what makes this pill pop, so we keep it bright instead of dimming. */
+  color: #1f1404;
+  border-color: color-mix(in srgb, #F4A93B 60%, #7a5410);
+}
+
+@media (max-width: 996px) {
+  .navbar-sidebar .navbar-donate {
+    margin: 4px 0;
+    box-shadow: none;
+  }
+}
+@media (max-width: 480px) {
+  .navbar-donate__label { display: none; }
+  .navbar-donate { padding: 4px 10px; }
+}
+
 /* Mobile navbar sidebar — must be opaque. The desktop navbar's
    --ifm-navbar-background-color is 78% transparent (paired with a
    backdrop-filter blur), but the mobile drawer inherits the same

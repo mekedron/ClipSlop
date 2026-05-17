@@ -1052,6 +1052,79 @@
   50%      { transform: scale(1.1) rotate(20deg); opacity: 1; }
 }
 
+/* ----------- Support section ----------- */
+.support {
+  text-align: center;
+  padding: 56px 32px 64px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background:
+    radial-gradient(900px 260px at 50% 0%, color-mix(in srgb, #F4A93B 14%, transparent), transparent),
+    var(--bg-card);
+  box-shadow: var(--shadow-md);
+}
+.supportEyebrow {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, #F4A93B 70%, var(--fg-2));
+  margin-bottom: 14px;
+}
+.supportH {
+  font-size: clamp(28px, 3.6vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin: 0 auto;
+  max-width: 22ch;
+}
+.supportH em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+.supportLede {
+  margin: 16px auto 0;
+  max-width: 56ch;
+  color: var(--fg-2);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.supportCtas {
+  margin-top: 28px;
+  display: inline-flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.supportFine {
+  margin: 20px auto 0;
+  color: var(--fg-3);
+  font-size: 13.5px;
+}
+
+/* Yellow donate button — same shape as .btn, distinct color so it reads
+   as the primary support CTA without being confused with the Download
+   button's blue. */
+.btnDonate {
+  background: linear-gradient(180deg, #FFCB57 0%, #F4A93B 100%);
+  color: #2a1a05;
+  border: 1px solid color-mix(in srgb, #F4A93B 65%, #b07a14);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.55) inset,
+    0 8px 18px -4px rgba(244, 169, 59, 0.55);
+}
+.btnDonate:hover {
+  background: linear-gradient(180deg, #FFD56E 0%, #F0A02C 100%);
+  color: #2a1a05;
+  transform: translateY(-1px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 12px 26px -6px rgba(244, 169, 59, 0.7);
+}
+
 /* Tiny screens */
 @media (max-width: 540px) {
   .hero { padding: 48px 0 40px; }
@@ -1059,4 +1132,5 @@
   .demoBody { padding: 24px 16px 32px; }
   .demoTextbox { font-size: 16px; padding: 14px 16px; }
   .floatTile { display: none; }
+  .support { padding: 44px 20px 52px; }
 }
