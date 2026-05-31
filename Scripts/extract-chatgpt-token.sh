@@ -10,7 +10,7 @@
 
 set -euo pipefail
 
-SERVICE="com.clipslop.app"
+SERVICE="com.mekedron.clipslop"
 
 # Find the ChatGPT token entry in Keychain
 ACCOUNT=$(security dump-keychain -a 2>/dev/null \

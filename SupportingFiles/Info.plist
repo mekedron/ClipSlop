@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.clipslop.app</string>
+    <string>com.mekedron.clipslop</string>
     <key>CFBundleName</key>
     <string>ClipSlop</string>
     <key>CFBundleDisplayName</key>
@@ -11,7 +11,7 @@
     <key>CFBundleVersion</key>
     <string>1</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.3.0</string>
+    <string>2.0.0</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleExecutable</key>
@@ -21,7 +21,7 @@
     <key>LSUIElement</key>
     <true/>
     <key>SUFeedURL</key>
-    <string>https://raw.githubusercontent.com/mekedron/clipslop/main/appcast.xml</string>
+    <string>https://raw.githubusercontent.com/mekedron/clipslop/main/appcast-v2.xml</string>
     <key>SUPublicEDKey</key>
     <string>22HdaJksDsRyOwfyMqARsF0on0MXQdfmCSeGTk+EaCU=</string>
     <key>NSScreenCaptureUsageDescription</key>
@@ -30,7 +30,7 @@
     <string>ClipSlop needs accessibility access to capture selected text from other applications.</string>
     <key>NSUbiquitousContainers</key>
     <dict>
-        <key>iCloud.com.clipslop.app</key>
+        <key>iCloud.com.mekedron.clipslop</key>
         <dict>
             <key>NSUbiquitousContainerIsDocumentScopePublic</key>
             <false/>

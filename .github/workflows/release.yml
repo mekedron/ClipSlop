@@ -164,6 +164,22 @@ jobs:
             echo "Signing with Developer ID: $SIGNING_IDENTITY"
             SIGN_OPTS=(--force --timestamp --options runtime --keychain "$KEYCHAIN_PATH" --sign "$SIGNING_IDENTITY")
 
+            # Resolve $(AppIdentifierPrefix) in the entitlements file to the real
+            # team ID (extracted from the signing identity CN, e.g.
+            # "Developer ID Application: Name (TEAMID)"). codesign does not do
+            # this substitution itself — it would treat $(AppIdentifierPrefix)
+            # as a literal access group name, which would not match anything.
+            TEAMID=$(echo "$SIGNING_IDENTITY" | sed -E 's/.*\(([A-Z0-9]+)\)$/\1/')
+            if [ -z "$TEAMID" ] || [ "$TEAMID" = "$SIGNING_IDENTITY" ]; then
+              echo "::error::Could not extract Team ID from signing identity: $SIGNING_IDENTITY"
+              exit 1
+            fi
+            RESOLVED_ENTITLEMENTS="$RUNNER_TEMP/entitlements-resolved.plist"
+            sed "s/\$(AppIdentifierPrefix)/${TEAMID}./g" "$ENTITLEMENTS" > "$RESOLVED_ENTITLEMENTS"
+            echo "Resolved entitlements (TeamID=${TEAMID}):"
+            cat "$RESOLVED_ENTITLEMENTS"
+            ENTITLEMENTS="$RESOLVED_ENTITLEMENTS"
+
             # Sign inside-out: nested helpers / XPC services / frameworks BEFORE the outer .app
 
             # Sparkle XPC services (Downloader.xpc, Installer.xpc) — present in Sparkle 2.x
@@ -370,14 +386,25 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME#v}"
 
-          # Switch to main first, then generate appcast.xml
+          # v1.x tags update the legacy appcast.xml (bundle id com.clipslop.app).
+          # v2.x tags update appcast-v2.xml (bundle id com.mekedron.clipslop).
+          # The two feeds are isolated so existing v1 installs never see a v2
+          # DMG (which Sparkle would refuse to install due to bundle ID mismatch).
+          case "$TAG" in
+            1.*) APPCAST_FILE="appcast.xml" ;;
+            2.*) APPCAST_FILE="appcast-v2.xml" ;;
+            *)   APPCAST_FILE="appcast-v2.xml" ;;
+          esac
+          echo "Writing release info to ${APPCAST_FILE}"
+
+          # Switch to main first, then generate appcast
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git stash --include-untracked
           git fetch origin main
           git checkout main
 
-          cat > appcast.xml << APPCAST_EOF
+          cat > "${APPCAST_FILE}" << APPCAST_EOF
           <?xml version="1.0" encoding="utf-8"?>
           <rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
             <channel>
@@ -401,10 +428,10 @@ jobs:
           </rss>
           APPCAST_EOF
 
-          sed -i '' 's/^          //' appcast.xml
+          sed -i '' 's/^          //' "${APPCAST_FILE}"
 
-          git add appcast.xml
-          git commit -m "chore: update appcast for ${GITHUB_REF_NAME}" || echo "No changes to commit"
+          git add "${APPCAST_FILE}"
+          git commit -m "chore: update ${APPCAST_FILE} for ${GITHUB_REF_NAME}" || echo "No changes to commit"
           git push origin main
 
       - name: Update Homebrew Cask
@@ -434,6 +461,7 @@ jobs:
 
             zap trash: [
               "~/Library/Application Support/ClipSlop",
+              "~/Library/Preferences/com.mekedron.clipslop.plist",
               "~/Library/Preferences/com.clipslop.app.plist",
             ]
           end

@@ -2,7 +2,7 @@ import Foundation
 
 enum Constants {
     static let appName = "ClipSlop"
-    static let bundleIdentifier = "com.clipslop.app"
+    static let bundleIdentifier = "com.mekedron.clipslop"
 
     static let appSupportDirectory: URL = {
         let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
