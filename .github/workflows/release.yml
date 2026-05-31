@@ -244,6 +244,10 @@ jobs:
           rm -f "$KEY_PATH" "$ZIP_PATH"
 
       - name: Create DMG
+        env:
+          MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+          MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
+          MACOS_NOTARY_KEY_P8_BASE64: ${{ secrets.MACOS_NOTARY_KEY_P8_BASE64 }}
         run: |
           APP_NAME="ClipSlop"
           TAG="${GITHUB_REF_NAME#v}"
@@ -258,10 +262,26 @@ jobs:
             -ov -format UDZO \
             "release/${DMG_NAME}"
 
-          # Belt-and-suspenders: also staple the DMG itself so Gatekeeper on direct downloads
-          # doesn't need an online check. The .app inside already has its own ticket from the
-          # previous step, which is what matters for Sparkle-installed updates.
           if [ "$HAS_SIGNING" = "true" ]; then
+            # The DMG must be separately submitted to notarytool — stapler
+            # queries Apple by the DMG's own SHA, not the contained .app's.
+            # Without this submission the staple step fails with
+            # "Record not found" / Error 65. The .app inside was stapled in
+            # the previous step, which is what Sparkle relies on; the DMG
+            # staple is for direct downloaders who'd otherwise hit an online
+            # Gatekeeper check on first launch.
+            KEY_PATH="$RUNNER_TEMP/notary-dmg.p8"
+            echo -n "$MACOS_NOTARY_KEY_P8_BASE64" | base64 --decode -o "$KEY_PATH"
+
+            echo "Submitting DMG to Apple notary..."
+            xcrun notarytool submit "release/${DMG_NAME}" \
+              --key "$KEY_PATH" \
+              --key-id "$MACOS_NOTARY_KEY_ID" \
+              --issuer "$MACOS_NOTARY_ISSUER_ID" \
+              --wait
+
+            rm -f "$KEY_PATH"
+
             xcrun stapler staple "release/${DMG_NAME}"
             xcrun stapler validate "release/${DMG_NAME}"
           fi
