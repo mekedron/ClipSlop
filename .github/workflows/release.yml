@@ -196,6 +196,37 @@ jobs:
 
           echo "App bundle created at $APP_PATH"
 
+      - name: Notarize .app
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        env:
+          MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+          MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
+          MACOS_NOTARY_KEY_P8_BASE64: ${{ secrets.MACOS_NOTARY_KEY_P8_BASE64 }}
+        run: |
+          APP_PATH="release/ClipSlop.app"
+          KEY_PATH="$RUNNER_TEMP/notary.p8"
+          ZIP_PATH="$RUNNER_TEMP/notarize.zip"
+
+          echo -n "$MACOS_NOTARY_KEY_P8_BASE64" | base64 --decode -o "$KEY_PATH"
+
+          # notarytool needs a ZIP/DMG/PKG, not a raw .app — wrap and submit
+          ditto -c -k --keepParent "$APP_PATH" "$ZIP_PATH"
+
+          echo "Submitting .app to Apple notary..."
+          xcrun notarytool submit "$ZIP_PATH" \
+            --key "$KEY_PATH" \
+            --key-id "$MACOS_NOTARY_KEY_ID" \
+            --issuer "$MACOS_NOTARY_ISSUER_ID" \
+            --wait
+
+          # Staple the ticket DIRECTLY to the .app so it survives extraction by Sparkle / etc.
+          echo "Stapling notarization ticket to .app..."
+          xcrun stapler staple "$APP_PATH"
+          xcrun stapler validate "$APP_PATH"
+          spctl --assess --type exec --verbose=2 "$APP_PATH" || true
+
+          rm -f "$KEY_PATH" "$ZIP_PATH"
+
       - name: Create DMG
         run: |
           APP_NAME="ClipSlop"
@@ -211,39 +242,17 @@ jobs:
             -ov -format UDZO \
             "release/${DMG_NAME}"
 
-          echo "DMG_NAME=${DMG_NAME}" >> $GITHUB_ENV
-          # Note: DMG_SHA256 is set later — after notarization+stapling — because stapling mutates the file
-          if [ "$HAS_SIGNING" != "true" ]; then
-            echo "DMG_SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')" >> $GITHUB_ENV
+          # Belt-and-suspenders: also staple the DMG itself so Gatekeeper on direct downloads
+          # doesn't need an online check. The .app inside already has its own ticket from the
+          # previous step, which is what matters for Sparkle-installed updates.
+          if [ "$HAS_SIGNING" = "true" ]; then
+            xcrun stapler staple "release/${DMG_NAME}"
+            xcrun stapler validate "release/${DMG_NAME}"
           fi
+
+          echo "DMG_NAME=${DMG_NAME}" >> $GITHUB_ENV
+          echo "DMG_SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')" >> $GITHUB_ENV
           echo "DMG created at release/${DMG_NAME}"
-
-      - name: Notarize and staple DMG
-        if: ${{ env.HAS_SIGNING == 'true' }}
-        env:
-          MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
-          MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
-          MACOS_NOTARY_KEY_P8_BASE64: ${{ secrets.MACOS_NOTARY_KEY_P8_BASE64 }}
-        run: |
-          KEY_PATH="$RUNNER_TEMP/notary.p8"
-          echo -n "$MACOS_NOTARY_KEY_P8_BASE64" | base64 --decode -o "$KEY_PATH"
-
-          echo "Submitting DMG to Apple notary..."
-          xcrun notarytool submit "release/${DMG_NAME}" \
-            --key "$KEY_PATH" \
-            --key-id "$MACOS_NOTARY_KEY_ID" \
-            --issuer "$MACOS_NOTARY_ISSUER_ID" \
-            --wait
-
-          echo "Stapling notarization ticket..."
-          xcrun stapler staple "release/${DMG_NAME}"
-          xcrun stapler validate "release/${DMG_NAME}"
-          spctl --assess --type open --context context:primary-signature --verbose=2 "release/${DMG_NAME}" || true
-
-          # SHA256 is computed AFTER stapling so the Homebrew cask matches the published DMG
-          echo "DMG_SHA256=$(shasum -a 256 "release/${DMG_NAME}" | awk '{print $1}')" >> "$GITHUB_ENV"
-
-          rm -f "$KEY_PATH"
 
       - name: Sign DMG for Sparkle
         if: ${{ env.SPARKLE_PRIVATE_KEY != '' }}
