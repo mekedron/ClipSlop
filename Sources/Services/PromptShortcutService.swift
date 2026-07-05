@@ -51,6 +51,12 @@ final class PromptShortcutService {
     private(set) var isProcessingInline = false
     private var inlineTask: Task<Void, Never>?
 
+    /// The plain-text content of the last inline paste. Used as a fallback when
+    /// the user triggers a second prompt immediately after a paste, before making
+    /// a new selection (at that point the clipboard still holds the pasted result
+    /// and Cmd+C captures nothing new).
+    private var lastPastedText: String?
+
     // MARK: - HUD
 
     private var hudWindow: ProcessingHUDWindow?
@@ -398,8 +404,22 @@ final class PromptShortcutService {
 
             guard let text = capturedText, !text.isEmpty, text != originalClipboard else {
                 if let accessibilityText = TextCaptureService.captureSelectedText(), !accessibilityText.isEmpty {
+                    // Accessibility API found a selection — use it.
                     await self.processAndPaste(
                         text: accessibilityText,
+                        systemPrompt: systemPrompt,
+                        promptName: prompt.name,
+                        provider: provider,
+                        displayMode: prompt.displayMode
+                    )
+                } else if let lastPasted = self.lastPastedText,
+                          !lastPasted.isEmpty,
+                          originalClipboard == lastPasted {
+                    // No new selection was made. The clipboard still holds our previous
+                    // paste result, meaning the user triggered a follow-up prompt before
+                    // re-selecting anything. Re-process the previously pasted text.
+                    await self.processAndPaste(
+                        text: lastPasted,
                         systemPrompt: systemPrompt,
                         promptName: prompt.name,
                         provider: provider,
@@ -445,6 +465,7 @@ final class PromptShortcutService {
             }
 
             let mode = displayMode ?? appState?.settings.editorMode ?? .plainText
+            lastPastedText = result
             switch mode {
             case .markdown:
                 ClipboardService.setRichText(result)
