@@ -94,7 +94,7 @@ struct ConstrainedRichHTMLEditor: NSViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
     @MainActor
-    final class Coordinator: NSObject, @preconcurrency RichHTMLEditorViewDelegate, SearchableContent {
+    final class Coordinator: NSObject, RichHTMLEditorViewDelegate, SearchableContent {
         let parent: ConstrainedRichHTMLEditor
         weak var editor: RichHTMLEditorView?
         weak var findBarState: FindBarState?
