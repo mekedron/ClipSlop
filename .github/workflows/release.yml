@@ -354,7 +354,8 @@ jobs:
             esac
             # Strip type prefix for display
             CLEAN=$(echo "$msg" | sed 's/^[a-z]*: //' | sed 's/^[a-z]*(.*): //')
-            CLEAN="$(echo "$CLEAN" | awk '{print toupper(substr($0,1,1)) substr($0,2)}')"
+            # macOS awk dies on emoji ("illegal byte sequence") in any locale; python is byte-safe
+            CLEAN="$(printf '%s' "$CLEAN" | python3 -c 'import sys; s = sys.stdin.buffer.read().decode("utf-8", "replace"); sys.stdout.write(s[:1].upper() + s[1:] if s else "")')"
 
             case "$msg" in
               feat:*|feat\(*) FEATURES="${FEATURES}- ${CLEAN}\n" ;;
