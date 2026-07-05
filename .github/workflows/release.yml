@@ -325,6 +325,8 @@ jobs:
 
       - name: Generate release notes
         run: |
+          # BSD awk dies with "illegal byte sequence" on emoji commit subjects under the C locale
+          export LC_ALL=en_US.UTF-8
           TAG="${GITHUB_REF_NAME#v}"
           REPO_URL="https://github.com/${GITHUB_REPOSITORY}"
 
