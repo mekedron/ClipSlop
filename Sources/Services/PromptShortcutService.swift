@@ -51,11 +51,14 @@ final class PromptShortcutService {
     private(set) var isProcessingInline = false
     private var inlineTask: Task<Void, Never>?
 
-    /// The plain-text content of the last inline paste. Used as a fallback when
-    /// the user triggers a second prompt immediately after a paste, before making
-    /// a new selection (at that point the clipboard still holds the pasted result
-    /// and Cmd+C captures nothing new).
-    private var lastPastedText: String?
+    /// The last inline paste and when it happened. Used as a fallback when the
+    /// user triggers a follow-up prompt right after a paste, before making a new
+    /// selection (at that point the clipboard still holds the pasted result and
+    /// Cmd+C captures nothing new). Consumed on use; ignored once stale.
+    private var lastPaste: (text: String, date: Date)?
+
+    /// How long after an inline paste a follow-up trigger may re-process it.
+    private static let followUpWindow: TimeInterval = 30
 
     // MARK: - HUD
 
@@ -412,14 +415,15 @@ final class PromptShortcutService {
                         provider: provider,
                         displayMode: prompt.displayMode
                     )
-                } else if let lastPasted = self.lastPastedText,
-                          !lastPasted.isEmpty,
-                          originalClipboard == lastPasted {
-                    // No new selection was made. The clipboard still holds our previous
-                    // paste result, meaning the user triggered a follow-up prompt before
-                    // re-selecting anything. Re-process the previously pasted text.
+                } else if let lastPaste = self.lastPaste,
+                          originalClipboard == lastPaste.text,
+                          Date().timeIntervalSince(lastPaste.date) < Self.followUpWindow {
+                    // No new selection was made and the clipboard still holds the result
+                    // we pasted moments ago — treat this as a follow-up prompt on that
+                    // text. Consume the stored paste so it can't fire again when stale.
+                    self.lastPaste = nil
                     await self.processAndPaste(
-                        text: lastPasted,
+                        text: lastPaste.text,
                         systemPrompt: systemPrompt,
                         promptName: prompt.name,
                         provider: provider,
@@ -465,7 +469,7 @@ final class PromptShortcutService {
             }
 
             let mode = displayMode ?? appState?.settings.editorMode ?? .plainText
-            lastPastedText = result
+            lastPaste = (text: result, date: Date())
             switch mode {
             case .markdown:
                 ClipboardService.setRichText(result)
