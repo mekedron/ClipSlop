@@ -428,13 +428,27 @@ final class PromptShortcutService {
         provider: AIProviderConfig,
         displayMode: EditorMode?
     ) async {
+        // Strip surrounding whitespace before sending to AI, then restore it
+        // around the result so the paste replaces only the content characters.
+        let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedText.isEmpty else { return }
+        let leadingWhitespace: String
+        let trailingWhitespace: String
+        if let range = text.range(of: trimmedText) {
+            leadingWhitespace = String(text[text.startIndex..<range.lowerBound])
+            trailingWhitespace = String(text[range.upperBound..<text.endIndex])
+        } else {
+            leadingWhitespace = ""
+            trailingWhitespace = ""
+        }
+
         showHUD(promptName: promptName)
 
         let service = AIServiceFactory.service(for: provider.providerType)
 
         do {
             let result = try await service.process(
-                text: text,
+                text: trimmedText,
                 systemPrompt: systemPrompt,
                 config: provider
             )
@@ -444,14 +458,15 @@ final class PromptShortcutService {
                 return
             }
 
+            let paddedResult = leadingWhitespace + result + trailingWhitespace
             let mode = displayMode ?? appState?.settings.editorMode ?? .plainText
             switch mode {
             case .markdown:
-                ClipboardService.setRichText(result)
+                ClipboardService.setRichText(paddedResult)
             case .html:
-                ClipboardService.setHTMLContent(result)
+                ClipboardService.setHTMLContent(paddedResult)
             case .plainText:
-                ClipboardService.setText(result)
+                ClipboardService.setText(paddedResult)
             }
 
             dismissHUD()
