@@ -477,14 +477,17 @@ final class PromptShortcutService {
                 config: provider
             )
 
-            guard !Task.isCancelled, !result.isEmpty else {
+            // Network providers return the model's raw text, which often carries its
+            // own trailing newline; strip it so the padding wraps only content.
+            let cleanResult = result.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !Task.isCancelled, !cleanResult.isEmpty else {
                 dismissHUD()
                 return
             }
 
-            let paddedResult = leadingWhitespace + result + trailingWhitespace
+            let paddedResult = leadingWhitespace + cleanResult + trailingWhitespace
             let mode = displayMode ?? appState?.settings.editorMode ?? .plainText
-            lastPaste = (text: result, date: Date())
+            lastPaste = (text: paddedResult, date: Date())
             switch mode {
             case .markdown:
                 ClipboardService.setRichText(paddedResult)
