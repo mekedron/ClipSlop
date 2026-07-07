@@ -11,16 +11,9 @@ struct PopupContentView: View {
         MarkdownConverter.html(from: appState.currentDisplayText)
     }
 
-    private var isViewingOriginal: Bool {
-        guard let session = appState.currentSession else { return false }
-        if appState.selectedHistoryStepIndex == -1 { return true }
-        if appState.selectedHistoryStepIndex == nil && !session.hasSteps { return true }
-        return false
-    }
-
     var body: some View {
         HStack(spacing: 0) {
-            if let session = appState.currentSession, session.hasSteps, !appState.isEditing {
+            if appState.currentSession != nil, !appState.isEditing {
                 HistorySidebarView(appState: appState)
                     .frame(width: 180)
                 Divider()
@@ -302,7 +295,7 @@ struct PopupContentView: View {
 
             Spacer()
 
-            if isViewingOriginal {
+            if appState.isViewingOriginal {
                 Picker(loc.t("popup.source"), selection: Bindable(appState).originalViewMode) {
                     Text("Plain text").tag(RichTextMode.plainText)
                     Text("HTML").tag(RichTextMode.html)
@@ -331,7 +324,7 @@ struct PopupContentView: View {
             .frame(width: 145)
             .onChange(of: appState.activeEditorMode) { _, newMode in
                 // Save display mode for original item when viewing it
-                if isViewingOriginal {
+                if appState.isViewingOriginal {
                     appState.originalDisplayMode = newMode
                 }
             }

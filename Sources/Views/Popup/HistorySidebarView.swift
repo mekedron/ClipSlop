@@ -26,10 +26,10 @@ struct HistorySidebarView: View {
                             label: loc.t("popup.history.original"),
                             icon: "doc.text",
                             preview: session.originalText,
-                            isSelected: appState.selectedHistoryStepIndex == -1
+                            isSelected: appState.isViewingOriginal
                         )
 
-                        if appState.selectedHistoryStepIndex == -1 {
+                        if appState.isViewingOriginal {
                             Picker("", selection: Bindable(appState).originalViewMode) {
                                 Text("Plain").tag(RichTextMode.plainText)
                                 Text("HTML").tag(RichTextMode.html)

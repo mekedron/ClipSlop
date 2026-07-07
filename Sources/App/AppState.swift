@@ -108,6 +108,16 @@ final class AppState {
         return session.currentText
     }
 
+    /// Whether the sidebar/content is currently showing the original text
+    /// rather than a transformation step — either explicitly selected, or
+    /// implicitly because no steps exist yet.
+    var isViewingOriginal: Bool {
+        guard let session = currentSession else { return false }
+        if selectedHistoryStepIndex == -1 { return true }
+        if selectedHistoryStepIndex == nil && !session.hasSteps { return true }
+        return false
+    }
+
     /// Returns the original text in the representation selected by `originalViewMode`.
     var originalTextForCurrentMode: String {
         guard let session = currentSession else { return "" }
