@@ -324,6 +324,8 @@ jobs:
           echo "Signed DMG: edSignature=${ED_SIGNATURE}, length=${FILE_LENGTH}"
 
       - name: Generate release notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # BSD awk dies with "illegal byte sequence" on emoji commit subjects under the C locale
           export LC_ALL=en_US.UTF-8
@@ -332,6 +334,7 @@ jobs:
 
           # Find previous tag (exclude current)
           PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${GITHUB_REF_NAME}$" | head -1)
+          export PREV_TAG
 
           if [ -n "$PREV_TAG" ]; then
             RANGE="${PREV_TAG}..${GITHUB_REF_NAME}"
@@ -341,12 +344,62 @@ jobs:
 
           echo "Generating notes for range: ${RANGE}"
 
+          # Fetch "<subject><TAB><contributor>" lines, newest first. The
+          # contributor is the GitHub handle when the compare API can match
+          # the commit's email to an account, falling back to the git author
+          # name (and, if the API itself is unreachable, to a plain git log).
+          COMMIT_LINES=$(python3 << 'PYEOF'
+          import json, os, subprocess, sys, urllib.error, urllib.request
+
+          ref = os.environ["GITHUB_REF_NAME"]
+          repo = os.environ["GITHUB_REPOSITORY"]
+          prev_tag = os.environ.get("PREV_TAG", "")
+          token = os.environ.get("GITHUB_TOKEN", "")
+
+
+          def git_log_lines(rev_range):
+              out = subprocess.run(
+                  ["git", "log", rev_range, "--no-merges", "--pretty=format:%s%x09%an"],
+                  capture_output=True, text=True, check=True,
+              ).stdout
+              return [line for line in out.split("\n") if line]
+
+
+          lines = None
+          if prev_tag:
+              try:
+                  url = f"https://api.github.com/repos/{repo}/compare/{prev_tag}...{ref}"
+                  req = urllib.request.Request(url, headers={
+                      "Authorization": f"token {token}",
+                      "Accept": "application/vnd.github+json",
+                  })
+                  with urllib.request.urlopen(req, timeout=15) as resp:
+                      data = json.load(resp)
+                  fetched = []
+                  for c in reversed(data.get("commits", [])):
+                      if len(c.get("parents", [])) > 1:
+                          continue  # skip merge commits, like git log --no-merges
+                      subject = c["commit"]["message"].split("\n", 1)[0]
+                      login = (c.get("author") or {}).get("login")
+                      who = f"@{login}" if login else c["commit"]["author"]["name"]
+                      fetched.append(f"{subject}\t{who}")
+                  lines = fetched
+              except Exception as e:
+                  print(f"::warning::Compare API unavailable ({e}); changelog will omit contributor handles", file=sys.stderr)
+
+          if lines is None:
+              lines = git_log_lines(f"{prev_tag}..{ref}" if prev_tag else ref)
+
+          print("\n".join(lines))
+          PYEOF
+          )
+
           # Collect commits grouped by type (skip chore: commits from CI)
           FEATURES=""
           FIXES=""
           OTHER=""
 
-          while IFS= read -r msg; do
+          while IFS=$'\t' read -r msg who; do
             [ -z "$msg" ] && continue
             # Skip CI-generated commits
             case "$msg" in
@@ -356,6 +409,7 @@ jobs:
             CLEAN=$(echo "$msg" | sed 's/^[a-z]*: //' | sed 's/^[a-z]*(.*): //')
             # macOS awk dies on emoji ("illegal byte sequence") in any locale; python is byte-safe
             CLEAN="$(printf '%s' "$CLEAN" | python3 -c 'import sys; s = sys.stdin.buffer.read().decode("utf-8", "replace"); sys.stdout.write(s[:1].upper() + s[1:] if s else "")')"
+            [ -n "$who" ] && CLEAN="${CLEAN} (${who})"
 
             case "$msg" in
               feat:*|feat\(*) FEATURES="${FEATURES}- ${CLEAN}\n" ;;
@@ -363,7 +417,7 @@ jobs:
               chore:*|docs:*|ci:*|refactor:*|perf:*|test:*) OTHER="${OTHER}- ${CLEAN}\n" ;;
               *)              OTHER="${OTHER}- ${CLEAN}\n" ;;
             esac
-          done <<< "$(git log ${RANGE} --pretty=format:'%s' --no-merges)"
+          done <<< "$COMMIT_LINES"
 
           # Build release body
           BODY=""
