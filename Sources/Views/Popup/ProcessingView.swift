@@ -20,6 +20,8 @@ struct ProcessingView: View {
                     .foregroundStyle(.secondary)
 
                 Spacer()
+            } else if appState.activeEditorMode == .markdown {
+                MarkdownPreviewView(markdown: appState.streamingText)
             } else {
                 ScrollViewReader { proxy in
                     ScrollView {
