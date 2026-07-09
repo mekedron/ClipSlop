@@ -14,8 +14,9 @@ struct HistorySidebarView: View {
                             index: index,
                             label: step.promptName,
                             icon: "wand.and.stars",
-                            preview: step.outputText,
-                            isSelected: isStepSelected(index, session: session)
+                            preview: step.isPending ? loc.t("popup.processing") : step.outputText,
+                            isSelected: isStepSelected(index, session: session),
+                            isPending: step.isPending
                         )
                     }
 
@@ -65,15 +66,22 @@ struct HistorySidebarView: View {
         label: String,
         icon: String,
         preview: String,
-        isSelected: Bool
+        isSelected: Bool,
+        isPending: Bool = false
     ) -> some View {
         Button {
             appState.selectHistoryStep(at: index)
         } label: {
             HStack(spacing: 8) {
-                Image(systemName: icon)
-                    .foregroundStyle(isSelected ? .white : .secondary)
-                    .frame(width: 16)
+                if isPending {
+                    ProgressView()
+                        .controlSize(.small)
+                        .frame(width: 16)
+                } else {
+                    Image(systemName: icon)
+                        .foregroundStyle(isSelected ? .white : .secondary)
+                        .frame(width: 16)
+                }
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(label)
@@ -97,7 +105,7 @@ struct HistorySidebarView: View {
         }
         .buttonStyle(.plain)
         .contextMenu {
-            if index >= 0 {
+            if index >= 0 && !isPending {
                 Button(role: .destructive) {
                     appState.removeHistoryStep(at: index)
                 } label: {

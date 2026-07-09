@@ -631,10 +631,16 @@ final class AppState {
         // If viewing a history step, truncate to that step first
         if let index = selectedHistoryStepIndex, index >= 0 {
             session = session.steppingTo(index: index)
-            currentSession = session
         }
 
         let inputText = currentDisplayText
+
+        // Add a placeholder "tab" for the step that's about to run and
+        // select it immediately — the sidebar (and a new tab for it) then
+        // shows up right away instead of only once the response finishes.
+        session = session.addingStep(promptName: name, outputText: "", displayMode: activeEditorMode, isPending: true)
+        currentSession = session
+        selectedHistoryStepIndex = nil
 
         isProcessing = true
         streamingText = ""
@@ -663,17 +669,19 @@ final class AppState {
                     guard !accumulated.isEmpty else {
                         throw AIServiceError.emptyResponse
                     }
-                    currentSession = session.addingStep(promptName: name, outputText: accumulated, displayMode: activeEditorMode)
+                    currentSession = session.updatingLastStep(outputText: accumulated, isPending: false)
                 } else {
                     let result = try await service.process(text: inputText, systemPrompt: systemPrompt, config: config)
-                    currentSession = session.addingStep(promptName: name, outputText: result, displayMode: activeEditorMode)
+                    currentSession = session.updatingLastStep(outputText: result, isPending: false)
                 }
-                selectedHistoryStepIndex = nil
                 navigationPath = []
                 isProcessing = false
                 streamingText = ""
             } catch {
                 let wasCancelled = error is CancellationError || Task.isCancelled
+                // Drop the placeholder tab we optimistically added — there's
+                // no result to show (request failed or was cancelled).
+                currentSession = session.undoingLastStep()
                 if !wasCancelled {
                     setError(from: error, providerType: config.providerType)
                 }
@@ -690,6 +698,13 @@ final class AppState {
         streamingText = ""
         errorMessage = nil
         errorDetail = nil
+        // Drop the optimistic placeholder tab for the step being cancelled
+        // right away — the task's own cleanup will also run once
+        // cancellation propagates, but this avoids a flash of the empty
+        // placeholder before that happens.
+        if let session = currentSession, session.steps.last?.isPending == true {
+            currentSession = session.undoingLastStep()
+        }
     }
 
     // MARK: - Actions

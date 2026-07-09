@@ -7,6 +7,11 @@ struct TransformationStep: Identifiable, Sendable {
     let outputText: String
     let timestamp: Date
     let displayMode: EditorMode
+    /// True while this step's AI response hasn't finished yet. Lets the
+    /// sidebar show a placeholder "tab" for it the instant a prompt starts
+    /// running, instead of only inserting the step once the full response
+    /// has come back.
+    let isPending: Bool
 
     init(
         id: UUID = UUID(),
@@ -14,7 +19,8 @@ struct TransformationStep: Identifiable, Sendable {
         inputText: String,
         outputText: String,
         timestamp: Date = Date(),
-        displayMode: EditorMode = .markdown
+        displayMode: EditorMode = .markdown,
+        isPending: Bool = false
     ) {
         self.id = id
         self.promptName = promptName
@@ -22,6 +28,7 @@ struct TransformationStep: Identifiable, Sendable {
         self.outputText = outputText
         self.timestamp = timestamp
         self.displayMode = displayMode
+        self.isPending = isPending
     }
 }
 
@@ -59,15 +66,35 @@ struct TransformationSession: Identifiable, Sendable {
     var stepCount: Int { steps.count }
     var hasSteps: Bool { !steps.isEmpty }
 
-    func addingStep(promptName: String, outputText: String, displayMode: EditorMode = .markdown) -> TransformationSession {
+    func addingStep(promptName: String, outputText: String, displayMode: EditorMode = .markdown, isPending: Bool = false) -> TransformationSession {
         var copy = self
         copy.steps.append(
             TransformationStep(
                 promptName: promptName,
                 inputText: currentText,
                 outputText: outputText,
-                displayMode: displayMode
+                displayMode: displayMode,
+                isPending: isPending
             )
+        )
+        return copy
+    }
+
+    /// Replaces the last step's output/pending flag in place, keeping its
+    /// identity and position — used to finalize (or drop, via
+    /// `undoingLastStep`) the placeholder tab added optimistically when a
+    /// prompt starts running.
+    func updatingLastStep(outputText: String, isPending: Bool) -> TransformationSession {
+        guard let last = steps.last else { return self }
+        var copy = self
+        copy.steps[copy.steps.count - 1] = TransformationStep(
+            id: last.id,
+            promptName: last.promptName,
+            inputText: last.inputText,
+            outputText: outputText,
+            timestamp: last.timestamp,
+            displayMode: last.displayMode,
+            isPending: isPending
         )
         return copy
     }
