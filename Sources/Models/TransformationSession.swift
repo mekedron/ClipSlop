@@ -7,6 +7,11 @@ struct TransformationStep: Identifiable, Sendable {
     let outputText: String
     let timestamp: Date
     let displayMode: EditorMode
+    /// True while this step's AI response hasn't finished yet. Lets the
+    /// sidebar show a placeholder "tab" for it the instant a prompt starts
+    /// running, instead of only inserting the step once the full response
+    /// has come back.
+    let isPending: Bool
 
     init(
         id: UUID = UUID(),
@@ -14,7 +19,8 @@ struct TransformationStep: Identifiable, Sendable {
         inputText: String,
         outputText: String,
         timestamp: Date = Date(),
-        displayMode: EditorMode = .markdown
+        displayMode: EditorMode = .markdown,
+        isPending: Bool = false
     ) {
         self.id = id
         self.promptName = promptName
@@ -22,6 +28,7 @@ struct TransformationStep: Identifiable, Sendable {
         self.outputText = outputText
         self.timestamp = timestamp
         self.displayMode = displayMode
+        self.isPending = isPending
     }
 }
 
@@ -59,16 +66,48 @@ struct TransformationSession: Identifiable, Sendable {
     var stepCount: Int { steps.count }
     var hasSteps: Bool { !steps.isEmpty }
 
-    func addingStep(promptName: String, outputText: String, displayMode: EditorMode = .markdown) -> TransformationSession {
+    func addingStep(promptName: String, outputText: String, displayMode: EditorMode = .markdown, isPending: Bool = false) -> TransformationSession {
         var copy = self
         copy.steps.append(
             TransformationStep(
                 promptName: promptName,
                 inputText: currentText,
                 outputText: outputText,
-                displayMode: displayMode
+                displayMode: displayMode,
+                isPending: isPending
             )
         )
+        return copy
+    }
+
+    /// Replaces the step matching `id`'s output/pending flag in place,
+    /// wherever it currently sits — used to finalize the placeholder tab
+    /// added optimistically when a prompt starts running. Looked up by id
+    /// rather than position so it's still found correctly even if other
+    /// history steps were edited or deleted while this one was in flight.
+    func updatingStep(id: UUID, outputText: String, isPending: Bool) -> TransformationSession {
+        guard let index = steps.firstIndex(where: { $0.id == id }) else { return self }
+        var copy = self
+        let existing = copy.steps[index]
+        copy.steps[index] = TransformationStep(
+            id: existing.id,
+            promptName: existing.promptName,
+            inputText: existing.inputText,
+            outputText: outputText,
+            timestamp: existing.timestamp,
+            displayMode: existing.displayMode,
+            isPending: isPending
+        )
+        return copy
+    }
+
+    /// Removes the step matching `id`, wherever it currently sits — used to
+    /// drop a placeholder tab whose prompt failed or was cancelled, without
+    /// disturbing other steps added/removed elsewhere in the meantime.
+    func removingStep(id: UUID) -> TransformationSession {
+        guard let index = steps.firstIndex(where: { $0.id == id }) else { return self }
+        var copy = self
+        copy.steps.remove(at: index)
         return copy
     }
 
