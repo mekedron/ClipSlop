@@ -27,35 +27,39 @@ struct TransformationSessionPendingStepTests {
         #expect(updated.steps.last?.promptName == "Fix Grammar")
     }
 
-    @Test("updatingLastStep finalizes a pending step in place")
-    func updatingLastStepFinalizes() {
+    @Test("updatingStep(id:) finalizes a pending step in place")
+    func updatingStepFinalizes() {
         let session = TransformationSession(originalText: "hello")
             .addingStep(promptName: "Fix Grammar", outputText: "", isPending: true)
-        let pendingID = session.steps.last?.id
+        let pendingID = session.steps[0].id
 
-        let finalized = session.updatingLastStep(outputText: "Hello.", isPending: false)
+        let finalized = session.updatingStep(id: pendingID, outputText: "Hello.", isPending: false)
 
         #expect(finalized.steps.count == 1)
-        #expect(finalized.steps.last?.id == pendingID)
-        #expect(finalized.steps.last?.promptName == "Fix Grammar")
-        #expect(finalized.steps.last?.outputText == "Hello.")
-        #expect(finalized.steps.last?.isPending == false)
+        #expect(finalized.steps[0].id == pendingID)
+        #expect(finalized.steps[0].promptName == "Fix Grammar")
+        #expect(finalized.steps[0].outputText == "Hello.")
+        #expect(finalized.steps[0].isPending == false)
     }
 
-    @Test("updatingLastStep on a session with no steps is a no-op")
-    func updatingLastStepNoStepsIsNoOp() {
+    @Test("updatingStep(id:) for an unknown id is a no-op")
+    func updatingStepUnknownIDIsNoOp() {
         let session = TransformationSession(originalText: "hello")
-        let updated = session.updatingLastStep(outputText: "anything", isPending: false)
-        #expect(updated.steps.isEmpty)
+            .addingStep(promptName: "Fix Grammar", outputText: "Hello.")
+        let updated = session.updatingStep(id: UUID(), outputText: "anything", isPending: false)
+        #expect(updated.steps.count == session.steps.count)
+        #expect(updated.steps[0].id == session.steps[0].id)
+        #expect(updated.steps[0].outputText == session.steps[0].outputText)
     }
 
-    @Test("updatingLastStep only touches the last step, earlier steps are untouched")
-    func updatingLastStepOnlyTouchesLastStep() {
+    @Test("updatingStep(id:) only touches the matching step, others are untouched")
+    func updatingStepOnlyTouchesMatchingStep() {
         let session = TransformationSession(originalText: "hello")
             .addingStep(promptName: "Translate", outputText: "Bonjour")
             .addingStep(promptName: "Rewrite", outputText: "", isPending: true)
+        let pendingID = session.steps[1].id
 
-        let finalized = session.updatingLastStep(outputText: "Bonjour, mon ami.", isPending: false)
+        let finalized = session.updatingStep(id: pendingID, outputText: "Bonjour, mon ami.", isPending: false)
 
         #expect(finalized.steps.count == 2)
         #expect(finalized.steps[0].promptName == "Translate")
@@ -65,17 +69,62 @@ struct TransformationSessionPendingStepTests {
         #expect(finalized.steps[1].isPending == false)
     }
 
-    @Test("undoingLastStep drops an optimistically-added pending step on cancel/error")
-    func undoingLastStepDropsPendingStep() {
+    @Test("updatingStep(id:) still finds the step after an earlier step was removed")
+    func updatingStepFindsStepAfterReordering() {
+        // Simulates: a prompt is running (pending, tracked by id) while the
+        // user deletes an earlier, unrelated history row from the sidebar —
+        // the pending step's position shifts, but it must still be found
+        // and finalized correctly by id once the response comes back.
+        let session = TransformationSession(originalText: "hello")
+            .addingStep(promptName: "Translate", outputText: "Bonjour")
+            .addingStep(promptName: "Rewrite", outputText: "", isPending: true)
+        let pendingID = session.steps[1].id
+
+        let afterDeletion = session.removingStep(at: 0)
+        #expect(afterDeletion.steps.count == 1)
+        #expect(afterDeletion.steps[0].id == pendingID)
+
+        let finalized = afterDeletion.updatingStep(id: pendingID, outputText: "Réécrit.", isPending: false)
+
+        #expect(finalized.steps.count == 1)
+        #expect(finalized.steps[0].id == pendingID)
+        #expect(finalized.steps[0].outputText == "Réécrit.")
+        #expect(finalized.steps[0].isPending == false)
+    }
+
+    @Test("removingStep(id:) drops an optimistically-added pending step on cancel/error")
+    func removingStepByIDDropsPendingStep() {
         let session = TransformationSession(originalText: "hello")
             .addingStep(promptName: "Translate", outputText: "Bonjour")
         let withPending = session.addingStep(promptName: "Rewrite", outputText: "", isPending: true)
+        let pendingID = withPending.steps[1].id
         #expect(withPending.steps.count == 2)
 
-        let reverted = withPending.undoingLastStep()
+        let reverted = withPending.removingStep(id: pendingID)
 
         #expect(reverted.steps.count == 1)
         #expect(reverted.steps.last?.promptName == "Translate")
         #expect(reverted.currentText == "Bonjour")
+    }
+
+    @Test("removingStep(id:) for an unknown id is a no-op")
+    func removingStepByIDUnknownIsNoOp() {
+        let session = TransformationSession(originalText: "hello")
+            .addingStep(promptName: "Translate", outputText: "Bonjour")
+        let updated = session.removingStep(id: UUID())
+        #expect(updated.steps.count == session.steps.count)
+        #expect(updated.steps[0].id == session.steps[0].id)
+    }
+
+    @Test("undoingLastStep still works for the general undo action")
+    func undoingLastStepDropsLastStep() {
+        let session = TransformationSession(originalText: "hello")
+            .addingStep(promptName: "Translate", outputText: "Bonjour")
+            .addingStep(promptName: "Rewrite", outputText: "Bonjour, mon ami.")
+
+        let reverted = session.undoingLastStep()
+
+        #expect(reverted.steps.count == 1)
+        #expect(reverted.steps.last?.promptName == "Translate")
     }
 }

@@ -71,6 +71,13 @@ final class AppState {
     @ObservationIgnored private var permissionAlertWindow: PermissionAlertWindow?
     @ObservationIgnored private var currentTask: Task<Void, Never>?
 
+    /// Id of the optimistically-added placeholder step for the prompt
+    /// currently running, if any. Set while `isProcessing` is true for a
+    /// `applyPrompt` run; used to finalize/drop the right step by identity
+    /// rather than by position. `nil` for processing that isn't tied to a
+    /// history step (e.g. the "Markdown (AI)" original-text conversion).
+    @ObservationIgnored private var pendingStepID: UUID?
+
     /// First-launch v1→v2 migration gating for iCloud sync. See `setup()`.
     @ObservationIgnored private var cloudSyncMigrationObserver: NSObjectProtocol?
     @ObservationIgnored private var cloudSyncStarted = false
@@ -116,6 +123,22 @@ final class AppState {
         if selectedHistoryStepIndex == -1 { return true }
         if selectedHistoryStepIndex == nil && !session.hasSteps { return true }
         return false
+    }
+
+    /// Whether the fullscreen processing view (spinner / live streaming
+    /// output) should replace the main content right now. A prompt can
+    /// still be running in the background while the user browses other,
+    /// already-finished history tabs in the sidebar — only the pending
+    /// step itself (or processing with no associated step at all, like the
+    /// "Markdown (AI)" original-text conversion) stays behind the spinner.
+    var shouldShowProcessingView: Bool {
+        guard isProcessing else { return false }
+        guard let session = currentSession, session.steps.last?.isPending == true else {
+            return true
+        }
+        let pendingIndex = session.steps.count - 1
+        let viewingIndex = selectedHistoryStepIndex ?? pendingIndex
+        return viewingIndex == pendingIndex
     }
 
     /// Returns the original text in the representation selected by `originalViewMode`.
@@ -568,6 +591,13 @@ final class AppState {
         if node.isFolder {
             navigationPath.append(node)
         } else if node.isPrompt, let prompt = node.systemPrompt {
+            // Another prompt is already running (possibly viewed via a
+            // different, non-pending sidebar tab right now) — ignore.
+            // Checked here (not just inside applyPrompt) so we also skip
+            // the display-mode switch below, and so this is enforced for
+            // every caller, including the global "Run in Editor" hotkey
+            // re-firing while the popup is already open.
+            guard !isProcessing else { return }
             applyPrompt(name: node.name, systemPrompt: prompt, providerID: node.providerID)
             // Switch display mode if prompt specifies one
             if let mode = node.displayMode {
@@ -614,7 +644,12 @@ final class AppState {
     // MARK: - Processing
 
     func applyPrompt(name: String, systemPrompt: String, providerID: UUID? = nil) {
-        guard var session = currentSession else { return }
+        // A prompt is already running — refuse to start another one on top
+        // of it. The user can still browse other history tabs while it
+        // finishes (see `shouldShowProcessingView`), but chaining a new
+        // prompt has to wait so the two runs can't race to mutate the
+        // session.
+        guard !isProcessing, var session = currentSession else { return }
 
         // Use prompt-specific provider if set, otherwise fall back to default
         let provider: AIProviderConfig
@@ -638,7 +673,10 @@ final class AppState {
         // Add a placeholder "tab" for the step that's about to run and
         // select it immediately — the sidebar (and a new tab for it) then
         // shows up right away instead of only once the response finishes.
+        // Tracked by id (not position) so it's still found correctly even
+        // if other history steps are edited or deleted while it's in flight.
         session = session.addingStep(promptName: name, outputText: "", displayMode: activeEditorMode, isPending: true)
+        pendingStepID = session.steps.last?.id
         currentSession = session
         selectedHistoryStepIndex = nil
 
@@ -669,10 +707,10 @@ final class AppState {
                     guard !accumulated.isEmpty else {
                         throw AIServiceError.emptyResponse
                     }
-                    currentSession = session.updatingLastStep(outputText: accumulated, isPending: false)
+                    finalizePendingStep(outputText: accumulated)
                 } else {
                     let result = try await service.process(text: inputText, systemPrompt: systemPrompt, config: config)
-                    currentSession = session.updatingLastStep(outputText: result, isPending: false)
+                    finalizePendingStep(outputText: result)
                 }
                 navigationPath = []
                 isProcessing = false
@@ -681,7 +719,7 @@ final class AppState {
                 let wasCancelled = error is CancellationError || Task.isCancelled
                 // Drop the placeholder tab we optimistically added — there's
                 // no result to show (request failed or was cancelled).
-                currentSession = session.undoingLastStep()
+                dropPendingStep()
                 if !wasCancelled {
                     setError(from: error, providerType: config.providerType)
                 }
@@ -689,6 +727,24 @@ final class AppState {
                 streamingText = ""
             }
         }
+    }
+
+    /// Replaces the placeholder step tracked by `pendingStepID` with its
+    /// final output, wherever it currently sits in the session — looked up
+    /// by id so it's found correctly even if the user edited or deleted
+    /// other history steps while this one was in flight.
+    private func finalizePendingStep(outputText: String) {
+        defer { pendingStepID = nil }
+        guard let id = pendingStepID, let session = currentSession else { return }
+        currentSession = session.updatingStep(id: id, outputText: outputText, isPending: false)
+    }
+
+    /// Drops the placeholder step tracked by `pendingStepID` — there's no
+    /// result to keep (the request failed or was cancelled).
+    private func dropPendingStep() {
+        defer { pendingStepID = nil }
+        guard let id = pendingStepID, let session = currentSession else { return }
+        currentSession = session.removingStep(id: id)
     }
 
     func cancelProcessing() {
@@ -701,10 +757,9 @@ final class AppState {
         // Drop the optimistic placeholder tab for the step being cancelled
         // right away — the task's own cleanup will also run once
         // cancellation propagates, but this avoids a flash of the empty
-        // placeholder before that happens.
-        if let session = currentSession, session.steps.last?.isPending == true {
-            currentSession = session.undoingLastStep()
-        }
+        // placeholder before that happens. (Idempotent: a no-op if the
+        // task's own catch block already cleared it.)
+        dropPendingStep()
     }
 
     // MARK: - Actions
@@ -762,6 +817,11 @@ final class AppState {
     // MARK: - Edit Mode
 
     func startEditing() {
+        // A background prompt may still be writing to the session (e.g. the
+        // user switched to an older tab while a newer one is generating) —
+        // block editing until it settles so a manual edit can't race with
+        // the pending step being finalized/dropped.
+        guard !isProcessing else { return }
         editingText = currentDisplayText
         isEditing = true
     }

@@ -23,7 +23,7 @@ struct PopupContentView: View {
             VStack(spacing: 0) {
                 if let error = appState.errorMessage {
                     errorView(error)
-                } else if appState.isProcessing {
+                } else if appState.shouldShowProcessingView {
                     ProcessingView(appState: appState)
                 } else if appState.isEditing {
                     editView
@@ -682,7 +682,7 @@ struct KeyEventHandler: NSViewRepresentable {
             // --- Normal mode ---
 
             if code == KeyCode.escape {
-                if appState.isProcessing {
+                if appState.shouldShowProcessingView {
                     appState.cancelProcessing()
                 } else if appState.errorMessage != nil {
                     appState.clearError()

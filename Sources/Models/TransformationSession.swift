@@ -80,22 +80,34 @@ struct TransformationSession: Identifiable, Sendable {
         return copy
     }
 
-    /// Replaces the last step's output/pending flag in place, keeping its
-    /// identity and position — used to finalize (or drop, via
-    /// `undoingLastStep`) the placeholder tab added optimistically when a
-    /// prompt starts running.
-    func updatingLastStep(outputText: String, isPending: Bool) -> TransformationSession {
-        guard let last = steps.last else { return self }
+    /// Replaces the step matching `id`'s output/pending flag in place,
+    /// wherever it currently sits — used to finalize the placeholder tab
+    /// added optimistically when a prompt starts running. Looked up by id
+    /// rather than position so it's still found correctly even if other
+    /// history steps were edited or deleted while this one was in flight.
+    func updatingStep(id: UUID, outputText: String, isPending: Bool) -> TransformationSession {
+        guard let index = steps.firstIndex(where: { $0.id == id }) else { return self }
         var copy = self
-        copy.steps[copy.steps.count - 1] = TransformationStep(
-            id: last.id,
-            promptName: last.promptName,
-            inputText: last.inputText,
+        let existing = copy.steps[index]
+        copy.steps[index] = TransformationStep(
+            id: existing.id,
+            promptName: existing.promptName,
+            inputText: existing.inputText,
             outputText: outputText,
-            timestamp: last.timestamp,
-            displayMode: last.displayMode,
+            timestamp: existing.timestamp,
+            displayMode: existing.displayMode,
             isPending: isPending
         )
+        return copy
+    }
+
+    /// Removes the step matching `id`, wherever it currently sits — used to
+    /// drop a placeholder tab whose prompt failed or was cancelled, without
+    /// disturbing other steps added/removed elsewhere in the meantime.
+    func removingStep(id: UUID) -> TransformationSession {
+        guard let index = steps.firstIndex(where: { $0.id == id }) else { return self }
+        var copy = self
+        copy.steps.remove(at: index)
         return copy
     }
 
