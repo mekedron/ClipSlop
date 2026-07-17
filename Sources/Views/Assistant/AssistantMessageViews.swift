@@ -1,4 +1,5 @@
 import SwiftUI
+import Textual
 
 /// Renders one transcript item. Proposal cards get Approve/Reject buttons that
 /// resolve the assistant's pending confirmation.
@@ -46,8 +47,11 @@ private struct AssistantMessageText: View {
 
     var body: some View {
         HStack {
-            Text(text)
-                .textSelection(.enabled)
+            // Assistant replies come back as Markdown — render them with the
+            // app's native (no-WebView) Textual renderer, sized to content so it
+            // flows inside the transcript.
+            StructuredText(markdown: text)
+                .textual.textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Spacer(minLength: 40)
         }

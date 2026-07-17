@@ -97,7 +97,10 @@ struct AssistantChatView: View {
     private var transcript: some View {
         ScrollViewReader { proxy in
             ScrollView(.vertical) {
-                LazyVStack(alignment: .leading, spacing: 12) {
+                // Non-lazy: Textual's AppKit text-selection overlay needs each
+                // message view fully instantiated and measured; a LazyVStack
+                // defers that and selection stops working.
+                VStack(alignment: .leading, spacing: 12) {
                     if service.items.isEmpty {
                         emptyState
                     }
