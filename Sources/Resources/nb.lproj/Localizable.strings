@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Neste treff";
 "shortcuts.find_prev" = "Forrige treff";
 "shortcuts.settings" = "Innstillinger";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Promptassistent:";
+"assistant.window.title" = "Promptassistent";
+"assistant.using" = "Bruker %@";
+"assistant.new_chat" = "Ny chat";
+"assistant.empty.title" = "Rediger promptbiblioteket ved å chatte";
+"assistant.empty.body" = "Be meg om å opprette, redigere, flytte eller slette prompter og mapper, eller angi snarveier. Jeg viser hver endring for godkjenning.";
+"assistant.thinking" = "Tenker…";
+"assistant.input.placeholder" = "Be om å endre en prompt…";
+"assistant.send" = "Send";
+"assistant.approve" = "Godkjenn";
+"assistant.reject" = "Avvis";
+"assistant.applied" = "Brukt";
+"assistant.declined" = "Avvist";
+"assistant.unsupported.title" = "Verktøykall kreves";
+"assistant.unsupported.body" = "Promptassistenten krever en leverandør som støtter verktøykall, som OpenAI eller Anthropic. Bytt standardleverandør for å bruke den.";
+"assistant.unsupported.open_settings" = "Åpne leverandørinnstillinger";
+"assistant.error.no_provider" = "Ingen KI-leverandør med støtte for verktøykall er satt som standard. Legg til eller velg OpenAI eller Anthropic i Innstillinger.";
+"assistant.error.max_steps" = "Jeg har nådd maks antall steg for én melding. Si hvordan du vil fortsette.";
+"assistant.error.empty" = "Assistenten returnerte et tomt svar. Prøv igjen.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Promptassistent";
+"onboarding.assistant.title" = "Møt promptassistenten";
+"onboarding.assistant.subtitle" = "Åpne en chat og bare spør – den redigerer promptbiblioteket for deg, så du slipper å lete i innstillingene. Hver endring vises for godkjenning først.";
+"onboarding.assistant.feature.edit" = "Opprett og rediger prompter ved å chatte";
+"onboarding.assistant.feature.organize" = "Organiser mapper og flytt prompter";
+"onboarding.assistant.feature.shortcuts" = "Tildel snarveier og angi promptmoduser";
+"onboarding.assistant.try" = "Prøv det nå";
+"assistant.intro_message" = "Hei! Hva kan du hjelpe meg med, og hva kan du gjøre?";

@@ -10,6 +10,7 @@ final class HotkeyService {
         .triggerScreenCapture,
         .triggerOCRToClipboard,
         .triggerQuickAccess,
+        .togglePromptAssistant,
     ]
 
     private let shortcutDidChangeNotification = Notification.Name("KeyboardShortcuts_shortcutByNameDidChange")
@@ -22,6 +23,7 @@ final class HotkeyService {
     var onTriggerScreenCapture: (() -> Void)?
     var onTriggerOCRToClipboard: (() -> Void)?
     var onTriggerQuickAccess: (() -> Void)?
+    var onTriggerPromptAssistant: (() -> Void)?
 
     func register() {
         registerHandlers()
@@ -53,6 +55,9 @@ final class HotkeyService {
         }
         KeyboardShortcuts.onKeyUp(for: .triggerQuickAccess) { [weak self] in
             self?.onTriggerQuickAccess?()
+        }
+        KeyboardShortcuts.onKeyUp(for: .togglePromptAssistant) { [weak self] in
+            self?.onTriggerPromptAssistant?()
         }
 
         isRegistered = true

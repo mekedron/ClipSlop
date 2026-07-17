@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Nästa träff";
 "shortcuts.find_prev" = "Föregående träff";
 "shortcuts.settings" = "Inställningar";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Promptassistent:";
+"assistant.window.title" = "Promptassistent";
+"assistant.using" = "Använder %@";
+"assistant.new_chat" = "Ny chatt";
+"assistant.empty.title" = "Redigera ditt promptbibliotek genom att chatta";
+"assistant.empty.body" = "Be mig skapa, redigera, flytta eller ta bort prompter och mappar, eller ställa in kortkommandon. Jag visar varje ändring för godkännande.";
+"assistant.thinking" = "Tänker…";
+"assistant.input.placeholder" = "Be om att ändra en prompt…";
+"assistant.send" = "Skicka";
+"assistant.approve" = "Godkänn";
+"assistant.reject" = "Avvisa";
+"assistant.applied" = "Tillämpad";
+"assistant.declined" = "Avvisad";
+"assistant.unsupported.title" = "Verktygsanrop krävs";
+"assistant.unsupported.body" = "Promptassistenten kräver en leverantör som stöder verktygsanrop, som OpenAI eller Anthropic. Byt standardleverantör för att använda den.";
+"assistant.unsupported.open_settings" = "Öppna leverantörsinställningar";
+"assistant.error.no_provider" = "Ingen AI-leverantör med stöd för verktygsanrop är inställd som standard. Lägg till eller välj OpenAI eller Anthropic i Inställningar.";
+"assistant.error.max_steps" = "Jag har nått det maximala antalet steg för ett meddelande. Säg hur du vill fortsätta.";
+"assistant.error.empty" = "Assistenten returnerade ett tomt svar. Försök igen.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Promptassistent";
+"onboarding.assistant.title" = "Möt promptassistenten";
+"onboarding.assistant.subtitle" = "Öppna en chatt och be bara – den redigerar ditt promptbibliotek åt dig, så att du aldrig behöver leta i inställningarna igen. Varje ändring visas för godkännande först.";
+"onboarding.assistant.feature.edit" = "Skapa och redigera prompter genom att chatta";
+"onboarding.assistant.feature.organize" = "Organisera mappar och flytta prompter";
+"onboarding.assistant.feature.shortcuts" = "Tilldela kortkommandon och ange lägen";
+"onboarding.assistant.try" = "Prova nu";
+"assistant.intro_message" = "Hej! Vad kan du hjälpa mig med och vad kan du göra?";

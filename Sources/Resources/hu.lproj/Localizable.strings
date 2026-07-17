@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Következő találat";
 "shortcuts.find_prev" = "Előző találat";
 "shortcuts.settings" = "Beállítások";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Prompt asszisztens:";
+"assistant.window.title" = "Prompt asszisztens";
+"assistant.using" = "Használt: %@";
+"assistant.new_chat" = "Új csevegés";
+"assistant.empty.title" = "Szerkeszd a promptkönyvtárad csevegéssel";
+"assistant.empty.body" = "Kérj meg, hogy hozzak létre, szerkesszek, mozgassak vagy töröljek prompteket és mappákat, vagy állítsak be gyorsbillentyűket. Minden változtatást megmutatok jóváhagyásra.";
+"assistant.thinking" = "Gondolkodom…";
+"assistant.input.placeholder" = "Kérj egy prompt módosítást…";
+"assistant.send" = "Küldés";
+"assistant.approve" = "Jóváhagyás";
+"assistant.reject" = "Elutasítás";
+"assistant.applied" = "Alkalmazva";
+"assistant.declined" = "Elutasítva";
+"assistant.unsupported.title" = "Eszközhívás szükséges";
+"assistant.unsupported.body" = "A prompt asszisztenshez eszközhívást támogató szolgáltató kell, például OpenAI vagy Anthropic. Válts alapértelmezett szolgáltatót a használatához.";
+"assistant.unsupported.open_settings" = "Szolgáltatói beállítások megnyitása";
+"assistant.error.no_provider" = "Nincs eszközhívást támogató MI-szolgáltató beállítva alapértelmezettként. Adj hozzá vagy válassz OpenAI-t vagy Anthropicot a Beállításokban.";
+"assistant.error.max_steps" = "Elértem az egy üzenetre eső lépések maximumát. Mondd meg, hogyan folytassam.";
+"assistant.error.empty" = "Az asszisztens üres választ adott. Kérlek, próbáld újra.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Prompt asszisztens";
+"onboarding.assistant.title" = "Ismerd meg a prompt asszisztenst";
+"onboarding.assistant.subtitle" = "Nyiss egy csevegést, és csak kérd – helyetted szerkeszti a promptkönyvtáradat, így soha többé nem kell a beállítások közt keresgélned. Minden változtatást előbb jóváhagyásra mutat.";
+"onboarding.assistant.feature.edit" = "Prompteket hozhatsz létre és szerkeszthetsz csevegéssel";
+"onboarding.assistant.feature.organize" = "Rendezd a mappákat és mozgasd a prompteket";
+"onboarding.assistant.feature.shortcuts" = "Rendelj hozzá gyorsbillentyűket és módokat";
+"onboarding.assistant.try" = "Kipróbálom";
+"assistant.intro_message" = "Szia! Miben tudsz segíteni, és mit tudsz csinálni?";

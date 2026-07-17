@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Seuraava osuma";
 "shortcuts.find_prev" = "Edellinen osuma";
 "shortcuts.settings" = "Asetukset";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Prompti-avustaja:";
+"assistant.window.title" = "Prompti-avustaja";
+"assistant.using" = "Käyttää %@";
+"assistant.new_chat" = "Uusi keskustelu";
+"assistant.empty.title" = "Muokkaa promptikirjastoasi keskustelemalla";
+"assistant.empty.body" = "Pyydä minua luomaan, muokkaamaan, siirtämään tai poistamaan prompteja ja kansioita tai asettamaan pikanäppäimiä. Näytän jokaisen muutoksen hyväksyttäväksi.";
+"assistant.thinking" = "Ajattelee…";
+"assistant.input.placeholder" = "Pyydä muuttamaan promptia…";
+"assistant.send" = "Lähetä";
+"assistant.approve" = "Hyväksy";
+"assistant.reject" = "Hylkää";
+"assistant.applied" = "Otettu käyttöön";
+"assistant.declined" = "Hylätty";
+"assistant.unsupported.title" = "Työkalukutsut vaaditaan";
+"assistant.unsupported.body" = "Prompti-avustaja tarvitsee palveluntarjoajan, joka tukee työkalukutsuja, kuten OpenAI tai Anthropic. Vaihda oletuspalveluntarjoaja käyttääksesi sitä.";
+"assistant.unsupported.open_settings" = "Avaa palveluntarjoajien asetukset";
+"assistant.error.no_provider" = "Oletukseksi ei ole asetettu tekoälypalvelua, joka tukee työkalukutsuja. Lisää tai valitse OpenAI tai Anthropic asetuksissa.";
+"assistant.error.max_steps" = "Saavutin yhden viestin enimmäisaskelmäärän. Kerro, miten haluat jatkaa.";
+"assistant.error.empty" = "Avustaja palautti tyhjän vastauksen. Yritä uudelleen.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Prompti-avustaja";
+"onboarding.assistant.title" = "Tässä on prompti-avustaja";
+"onboarding.assistant.subtitle" = "Avaa keskustelu ja pyydä vain – se muokkaa promptikirjastoasi puolestasi, joten sinun ei tarvitse enää etsiä asetuksista. Jokainen muutos näytetään ensin hyväksyttäväksi.";
+"onboarding.assistant.feature.edit" = "Luo ja muokkaa prompteja keskustelemalla";
+"onboarding.assistant.feature.organize" = "Järjestä kansioita ja siirrä prompteja";
+"onboarding.assistant.feature.shortcuts" = "Määritä pikanäppäimet ja promptitilat";
+"onboarding.assistant.try" = "Kokeile nyt";
+"assistant.intro_message" = "Hei! Missä voit auttaa minua ja mitä osaat tehdä?";

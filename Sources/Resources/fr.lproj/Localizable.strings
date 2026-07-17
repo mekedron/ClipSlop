@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Occurrence suivante";
 "shortcuts.find_prev" = "Occurrence précédente";
 "shortcuts.settings" = "Réglages";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Assistant de prompts :";
+"assistant.window.title" = "Assistant de prompts";
+"assistant.using" = "Utilise %@";
+"assistant.new_chat" = "Nouvelle discussion";
+"assistant.empty.title" = "Modifiez votre bibliothèque de prompts en discutant";
+"assistant.empty.body" = "Demandez-moi de créer, modifier, déplacer ou supprimer des prompts et des dossiers, ou de définir des raccourcis. Je vous montrerai chaque changement pour validation.";
+"assistant.thinking" = "Réflexion…";
+"assistant.input.placeholder" = "Demander une modification de prompt…";
+"assistant.send" = "Envoyer";
+"assistant.approve" = "Approuver";
+"assistant.reject" = "Refuser";
+"assistant.applied" = "Appliqué";
+"assistant.declined" = "Refusé";
+"assistant.unsupported.title" = "Appel d'outils requis";
+"assistant.unsupported.body" = "L'assistant de prompts nécessite un fournisseur prenant en charge l'appel d'outils, comme OpenAI ou Anthropic. Changez de fournisseur par défaut pour l'utiliser.";
+"assistant.unsupported.open_settings" = "Ouvrir les réglages des fournisseurs";
+"assistant.error.no_provider" = "Aucun fournisseur d'IA prenant en charge l'appel d'outils n'est défini par défaut. Ajoutez ou sélectionnez OpenAI ou Anthropic dans les réglages.";
+"assistant.error.max_steps" = "J'ai atteint le nombre maximal d'étapes pour un message. Dites-moi comment continuer.";
+"assistant.error.empty" = "L'assistant a renvoyé une réponse vide. Veuillez réessayer.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Assistant de prompts";
+"onboarding.assistant.title" = "Découvrez l'assistant de prompts";
+"onboarding.assistant.subtitle" = "Ouvrez une discussion et demandez : il modifie votre bibliothèque de prompts pour vous, sans jamais fouiller dans les réglages. Chaque changement vous est présenté pour validation.";
+"onboarding.assistant.feature.edit" = "Créez et modifiez des prompts en discutant";
+"onboarding.assistant.feature.organize" = "Organisez les dossiers et déplacez les prompts";
+"onboarding.assistant.feature.shortcuts" = "Attribuez des raccourcis et définissez les modes";
+"onboarding.assistant.try" = "Essayer maintenant";
+"assistant.intro_message" = "Bonjour ! En quoi peux-tu m'aider et que sais-tu faire ?";

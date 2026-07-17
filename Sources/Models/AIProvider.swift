@@ -95,6 +95,16 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
     var supportsReasoningEffort: Bool {
         self == .openAIChatGPT
     }
+
+    /// Whether this provider can drive the prompt-library assistant, which
+    /// relies on function/tool calling. The CLI-tool provider shells out to an
+    /// external binary with no structured tool protocol, so it's excluded.
+    var supportsToolCalling: Bool {
+        switch self {
+        case .anthropic, .openAI, .ollama, .openAICompatible, .openAIChatGPT: true
+        case .cliTool: false
+        }
+    }
 }
 
 enum ReasoningEffort: String, Codable, Sendable, CaseIterable, Identifiable {

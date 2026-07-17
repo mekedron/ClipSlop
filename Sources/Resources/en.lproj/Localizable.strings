@@ -446,3 +446,34 @@
 "shortcuts.find_next" = "Next match";
 "shortcuts.find_prev" = "Previous match";
 "shortcuts.settings" = "Settings";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Prompt Assistant:";
+"assistant.window.title" = "Prompt Assistant";
+"assistant.using" = "Using %@";
+"assistant.new_chat" = "New chat";
+"assistant.empty.title" = "Edit your prompt library by chatting";
+"assistant.empty.body" = "Ask me to create, edit, move, or delete prompts and folders, or to set shortcuts. I'll show each change for you to approve.";
+"assistant.thinking" = "Thinking…";
+"assistant.input.placeholder" = "Ask to change a prompt…";
+"assistant.send" = "Send";
+"assistant.approve" = "Approve";
+"assistant.reject" = "Reject";
+"assistant.applied" = "Applied";
+"assistant.declined" = "Declined";
+"assistant.unsupported.title" = "Tool calling required";
+"assistant.unsupported.body" = "The prompt assistant needs a provider that supports tool calling, like OpenAI or Anthropic. Switch your default provider to use it.";
+"assistant.unsupported.open_settings" = "Open Provider Settings";
+"assistant.error.no_provider" = "No AI provider with tool-calling support is set as default. Add or select OpenAI or Anthropic in Settings.";
+"assistant.error.max_steps" = "I've reached the maximum number of steps for one message. Let me know how you'd like to continue.";
+"assistant.error.empty" = "The assistant returned an empty response. Please try again.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Prompt Assistant";
+"onboarding.assistant.title" = "Meet the Prompt Assistant";
+"onboarding.assistant.subtitle" = "Open a chat and just ask — it edits your prompt library for you, so you never have to dig through settings again. Every change is shown for you to approve first.";
+"onboarding.assistant.feature.edit" = "Create and edit prompts by chatting";
+"onboarding.assistant.feature.organize" = "Organize folders and move prompts around";
+"onboarding.assistant.feature.shortcuts" = "Assign shortcuts and set prompt modes";
+"onboarding.assistant.try" = "Try it now";
+"assistant.intro_message" = "Hi! What can you help me with, and what can you do?";

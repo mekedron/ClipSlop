@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Risultato successivo";
 "shortcuts.find_prev" = "Risultato precedente";
 "shortcuts.settings" = "Impostazioni";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Assistente prompt:";
+"assistant.window.title" = "Assistente prompt";
+"assistant.using" = "Usa %@";
+"assistant.new_chat" = "Nuova chat";
+"assistant.empty.title" = "Modifica la tua libreria di prompt chattando";
+"assistant.empty.body" = "Chiedimi di creare, modificare, spostare o eliminare prompt e cartelle, o di impostare scorciatoie. Ti mostrerò ogni modifica da approvare.";
+"assistant.thinking" = "Sto pensando…";
+"assistant.input.placeholder" = "Chiedi di modificare un prompt…";
+"assistant.send" = "Invia";
+"assistant.approve" = "Approva";
+"assistant.reject" = "Rifiuta";
+"assistant.applied" = "Applicato";
+"assistant.declined" = "Rifiutato";
+"assistant.unsupported.title" = "Richiesta chiamata a strumenti";
+"assistant.unsupported.body" = "L'assistente prompt richiede un provider che supporti la chiamata a strumenti, come OpenAI o Anthropic. Cambia il provider predefinito per usarlo.";
+"assistant.unsupported.open_settings" = "Apri impostazioni provider";
+"assistant.error.no_provider" = "Nessun provider IA con supporto alla chiamata a strumenti è impostato come predefinito. Aggiungi o seleziona OpenAI o Anthropic nelle impostazioni.";
+"assistant.error.max_steps" = "Ho raggiunto il numero massimo di passaggi per un messaggio. Dimmi come vuoi continuare.";
+"assistant.error.empty" = "L'assistente ha restituito una risposta vuota. Riprova.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Assistente prompt";
+"onboarding.assistant.title" = "Scopri l'assistente prompt";
+"onboarding.assistant.subtitle" = "Apri una chat e chiedi: modifica la tua libreria di prompt per te, senza più cercare nelle impostazioni. Ogni modifica ti viene mostrata prima per l'approvazione.";
+"onboarding.assistant.feature.edit" = "Crea e modifica prompt chattando";
+"onboarding.assistant.feature.organize" = "Organizza le cartelle e sposta i prompt";
+"onboarding.assistant.feature.shortcuts" = "Assegna scorciatoie e imposta le modalità";
+"onboarding.assistant.try" = "Provalo ora";
+"assistant.intro_message" = "Ciao! In cosa puoi aiutarmi e cosa sai fare?";

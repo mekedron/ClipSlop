@@ -10,7 +10,7 @@ struct OnboardingView: View {
     @State private var screenRecordingPending = false
 
     private let loc = Loc.shared
-    private let totalSteps = 7
+    private let totalSteps = 8
 
     var body: some View {
         VStack(spacing: 0) {
@@ -24,6 +24,7 @@ struct OnboardingView: View {
                 case 4: providerStep
                 case 5: iCloudStep
                 case 6: demoStep
+                case 7: assistantStep
                 default: EmptyView()
                 }
             }
@@ -231,6 +232,10 @@ struct OnboardingView: View {
                     label: loc.t("onboarding.shortcuts.ocr_clipslop"),
                     name: .triggerScreenCapture
                 )
+                ShortcutRow(
+                    label: loc.t("onboarding.shortcuts.assistant"),
+                    name: .togglePromptAssistant
+                )
             }
             .frame(maxWidth: 420)
 
@@ -255,6 +260,45 @@ struct OnboardingView: View {
 
     private var demoStep: some View {
         OnboardingDemoView(appState: appState)
+    }
+
+    // MARK: - Step 8: Prompt Assistant
+
+    private var assistantStep: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "wand.and.stars")
+                .font(.system(size: 48))
+                .foregroundStyle(.blue)
+
+            Text(loc.t("onboarding.assistant.title"))
+                .font(.title.bold())
+
+            Text(loc.t("onboarding.assistant.subtitle"))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 440)
+
+            VStack(alignment: .leading, spacing: 8) {
+                featureRow(icon: "square.and.pencil", text: loc.t("onboarding.assistant.feature.edit"))
+                featureRow(icon: "folder", text: loc.t("onboarding.assistant.feature.organize"))
+                featureRow(icon: "keyboard", text: loc.t("onboarding.assistant.feature.shortcuts"))
+            }
+            .padding(.top, 4)
+
+            Button {
+                appState.completeOnboarding()
+                appState.showAssistant(initialMessage: loc.t("assistant.intro_message"))
+            } label: {
+                Label(loc.t("onboarding.assistant.try"), systemImage: "wand.and.stars")
+            }
+            .buttonStyle(AlwaysProminentButtonStyle())
+            .padding(.top, 8)
+
+            Spacer()
+        }
+        .padding(32)
     }
 
     // MARK: - Helpers

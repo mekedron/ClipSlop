@@ -9,6 +9,7 @@ final class AppState {
     let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
     let promptShortcutService = PromptShortcutService()
+    let promptAssistant = PromptAssistantService()
     let settings = AppSettings.shared
     let syncService = CloudSyncService(
         syncFileName: "prompts.json",
@@ -27,6 +28,7 @@ final class AppState {
     var currentSession: TransformationSession?
     var isPopupVisible = false
     var isQuickAccessVisible = false
+    var isAssistantVisible = false
     var isProcessing = false
     var streamingText = ""
     var errorMessage: String?
@@ -75,6 +77,7 @@ final class AppState {
     // Window references — not observed by views, excluded from @Observable tracking
     @ObservationIgnored private var popupWindow: PopupWindow?
     @ObservationIgnored private var quickAccessWindow: QuickAccessWindow?
+    @ObservationIgnored private var assistantWindow: AssistantWindow?
     @ObservationIgnored private var settingsWindow: NSWindow?
     @ObservationIgnored private var aboutWindow: NSWindow?
     @ObservationIgnored private var onboardingWindow: OnboardingWindow?
@@ -247,12 +250,18 @@ final class AppState {
                 self.showQuickAccess()
             }
         }
+        hotkeyService.onTriggerPromptAssistant = { [weak self] in
+            self?.toggleAssistant()
+        }
         hotkeyService.register()
 
         // Wire prompt shortcut service
         promptShortcutService.appState = self
         promptShortcutService.syncFromModel()
         promptShortcutService.registerAll()
+
+        // Wire the prompt-library assistant
+        promptAssistant.appState = self
 
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore
@@ -1078,6 +1087,66 @@ final class AppState {
         DispatchQueue.main.async {
             target?.activate(options: [.activateAllWindows])
         }
+    }
+
+    // MARK: - Prompt-library assistant
+
+    func showAssistant(initialMessage: String? = nil) {
+        if assistantWindow == nil {
+            assistantWindow = AssistantWindow(appState: self)
+        }
+        assistantWindow?.showAtCenter()
+        isAssistantVisible = true
+        // Auto-send a first message (used by the onboarding "Try it" button) only
+        // when starting fresh, so reopening an existing chat doesn't re-send.
+        if let initialMessage, promptAssistant.items.isEmpty, !promptAssistant.isBusy {
+            promptAssistant.send(initialMessage)
+        }
+    }
+
+    func dismissAssistant() {
+        guard isAssistantVisible || assistantWindow?.isVisible == true else { return }
+        // Auto-reject any pending confirmation so a closed window doesn't leave
+        // the agent loop blocked on a card nobody can approve. The conversation
+        // itself is preserved for when the window reopens.
+        promptAssistant.resolveConfirmation(approved: false)
+        isAssistantVisible = false
+        assistantWindow?.close()
+
+        // Mirror dismissPopup/dismissQuickAccess's focus-handoff. The panel's
+        // makeKeyAndOrderFront + NSApp.activate promoted ClipSlop to the
+        // foreground; hand focus back to the app the user came from.
+        let target = lastExternalApp
+        let hasOtherWindow = NSApp.windows.contains { win in
+            win.isVisible
+                && win !== assistantWindow
+                && !(win is ProcessingHUDWindow)
+                && win.className != "NSStatusBarWindow"
+        }
+        if hasOtherWindow {
+            NSApp.deactivate()
+        } else {
+            NSApp.hide(nil)
+        }
+        DispatchQueue.main.async {
+            target?.activate(options: [.activateAllWindows])
+        }
+    }
+
+    func toggleAssistant() {
+        if isAssistantVisible {
+            dismissAssistant()
+        } else {
+            showAssistant()
+        }
+    }
+
+    /// Called from `AssistantWindow.windowWillClose` (e.g. the title-bar close
+    /// button) to keep state in sync without re-triggering the close.
+    func assistantWindowWillClose() {
+        guard isAssistantVisible else { return }
+        isAssistantVisible = false
+        promptAssistant.resolveConfirmation(approved: false)
     }
 
     func activateQuickAccessTile(_ tile: QuickAccessTile) {

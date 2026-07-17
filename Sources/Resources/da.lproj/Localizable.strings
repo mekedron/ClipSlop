@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Næste match";
 "shortcuts.find_prev" = "Forrige match";
 "shortcuts.settings" = "Indstillinger";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Promptassistent:";
+"assistant.window.title" = "Promptassistent";
+"assistant.using" = "Bruger %@";
+"assistant.new_chat" = "Ny chat";
+"assistant.empty.title" = "Rediger dit promptbibliotek ved at chatte";
+"assistant.empty.body" = "Bed mig om at oprette, redigere, flytte eller slette prompter og mapper eller angive genveje. Jeg viser hver ændring til godkendelse.";
+"assistant.thinking" = "Tænker…";
+"assistant.input.placeholder" = "Bed om at ændre en prompt…";
+"assistant.send" = "Send";
+"assistant.approve" = "Godkend";
+"assistant.reject" = "Afvis";
+"assistant.applied" = "Anvendt";
+"assistant.declined" = "Afvist";
+"assistant.unsupported.title" = "Værktøjskald kræves";
+"assistant.unsupported.body" = "Promptassistenten kræver en udbyder, der understøtter værktøjskald, som OpenAI eller Anthropic. Skift din standardudbyder for at bruge den.";
+"assistant.unsupported.open_settings" = "Åbn udbyderindstillinger";
+"assistant.error.no_provider" = "Ingen AI-udbyder med understøttelse af værktøjskald er valgt som standard. Tilføj eller vælg OpenAI eller Anthropic i Indstillinger.";
+"assistant.error.max_steps" = "Jeg har nået det maksimale antal trin for én besked. Sig, hvordan du vil fortsætte.";
+"assistant.error.empty" = "Assistenten returnerede et tomt svar. Prøv igen.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Promptassistent";
+"onboarding.assistant.title" = "Mød promptassistenten";
+"onboarding.assistant.subtitle" = "Åbn en chat og bed bare om det – den redigerer dit promptbibliotek for dig, så du aldrig skal lede i indstillingerne igen. Hver ændring vises til godkendelse først.";
+"onboarding.assistant.feature.edit" = "Opret og rediger prompter ved at chatte";
+"onboarding.assistant.feature.organize" = "Organiser mapper og flyt prompter";
+"onboarding.assistant.feature.shortcuts" = "Tildel genveje og angiv prompttilstande";
+"onboarding.assistant.try" = "Prøv det nu";
+"assistant.intro_message" = "Hej! Hvad kan du hjælpe mig med, og hvad kan du?";

@@ -30,4 +30,9 @@ extension KeyboardShortcuts.Name {
         "triggerQuickAccess",
         default: .init(.space, modifiers: [.option, .shift])
     )
+
+    static let togglePromptAssistant = Self(
+        "togglePromptAssistant",
+        default: .init(.p, modifiers: [.option, .shift])
+    )
 }

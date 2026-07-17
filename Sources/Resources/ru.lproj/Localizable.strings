@@ -454,3 +454,34 @@
 "shortcuts.find_next" = "Следующее совпадение";
 "shortcuts.find_prev" = "Предыдущее совпадение";
 "shortcuts.settings" = "Настройки";
+
+/* Prompt Assistant */
+"settings.general.shortcuts.assistant" = "Ассистент промптов:";
+"assistant.window.title" = "Ассистент промптов";
+"assistant.using" = "Использует %@";
+"assistant.new_chat" = "Новый чат";
+"assistant.empty.title" = "Редактируйте библиотеку промптов в чате";
+"assistant.empty.body" = "Попросите меня создать, изменить, переместить или удалить промпты и папки либо назначить сочетания клавиш. Каждое изменение я покажу вам для подтверждения.";
+"assistant.thinking" = "Думаю…";
+"assistant.input.placeholder" = "Попросите изменить промпт…";
+"assistant.send" = "Отправить";
+"assistant.approve" = "Подтвердить";
+"assistant.reject" = "Отклонить";
+"assistant.applied" = "Применено";
+"assistant.declined" = "Отклонено";
+"assistant.unsupported.title" = "Требуется вызов инструментов";
+"assistant.unsupported.body" = "Ассистенту промптов нужен провайдер с поддержкой вызова инструментов, например OpenAI или Anthropic. Смените провайдера по умолчанию, чтобы использовать его.";
+"assistant.unsupported.open_settings" = "Открыть настройки провайдеров";
+"assistant.error.no_provider" = "Провайдер ИИ с поддержкой вызова инструментов не выбран по умолчанию. Добавьте или выберите OpenAI либо Anthropic в настройках.";
+"assistant.error.max_steps" = "Я достиг максимального числа шагов для одного сообщения. Подскажите, как продолжить.";
+"assistant.error.empty" = "Ассистент вернул пустой ответ. Попробуйте ещё раз.";
+
+/* Prompt Assistant onboarding */
+"onboarding.shortcuts.assistant" = "Ассистент промптов";
+"onboarding.assistant.title" = "Знакомьтесь: ассистент промптов";
+"onboarding.assistant.subtitle" = "Откройте чат и просто попросите — он сам отредактирует вашу библиотеку промптов, чтобы больше не рыться в настройках. Каждое изменение сначала показывается вам для подтверждения.";
+"onboarding.assistant.feature.edit" = "Создавайте и редактируйте промпты в чате";
+"onboarding.assistant.feature.organize" = "Управляйте папками и перемещайте промпты";
+"onboarding.assistant.feature.shortcuts" = "Назначайте сочетания клавиш и режимы";
+"onboarding.assistant.try" = "Попробовать";
+"assistant.intro_message" = "Привет! Чем ты можешь мне помочь и что умеешь?";
