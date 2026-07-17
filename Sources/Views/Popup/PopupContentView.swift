@@ -73,12 +73,10 @@ struct PopupContentView: View {
                                 .id("md-preview")
                         }
                     case .markdownStyled:
-                        MarkdownTextView(
+                        MarkdownEngineView(
                             text: .constant(appState.currentDisplayText),
-                            editorContext: styledViewContext,
-                            findBarState: appState.findBarState,
-                            highlightsMarkdown: true,
-                            isEditable: false
+                            isEditable: false,
+                            findBarState: appState.findBarState
                         )
                         .id("md-styled-view")
                     case .html:
@@ -204,7 +202,6 @@ struct PopupContentView: View {
     }
 
     @State private var plainTextEditorContext = MarkdownEditorContext()
-    @State private var styledViewContext = MarkdownEditorContext()
 
     private var editView: some View {
         VStack(spacing: 0) {
@@ -216,8 +213,10 @@ struct PopupContentView: View {
 
             Group {
                 switch appState.activeEditorMode {
-                case .markdown, .markdownStyled:
+                case .markdown:
                     MarkdownEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
+                case .markdownStyled:
+                    MarkdownEngineView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .html:
                     HTMLEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .plainText:

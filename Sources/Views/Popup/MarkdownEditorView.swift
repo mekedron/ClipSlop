@@ -566,7 +566,6 @@ struct MarkdownTextView: NSViewRepresentable {
     var findBarState: FindBarState?
     /// Styles the Markdown source in place (bold/italic/links with ⌘-click).
     var highlightsMarkdown: Bool = false
-    var isEditable: Bool = true
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -598,7 +597,6 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.allowsUndo = true
         textView.drawsBackground = false
-        textView.isEditable = isEditable
         textView.delegate = context.coordinator
         textView.string = text
         if highlightsMarkdown {

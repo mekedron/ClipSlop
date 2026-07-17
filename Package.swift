@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.4.0"),
         .package(url: "https://github.com/gonzalezreal/textual", from: "0.1.0"),
         .package(url: "https://github.com/Infomaniak/swift-rich-html-editor.git", from: "3.0.0"),
+        .package(url: "https://github.com/nodes-app/swift-markdown-engine", from: "0.10.0"),
     ],
     targets: [
         .executableTarget(
@@ -26,6 +27,7 @@ let package = Package(
                 .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "Textual", package: "textual"),
                 .product(name: "InfomaniakRichHTMLEditor", package: "swift-rich-html-editor"),
+                .product(name: "MarkdownEngine", package: "swift-markdown-engine"),
             ],
             path: "Sources",
             resources: [
