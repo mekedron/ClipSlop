@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "I Snabbåtkomst";
 "settings.quick_access.tile.missing" = "(borttagen prompt)";
 "quick_access.empty_state" = "Inga paneler konfigurerade.\nÖppna Inställningar → Snabbåtkomst för att lägga till några.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliotek";
+"popup.hint.shortcuts" = "Genvägar";
+"shortcuts.title" = "Tangentbordsgenvägar";
+"shortcuts.section.viewing" = "Visning";
+"shortcuts.section.actions" = "Åtgärder";
+"shortcuts.section.editing" = "Redigering";
+"shortcuts.section.search" = "Promptsökning";
+"shortcuts.display_next" = "Nästa visningsläge";
+"shortcuts.display_prev" = "Föregående visningsläge";
+"shortcuts.toggle_library" = "Visa/dölj promptbiblioteket";
+"shortcuts.toggle_overlay" = "Visa/dölj denna översikt";
+"shortcuts.find_next" = "Nästa träff";
+"shortcuts.find_prev" = "Föregående träff";
+"shortcuts.settings" = "Inställningar";

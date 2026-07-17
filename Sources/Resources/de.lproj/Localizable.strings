@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "Im Schnellzugriff";
 "settings.quick_access.tile.missing" = "(gelöschter Prompt)";
 "quick_access.empty_state" = "Keine Kacheln konfiguriert.\nÖffne Einstellungen → Schnellzugriff, um welche hinzuzufügen.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliothek";
+"popup.hint.shortcuts" = "Kurzbefehle";
+"shortcuts.title" = "Tastaturkurzbefehle";
+"shortcuts.section.viewing" = "Ansicht";
+"shortcuts.section.actions" = "Aktionen";
+"shortcuts.section.editing" = "Bearbeiten";
+"shortcuts.section.search" = "Prompt-Suche";
+"shortcuts.display_next" = "Nächster Anzeigemodus";
+"shortcuts.display_prev" = "Vorheriger Anzeigemodus";
+"shortcuts.toggle_library" = "Prompt-Bibliothek ein-/ausblenden";
+"shortcuts.toggle_overlay" = "Diese Übersicht ein-/ausblenden";
+"shortcuts.find_next" = "Nächster Treffer";
+"shortcuts.find_prev" = "Vorheriger Treffer";
+"shortcuts.settings" = "Einstellungen";

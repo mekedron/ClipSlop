@@ -39,6 +39,11 @@ struct PopupContentView: View {
         .frame(minWidth: 560, minHeight: 400)
         .background(.ultraThinMaterial.opacity(appState.settings.popupOpacity))
         .background(KeyEventHandler(appState: appState))
+        .overlay {
+            if appState.isShortcutsOverlayVisible {
+                ShortcutsCheatSheetView(appState: appState)
+            }
+        }
     }
 
     // MARK: - Main Content Area
@@ -47,6 +52,10 @@ struct PopupContentView: View {
         GeometryReader { geo in
             let maxPromptHeight = max(80, geo.size.height - 200)
             let clampedHeight = min(promptGridHeight, maxPromptHeight)
+            // "/" search temporarily reveals the library even when collapsed —
+            // the results list is the whole point of searching.
+            let libraryCollapsed = appState.settings.promptLibraryCollapsed
+                && !appState.promptSearchState.isActive
 
             VStack(spacing: 0) {
                 // Find bar
@@ -96,11 +105,16 @@ struct PopupContentView: View {
                     appState.findBarState.clearAndReSearch()
                 }
 
-                // Resize handle centered on divider
-                ZStack {
+                // Resize handle centered on divider (plain divider when the
+                // library is collapsed — there is nothing to resize)
+                if libraryCollapsed {
                     Divider()
-                    ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
-                        .frame(height: 8)
+                } else {
+                    ZStack {
+                        Divider()
+                        ResizeHandle(height: $promptGridHeight, dragStartHeight: $dragStartHeight)
+                            .frame(height: 8)
+                    }
                 }
 
                 // Search mode replaces the breadcrumb with a search input —
@@ -161,36 +175,55 @@ struct PopupContentView: View {
                         }
                         .buttonStyle(.plain)
                     }
+
+                    Button {
+                        appState.settings.promptLibraryCollapsed.toggle()
+                    } label: {
+                        Image(systemName: libraryCollapsed ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            // The bare glyph is a ~10pt sliver — give the
+                            // button a real hit target.
+                            .frame(width: 32, height: 20)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help("\(loc.t("popup.hint.library")) (⌘L)")
+                    .background(WindowDragBlocker())
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 }
 
             // Prompt navigator — "/" toggles between folder grid and flat
-            // scored search across every prompt in the library.
-            Group {
-                if appState.promptSearchState.isActive {
-                    PromptSearchList(
-                        appState: appState,
-                        searchState: appState.promptSearchState
-                    )
-                } else {
-                    ScrollView(.vertical, showsIndicators: true) {
-                        LazyVGrid(
-                            columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
-                            spacing: 6
-                        ) {
-                            ForEach(appState.currentPrompts) { node in
-                                PromptCard(node: node) {
-                                    appState.navigateInto(node)
+            // scored search across every prompt in the library. Hidden
+            // entirely in collapsed mode; the breadcrumb row above stays as
+            // a compact reference (mnemonic keys keep working regardless).
+            if !libraryCollapsed {
+                Group {
+                    if appState.promptSearchState.isActive {
+                        PromptSearchList(
+                            appState: appState,
+                            searchState: appState.promptSearchState
+                        )
+                    } else {
+                        ScrollView(.vertical, showsIndicators: true) {
+                            LazyVGrid(
+                                columns: [GridItem(.adaptive(minimum: 150), spacing: 6)],
+                                spacing: 6
+                            ) {
+                                ForEach(appState.currentPrompts) { node in
+                                    PromptCard(node: node) {
+                                        appState.navigateInto(node)
+                                    }
                                 }
                             }
+                            .padding(12)
                         }
-                        .padding(12)
                     }
                 }
+                .frame(height: clampedHeight)
             }
-            .frame(height: clampedHeight)
 
             Divider()
 
@@ -380,6 +413,8 @@ struct PopupContentView: View {
 
                 shortcutHint("Esc", loc.t("popup.hint.close"))
                 shortcutHint("⌘D", loc.t("popup.hint.display"))
+                shortcutHint("⌘L", loc.t("popup.hint.library"))
+                shortcutHint("⌘/", loc.t("popup.hint.shortcuts"))
 
                 Spacer()
 
@@ -605,6 +640,8 @@ struct KeyEventHandler: NSViewRepresentable {
             static let z: UInt16 = 6
             static let f: UInt16 = 3
             static let g: UInt16 = 5
+            static let l: UInt16 = 37
+            static let slash: UInt16 = 44
             static let comma: UInt16 = 43
             static let escape: UInt16 = 53
             static let enter: UInt16 = 36
@@ -625,6 +662,16 @@ struct KeyEventHandler: NSViewRepresentable {
             // Let global shortcuts (⌃⌘ combos) pass through to the
             // KeyboardShortcuts handler — don't intercept them here.
             if hasCmd && hasControl { return false }
+
+            // --- Shortcuts cheat-sheet overlay ---
+            // Swallow everything while visible so keys don't act behind it;
+            // Esc or ⌘/ dismisses.
+            if appState.isShortcutsOverlayVisible {
+                if code == KeyCode.escape || (hasCmd && code == KeyCode.slash) {
+                    appState.isShortcutsOverlayVisible = false
+                }
+                return true
+            }
 
             // --- Prompt-search overlay ---
             // When the "/" search is active, only intercept the four
@@ -733,6 +780,16 @@ struct KeyEventHandler: NSViewRepresentable {
                     case .markdownStyled: appState.activeEditorMode = .plainText
                     }
                 }
+                return true
+            }
+
+            if hasCmd && code == KeyCode.slash {
+                appState.isShortcutsOverlayVisible = true
+                return true
+            }
+
+            if hasCmd && code == KeyCode.l {
+                appState.settings.promptLibraryCollapsed.toggle()
                 return true
             }
 

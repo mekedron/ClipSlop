@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "In Snelle toegang";
 "settings.quick_access.tile.missing" = "(verwijderde prompt)";
 "quick_access.empty_state" = "Geen tegels geconfigureerd.\nOpen Instellingen → Snelle toegang om er toe te voegen.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliotheek";
+"popup.hint.shortcuts" = "Sneltoetsen";
+"shortcuts.title" = "Sneltoetsen";
+"shortcuts.section.viewing" = "Weergave";
+"shortcuts.section.actions" = "Acties";
+"shortcuts.section.editing" = "Bewerken";
+"shortcuts.section.search" = "Prompts zoeken";
+"shortcuts.display_next" = "Volgende weergavemodus";
+"shortcuts.display_prev" = "Vorige weergavemodus";
+"shortcuts.toggle_library" = "Promptbibliotheek tonen/verbergen";
+"shortcuts.toggle_overlay" = "Dit overzicht tonen/verbergen";
+"shortcuts.find_next" = "Volgende overeenkomst";
+"shortcuts.find_prev" = "Vorige overeenkomst";
+"shortcuts.settings" = "Instellingen";

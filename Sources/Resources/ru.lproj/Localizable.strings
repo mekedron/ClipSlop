@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "В Быстром доступе";
 "settings.quick_access.tile.missing" = "(промпт удалён)";
 "quick_access.empty_state" = "Плитки не настроены.\nОткройте Настройки → Быстрый доступ, чтобы добавить.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Библиотека";
+"popup.hint.shortcuts" = "Шорткаты";
+"shortcuts.title" = "Горячие клавиши";
+"shortcuts.section.viewing" = "Просмотр";
+"shortcuts.section.actions" = "Действия";
+"shortcuts.section.editing" = "Редактирование";
+"shortcuts.section.search" = "Поиск промптов";
+"shortcuts.display_next" = "Следующий режим показа";
+"shortcuts.display_prev" = "Предыдущий режим показа";
+"shortcuts.toggle_library" = "Показать/скрыть библиотеку промптов";
+"shortcuts.toggle_overlay" = "Показать/скрыть эту шпаргалку";
+"shortcuts.find_next" = "Следующее совпадение";
+"shortcuts.find_prev" = "Предыдущее совпадение";
+"shortcuts.settings" = "Настройки";

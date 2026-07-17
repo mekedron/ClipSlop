@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "V Rychlém přístupu";
 "settings.quick_access.tile.missing" = "(smazaný prompt)";
 "quick_access.empty_state" = "Žádné dlaždice nejsou nakonfigurované.\nOtevřete Nastavení → Rychlý přístup pro přidání.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Knihovna";
+"popup.hint.shortcuts" = "Zkratky";
+"shortcuts.title" = "Klávesové zkratky";
+"shortcuts.section.viewing" = "Prohlížení";
+"shortcuts.section.actions" = "Akce";
+"shortcuts.section.editing" = "Úpravy";
+"shortcuts.section.search" = "Hledání promptů";
+"shortcuts.display_next" = "Další režim zobrazení";
+"shortcuts.display_prev" = "Předchozí režim zobrazení";
+"shortcuts.toggle_library" = "Zobrazit/skrýt knihovnu promptů";
+"shortcuts.toggle_overlay" = "Zobrazit/skrýt tento přehled";
+"shortcuts.find_next" = "Další shoda";
+"shortcuts.find_prev" = "Předchozí shoda";
+"shortcuts.settings" = "Nastavení";

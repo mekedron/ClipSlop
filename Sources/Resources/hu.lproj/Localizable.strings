@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "A Gyors hozzáférésben";
 "settings.quick_access.tile.missing" = "(törölt prompt)";
 "quick_access.empty_state" = "Nincsenek beállított csempék.\nNyisd meg a Beállítások → Gyors hozzáférés menüt hozzáadáshoz.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Könyvtár";
+"popup.hint.shortcuts" = "Gyorsbillentyűk";
+"shortcuts.title" = "Gyorsbillentyűk";
+"shortcuts.section.viewing" = "Megtekintés";
+"shortcuts.section.actions" = "Műveletek";
+"shortcuts.section.editing" = "Szerkesztés";
+"shortcuts.section.search" = "Promptkeresés";
+"shortcuts.display_next" = "Következő megjelenítési mód";
+"shortcuts.display_prev" = "Előző megjelenítési mód";
+"shortcuts.toggle_library" = "Prompt-könyvtár megjelenítése/elrejtése";
+"shortcuts.toggle_overlay" = "A súgólap megjelenítése/elrejtése";
+"shortcuts.find_next" = "Következő találat";
+"shortcuts.find_prev" = "Előző találat";
+"shortcuts.settings" = "Beállítások";

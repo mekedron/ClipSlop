@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "Pikakäytössä";
 "settings.quick_access.tile.missing" = "(poistettu kehote)";
 "quick_access.empty_state" = "Ei määriteltyjä ruutuja.\nAvaa Asetukset → Pikakäyttö lisätäksesi.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Kirjasto";
+"popup.hint.shortcuts" = "Pikanäppäimet";
+"shortcuts.title" = "Pikanäppäimet";
+"shortcuts.section.viewing" = "Katselu";
+"shortcuts.section.actions" = "Toiminnot";
+"shortcuts.section.editing" = "Muokkaus";
+"shortcuts.section.search" = "Promptien haku";
+"shortcuts.display_next" = "Seuraava näkymä";
+"shortcuts.display_prev" = "Edellinen näkymä";
+"shortcuts.toggle_library" = "Näytä/piilota prompt-kirjasto";
+"shortcuts.toggle_overlay" = "Näytä/piilota tämä ohje";
+"shortcuts.find_next" = "Seuraava osuma";
+"shortcuts.find_prev" = "Edellinen osuma";
+"shortcuts.settings" = "Asetukset";

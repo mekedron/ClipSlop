@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "No Acesso rápido";
 "settings.quick_access.tile.missing" = "(prompt eliminado)";
 "quick_access.empty_state" = "Sem blocos configurados.\nAbra Definições → Acesso rápido para adicionar.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Biblioteca";
+"popup.hint.shortcuts" = "Atalhos";
+"shortcuts.title" = "Atalhos de teclado";
+"shortcuts.section.viewing" = "Visualização";
+"shortcuts.section.actions" = "Ações";
+"shortcuts.section.editing" = "Edição";
+"shortcuts.section.search" = "Busca de prompts";
+"shortcuts.display_next" = "Próximo modo de exibição";
+"shortcuts.display_prev" = "Modo de exibição anterior";
+"shortcuts.toggle_library" = "Mostrar/ocultar a biblioteca de prompts";
+"shortcuts.toggle_overlay" = "Mostrar/ocultar este painel";
+"shortcuts.find_next" = "Próxima ocorrência";
+"shortcuts.find_prev" = "Ocorrência anterior";
+"shortcuts.settings" = "Definições";

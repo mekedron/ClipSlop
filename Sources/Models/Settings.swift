@@ -164,6 +164,12 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultQuickAccess, forKey: "useDefaultQuickAccess") }
     }
 
+    /// Collapses the prompt navigator in the popup to just the breadcrumb
+    /// row — for users who drive prompts by mnemonics and want the space back.
+    var promptLibraryCollapsed: Bool {
+        didSet { UserDefaults.standard.set(promptLibraryCollapsed, forKey: "promptLibraryCollapsed") }
+    }
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -205,6 +211,7 @@ final class AppSettings {
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
+        promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
         // and the store performs a one-shot migration on first launch.

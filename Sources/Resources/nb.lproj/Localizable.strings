@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "I Hurtigtilgang";
 "settings.quick_access.tile.missing" = "(slettet prompt)";
 "quick_access.empty_state" = "Ingen fliser konfigurert.\nÅpne Innstillinger → Hurtigtilgang for å legge til.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliotek";
+"popup.hint.shortcuts" = "Snarveier";
+"shortcuts.title" = "Tastatursnarveier";
+"shortcuts.section.viewing" = "Visning";
+"shortcuts.section.actions" = "Handlinger";
+"shortcuts.section.editing" = "Redigering";
+"shortcuts.section.search" = "Promptsøk";
+"shortcuts.display_next" = "Neste visningsmodus";
+"shortcuts.display_prev" = "Forrige visningsmodus";
+"shortcuts.toggle_library" = "Vis/skjul promptbiblioteket";
+"shortcuts.toggle_overlay" = "Vis/skjul denne oversikten";
+"shortcuts.find_next" = "Neste treff";
+"shortcuts.find_prev" = "Forrige treff";
+"shortcuts.settings" = "Innstillinger";

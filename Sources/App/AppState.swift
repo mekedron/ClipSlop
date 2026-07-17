@@ -46,6 +46,9 @@ final class AppState {
     var isEditing = false
     var editingText = ""
 
+    // Shortcuts cheat-sheet overlay (⌘/) — session-only, never persisted
+    var isShortcutsOverlayVisible = false
+
     // Pending prompt for Open & Run shortcut
     var pendingPromptNode: PromptNode?
 

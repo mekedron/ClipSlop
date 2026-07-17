@@ -421,3 +421,19 @@
 "settings.quick_access.tile.in_use_badge" = "In Quick Access";
 "settings.quick_access.tile.missing" = "(deleted prompt)";
 "quick_access.empty_state" = "No tiles configured.\nOpen Settings → Quick Access to add some.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Library";
+"popup.hint.shortcuts" = "Shortcuts";
+"shortcuts.title" = "Keyboard Shortcuts";
+"shortcuts.section.viewing" = "Viewing";
+"shortcuts.section.actions" = "Actions";
+"shortcuts.section.editing" = "Editing";
+"shortcuts.section.search" = "Prompt Search";
+"shortcuts.display_next" = "Next display mode";
+"shortcuts.display_prev" = "Previous display mode";
+"shortcuts.toggle_library" = "Show/hide prompt library";
+"shortcuts.toggle_overlay" = "Show/hide this cheat sheet";
+"shortcuts.find_next" = "Next match";
+"shortcuts.find_prev" = "Previous match";
+"shortcuts.settings" = "Settings";

@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "I Hurtig adgang";
 "settings.quick_access.tile.missing" = "(slettet prompt)";
 "quick_access.empty_state" = "Ingen fliser konfigureret.\nÅbn Indstillinger → Hurtig adgang for at tilføje nogle.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliotek";
+"popup.hint.shortcuts" = "Genveje";
+"shortcuts.title" = "Tastaturgenveje";
+"shortcuts.section.viewing" = "Visning";
+"shortcuts.section.actions" = "Handlinger";
+"shortcuts.section.editing" = "Redigering";
+"shortcuts.section.search" = "Promptsøgning";
+"shortcuts.display_next" = "Næste visningstilstand";
+"shortcuts.display_prev" = "Forrige visningstilstand";
+"shortcuts.toggle_library" = "Vis/skjul promptbiblioteket";
+"shortcuts.toggle_overlay" = "Vis/skjul denne oversigt";
+"shortcuts.find_next" = "Næste match";
+"shortcuts.find_prev" = "Forrige match";
+"shortcuts.settings" = "Indstillinger";

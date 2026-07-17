@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "У Швидкому доступі";
 "settings.quick_access.tile.missing" = "(промпт видалено)";
 "quick_access.empty_state" = "Плитки не налаштовано.\nВідкрийте Налаштування → Швидкий доступ, щоб додати.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Бібліотека";
+"popup.hint.shortcuts" = "Шорткати";
+"shortcuts.title" = "Гарячі клавіші";
+"shortcuts.section.viewing" = "Перегляд";
+"shortcuts.section.actions" = "Дії";
+"shortcuts.section.editing" = "Редагування";
+"shortcuts.section.search" = "Пошук промптів";
+"shortcuts.display_next" = "Наступний режим показу";
+"shortcuts.display_prev" = "Попередній режим показу";
+"shortcuts.toggle_library" = "Показати/сховати бібліотеку промптів";
+"shortcuts.toggle_overlay" = "Показати/сховати цю шпаргалку";
+"shortcuts.find_next" = "Наступний збіг";
+"shortcuts.find_prev" = "Попередній збіг";
+"shortcuts.settings" = "Параметри";

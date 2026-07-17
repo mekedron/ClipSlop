@@ -429,3 +429,19 @@
 "settings.quick_access.tile.in_use_badge" = "În Acces rapid";
 "settings.quick_access.tile.missing" = "(prompt șters)";
 "quick_access.empty_state" = "Nicio placă configurată.\nDeschide Setări → Acces rapid pentru a adăuga.";
+
+/* Shortcuts cheat sheet */
+"popup.hint.library" = "Bibliotecă";
+"popup.hint.shortcuts" = "Scurtături";
+"shortcuts.title" = "Scurtături de tastatură";
+"shortcuts.section.viewing" = "Vizualizare";
+"shortcuts.section.actions" = "Acțiuni";
+"shortcuts.section.editing" = "Editare";
+"shortcuts.section.search" = "Căutare prompturi";
+"shortcuts.display_next" = "Următorul mod de afișare";
+"shortcuts.display_prev" = "Modul de afișare anterior";
+"shortcuts.toggle_library" = "Afișează/ascunde biblioteca de prompturi";
+"shortcuts.toggle_overlay" = "Afișează/ascunde acest ghid";
+"shortcuts.find_next" = "Următoarea potrivire";
+"shortcuts.find_prev" = "Potrivirea anterioară";
+"shortcuts.settings" = "Setări";
