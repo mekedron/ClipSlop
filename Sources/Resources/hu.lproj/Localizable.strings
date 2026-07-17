@@ -337,6 +337,7 @@
 "settings.general.behavior.editor_mode_help" = "Hogyan jelenik meg és szerkeszthető a szöveg a felugró ablakban";
 "settings.general.behavior.editor_mode.html" = "HTML";
 "settings.general.behavior.editor_mode.markdown" = "Markdown";
+"settings.general.behavior.editor_mode.markdown_styled" = "MD (stílusos)";
 "settings.general.behavior.editor_mode.plain" = "Egyszerű szöveg";
 "settings.general.behavior.markdown_ai_only_rich" = "Csak formázott szöveg észlelésekor";
 "settings.general.behavior.markdown_ai_only_rich_help" = "AI-konverzió kihagyása, ha a vágólap csak egyszerű szöveget tartalmaz (HTML vagy RTF nélkül)";
@@ -359,7 +360,7 @@
 "settings.prompts.editor.display_mode" = "Megjelenítési mód";
 "settings.prompts.editor.display_mode_default" = "Alapértelmezett használata";
 "settings.general.behavior.markdown_renderer" = "Markdown-megjelenítő";
-"settings.general.behavior.markdown_renderer_help" = "A Textual natív megjelenítést használ; a HTML Editor webalapú megjelenítőt használ gazdagabb formázási támogatással";
+"settings.general.behavior.markdown_renderer_help" = "A Textual natív megjelenítést használ; a Styled Text a Markdown-forrást mutatja beágyazott stílusokkal és ⌘-kattintással megnyitható hivatkozásokkal; a HTML Editor webalapú megjelenítőt használ gazdagabb formázási támogatással";
 "settings.general.behavior.show_images_markdown" = "Képek megjelenítése Markdownban";
 "settings.general.behavior.show_images_markdown_help" = "Képek betöltése és megjelenítése Markdown-előnézeti módban";
 "settings.general.behavior.preserve_image_widths" = "Képszélességek megőrzése";

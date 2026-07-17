@@ -72,6 +72,15 @@ struct PopupContentView: View {
                             MarkdownPreviewView(markdown: appState.currentDisplayText)
                                 .id("md-preview")
                         }
+                    case .markdownStyled:
+                        MarkdownTextView(
+                            text: .constant(appState.currentDisplayText),
+                            editorContext: styledViewContext,
+                            findBarState: appState.findBarState,
+                            highlightsMarkdown: true,
+                            isEditable: false
+                        )
+                        .id("md-styled-view")
                     case .html:
                         HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false, findBarState: appState.findBarState)
                             .id("html-view")
@@ -195,6 +204,7 @@ struct PopupContentView: View {
     }
 
     @State private var plainTextEditorContext = MarkdownEditorContext()
+    @State private var styledViewContext = MarkdownEditorContext()
 
     private var editView: some View {
         VStack(spacing: 0) {
@@ -206,7 +216,7 @@ struct PopupContentView: View {
 
             Group {
                 switch appState.activeEditorMode {
-                case .markdown:
+                case .markdown, .markdownStyled:
                     MarkdownEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .html:
                     HTMLEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
@@ -253,8 +263,9 @@ struct PopupContentView: View {
                     Text("Plain text").tag(EditorMode.plainText)
                     Text("HTML").tag(EditorMode.html)
                     Text("Markdown").tag(EditorMode.markdown)
+                    Text("Markdown (Styled)").tag(EditorMode.markdownStyled)
                 }
-                .frame(width: 145)
+                .frame(width: 175)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
@@ -311,7 +322,11 @@ struct PopupContentView: View {
                     switch newMode {
                     case .plainText: appState.activeEditorMode = .plainText
                     case .html: appState.activeEditorMode = .html
-                    case .markdown, .markdownAI: appState.activeEditorMode = .markdown
+                    case .markdown, .markdownAI:
+                        // Both markdown displays fit — don't override styled
+                        if appState.activeEditorMode != .markdownStyled {
+                            appState.activeEditorMode = .markdown
+                        }
                     }
                 }
             }
@@ -320,8 +335,9 @@ struct PopupContentView: View {
                 Text("Plain text").tag(EditorMode.plainText)
                 Text("HTML").tag(EditorMode.html)
                 Text("Markdown").tag(EditorMode.markdown)
+                Text("Markdown (Styled)").tag(EditorMode.markdownStyled)
             }
-            .frame(width: 145)
+            .frame(width: 175)
             .onChange(of: appState.activeEditorMode) { _, newMode in
                 // Save display mode for original item when viewing it
                 if appState.isViewingOriginal {
@@ -702,18 +718,20 @@ struct KeyEventHandler: NSViewRepresentable {
             if hasCmd && code == KeyCode.d {
                 let hasShift = event.modifierFlags.contains(.shift)
                 if hasShift {
-                    // Cycle backward: Plain → Markdown → HTML → Plain
+                    // Cycle backward: Plain → Styled → Markdown → HTML → Plain
                     switch appState.activeEditorMode {
-                    case .plainText: appState.activeEditorMode = .markdown
-                    case .html: appState.activeEditorMode = .plainText
+                    case .plainText: appState.activeEditorMode = .markdownStyled
+                    case .markdownStyled: appState.activeEditorMode = .markdown
                     case .markdown: appState.activeEditorMode = .html
+                    case .html: appState.activeEditorMode = .plainText
                     }
                 } else {
-                    // Cycle forward: Plain → HTML → Markdown → Plain
+                    // Cycle forward: Plain → HTML → Markdown → Styled → Plain
                     switch appState.activeEditorMode {
                     case .plainText: appState.activeEditorMode = .html
                     case .html: appState.activeEditorMode = .markdown
-                    case .markdown: appState.activeEditorMode = .plainText
+                    case .markdown: appState.activeEditorMode = .markdownStyled
+                    case .markdownStyled: appState.activeEditorMode = .plainText
                     }
                 }
                 return true

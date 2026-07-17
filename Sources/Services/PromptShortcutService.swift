@@ -489,7 +489,7 @@ final class PromptShortcutService {
             let mode = displayMode ?? appState?.settings.editorMode ?? .plainText
             lastPaste = (text: paddedResult, date: Date())
             switch mode {
-            case .markdown:
+            case .markdown, .markdownStyled:
                 ClipboardService.setRichText(paddedResult)
             case .html:
                 ClipboardService.setHTMLContent(paddedResult)

@@ -337,6 +337,7 @@
 "settings.general.behavior.editor_mode_help" = "Hur text visas och redigeras i popupen";
 "settings.general.behavior.editor_mode.html" = "HTML";
 "settings.general.behavior.editor_mode.markdown" = "Markdown";
+"settings.general.behavior.editor_mode.markdown_styled" = "MD (stilad)";
 "settings.general.behavior.editor_mode.plain" = "Vanlig text";
 "settings.general.behavior.markdown_ai_only_rich" = "Endast när formaterad text upptäcks";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Hoppa över AI-konvertering när urklipp endast innehåller vanlig text (ingen HTML eller RTF)";
@@ -359,7 +360,7 @@
 "settings.prompts.editor.display_mode" = "Visningsläge";
 "settings.prompts.editor.display_mode_default" = "Använd standard";
 "settings.general.behavior.markdown_renderer" = "Markdown-renderare";
-"settings.general.behavior.markdown_renderer_help" = "Textual använder native-rendering; HTML Editor använder en webbaserad renderare med rikare formateringsstöd";
+"settings.general.behavior.markdown_renderer_help" = "Textual använder native-rendering; Styled Text visar Markdown-källan med inline-styling och länkar som öppnas med ⌘-klick; HTML Editor använder en webbaserad renderare med rikare formateringsstöd";
 "settings.general.behavior.show_images_markdown" = "Visa bilder i Markdown";
 "settings.general.behavior.show_images_markdown_help" = "Läs in och visa bilder i Markdown-förhandsvisning";
 "settings.general.behavior.preserve_image_widths" = "Behåll bildbredder";

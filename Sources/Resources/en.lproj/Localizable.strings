@@ -123,7 +123,7 @@
 "settings.general.behavior.keycodes" = "Use key codes (layout-independent shortcuts)";
 "settings.general.behavior.keycodes_help" = "Match by physical key position — mnemonics work with any keyboard layout";
 "settings.general.behavior.markdown_renderer" = "Markdown renderer";
-"settings.general.behavior.markdown_renderer_help" = "Textual uses native rendering; HTML Editor uses a web-based renderer with richer formatting support";
+"settings.general.behavior.markdown_renderer_help" = "Textual uses native rendering; Styled Text shows the Markdown source with inline styling and ⌘-clickable links; HTML Editor uses a web-based renderer with richer formatting support";
 "settings.general.behavior.show_images_markdown" = "Show images in Markdown";
 "settings.general.behavior.show_images_markdown_help" = "Load and display images in Markdown preview mode";
 "settings.general.behavior.preserve_image_widths" = "Preserve image widths";
@@ -137,6 +137,7 @@
 "settings.general.behavior.editor_mode.plain" = "Plain text";
 "settings.general.behavior.editor_mode.html" = "HTML";
 "settings.general.behavior.editor_mode.markdown" = "Markdown";
+"settings.general.behavior.editor_mode.markdown_styled" = "MD (Styled)";
 "settings.general.behavior.rich_text_mode" = "Rich text processing";
 "settings.general.behavior.rich_text_mode_help" = "How to handle formatted text from clipboard (e.g. copied from Chrome, Word)";
 "settings.general.behavior.rich_text_mode.plain" = "Plain text";

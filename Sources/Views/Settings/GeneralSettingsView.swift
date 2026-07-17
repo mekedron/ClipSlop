@@ -107,9 +107,10 @@ struct GeneralSettingsView: View {
                         Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)
                         Text(loc.t("settings.general.behavior.editor_mode.html")).tag(EditorMode.html)
                         Text(loc.t("settings.general.behavior.editor_mode.markdown")).tag(EditorMode.markdown)
+                        Text(loc.t("settings.general.behavior.editor_mode.markdown_styled")).tag(EditorMode.markdownStyled)
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 250)
+                    .frame(width: 340)
                 }
                 .help(loc.t("settings.general.behavior.editor_mode_help"))
                 LabeledContent(loc.t("settings.general.behavior.rich_text_mode")) {

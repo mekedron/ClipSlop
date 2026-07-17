@@ -517,6 +517,7 @@ struct PromptEditorView: View {
                         Text("Plain text").tag(EditorMode?.some(.plainText))
                         Text("HTML").tag(EditorMode?.some(.html))
                         Text("Markdown").tag(EditorMode?.some(.markdown))
+                    Text("Markdown (Styled)").tag(EditorMode?.some(.markdownStyled))
                     }
                     .onChange(of: node.displayMode) { autoSave() }
                 }

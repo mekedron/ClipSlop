@@ -883,7 +883,7 @@ final class AppState {
 
     func copyCurrentText() {
         switch activeEditorMode {
-        case .markdown:
+        case .markdown, .markdownStyled:
             ClipboardService.setRichText(currentDisplayText)
         case .html:
             ClipboardService.setHTMLContent(currentDisplayText)
@@ -899,7 +899,7 @@ final class AppState {
 
     func copyAndDismiss() {
         switch activeEditorMode {
-        case .markdown:
+        case .markdown, .markdownStyled:
             ClipboardService.setRichText(currentDisplayText)
         case .html:
             ClipboardService.setHTMLContent(currentDisplayText)
@@ -911,7 +911,7 @@ final class AppState {
 
     func pasteCurrentText() {
         switch activeEditorMode {
-        case .markdown:
+        case .markdown, .markdownStyled:
             ClipboardService.setRichText(currentDisplayText)
         case .html:
             ClipboardService.setHTMLContent(currentDisplayText)

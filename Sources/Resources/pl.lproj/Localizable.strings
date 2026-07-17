@@ -337,6 +337,7 @@
 "settings.general.behavior.editor_mode_help" = "Jak tekst jest wyświetlany i edytowany w wyskakującym okienku";
 "settings.general.behavior.editor_mode.html" = "HTML";
 "settings.general.behavior.editor_mode.markdown" = "Markdown";
+"settings.general.behavior.editor_mode.markdown_styled" = "MD (stylizowany)";
 "settings.general.behavior.editor_mode.plain" = "Zwykły tekst";
 "settings.general.behavior.markdown_ai_only_rich" = "Tylko gdy wykryto sformatowany tekst";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Pomiń konwersję AI, gdy schowek zawiera tylko zwykły tekst (bez HTML ani RTF)";
@@ -359,7 +360,7 @@
 "settings.prompts.editor.display_mode" = "Tryb wyświetlania";
 "settings.prompts.editor.display_mode_default" = "Użyj domyślnego";
 "settings.general.behavior.markdown_renderer" = "Renderer Markdown";
-"settings.general.behavior.markdown_renderer_help" = "Textual używa natywnego renderowania; HTML Editor używa renderera webowego z bogatszym formatowaniem";
+"settings.general.behavior.markdown_renderer_help" = "Textual używa natywnego renderowania; Styled Text pokazuje źródło Markdown ze stylami inline i linkami otwieranymi przez ⌘-kliknięcie; HTML Editor używa renderera webowego z bogatszym formatowaniem";
 "settings.general.behavior.show_images_markdown" = "Pokaż obrazy w Markdown";
 "settings.general.behavior.show_images_markdown_help" = "Wczytuj i wyświetlaj obrazy w trybie podglądu Markdown";
 "settings.general.behavior.preserve_image_widths" = "Zachowaj szerokość obrazów";

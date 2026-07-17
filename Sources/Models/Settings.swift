@@ -43,6 +43,9 @@ enum EditorMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case plainText
     case html
     case markdown
+    /// Raw Markdown source with inline styling (bold/italic/links) applied
+    /// in place — rendered by `MarkdownSourceHighlighter`, not Textual/HTML.
+    case markdownStyled
 
     var id: String { rawValue }
 }

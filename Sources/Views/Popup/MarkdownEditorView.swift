@@ -389,7 +389,12 @@ struct MarkdownEditorView: View {
                     MarkdownPreviewView(markdown: text)
                 }
             } else {
-                MarkdownTextView(text: $text, editorContext: editorContext, findBarState: findBarState)
+                MarkdownTextView(
+                    text: $text,
+                    editorContext: editorContext,
+                    findBarState: findBarState,
+                    highlightsMarkdown: true
+                )
             }
         }
         .onChange(of: showPreview) {
@@ -559,6 +564,9 @@ struct MarkdownTextView: NSViewRepresentable {
     @Binding var text: String
     let editorContext: MarkdownEditorContext
     var findBarState: FindBarState?
+    /// Styles the Markdown source in place (bold/italic/links with ⌘-click).
+    var highlightsMarkdown: Bool = false
+    var isEditable: Bool = true
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -580,7 +588,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textContainer.widthTracksTextView = true
         layoutManager.addTextContainer(textContainer)
 
-        let textView = NSTextView(frame: .zero, textContainer: textContainer)
+        let textView = MarkdownSourceTextView(frame: .zero, textContainer: textContainer)
         textView.isRichText = false
         textView.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
         textView.textContainerInset = NSSize(width: 8, height: 12)
@@ -590,8 +598,15 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.allowsUndo = true
         textView.drawsBackground = false
+        textView.isEditable = isEditable
         textView.delegate = context.coordinator
         textView.string = text
+        if highlightsMarkdown {
+            // Styling comes from the highlighter; keep the automatic link
+            // overlay down to a hover cursor.
+            textView.linkTextAttributes = [.cursor: NSCursor.pointingHand]
+            MarkdownSourceHighlighter.highlight(textStorage)
+        }
 
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
@@ -617,6 +632,9 @@ struct MarkdownTextView: NSViewRepresentable {
         context.coordinator.isUpdating = true
         if textView.string != text {
             textView.string = text
+            if highlightsMarkdown, let textStorage = textView.textStorage {
+                MarkdownSourceHighlighter.highlight(textStorage)
+            }
         }
         context.coordinator.isUpdating = false
         editorContext.textView = textView
@@ -647,6 +665,16 @@ struct MarkdownTextView: NSViewRepresentable {
             guard !isUpdating else { return }
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
+            if parent.highlightsMarkdown, let textStorage = textView.textStorage {
+                MarkdownSourceHighlighter.highlight(textStorage)
+                textView.typingAttributes = [
+                    .font: NSFont.monospacedSystemFont(
+                        ofSize: MarkdownSourceHighlighter.baseFontSize,
+                        weight: .regular
+                    ),
+                    .foregroundColor: NSColor.labelColor,
+                ]
+            }
         }
 
         // MARK: - SearchableContent
