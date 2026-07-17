@@ -216,32 +216,21 @@ brew install --cask clipslop
 
 Grab the latest `.dmg` from [Releases](https://github.com/mekedron/ClipSlop/releases/latest). Drag to Applications.
 
-#### Opening the app (important)
+#### Opening the app
 
-ClipSlop is not signed with an Apple Developer certificate, so macOS will block it on first launch. This is expected — I simply don't want to pay Apple $99/year for a developer account.
+Drag `ClipSlop.app` to **Applications** and double-click. That's it — no Gatekeeper warning, no "Open Anyway" dance.
 
-**The app is safe.** The source code is fully open, and all release builds are produced automatically by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) — nothing is added to the binary that isn't in this repository.
+ClipSlop is signed with an Apple Developer ID and notarised by Apple, so macOS opens it like any other app.
 
-To open ClipSlop:
+**The app is safe, and you don't have to take my word for it.** The source is fully open, and every release is built and signed automatically by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) straight from this repository — nothing is added to the binary that isn't here. You can check the signature yourself:
 
-1. **Drag** `ClipSlop.app` to your **Applications** folder
-2. **Double-click** to open — macOS will show a warning and refuse
-3. Open **System Settings → Privacy & Security**
-4. Scroll down — you'll see *"ClipSlop was blocked from use because it is not from an identified developer"*
-5. Click **Open Anyway**, then confirm
+```bash
+spctl -a -vvv -t exec /Applications/ClipSlop.app
+# ClipSlop.app: accepted
+# source=Notarized Developer ID
+```
 
-You only need to do this once. After that, the app opens normally.
-
-#### After updating to a new version
-
-Because the app is unsigned, macOS may change its internal bundle identifier between versions. When this happens, previously granted permissions (Accessibility, Screen Recording) stop working. To fix this:
-
-1. Open **System Settings → Privacy & Security → Accessibility**
-2. Find ClipSlop in the list and **remove it** (select → click "−")
-3. Click "+" and **re-add** `ClipSlop.app` from your Applications folder
-4. Do the same for **Screen Recording** if you use the OCR feature
-
-This is an unfortunate side effect of not having a signed app. Your prompts, providers, and settings are not affected.
+> **Upgrading from v1.x?** Those releases were unsigned (v2.0.0 was the first signed one). macOS ties Accessibility and Screen Recording permissions to the app's signature, so the first signed version you install may need those granted once more: **System Settings → Privacy & Security → Accessibility**, remove any stale ClipSlop entry with **−**, then re-add `ClipSlop.app` with **+**. Repeat under **Screen Recording** if you use OCR. Your prompts, providers, and settings are untouched — and this is a one-time migration, not a per-update chore.
 
 ### Build from source
 

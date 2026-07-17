@@ -1,7 +1,7 @@
 ---
 sidebar_position: 5
 title: FAQ
-description: Common questions — pricing, privacy, why it's unsigned, how to run fully offline.
+description: Common questions — pricing, privacy, Apple notarisation, how to run fully offline.
 ---
 
 # FAQ
@@ -10,11 +10,11 @@ description: Common questions — pricing, privacy, why it's unsigned, how to ru
 
 Yes. The app is MIT-licensed and free of charge. You only ever pay your AI provider — and the free **ChatGPT sign-in** counts as a zero-cost provider.
 
-### Why isn't ClipSlop signed by Apple?
+### Is ClipSlop signed by Apple?
 
-Because the developer doesn't want to pay Apple's $99/year fee. The source is on GitHub and every release is built by GitHub Actions directly from the public repo, so the binary you download matches the source you can read.
+Yes. Since **v2.0.0**, every release is signed with an Apple Developer ID and notarised by Apple, so it opens with no Gatekeeper warning and keeps its permissions across updates. Releases before v2.0.0 were unsigned — see [Install & first run](../install.mdx#after-updating-to-a-new-version) if you're coming from a v1.x build.
 
-The downside is one-time-per-version friction at install (see [Install & first run](../install.mdx)). The upside is no subscription tax going to Apple.
+Being signed doesn't make it any less open: the source is on GitHub, and every release is built *and signed* by GitHub Actions directly from the public repo, so the binary you download matches the source you can read. Verify it yourself with `spctl -a -vvv -t exec /Applications/ClipSlop.app`.
 
 ### Does ClipSlop send my text anywhere?
 

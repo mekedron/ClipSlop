@@ -42,9 +42,9 @@ By contributing, you agree your code ships under the project's [MIT License](htt
 
 ## Releases & signing
 
-The release pipeline lives in `.github/workflows/release.yml`. It produces an *unsigned* DMG today — see [FAQ → Why isn't ClipSlop signed by Apple?](../reference/faq.md#why-isnt-clipslop-signed-by-apple) for the rationale.
+The release pipeline lives in `.github/workflows/release.yml`. Official releases are signed with a Developer ID certificate and notarised with Apple — see [FAQ → Is ClipSlop signed by Apple?](../reference/faq.md#is-clipslop-signed-by-apple).
 
-If you have ideas for getting a notarised build without a paid Developer account (e.g., shipping via the Mac App Store with the open-source Free tier), open a discussion.
+Signing is gated on the `HAS_SIGNING` condition, which is true only when the `MACOS_CERTIFICATE_P12_BASE64` and `MACOS_NOTARY_KEY_P8_BASE64` secrets are present. **Forks don't inherit those secrets**, so a release build from your fork falls back to an ad-hoc signature and Gatekeeper will refuse it. That's expected — it only affects your own fork's artifacts, never the releases published from this repo.
 
 ## Asset asks
 

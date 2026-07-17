@@ -10,7 +10,7 @@ description: Common breakages — shortcuts stop working after upgrade, provider
 
 Symptom: ClipSlop runs, but pressing the global hotkey does nothing in any app.
 
-Cause: macOS revoked Accessibility permission because the app's bundle changed (ClipSlop is unsigned).
+Cause: macOS revoked Accessibility permission because the app's signature changed. Since releases are signed with a stable Developer ID, this should only happen once — when upgrading from an unsigned v1.x build to v2.0.0 or later.
 
 Fix:
 

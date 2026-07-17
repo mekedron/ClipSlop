@@ -33,19 +33,15 @@ After install, ClipSlop lives in your menu bar:
 
 ## Opening the app for the first time
 
-ClipSlop is **not signed with an Apple Developer certificate** — we don't pay Apple's $99/year. macOS will block it on first launch, which is expected.
+Drag `ClipSlop.app` to your **Applications** folder and double-click. It opens straight away — ClipSlop is signed with an Apple Developer ID and notarised by Apple, so there's no Gatekeeper warning to click through.
 
-The app is safe: the source is fully open and every release is built by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) directly from the public repository.
+The app is safe, and you can verify that independently: the source is fully open, and every release is built and signed by [GitHub Actions](https://github.com/mekedron/ClipSlop/actions) directly from the public repository. To check the copy you downloaded:
 
-To open it:
-
-1. Drag `ClipSlop.app` to your **Applications** folder.
-2. Double-click — macOS shows a warning and refuses.
-3. Open **System Settings → Privacy &amp; Security**.
-4. Scroll down — you'll see _"ClipSlop was blocked from use because it is not from an identified developer"_.
-5. Click **Open Anyway**, then confirm.
-
-Subsequent launches open normally.
+```bash
+spctl -a -vvv -t exec /Applications/ClipSlop.app
+# ClipSlop.app: accepted
+# source=Notarized Developer ID
+```
 
 ## Grant permissions
 
@@ -56,15 +52,17 @@ ClipSlop needs two macOS permissions to work in any app:
 
 ## After updating to a new version
 
+Nothing to do. Because releases are signed with a stable Developer ID, macOS keeps your Accessibility and Screen Recording grants across updates.
+
 <Callout type="warn">
-Because the app is unsigned, macOS may change the bundle identifier between versions and invalidate previously granted permissions. If shortcuts stop working after an update:
+**One exception — upgrading from v1.x.** Releases before v2.0.0 were unsigned, and macOS ties permissions to the app's signature. Moving from an unsigned build to a signed one invalidates the old grant once, so if shortcuts stop working right after that upgrade:
 
 1. Open **System Settings → Privacy &amp; Security → Accessibility**.
 2. Find ClipSlop in the list and **remove it** (select → click "−").
 3. Click "+" and **re-add** `ClipSlop.app` from your Applications folder.
 4. Repeat for **Screen Recording** if you use OCR.
 
-Your prompts and settings are never affected.
+This is a one-time migration, not a per-update chore. Your prompts and settings are never affected.
 </Callout>
 
 Continue with [Pick a provider](./pick-a-provider.mdx) — ClipSlop calls a real AI model for every transformation, so you need at least one provider configured.
