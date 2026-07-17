@@ -11,9 +11,12 @@ import SwiftUI
 /// the next activation so the bar always reopens compact).
 struct AdHocPromptBar: View {
     let appState: AppState
-    /// 0 = automatic line-count sizing; > 0 = height picked with the handle.
+    /// 0 = automatic content sizing; > 0 = height picked with the handle.
     @State private var manualHeight: Double = 0
     @State private var dragStartHeight: Double = 0
+    /// Height the text needs to fit (measured), so pasted/wrapped text grows the
+    /// bar too — not just explicit newlines.
+    @State private var contentHeight: CGFloat = 0
     private let loc = Loc.shared
 
     private static let lineHeight: CGFloat = {
@@ -28,10 +31,12 @@ struct AdHocPromptBar: View {
     private static let maxAutoLines = 5
 
     private var oneLineHeight: CGFloat { Self.lineHeight + Self.verticalInset }
+    private var maxAutoHeight: CGFloat {
+        CGFloat(Self.maxAutoLines) * Self.lineHeight + Self.verticalInset
+    }
 
     private var autoHeight: CGFloat {
-        let lines = max(1, appState.adHocPromptText.components(separatedBy: "\n").count)
-        return CGFloat(min(lines, Self.maxAutoLines)) * Self.lineHeight + Self.verticalInset
+        min(max(contentHeight, oneLineHeight), maxAutoHeight)
     }
 
     private var editorHeight: CGFloat {
@@ -50,7 +55,8 @@ struct AdHocPromptBar: View {
 
                 ChatInputTextView(
                     text: Bindable(appState).adHocPromptText,
-                    verticalInset: Self.verticalInset / 2
+                    verticalInset: Self.verticalInset / 2,
+                    onContentHeightChange: { contentHeight = $0 }
                 )
                 .frame(height: editorHeight)
                 .overlay(alignment: .topLeading) {

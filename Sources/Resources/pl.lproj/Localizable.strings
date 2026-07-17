@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Wypróbuj teraz";
 "assistant.intro_message" = "Cześć! W czym możesz mi pomóc i co potrafisz?";
 "menu.assistant" = "Asystent promptów";
+"settings.prompts.assistant.title" = "Asystent promptów AI";
+"settings.prompts.assistant.hint" = "Poproś asystenta, aby tworzył, edytował, przenosił lub porządkował Twoje prompty w naturalnym języku.";
+"settings.prompts.assistant.open" = "Otwórz asystenta";

@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Încearcă acum";
 "assistant.intro_message" = "Salut! Cu ce mă poți ajuta și ce știi să faci?";
 "menu.assistant" = "Asistent de prompturi";
+"settings.prompts.assistant.title" = "Asistent de prompturi cu IA";
+"settings.prompts.assistant.hint" = "Cere-i asistentului să creeze, editeze, mute sau organizeze prompturile tale în limbaj natural.";
+"settings.prompts.assistant.open" = "Deschide asistentul";

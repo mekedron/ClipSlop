@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Vyzkoušet";
 "assistant.intro_message" = "Ahoj! S čím mi můžeš pomoct a co umíš?";
 "menu.assistant" = "Asistent promptů";
+"settings.prompts.assistant.title" = "AI asistent promptů";
+"settings.prompts.assistant.hint" = "Požádejte asistenta, aby vytvářel, upravoval, přesouval nebo organizoval vaše prompty běžným jazykem.";
+"settings.prompts.assistant.open" = "Otevřít asistenta";

@@ -174,6 +174,14 @@ private struct AssistantInputBar: View {
     @Bindable var service: PromptAssistantService
     private let loc = Loc.shared
 
+    /// Height the text needs to fit (reported by the editor), used for auto-grow.
+    @State private var contentHeight: CGFloat = 0
+    /// User-dragged height; > 0 overrides auto-grow. Restored from the last drag.
+    @State private var manualHeight: Double = UserDefaults.standard.double(forKey: Self.storageKey)
+    @State private var dragStartHeight: Double = 0
+
+    private static let storageKey = "assistantInputHeight"
+
     private static let lineHeight: CGFloat = {
         NSLayoutManager()
             .defaultLineHeight(for: NSFont.preferredFont(forTextStyle: .body))
@@ -183,10 +191,18 @@ private struct AssistantInputBar: View {
     private static let maxAutoLines = 5
 
     private var oneLineHeight: CGFloat { Self.lineHeight + Self.verticalInset }
+    private var maxAutoHeight: CGFloat {
+        CGFloat(Self.maxAutoLines) * Self.lineHeight + Self.verticalInset
+    }
+
+    /// Grows to fit the content (measured, so wrapped/pasted text counts) up to
+    /// the auto cap; the drag handle overrides this once used.
+    private var autoHeight: CGFloat {
+        min(max(contentHeight, oneLineHeight), maxAutoHeight)
+    }
 
     private var editorHeight: CGFloat {
-        let lines = max(1, service.draft.components(separatedBy: "\n").count)
-        return CGFloat(min(lines, Self.maxAutoLines)) * Self.lineHeight + Self.verticalInset
+        manualHeight > 0 ? manualHeight : autoHeight
     }
 
     private var canSend: Bool {
@@ -195,38 +211,56 @@ private struct AssistantInputBar: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 8) {
-            ChatInputTextView(
-                text: $service.draft,
-                verticalInset: Self.verticalInset / 2
-            )
-            .frame(height: editorHeight)
-            .overlay(alignment: .topLeading) {
-                if service.draft.isEmpty {
-                    Text(loc.t("assistant.input.placeholder"))
-                        .font(.body)
-                        .foregroundStyle(.tertiary)
-                        .padding(.top, Self.verticalInset / 2)
-                        .allowsHitTesting(false)
-                }
-            }
-            .pointerStyle(.horizontalText)
+        VStack(spacing: 0) {
+            Divider()
 
-            Button {
-                service.send(service.draft)
-            } label: {
-                Image(systemName: "arrow.up.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(canSend ? Color.accentColor : Color.secondary.opacity(0.5))
-                    .frame(width: 24, height: oneLineHeight)
-                    .contentShape(Rectangle())
+            HStack(alignment: .top, spacing: 8) {
+                ChatInputTextView(
+                    text: $service.draft,
+                    verticalInset: Self.verticalInset / 2,
+                    onContentHeightChange: { contentHeight = $0 }
+                )
+                .frame(height: editorHeight)
+                .overlay(alignment: .topLeading) {
+                    if service.draft.isEmpty {
+                        Text(loc.t("assistant.input.placeholder"))
+                            .font(.body)
+                            .foregroundStyle(.tertiary)
+                            .padding(.top, Self.verticalInset / 2)
+                            .allowsHitTesting(false)
+                    }
+                }
+                .pointerStyle(.horizontalText)
+
+                Button {
+                    service.send(service.draft)
+                } label: {
+                    Image(systemName: "arrow.up.circle.fill")
+                        .font(.title3)
+                        .foregroundStyle(canSend ? Color.accentColor : Color.secondary.opacity(0.5))
+                        .frame(width: 24, height: oneLineHeight)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(!canSend)
+                .help(loc.t("assistant.send") + " (↩)")
             }
-            .buttonStyle(.plain)
-            .disabled(!canSend)
-            .help(loc.t("assistant.send") + " (↩)")
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            // Drag the divider to resize the input (persisted across opens).
+            .overlay(alignment: .top) {
+                ResizeHandle(
+                    height: $manualHeight,
+                    dragStartHeight: $dragStartHeight,
+                    minHeight: oneLineHeight,
+                    maxHeight: 400,
+                    storageKey: Self.storageKey,
+                    initialHeight: { autoHeight }
+                )
+                .frame(height: 8)
+                .offset(y: -4)
+            }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 }
 

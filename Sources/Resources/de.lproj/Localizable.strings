@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Jetzt ausprobieren";
 "assistant.intro_message" = "Hi! Wobei kannst du mir helfen und was kannst du alles?";
 "menu.assistant" = "Prompt-Assistent";
+"settings.prompts.assistant.title" = "KI-Prompt-Assistent";
+"settings.prompts.assistant.hint" = "Bitte den Assistenten, deine Prompts in natürlicher Sprache zu erstellen, bearbeiten, verschieben oder zu ordnen.";
+"settings.prompts.assistant.open" = "Assistent öffnen";

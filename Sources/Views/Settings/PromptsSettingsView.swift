@@ -13,10 +13,34 @@ struct PromptsSettingsView: View {
     private let loc = Loc.shared
     private var promptStore: PromptStore { appState.promptStore }
 
+    /// Prominent entry point to the AI Prompt Assistant from the library editor.
+    private var assistantBanner: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(loc.t("settings.prompts.assistant.title"), systemImage: "wand.and.stars")
+                .font(.subheadline.weight(.semibold))
+            Text(loc.t("settings.prompts.assistant.hint"))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Button {
+                appState.showAssistant()
+            } label: {
+                Label(loc.t("settings.prompts.assistant.open"), systemImage: "sparkles")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding(10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.10))
+    }
+
     var body: some View {
         HSplitView {
             // Tree outline
             VStack(spacing: 0) {
+                assistantBanner
+
                 List(selection: $selectedNodeID) {
                     promptTree(promptStore.prompts)
                 }

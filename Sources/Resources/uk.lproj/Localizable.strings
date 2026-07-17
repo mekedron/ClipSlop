@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Спробувати";
 "assistant.intro_message" = "Привіт! Чим ти можеш мені допомогти і що вмієш?";
 "menu.assistant" = "Асистент промптів";
+"settings.prompts.assistant.title" = "AI-асистент промптів";
+"settings.prompts.assistant.hint" = "Попросіть асистента створювати, редагувати, переміщувати чи впорядковувати промпти звичайною мовою.";
+"settings.prompts.assistant.open" = "Відкрити асистента";

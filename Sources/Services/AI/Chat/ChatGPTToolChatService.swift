@@ -77,7 +77,10 @@ struct ChatGPTToolChatService: ToolChatService {
             switch event.type {
             case "response.output_text.delta":
                 if let delta = event.delta { text += delta }
-            case "response.output_item.done", "response.output_item.added":
+            case "response.output_item.done":
+                // Capture only on `done` — the `added` event fires before the
+                // arguments have streamed in, so its `arguments` is empty and
+                // would otherwise win the de-dup and drop the real payload.
                 addToolCall(event.item)
             case "response.completed":
                 // Fallback: pull anything the deltas/items missed.

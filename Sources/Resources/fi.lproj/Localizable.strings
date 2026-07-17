@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Kokeile nyt";
 "assistant.intro_message" = "Hei! Missä voit auttaa minua ja mitä osaat tehdä?";
 "menu.assistant" = "Prompti-avustaja";
+"settings.prompts.assistant.title" = "Tekoäly-prompti-avustaja";
+"settings.prompts.assistant.hint" = "Pyydä avustajaa luomaan, muokkaamaan, siirtämään tai järjestämään promptejasi tavallisella kielellä.";
+"settings.prompts.assistant.open" = "Avaa avustaja";

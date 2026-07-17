@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Nu proberen";
 "assistant.intro_message" = "Hoi! Waarmee kun je me helpen en wat kun je allemaal?";
 "menu.assistant" = "Prompt-assistent";
+"settings.prompts.assistant.title" = "AI-prompt-assistent";
+"settings.prompts.assistant.hint" = "Vraag de assistent om je prompts in gewone taal te maken, bewerken, verplaatsen of ordenen.";
+"settings.prompts.assistant.open" = "Assistent openen";

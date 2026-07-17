@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Kipróbálom";
 "assistant.intro_message" = "Szia! Miben tudsz segíteni, és mit tudsz csinálni?";
 "menu.assistant" = "Prompt asszisztens";
+"settings.prompts.assistant.title" = "MI prompt asszisztens";
+"settings.prompts.assistant.hint" = "Kérd meg az asszisztenst, hogy hozzon létre, szerkesszen, mozgasson vagy rendezzen prompteket köznyelven.";
+"settings.prompts.assistant.open" = "Asszisztens megnyitása";

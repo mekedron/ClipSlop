@@ -486,3 +486,6 @@
 "onboarding.assistant.try" = "Prova nu";
 "assistant.intro_message" = "Hej! Vad kan du hjälpa mig med och vad kan du göra?";
 "menu.assistant" = "Promptassistent";
+"settings.prompts.assistant.title" = "AI-promptassistent";
+"settings.prompts.assistant.hint" = "Be assistenten skapa, redigera, flytta eller ordna dina prompter med vanligt språk.";
+"settings.prompts.assistant.open" = "Öppna assistenten";
