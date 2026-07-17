@@ -248,6 +248,10 @@ final class MarkdownEngineBridge: SearchableContent {
         self.bus = bus
         self.configuration = MarkdownEditorConfiguration(
             services: MarkdownEditorServices(bus: bus),
+            // Match the padding of the other content views (Textual preview
+            // uses 16pt) — the engine's default is zero, gluing text to the
+            // window edges.
+            textInsets: TextInsets(horizontal: 16, vertical: 14),
             heightBehavior: .fitsContent
         )
 
