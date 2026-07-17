@@ -148,6 +148,9 @@
 "settings.general.behavior.markdown_ai_only_rich_help" = "Skip AI conversion when clipboard contains plain text only (no HTML or RTF)";
 "settings.general.behavior.conversion_prompt" = "Conversion prompt";
 "settings.general.behavior.reset_default" = "Reset to default";
+"settings.general.adhoc" = "Quick Instruction (⌘K)";
+"settings.general.adhoc.system_prompt" = "System prompt";
+"settings.general.adhoc.help" = "Press ⌘K in the popup to type a one-off instruction and run it on the current text — no saved prompt needed. The instruction replaces the {instruction} placeholder below; if the placeholder is missing, the instruction is appended to the end.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Appearance";
@@ -341,6 +344,11 @@
 "popup.hint.search_exit" = "Exit search";
 "popup.search.placeholder" = "Search prompts...";
 "popup.search.no_results" = "No matching prompts";
+"popup.adhoc.placeholder" = "Describe what to do with this text…";
+"popup.hint.adhoc" = "Instruction";
+"popup.hint.adhoc_run" = "Run";
+"popup.hint.adhoc_newline" = "New line";
+"popup.hint.adhoc_exit" = "Cancel";
 "popup.processing" = "Processing...";
 "popup.receiving" = "Receiving response...";
 
@@ -430,6 +438,7 @@
 "shortcuts.section.actions" = "Actions";
 "shortcuts.section.editing" = "Editing";
 "shortcuts.section.search" = "Prompt Search";
+"shortcuts.section.adhoc" = "Quick instruction";
 "shortcuts.display_next" = "Next display mode";
 "shortcuts.display_prev" = "Previous display mode";
 "shortcuts.toggle_library" = "Show/hide prompt library";

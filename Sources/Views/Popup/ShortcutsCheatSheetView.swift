@@ -16,7 +16,15 @@ struct ShortcutsCheatSheetView: View {
                     appState.isShortcutsOverlayVisible = false
                 }
 
-            panel
+            // The panel can be taller than a small popup window — fall back
+            // to scrolling instead of clipping when it doesn't fit.
+            ViewThatFits(in: .vertical) {
+                panel
+                ScrollView(showsIndicators: false) {
+                    panel
+                        .padding(.vertical, 16)
+                }
+            }
         }
     }
 
@@ -55,6 +63,11 @@ struct ShortcutsCheatSheetView: View {
                         ("↩", loc.t("popup.hint.search_run")),
                         ("Esc", loc.t("popup.hint.search_exit")),
                     ])
+
+                    section(loc.t("shortcuts.section.editing"), rows: [
+                        ("⌘↩", loc.t("popup.done")),
+                        ("Esc", loc.t("popup.cancel")),
+                    ])
                 }
 
                 VStack(alignment: .leading, spacing: 14) {
@@ -72,9 +85,11 @@ struct ShortcutsCheatSheetView: View {
                         ("⌘,", loc.t("shortcuts.settings")),
                     ])
 
-                    section(loc.t("shortcuts.section.editing"), rows: [
-                        ("⌘↩", loc.t("popup.done")),
-                        ("Esc", loc.t("popup.cancel")),
+                    section(loc.t("shortcuts.section.adhoc"), rows: [
+                        ("⌘K", loc.t("popup.hint.adhoc")),
+                        ("↩", loc.t("popup.hint.adhoc_run")),
+                        ("⇧↩", loc.t("popup.hint.adhoc_newline")),
+                        ("Esc", loc.t("popup.hint.adhoc_exit")),
                     ])
                 }
             }

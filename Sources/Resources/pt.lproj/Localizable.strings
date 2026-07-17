@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Apenas quando texto formatado for detetado";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Ignorar a conversão por IA quando a área de transferência contém apenas texto simples (sem HTML ou RTF)";
 "settings.general.behavior.reset_default" = "Restaurar predefinição";
+"settings.general.adhoc" = "Instrução rápida (⌘K)";
+"settings.general.adhoc.system_prompt" = "Prompt do sistema";
+"settings.general.adhoc.help" = "Pressione ⌘K na janela para digitar uma instrução avulsa e aplicá-la ao texto atual, sem precisar de um prompt salvo. A instrução substitui o marcador {instruction} abaixo; se o marcador não existir, ela é adicionada ao final.";
 "settings.general.behavior.rich_text_mode" = "Processamento de texto formatado";
 "settings.general.behavior.rich_text_mode_help" = "Como tratar texto formatado da área de transferência (ex.: copiado do Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Sair da pesquisa";
 "popup.search.placeholder" = "Procurar prompts...";
 "popup.search.no_results" = "Nenhum prompt correspondente";
+"popup.adhoc.placeholder" = "Descreva o que fazer com este texto…";
+"popup.hint.adhoc" = "Instrução";
+"popup.hint.adhoc_run" = "Executar";
+"popup.hint.adhoc_newline" = "Nova linha";
+"popup.hint.adhoc_exit" = "Cancelar";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Abrir Acesso rápido";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Ações";
 "shortcuts.section.editing" = "Edição";
 "shortcuts.section.search" = "Busca de prompts";
+"shortcuts.section.adhoc" = "Instrução rápida";
 "shortcuts.display_next" = "Próximo modo de exibição";
 "shortcuts.display_prev" = "Modo de exibição anterior";
 "shortcuts.toggle_library" = "Mostrar/ocultar a biblioteca de prompts";

@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Uniquement si du texte enrichi est détecté";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Ignorer la conversion IA quand le presse-papiers ne contient que du texte brut (pas de HTML ni RTF)";
 "settings.general.behavior.reset_default" = "Réinitialiser par défaut";
+"settings.general.adhoc" = "Instruction rapide (⌘K)";
+"settings.general.adhoc.system_prompt" = "Prompt système";
+"settings.general.adhoc.help" = "Appuyez sur ⌘K dans la fenêtre pour saisir une instruction ponctuelle et l'appliquer au texte actuel, sans prompt enregistré. L'instruction remplace le marqueur {instruction} ci-dessous ; s'il est absent, elle est ajoutée à la fin.";
 "settings.general.behavior.rich_text_mode" = "Traitement du texte enrichi";
 "settings.general.behavior.rich_text_mode_help" = "Comment gérer le texte formaté depuis le presse-papiers (par ex. copié depuis Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Quitter la recherche";
 "popup.search.placeholder" = "Rechercher des prompts...";
 "popup.search.no_results" = "Aucun prompt correspondant";
+"popup.adhoc.placeholder" = "Décrivez quoi faire avec ce texte…";
+"popup.hint.adhoc" = "Instruction";
+"popup.hint.adhoc_run" = "Exécuter";
+"popup.hint.adhoc_newline" = "Nouvelle ligne";
+"popup.hint.adhoc_exit" = "Annuler";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Ouvrir l’Accès rapide";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Actions";
 "shortcuts.section.editing" = "Édition";
 "shortcuts.section.search" = "Recherche de prompts";
+"shortcuts.section.adhoc" = "Instruction rapide";
 "shortcuts.display_next" = "Mode d'affichage suivant";
 "shortcuts.display_prev" = "Mode d'affichage précédent";
 "shortcuts.toggle_library" = "Afficher/masquer la bibliothèque de prompts";

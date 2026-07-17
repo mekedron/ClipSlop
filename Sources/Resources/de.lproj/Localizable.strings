@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Nur bei erkanntem Rich Text";
 "settings.general.behavior.markdown_ai_only_rich_help" = "AI-Konvertierung überspringen, wenn die Zwischenablage nur Klartext enthält (kein HTML oder RTF)";
 "settings.general.behavior.reset_default" = "Auf Standard zurücksetzen";
+"settings.general.adhoc" = "Schnellanweisung (⌘K)";
+"settings.general.adhoc.system_prompt" = "System-Prompt";
+"settings.general.adhoc.help" = "Drücke ⌘K im Popup, um eine einmalige Anweisung einzugeben und auf den aktuellen Text anzuwenden — ohne gespeicherten Prompt. Die Anweisung ersetzt den Platzhalter {instruction} unten; fehlt der Platzhalter, wird sie am Ende angehängt.";
 "settings.general.behavior.rich_text_mode" = "Rich-Text-Verarbeitung";
 "settings.general.behavior.rich_text_mode_help" = "Wie formatierter Text aus der Zwischenablage behandelt wird (z. B. aus Chrome, Word kopiert)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Suche beenden";
 "popup.search.placeholder" = "Prompts suchen...";
 "popup.search.no_results" = "Keine passenden Prompts";
+"popup.adhoc.placeholder" = "Beschreibe, was mit diesem Text geschehen soll…";
+"popup.hint.adhoc" = "Anweisung";
+"popup.hint.adhoc_run" = "Ausführen";
+"popup.hint.adhoc_newline" = "Neue Zeile";
+"popup.hint.adhoc_exit" = "Abbrechen";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Schnellzugriff öffnen";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Aktionen";
 "shortcuts.section.editing" = "Bearbeiten";
 "shortcuts.section.search" = "Prompt-Suche";
+"shortcuts.section.adhoc" = "Schnellanweisung";
 "shortcuts.display_next" = "Nächster Anzeigemodus";
 "shortcuts.display_prev" = "Vorheriger Anzeigemodus";
 "shortcuts.toggle_library" = "Prompt-Bibliothek ein-/ausblenden";

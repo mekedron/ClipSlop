@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Pouze pokud je zjištěn formátovaný text";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Přeskočit AI konverzi, když schránka obsahuje pouze prostý text (bez HTML nebo RTF)";
 "settings.general.behavior.reset_default" = "Obnovit výchozí";
+"settings.general.adhoc" = "Rychlá instrukce (⌘K)";
+"settings.general.adhoc.system_prompt" = "Systémový prompt";
+"settings.general.adhoc.help" = "Stisknutím ⌘K v okně zadáte jednorázovou instrukci a použijete ji na aktuální text — bez uloženého promptu. Instrukce nahradí zástupný symbol {instruction} níže; pokud chybí, přidá se na konec.";
 "settings.general.behavior.rich_text_mode" = "Zpracování formátovaného textu";
 "settings.general.behavior.rich_text_mode_help" = "Jak zacházet s formátovaným textem ze schránky (např. zkopírovaným z Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Ukončit hledání";
 "popup.search.placeholder" = "Hledat prompty...";
 "popup.search.no_results" = "Žádné odpovídající prompty";
+"popup.adhoc.placeholder" = "Popište, co s tímto textem udělat…";
+"popup.hint.adhoc" = "Instrukce";
+"popup.hint.adhoc_run" = "Spustit";
+"popup.hint.adhoc_newline" = "Nový řádek";
+"popup.hint.adhoc_exit" = "Zrušit";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Otevřít Rychlý přístup";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Akce";
 "shortcuts.section.editing" = "Úpravy";
 "shortcuts.section.search" = "Hledání promptů";
+"shortcuts.section.adhoc" = "Rychlá instrukce";
 "shortcuts.display_next" = "Další režim zobrazení";
 "shortcuts.display_prev" = "Předchozí režim zobrazení";
 "shortcuts.toggle_library" = "Zobrazit/skrýt knihovnu promptů";

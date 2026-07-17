@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Endast när formaterad text upptäcks";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Hoppa över AI-konvertering när urklipp endast innehåller vanlig text (ingen HTML eller RTF)";
 "settings.general.behavior.reset_default" = "Återställ till standard";
+"settings.general.adhoc" = "Snabbinstruktion (⌘K)";
+"settings.general.adhoc.system_prompt" = "Systemprompt";
+"settings.general.adhoc.help" = "Tryck ⌘K i fönstret för att skriva en engångsinstruktion och köra den på den aktuella texten — utan sparad prompt. Instruktionen ersätter platshållaren {instruction} nedan; saknas den läggs instruktionen till i slutet.";
 "settings.general.behavior.rich_text_mode" = "Bearbetning av formaterad text";
 "settings.general.behavior.rich_text_mode_help" = "Hur formaterad text från urklipp ska hanteras (t.ex. kopierad från Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Avsluta sökning";
 "popup.search.placeholder" = "Sök prompter...";
 "popup.search.no_results" = "Inga matchande prompter";
+"popup.adhoc.placeholder" = "Beskriv vad som ska göras med texten…";
+"popup.hint.adhoc" = "Instruktion";
+"popup.hint.adhoc_run" = "Kör";
+"popup.hint.adhoc_newline" = "Ny rad";
+"popup.hint.adhoc_exit" = "Avbryt";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Öppna Snabbåtkomst";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Åtgärder";
 "shortcuts.section.editing" = "Redigering";
 "shortcuts.section.search" = "Promptsökning";
+"shortcuts.section.adhoc" = "Snabbinstruktion";
 "shortcuts.display_next" = "Nästa visningsläge";
 "shortcuts.display_prev" = "Föregående visningsläge";
 "shortcuts.toggle_library" = "Visa/dölj promptbiblioteket";

@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Doar când este detectat text formatat";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Sari peste conversia AI când clipboard-ul conține doar text simplu (fără HTML sau RTF)";
 "settings.general.behavior.reset_default" = "Resetează la implicit";
+"settings.general.adhoc" = "Instrucțiune rapidă (⌘K)";
+"settings.general.adhoc.system_prompt" = "Prompt de sistem";
+"settings.general.adhoc.help" = "Apasă ⌘K în fereastră pentru a tasta o instrucțiune punctuală și a o aplica textului curent — fără un prompt salvat. Instrucțiunea înlocuiește substituentul {instruction} de mai jos; dacă lipsește, este adăugată la final.";
 "settings.general.behavior.rich_text_mode" = "Procesare text formatat";
 "settings.general.behavior.rich_text_mode_help" = "Cum se gestionează textul formatat din clipboard (ex. copiat din Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Ieșire din căutare";
 "popup.search.placeholder" = "Caută prompt-uri...";
 "popup.search.no_results" = "Niciun prompt corespunzător";
+"popup.adhoc.placeholder" = "Descrie ce să facem cu acest text…";
+"popup.hint.adhoc" = "Instrucțiune";
+"popup.hint.adhoc_run" = "Execută";
+"popup.hint.adhoc_newline" = "Linie nouă";
+"popup.hint.adhoc_exit" = "Anulează";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Deschide Acces rapid";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Acțiuni";
 "shortcuts.section.editing" = "Editare";
 "shortcuts.section.search" = "Căutare prompturi";
+"shortcuts.section.adhoc" = "Instrucțiune rapidă";
 "shortcuts.display_next" = "Următorul mod de afișare";
 "shortcuts.display_prev" = "Modul de afișare anterior";
 "shortcuts.toggle_library" = "Afișează/ascunde biblioteca de prompturi";

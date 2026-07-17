@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Alleen wanneer opgemaakte tekst wordt gedetecteerd";
 "settings.general.behavior.markdown_ai_only_rich_help" = "AI-conversie overslaan wanneer het klembord alleen platte tekst bevat (geen HTML of RTF)";
 "settings.general.behavior.reset_default" = "Standaardwaarden herstellen";
+"settings.general.adhoc" = "Snelle instructie (⌘K)";
+"settings.general.adhoc.system_prompt" = "Systeemprompt";
+"settings.general.adhoc.help" = "Druk op ⌘K in het venster om een eenmalige instructie te typen en op de huidige tekst toe te passen — zonder opgeslagen prompt. De instructie vervangt de placeholder {instruction} hieronder; ontbreekt die, dan wordt de instructie aan het einde toegevoegd.";
 "settings.general.behavior.rich_text_mode" = "Verwerking van opgemaakte tekst";
 "settings.general.behavior.rich_text_mode_help" = "Hoe opgemaakte tekst van het klembord wordt afgehandeld (bv. gekopieerd uit Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Zoeken afsluiten";
 "popup.search.placeholder" = "Prompts zoeken...";
 "popup.search.no_results" = "Geen overeenkomende prompts";
+"popup.adhoc.placeholder" = "Beschrijf wat er met deze tekst moet gebeuren…";
+"popup.hint.adhoc" = "Instructie";
+"popup.hint.adhoc_run" = "Uitvoeren";
+"popup.hint.adhoc_newline" = "Nieuwe regel";
+"popup.hint.adhoc_exit" = "Annuleren";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Snelle toegang openen";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Acties";
 "shortcuts.section.editing" = "Bewerken";
 "shortcuts.section.search" = "Prompts zoeken";
+"shortcuts.section.adhoc" = "Snelle instructie";
 "shortcuts.display_next" = "Volgende weergavemodus";
 "shortcuts.display_prev" = "Vorige weergavemodus";
 "shortcuts.toggle_library" = "Promptbibliotheek tonen/verbergen";

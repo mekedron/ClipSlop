@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Только при обнаружении форматированного текста";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Пропускать AI-конвертацию, если в буфере обмена только обычный текст (без HTML или RTF)";
 "settings.general.behavior.reset_default" = "Сбросить по умолчанию";
+"settings.general.adhoc" = "Быстрая инструкция (⌘K)";
+"settings.general.adhoc.system_prompt" = "Системный промпт";
+"settings.general.adhoc.help" = "Нажмите ⌘K в окне, чтобы ввести разовую инструкцию и применить её к текущему тексту — без сохранённого промпта. Инструкция подставляется вместо {instruction} в промпте ниже; если плейсхолдера нет, она добавляется в конец.";
 "settings.general.behavior.rich_text_mode" = "Обработка форматированного текста";
 "settings.general.behavior.rich_text_mode_help" = "Как обрабатывать форматированный текст из буфера обмена (например, скопированный из Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Выйти из поиска";
 "popup.search.placeholder" = "Поиск промптов...";
 "popup.search.no_results" = "Подходящих промптов нет";
+"popup.adhoc.placeholder" = "Опишите, что сделать с этим текстом…";
+"popup.hint.adhoc" = "Инструкция";
+"popup.hint.adhoc_run" = "Выполнить";
+"popup.hint.adhoc_newline" = "Новая строка";
+"popup.hint.adhoc_exit" = "Отмена";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Открыть быстрый доступ";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Действия";
 "shortcuts.section.editing" = "Редактирование";
 "shortcuts.section.search" = "Поиск промптов";
+"shortcuts.section.adhoc" = "Быстрая инструкция";
 "shortcuts.display_next" = "Следующий режим показа";
 "shortcuts.display_prev" = "Предыдущий режим показа";
 "shortcuts.toggle_library" = "Показать/скрыть библиотеку промптов";

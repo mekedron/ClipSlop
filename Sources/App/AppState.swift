@@ -49,6 +49,13 @@ final class AppState {
     // Shortcuts cheat-sheet overlay (⌘/) — session-only, never persisted
     var isShortcutsOverlayVisible = false
 
+    // Ad-hoc instruction bar (⌘K) — a one-off typed prompt that replaces
+    // the prompt-library block while active. The draft survives Esc so an
+    // accidental close doesn't eat a half-typed instruction; it's cleared
+    // after a successful run and when the popup closes.
+    var isAdHocPromptActive = false
+    var adHocPromptText = ""
+
     // Pending prompt for Open & Run shortcut
     var pendingPromptNode: PromptNode?
 
@@ -561,6 +568,8 @@ final class AppState {
         errorDetail = nil
         streamingText = ""
         isProcessing = false
+        isAdHocPromptActive = false
+        adHocPromptText = ""
 
         // Reset lazy caches
         cachedOriginalMarkdown = nil
@@ -630,6 +639,35 @@ final class AppState {
 
     func navigateToRoot() {
         navigationPath = []
+    }
+
+    // MARK: - Ad-hoc Instruction (⌘K)
+
+    func activateAdHocPrompt() {
+        guard !isProcessing, errorMessage == nil, currentSession != nil else { return }
+        promptSearchState.deactivate()
+        isAdHocPromptActive = true
+    }
+
+    func deactivateAdHocPrompt() {
+        isAdHocPromptActive = false
+    }
+
+    /// Runs the typed one-off instruction through the configurable ad-hoc
+    /// system prompt. The instruction itself becomes the step name in the
+    /// history sidebar so the run stays recognizable later.
+    func runAdHocPrompt() {
+        let instruction = adHocPromptText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !instruction.isEmpty, !isProcessing else { return }
+
+        let template = settings.adHocSystemPrompt.isEmpty
+            ? AppSettings.defaultAdHocSystemPrompt
+            : settings.adHocSystemPrompt
+        let systemPrompt = AdHocPromptComposer.compose(template: template, instruction: instruction)
+
+        isAdHocPromptActive = false
+        adHocPromptText = ""
+        applyPrompt(name: AdHocPromptComposer.stepName(for: instruction), systemPrompt: systemPrompt)
     }
 
     @discardableResult
@@ -1002,6 +1040,8 @@ final class AppState {
         isProcessing = false
         isEditing = false
         editingText = ""
+        isAdHocPromptActive = false
+        adHocPromptText = ""
     }
 
     // MARK: - Quick Access

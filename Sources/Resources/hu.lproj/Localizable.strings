@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Csak formázott szöveg észlelésekor";
 "settings.general.behavior.markdown_ai_only_rich_help" = "AI-konverzió kihagyása, ha a vágólap csak egyszerű szöveget tartalmaz (HTML vagy RTF nélkül)";
 "settings.general.behavior.reset_default" = "Visszaállítás alapértelmezettre";
+"settings.general.adhoc" = "Gyors utasítás (⌘K)";
+"settings.general.adhoc.system_prompt" = "Rendszerprompt";
+"settings.general.adhoc.help" = "Nyomd meg a ⌘K-t az ablakban egy egyszeri utasítás beírásához és az aktuális szövegre való alkalmazásához — mentett prompt nélkül. Az utasítás az alábbi {instruction} helyőrző helyére kerül; ha az hiányzik, a végéhez lesz fűzve.";
 "settings.general.behavior.rich_text_mode" = "Formázott szöveg feldolgozása";
 "settings.general.behavior.rich_text_mode_help" = "Hogyan kezelje a vágólap formázott szövegét (pl. Chrome-ból, Wordből másolva)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Kilépés a keresésből";
 "popup.search.placeholder" = "Promptok keresése...";
 "popup.search.no_results" = "Nincs egyező prompt";
+"popup.adhoc.placeholder" = "Írd le, mit tegyünk ezzel a szöveggel…";
+"popup.hint.adhoc" = "Utasítás";
+"popup.hint.adhoc_run" = "Futtatás";
+"popup.hint.adhoc_newline" = "Új sor";
+"popup.hint.adhoc_exit" = "Mégse";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Gyors hozzáférés megnyitása";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Műveletek";
 "shortcuts.section.editing" = "Szerkesztés";
 "shortcuts.section.search" = "Promptkeresés";
+"shortcuts.section.adhoc" = "Gyors utasítás";
 "shortcuts.display_next" = "Következő megjelenítési mód";
 "shortcuts.display_prev" = "Előző megjelenítési mód";
 "shortcuts.toggle_library" = "Prompt-könyvtár megjelenítése/elrejtése";

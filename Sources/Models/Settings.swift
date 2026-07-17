@@ -170,6 +170,23 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(promptLibraryCollapsed, forKey: "promptLibraryCollapsed") }
     }
 
+    /// System prompt template for the ⌘K one-off instruction bar. The typed
+    /// instruction replaces `{instruction}`, or is appended when the
+    /// placeholder is absent — see `AdHocPromptComposer`.
+    var adHocSystemPrompt: String {
+        didSet { UserDefaults.standard.set(adHocSystemPrompt, forKey: "adHocSystemPrompt") }
+    }
+
+    static let defaultAdHocSystemPrompt = """
+    You are a text transformation assistant inside a clipboard utility. \
+    Apply the user's instruction to the text they provide. \
+    Output ONLY the resulting text — no explanations, no preamble, no code fences. \
+    Preserve the original language of the text unless the instruction says otherwise.
+
+    Instruction:
+    {instruction}
+    """
+
     static let defaultConversionPrompt = """
     Convert the following HTML to clean, well-structured Markdown. \
     Extract only meaningful content. Skip all presentational HTML \
@@ -212,6 +229,7 @@ final class AppSettings {
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
+        adHocSystemPrompt = defaults.string(forKey: "adHocSystemPrompt") ?? AppSettings.defaultAdHocSystemPrompt
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
         // and the store performs a one-shot migration on first launch.

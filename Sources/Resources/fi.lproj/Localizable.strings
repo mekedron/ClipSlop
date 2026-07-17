@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Vain kun muotoiltu teksti tunnistetaan";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Ohita AI-muunnos, kun leikepöydällä on vain pelkkää tekstiä (ei HTML:ää tai RTF:ää)";
 "settings.general.behavior.reset_default" = "Palauta oletukseksi";
+"settings.general.adhoc" = "Pikaohje (⌘K)";
+"settings.general.adhoc.system_prompt" = "Järjestelmäkehote";
+"settings.general.adhoc.help" = "Paina ⌘K ikkunassa kirjoittaaksesi kertaluonteisen ohjeen ja suorittaaksesi sen nykyiselle tekstille — ilman tallennettua kehotetta. Ohje korvaa alla olevan {instruction}-paikkamerkin; jos paikkamerkkiä ei ole, ohje lisätään loppuun.";
 "settings.general.behavior.rich_text_mode" = "Muotoillun tekstin käsittely";
 "settings.general.behavior.rich_text_mode_help" = "Miten leikepöydän muotoiltua tekstiä käsitellään (esim. Chromesta tai Wordista kopioitu)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Poistu haku";
 "popup.search.placeholder" = "Etsi kehotteita...";
 "popup.search.no_results" = "Ei vastaavia kehotteita";
+"popup.adhoc.placeholder" = "Kuvaile, mitä tekstille tehdään…";
+"popup.hint.adhoc" = "Ohje";
+"popup.hint.adhoc_run" = "Suorita";
+"popup.hint.adhoc_newline" = "Uusi rivi";
+"popup.hint.adhoc_exit" = "Peruuta";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Avaa Pikakäyttö";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Toiminnot";
 "shortcuts.section.editing" = "Muokkaus";
 "shortcuts.section.search" = "Promptien haku";
+"shortcuts.section.adhoc" = "Pikaohje";
 "shortcuts.display_next" = "Seuraava näkymä";
 "shortcuts.display_prev" = "Edellinen näkymä";
 "shortcuts.toggle_library" = "Näytä/piilota prompt-kirjasto";

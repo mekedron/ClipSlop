@@ -96,6 +96,9 @@ struct PopupContentView: View {
                             text: appState.currentDisplayText,
                             findBarState: appState.findBarState
                         )
+                        // NSTextView's own I-beam gets reset by SwiftUI's
+                        // pointer management — declare it at the SwiftUI layer.
+                        .pointerStyle(.horizontalText)
                     }
                 }
                 .frame(maxHeight: .infinity)
@@ -104,6 +107,13 @@ struct PopupContentView: View {
                     // highlight HTML from leaking between renderers.
                     appState.findBarState.clearAndReSearch()
                 }
+
+                // ⌘K one-off instruction input replaces the whole
+                // breadcrumb + prompt-grid block while active (it brings
+                // its own divider + resize handle).
+                if appState.isAdHocPromptActive {
+                    AdHocPromptBar(appState: appState)
+                } else {
 
                 // Resize handle centered on divider (plain divider when the
                 // library is collapsed — there is nothing to resize)
@@ -224,6 +234,8 @@ struct PopupContentView: View {
                 }
                 .frame(height: clampedHeight)
             }
+
+            } // end of the non-⌘K breadcrumb + grid block
 
             Divider()
 
@@ -385,7 +397,18 @@ struct PopupContentView: View {
 
     @ViewBuilder
     private var shortcutsHint: some View {
-        if appState.promptSearchState.isActive {
+        if appState.isAdHocPromptActive {
+            HStack(spacing: 16) {
+                shortcutHint("↩", loc.t("popup.hint.adhoc_run"))
+                shortcutHint("⇧↩", loc.t("popup.hint.adhoc_newline"))
+                shortcutHint("Esc", loc.t("popup.hint.adhoc_exit"))
+                Spacer()
+            }
+            .font(.caption2)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .background(.quaternary.opacity(0.3))
+        } else if appState.promptSearchState.isActive {
             HStack(spacing: 16) {
                 shortcutHint("↑↓", loc.t("popup.hint.search_select"))
                 shortcutHint("↩", loc.t("popup.hint.search_run"))
@@ -406,6 +429,7 @@ struct PopupContentView: View {
                 shortcutHint("Space", loc.t("popup.hint.page_down"))
                 shortcutHint("⇧Space", loc.t("popup.hint.page_up"))
                 shortcutHint("/", loc.t("popup.hint.search"))
+                shortcutHint("⌘K", loc.t("popup.hint.adhoc"))
 
                 if !appState.navigationPath.isEmpty {
                     shortcutHint("⌫", loc.t("popup.hint.back"))
@@ -640,6 +664,7 @@ struct KeyEventHandler: NSViewRepresentable {
             static let z: UInt16 = 6
             static let f: UInt16 = 3
             static let g: UInt16 = 5
+            static let k: UInt16 = 40
             static let l: UInt16 = 37
             static let slash: UInt16 = 44
             static let comma: UInt16 = 43
@@ -671,6 +696,22 @@ struct KeyEventHandler: NSViewRepresentable {
                     appState.isShortcutsOverlayVisible = false
                 }
                 return true
+            }
+
+            // --- Ad-hoc instruction bar (⌘K) ---
+            // Enter runs, Shift+Enter falls through to the TextEditor (which
+            // inserts a newline), Esc / ⌘K close. Every other key flows to
+            // the focused editor so typing and Cmd+A/C/V work normally.
+            if appState.isAdHocPromptActive {
+                if code == KeyCode.escape || (hasCmd && code == KeyCode.k) {
+                    appState.deactivateAdHocPrompt()
+                    return true
+                }
+                if code == KeyCode.enter && !hasCmd && !flags.contains(.shift) {
+                    appState.runAdHocPrompt()
+                    return true
+                }
+                return false
             }
 
             // --- Prompt-search overlay ---
@@ -790,6 +831,11 @@ struct KeyEventHandler: NSViewRepresentable {
 
             if hasCmd && code == KeyCode.l {
                 appState.settings.promptLibraryCollapsed.toggle()
+                return true
+            }
+
+            if hasCmd && code == KeyCode.k {
+                appState.activateAdHocPrompt()
                 return true
             }
 
@@ -947,33 +993,67 @@ struct KeyEventHandler: NSViewRepresentable {
 
 // MARK: - Resize Handle (AppKit-based to block window dragging)
 
-struct ResizeHandle: NSViewRepresentable {
+/// Divider drag handle. On macOS 15 NSHostingView owns the cursor through
+/// SwiftUI's pointer-style system and re-applies the resolved style (arrow
+/// for unstyled areas) on every mouse move — `NSCursor` push/pop from
+/// tracking areas only flashes before being reset. Declaring the cursor via
+/// `.pointerStyle` here makes SwiftUI itself show it, so it sticks.
+struct ResizeHandle: View {
     @Binding var height: Double
     @Binding var dragStartHeight: Double
+    var minHeight: Double = 80
+    var maxHeight: Double = 400
+    /// UserDefaults key the final height is persisted under; nil = session-only.
+    var storageKey: String? = "promptGridHeight"
+    /// Base height for the first drag when `height` is still 0 — used by the
+    /// ⌘K bar, whose height is content-driven until the user grabs the handle.
+    var initialHeight: (() -> Double)?
+
+    var body: some View {
+        ResizeHandleRepresentable(
+            height: $height,
+            dragStartHeight: $dragStartHeight,
+            minHeight: minHeight,
+            maxHeight: maxHeight,
+            storageKey: storageKey,
+            initialHeight: initialHeight
+        )
+        .pointerStyle(.rowResize)
+    }
+}
+
+private struct ResizeHandleRepresentable: NSViewRepresentable {
+    @Binding var height: Double
+    @Binding var dragStartHeight: Double
+    var minHeight: Double
+    var maxHeight: Double
+    var storageKey: String?
+    var initialHeight: (() -> Double)?
+
+    private func configure(_ view: ResizeHandleNSView) {
+        view.onDrag = { delta in
+            if dragStartHeight == 0 {
+                dragStartHeight = height > 0 ? height : (initialHeight?() ?? height)
+            }
+            // NSView y-axis is bottom-up: positive delta = mouse moved up = grow
+            height = max(minHeight, min(maxHeight, dragStartHeight + delta))
+        }
+        view.onDragEnd = {
+            if let storageKey {
+                UserDefaults.standard.set(height, forKey: storageKey)
+            }
+            dragStartHeight = 0
+        }
+    }
 
     func makeNSView(context: Context) -> ResizeHandleNSView {
         let view = ResizeHandleNSView()
-        view.onDrag = { delta in
-            if dragStartHeight == 0 { dragStartHeight = height }
-            // NSView y-axis is bottom-up: positive delta = mouse moved up = grow prompts
-            height = max(80, min(400, dragStartHeight + delta))
-        }
-        view.onDragEnd = {
-            UserDefaults.standard.set(height, forKey: "promptGridHeight")
-            dragStartHeight = 0
-        }
+        configure(view)
         return view
     }
 
     func updateNSView(_ nsView: ResizeHandleNSView, context: Context) {
-        nsView.onDrag = { delta in
-            if dragStartHeight == 0 { dragStartHeight = height }
-            height = max(80, min(400, dragStartHeight + delta))
-        }
-        nsView.onDragEnd = {
-            UserDefaults.standard.set(height, forKey: "promptGridHeight")
-            dragStartHeight = 0
-        }
+        configure(nsView)
     }
 }
 
@@ -989,37 +1069,11 @@ final class ResizeHandleNSView: NSView {
         NSSize(width: NSView.noIntrinsicMetric, height: 8)
     }
 
-    override init(frame: NSRect) {
-        super.init(frame: frame)
-        setupTrackingArea()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupTrackingArea()
-    }
-
-    private func setupTrackingArea() {
-        let area = NSTrackingArea(
-            rect: .zero,
-            options: [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect],
-            owner: self
-        )
-        addTrackingArea(area)
-    }
-
-    override func draw(_ dirtyRect: NSRect) {
-        super.draw(dirtyRect)
-
-        // No visual indicator — cursor change on hover is enough
-    }
-
-    override func mouseEntered(with event: NSEvent) {
-        NSCursor.resizeUpDown.push()
-    }
-
-    override func mouseExited(with event: NSEvent) {
-        NSCursor.pop()
+    // `.pointerStyle(.rowResize)` on the representable handles hover; the
+    // cursor rect covers AppKit-driven cursor updates (window activation,
+    // returning from a drag) without a push/pop that SwiftUI would reset.
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .resizeUpDown)
     }
 
     override func mouseDown(with event: NSEvent) {

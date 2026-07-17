@@ -155,6 +155,35 @@ struct GeneralSettingsView: View {
                 }
             }
 
+            Section(loc.t("settings.general.adhoc")) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(loc.t("settings.general.adhoc.help"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+
+                    HStack {
+                        Text(loc.t("settings.general.adhoc.system_prompt"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button(loc.t("settings.general.behavior.reset_default")) {
+                            settings.adHocSystemPrompt = AppSettings.defaultAdHocSystemPrompt
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.mini)
+                        .disabled(settings.adHocSystemPrompt == AppSettings.defaultAdHocSystemPrompt)
+                    }
+                    TextEditor(text: $settings.adHocSystemPrompt)
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(height: 110)
+                        .scrollContentBackground(.hidden)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(.quaternary)
+                        )
+                }
+            }
+
             Section(loc.t("settings.general.appearance")) {
                 Picker(loc.t("settings.general.appearance.theme"), selection: $settings.appColorScheme) {
                     ForEach(AppColorScheme.allCases) { scheme in

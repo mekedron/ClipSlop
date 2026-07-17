@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Bare når formatert tekst oppdages";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Hopp over AI-konvertering når utklippstavlen kun inneholder vanlig tekst (ingen HTML eller RTF)";
 "settings.general.behavior.reset_default" = "Tilbakestill til standard";
+"settings.general.adhoc" = "Hurtiginstruksjon (⌘K)";
+"settings.general.adhoc.system_prompt" = "Systemprompt";
+"settings.general.adhoc.help" = "Trykk ⌘K i vinduet for å skrive en engangsinstruksjon og kjøre den på gjeldende tekst — uten lagret prompt. Instruksjonen erstatter plassholderen {instruction} nedenfor; mangler den, legges instruksjonen til på slutten.";
 "settings.general.behavior.rich_text_mode" = "Behandling av formatert tekst";
 "settings.general.behavior.rich_text_mode_help" = "Hvordan formatert tekst fra utklippstavlen håndteres (f.eks. kopiert fra Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Avslutt søk";
 "popup.search.placeholder" = "Søk i prompts...";
 "popup.search.no_results" = "Ingen samsvarende prompts";
+"popup.adhoc.placeholder" = "Beskriv hva som skal gjøres med teksten…";
+"popup.hint.adhoc" = "Instruksjon";
+"popup.hint.adhoc_run" = "Kjør";
+"popup.hint.adhoc_newline" = "Ny linje";
+"popup.hint.adhoc_exit" = "Avbryt";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Åpne Hurtigtilgang";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Handlinger";
 "shortcuts.section.editing" = "Redigering";
 "shortcuts.section.search" = "Promptsøk";
+"shortcuts.section.adhoc" = "Hurtiginstruksjon";
 "shortcuts.display_next" = "Neste visningsmodus";
 "shortcuts.display_prev" = "Forrige visningsmodus";
 "shortcuts.toggle_library" = "Vis/skjul promptbiblioteket";

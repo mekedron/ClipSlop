@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Solo quando viene rilevato testo formattato";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Salta la conversione AI quando gli appunti contengono solo testo semplice (senza HTML o RTF)";
 "settings.general.behavior.reset_default" = "Ripristina valori predefiniti";
+"settings.general.adhoc" = "Istruzione rapida (⌘K)";
+"settings.general.adhoc.system_prompt" = "Prompt di sistema";
+"settings.general.adhoc.help" = "Premi ⌘K nella finestra per digitare un'istruzione una tantum e applicarla al testo corrente, senza prompt salvato. L'istruzione sostituisce il segnaposto {instruction} qui sotto; se manca, viene aggiunta alla fine.";
 "settings.general.behavior.rich_text_mode" = "Elaborazione del testo formattato";
 "settings.general.behavior.rich_text_mode_help" = "Come gestire il testo formattato dagli appunti (es. copiato da Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Esci dalla ricerca";
 "popup.search.placeholder" = "Cerca prompt...";
 "popup.search.no_results" = "Nessun prompt corrispondente";
+"popup.adhoc.placeholder" = "Descrivi cosa fare con questo testo…";
+"popup.hint.adhoc" = "Istruzione";
+"popup.hint.adhoc_run" = "Esegui";
+"popup.hint.adhoc_newline" = "Nuova riga";
+"popup.hint.adhoc_exit" = "Annulla";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Apri Accesso rapido";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Azioni";
 "shortcuts.section.editing" = "Modifica";
 "shortcuts.section.search" = "Ricerca prompt";
+"shortcuts.section.adhoc" = "Istruzione rapida";
 "shortcuts.display_next" = "Modalità di visualizzazione successiva";
 "shortcuts.display_prev" = "Modalità di visualizzazione precedente";
 "shortcuts.toggle_library" = "Mostra/nascondi la libreria dei prompt";

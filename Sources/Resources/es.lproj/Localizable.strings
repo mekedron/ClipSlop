@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Solo cuando se detecta texto enriquecido";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Omitir la conversión con IA cuando el portapapeles solo contiene texto sin formato (sin HTML ni RTF)";
 "settings.general.behavior.reset_default" = "Restablecer al predeterminado";
+"settings.general.adhoc" = "Instrucción rápida (⌘K)";
+"settings.general.adhoc.system_prompt" = "Prompt del sistema";
+"settings.general.adhoc.help" = "Pulsa ⌘K en la ventana para escribir una instrucción puntual y aplicarla al texto actual, sin necesidad de un prompt guardado. La instrucción sustituye el marcador {instruction} de abajo; si falta el marcador, se añade al final.";
 "settings.general.behavior.rich_text_mode" = "Procesamiento de texto enriquecido";
 "settings.general.behavior.rich_text_mode_help" = "Cómo manejar el texto formateado del portapapeles (p. ej. copiado de Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Salir de la búsqueda";
 "popup.search.placeholder" = "Buscar prompts...";
 "popup.search.no_results" = "No hay prompts coincidentes";
+"popup.adhoc.placeholder" = "Describe qué hacer con este texto…";
+"popup.hint.adhoc" = "Instrucción";
+"popup.hint.adhoc_run" = "Ejecutar";
+"popup.hint.adhoc_newline" = "Nueva línea";
+"popup.hint.adhoc_exit" = "Cancelar";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Abrir Acceso rápido";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Acciones";
 "shortcuts.section.editing" = "Edición";
 "shortcuts.section.search" = "Búsqueda de prompts";
+"shortcuts.section.adhoc" = "Instrucción rápida";
 "shortcuts.display_next" = "Siguiente modo de visualización";
 "shortcuts.display_prev" = "Modo de visualización anterior";
 "shortcuts.toggle_library" = "Mostrar/ocultar la biblioteca de prompts";

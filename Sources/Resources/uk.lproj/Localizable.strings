@@ -342,6 +342,9 @@
 "settings.general.behavior.markdown_ai_only_rich" = "Лише коли виявлено форматований текст";
 "settings.general.behavior.markdown_ai_only_rich_help" = "Пропускати AI-конвертацію, якщо в буфері обміну лише звичайний текст (без HTML або RTF)";
 "settings.general.behavior.reset_default" = "Скинути за замовчуванням";
+"settings.general.adhoc" = "Швидка інструкція (⌘K)";
+"settings.general.adhoc.system_prompt" = "Системний промпт";
+"settings.general.adhoc.help" = "Натисніть ⌘K у вікні, щоб ввести одноразову інструкцію та застосувати її до поточного тексту — без збереженого промпту. Інструкція підставляється замість {instruction} у промпті нижче; якщо плейсхолдера немає, її буде додано в кінець.";
 "settings.general.behavior.rich_text_mode" = "Обробка форматованого тексту";
 "settings.general.behavior.rich_text_mode_help" = "Як обробляти форматований текст із буфера обміну (наприклад, скопійований із Chrome, Word)";
 "settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
@@ -389,6 +392,11 @@
 "popup.hint.search_exit" = "Вийти з пошуку";
 "popup.search.placeholder" = "Пошук промптів...";
 "popup.search.no_results" = "Відповідних промптів немає";
+"popup.adhoc.placeholder" = "Опишіть, що зробити з цим текстом…";
+"popup.hint.adhoc" = "Інструкція";
+"popup.hint.adhoc_run" = "Виконати";
+"popup.hint.adhoc_newline" = "Новий рядок";
+"popup.hint.adhoc_exit" = "Скасувати";
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Відкрити швидкий доступ";
@@ -438,6 +446,7 @@
 "shortcuts.section.actions" = "Дії";
 "shortcuts.section.editing" = "Редагування";
 "shortcuts.section.search" = "Пошук промптів";
+"shortcuts.section.adhoc" = "Швидка інструкція";
 "shortcuts.display_next" = "Наступний режим показу";
 "shortcuts.display_prev" = "Попередній режим показу";
 "shortcuts.toggle_library" = "Показати/сховати бібліотеку промптів";
