@@ -53,6 +53,28 @@ final class AssistantWindow: NSPanel, NSWindowDelegate {
         // hotkey-summoned panel, and why dismissal must yield focus back
         // (AppState.dismissAssistant replicates that handoff).
         NSApplication.shared.activate()
+        // Put the caret in the input on every open. The text view focuses
+        // itself only when first created (`makeNSView`); on later shows the
+        // view is reused, so we refocus here once the window is key.
+        DispatchQueue.main.async { [weak self] in
+            self?.focusInput()
+        }
+    }
+
+    /// Makes the chat input the first responder so the user can type at once.
+    @MainActor
+    func focusInput() {
+        guard let textView = Self.firstTextView(in: contentView) else { return }
+        makeFirstResponder(textView)
+    }
+
+    private static func firstTextView(in view: NSView?) -> NSTextView? {
+        guard let view else { return nil }
+        if let textView = view as? NSTextView { return textView }
+        for subview in view.subviews {
+            if let found = firstTextView(in: subview) { return found }
+        }
+        return nil
     }
 
     private func centerOnMouseScreen() {

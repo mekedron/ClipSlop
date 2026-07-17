@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Přiřazujte zkratky a nastavujte režimy";
 "onboarding.assistant.try" = "Vyzkoušet";
 "assistant.intro_message" = "Ahoj! S čím mi můžeš pomoct a co umíš?";
+"menu.assistant" = "Asistent promptů";

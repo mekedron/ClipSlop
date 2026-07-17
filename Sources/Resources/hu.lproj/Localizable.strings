@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Rendelj hozzá gyorsbillentyűket és módokat";
 "onboarding.assistant.try" = "Kipróbálom";
 "assistant.intro_message" = "Szia! Miben tudsz segíteni, és mit tudsz csinálni?";
+"menu.assistant" = "Prompt asszisztens";

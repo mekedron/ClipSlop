@@ -31,6 +31,10 @@ struct MenuBarView: View {
             appState.showQuickAccess()
         }
 
+        menuButton(loc.t("menu.assistant"), shortcut: .togglePromptAssistant) {
+            appState.showAssistant()
+        }
+
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
 
         Divider()

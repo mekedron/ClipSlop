@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Wijs sneltoetsen toe en stel modi in";
 "onboarding.assistant.try" = "Nu proberen";
 "assistant.intro_message" = "Hoi! Waarmee kun je me helpen en wat kun je allemaal?";
+"menu.assistant" = "Prompt-assistent";

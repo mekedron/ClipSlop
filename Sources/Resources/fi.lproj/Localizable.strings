@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Määritä pikanäppäimet ja promptitilat";
 "onboarding.assistant.try" = "Kokeile nyt";
 "assistant.intro_message" = "Hei! Missä voit auttaa minua ja mitä osaat tehdä?";
+"menu.assistant" = "Prompti-avustaja";

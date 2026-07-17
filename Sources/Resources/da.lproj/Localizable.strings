@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Tildel genveje og angiv prompttilstande";
 "onboarding.assistant.try" = "Prøv det nu";
 "assistant.intro_message" = "Hej! Hvad kan du hjælpe mig med, og hvad kan du?";
+"menu.assistant" = "Promptassistent";

@@ -33,6 +33,6 @@ extension KeyboardShortcuts.Name {
 
     static let togglePromptAssistant = Self(
         "togglePromptAssistant",
-        default: .init(.p, modifiers: [.option, .shift])
+        default: .init(.p, modifiers: [.command, .control, .option])
     )
 }

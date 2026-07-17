@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Назначайте сочетания клавиш и режимы";
 "onboarding.assistant.try" = "Попробовать";
 "assistant.intro_message" = "Привет! Чем ты можешь мне помочь и что умеешь?";
+"menu.assistant" = "Ассистент промптов";

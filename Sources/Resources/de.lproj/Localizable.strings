@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Kurzbefehle vergeben und Prompt-Modi setzen";
 "onboarding.assistant.try" = "Jetzt ausprobieren";
 "assistant.intro_message" = "Hi! Wobei kannst du mir helfen und was kannst du alles?";
+"menu.assistant" = "Prompt-Assistent";

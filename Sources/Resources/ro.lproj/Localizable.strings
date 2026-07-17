@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Atribuie scurtături și setează moduri";
 "onboarding.assistant.try" = "Încearcă acum";
 "assistant.intro_message" = "Salut! Cu ce mă poți ajuta și ce știi să faci?";
+"menu.assistant" = "Asistent de prompturi";

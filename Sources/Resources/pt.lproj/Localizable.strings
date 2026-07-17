@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Atribua atalhos e defina modos de prompt";
 "onboarding.assistant.try" = "Experimentar agora";
 "assistant.intro_message" = "Oi! Com o que você pode me ajudar e o que você sabe fazer?";
+"menu.assistant" = "Assistente de prompts";

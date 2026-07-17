@@ -485,3 +485,4 @@
 "onboarding.assistant.feature.shortcuts" = "Tilldela kortkommandon och ange lägen";
 "onboarding.assistant.try" = "Prova nu";
 "assistant.intro_message" = "Hej! Vad kan du hjälpa mig med och vad kan du göra?";
+"menu.assistant" = "Promptassistent";
