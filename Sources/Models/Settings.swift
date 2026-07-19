@@ -46,11 +46,6 @@ enum EditorMode: String, CaseIterable, Identifiable, Codable, Sendable {
 
     var id: String { rawValue }
 
-    /// Display format written by builds that shipped "Markdown (Styled)" as a
-    /// fourth workspace mode. It is now plain `.markdown` plus a renderer
-    /// choice — see `MarkdownViewerStyle` / `MarkdownEditorStyle`.
-    static let legacyStyledRawValue = "markdownStyled"
-
     init(from decoder: any Decoder) throws {
         let raw = try decoder.singleValueContainer().decode(String.self)
         // Prompts and history steps saved before the split still carry
@@ -269,18 +264,15 @@ final class AppSettings {
         closeOnCopy = defaults.object(forKey: "closeOnCopy") as? Bool ?? true
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
-        // "Markdown (Styled)" used to be a fourth display format. It is now
-        // plain Markdown plus a renderer choice, so someone who had it
-        // selected keeps the styled renderer instead of silently losing it.
-        let storedEditorMode = defaults.string(forKey: "editorMode")
-        let hadStyledDisplayFormat = storedEditorMode == EditorMode.legacyStyledRawValue
-        editorMode = storedEditorMode.flatMap(EditorMode.init(rawValue:)) ?? .markdown
+        // A stored "markdownStyled" is from builds that shipped it as a fourth
+        // display format; it falls back to plain Markdown, and the renderer is
+        // picked by the two settings below.
+        editorMode = defaults.string(forKey: "editorMode")
+            .flatMap(EditorMode.init(rawValue:)) ?? .markdown
         markdownViewer = defaults.string(forKey: "markdownViewer")
-            .flatMap(MarkdownViewerStyle.init(rawValue:))
-            ?? (hadStyledDisplayFormat ? .styled : .rendered)
+            .flatMap(MarkdownViewerStyle.init(rawValue:)) ?? .rendered
         markdownEditor = defaults.string(forKey: "markdownEditor")
-            .flatMap(MarkdownEditorStyle.init(rawValue:))
-            ?? (hadStyledDisplayFormat ? .styled : .colored)
+            .flatMap(MarkdownEditorStyle.init(rawValue:)) ?? .colored
         richTextMode = defaults.string(forKey: "richTextMode")
             .flatMap(RichTextMode.init(rawValue:)) ?? .markdown
         markdownAIOnlyRichText = defaults.object(forKey: "markdownAIOnlyRichText") as? Bool ?? true
@@ -294,14 +286,6 @@ final class AppSettings {
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
         // and the store performs a one-shot migration on first launch.
-
-        // `didSet` does not fire during init, so write the retired display
-        // format back by hand. Rewriting "editorMode" makes this one-shot.
-        if hadStyledDisplayFormat {
-            defaults.set(editorMode.rawValue, forKey: "editorMode")
-            defaults.set(markdownViewer.rawValue, forKey: "markdownViewer")
-            defaults.set(markdownEditor.rawValue, forKey: "markdownEditor")
-        }
     }
 }
 
