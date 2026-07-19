@@ -68,26 +68,42 @@ struct PopupContentView: View {
                 Group {
                     switch appState.activeEditorMode {
                     case .markdown:
-                        if appState.findBarState.isVisible {
-                            // Markdown uses native StructuredText (no WebView) — swap to
-                            // HTML rendering so JS-based search highlighting works.
-                            HTMLEditorView(
-                                text: .constant(markdownAsHTML),
+                        // Which Markdown renderer is a separate setting, so the
+                        // display picker stays a single "Markdown" entry.
+                        switch appState.settings.markdownViewer {
+                        case .rendered:
+                            if appState.findBarState.isVisible {
+                                // Textual is native StructuredText with no search
+                                // hook — swap to HTML so JS highlighting works.
+                                // The other two viewers are SearchableContent
+                                // already and need no swap.
+                                HTMLEditorView(
+                                    text: .constant(markdownAsHTML),
+                                    isEditable: false,
+                                    findBarState: appState.findBarState
+                                )
+                                .id("md-search")
+                            } else {
+                                MarkdownPreviewView(markdown: appState.currentDisplayText)
+                                    .id("md-preview")
+                            }
+                        case .colored:
+                            MarkdownTextView(
+                                text: .constant(appState.currentDisplayText),
+                                editorContext: markdownViewerContext,
+                                findBarState: appState.findBarState,
+                                highlightsMarkdown: true,
+                                isEditable: false
+                            )
+                            .id("md-colored-view")
+                        case .styled:
+                            MarkdownEngineView(
+                                text: .constant(appState.currentDisplayText),
                                 isEditable: false,
                                 findBarState: appState.findBarState
                             )
-                            .id("md-search")
-                        } else {
-                            MarkdownPreviewView(markdown: appState.currentDisplayText)
-                                .id("md-preview")
+                            .id("md-styled-view")
                         }
-                    case .markdownStyled:
-                        MarkdownEngineView(
-                            text: .constant(appState.currentDisplayText),
-                            isEditable: false,
-                            findBarState: appState.findBarState
-                        )
-                        .id("md-styled-view")
                     case .html:
                         HTMLEditorView(text: .constant(appState.currentDisplayText), isEditable: false, findBarState: appState.findBarState)
                             .id("html-view")
@@ -247,6 +263,9 @@ struct PopupContentView: View {
     }
 
     @State private var plainTextEditorContext = MarkdownEditorContext()
+    /// The read-only coloured Markdown viewer reuses `MarkdownTextView`, which
+    /// requires a context; keep it separate from the editing one.
+    @State private var markdownViewerContext = MarkdownEditorContext()
 
     private var editView: some View {
         VStack(spacing: 0) {
@@ -259,9 +278,27 @@ struct PopupContentView: View {
             Group {
                 switch appState.activeEditorMode {
                 case .markdown:
-                    MarkdownEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
-                case .markdownStyled:
-                    MarkdownEngineView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
+                    // Editing renderer is its own setting — independent of the
+                    // viewer, so e.g. rendered viewing + plain editing works.
+                    switch appState.settings.markdownEditor {
+                    case .plain:
+                        MarkdownEditorView(
+                            text: Bindable(appState).editingText,
+                            findBarState: appState.findBarState,
+                            highlightsMarkdown: false
+                        )
+                    case .colored:
+                        MarkdownEditorView(
+                            text: Bindable(appState).editingText,
+                            findBarState: appState.findBarState,
+                            highlightsMarkdown: true
+                        )
+                    case .styled:
+                        MarkdownEngineView(
+                            text: Bindable(appState).editingText,
+                            findBarState: appState.findBarState
+                        )
+                    }
                 case .html:
                     HTMLEditorView(text: Bindable(appState).editingText, findBarState: appState.findBarState)
                 case .plainText:
@@ -307,7 +344,6 @@ struct PopupContentView: View {
                     Text("Plain text").tag(EditorMode.plainText)
                     Text("HTML").tag(EditorMode.html)
                     Text("Markdown").tag(EditorMode.markdown)
-                    Text("Markdown (Styled)").tag(EditorMode.markdownStyled)
                 }
                 .frame(width: 175)
             }
@@ -367,10 +403,7 @@ struct PopupContentView: View {
                     case .plainText: appState.activeEditorMode = .plainText
                     case .html: appState.activeEditorMode = .html
                     case .markdown, .markdownAI:
-                        // Both markdown displays fit — don't override styled
-                        if appState.activeEditorMode != .markdownStyled {
-                            appState.activeEditorMode = .markdown
-                        }
+                        appState.activeEditorMode = .markdown
                     }
                 }
             }
@@ -379,7 +412,6 @@ struct PopupContentView: View {
                 Text("Plain text").tag(EditorMode.plainText)
                 Text("HTML").tag(EditorMode.html)
                 Text("Markdown").tag(EditorMode.markdown)
-                Text("Markdown (Styled)").tag(EditorMode.markdownStyled)
             }
             .frame(width: 175)
             .onChange(of: appState.activeEditorMode) { _, newMode in
@@ -805,20 +837,18 @@ struct KeyEventHandler: NSViewRepresentable {
             if hasCmd && code == KeyCode.d {
                 let hasShift = event.modifierFlags.contains(.shift)
                 if hasShift {
-                    // Cycle backward: Plain → Styled → Markdown → HTML → Plain
+                    // Cycle backward: Plain → Markdown → HTML → Plain
                     switch appState.activeEditorMode {
-                    case .plainText: appState.activeEditorMode = .markdownStyled
-                    case .markdownStyled: appState.activeEditorMode = .markdown
+                    case .plainText: appState.activeEditorMode = .markdown
                     case .markdown: appState.activeEditorMode = .html
                     case .html: appState.activeEditorMode = .plainText
                     }
                 } else {
-                    // Cycle forward: Plain → HTML → Markdown → Styled → Plain
+                    // Cycle forward: Plain → HTML → Markdown → Plain
                     switch appState.activeEditorMode {
                     case .plainText: appState.activeEditorMode = .html
                     case .html: appState.activeEditorMode = .markdown
-                    case .markdown: appState.activeEditorMode = .markdownStyled
-                    case .markdownStyled: appState.activeEditorMode = .plainText
+                    case .markdown: appState.activeEditorMode = .plainText
                     }
                 }
                 return true

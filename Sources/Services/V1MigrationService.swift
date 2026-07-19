@@ -32,6 +32,7 @@ enum V1MigrationService {
         "selectedProviderID", "popupOpacity", "popupWidth", "popupHeight",
         "hideMenuBarIcon", "hideDockIcon", "iCloudSyncEnabled", "useKeyCodes",
         "showImagesInMarkdown", "markdownRenderer", "preserveImageWidths",
+        "markdownViewer", "markdownEditor",
         "closeOnEscape", "closeOnCopy", "appColorScheme", "editorMode",
         "richTextMode", "markdownAIOnlyRichText", "useCustomConversionPrompt",
         "customConversionPrompt", "suppressPermissionAlert",

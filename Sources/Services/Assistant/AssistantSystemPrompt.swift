@@ -32,8 +32,6 @@ enum AssistantSystemPrompt {
           • plainText — pasted as plain text.
           • html — result treated as HTML.
           • markdown — Markdown rendered to rich text.
-          • markdownStyled — "Markdown (Styled)": raw Markdown source with bold/italic/link \
-            styling applied in place.
           • default — inherit the app's global default (use "default" to clear an override).
         - select_all_before_capture: when true, ClipSlop presses ⌘A to grab the whole \
           document before capturing, instead of just the current selection.

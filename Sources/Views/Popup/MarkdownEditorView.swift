@@ -366,6 +366,9 @@ final class MarkdownEditorContext {
 struct MarkdownEditorView: View {
     @Binding var text: String
     var findBarState: FindBarState?
+    /// Colours the source in place. `false` is the plain-source editor —
+    /// both are driven by the `markdownEditor` setting.
+    var highlightsMarkdown: Bool = true
     @State private var showPreview = false
     @State private var showImagePicker = false
     @State private var editorContext = MarkdownEditorContext()
@@ -393,8 +396,9 @@ struct MarkdownEditorView: View {
                     text: $text,
                     editorContext: editorContext,
                     findBarState: findBarState,
-                    highlightsMarkdown: true
+                    highlightsMarkdown: highlightsMarkdown
                 )
+                .id(highlightsMarkdown ? "md-edit-colored" : "md-edit-plain")
             }
         }
         .onChange(of: showPreview) {
@@ -566,6 +570,8 @@ struct MarkdownTextView: NSViewRepresentable {
     var findBarState: FindBarState?
     /// Styles the Markdown source in place (bold/italic/links with ⌘-click).
     var highlightsMarkdown: Bool = false
+    /// Read-only source doubles as the "coloured source" Markdown viewer.
+    var isEditable: Bool = true
 
     func makeNSView(context: Context) -> NSScrollView {
         let scrollView = NSScrollView()
@@ -597,6 +603,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isAutomaticSpellingCorrectionEnabled = false
         textView.allowsUndo = true
         textView.drawsBackground = false
+        textView.isEditable = isEditable
         textView.delegate = context.coordinator
         textView.string = text
         if highlightsMarkdown {
@@ -609,6 +616,14 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
+        // NSTextView's default maxSize is its (zero) init frame — without
+        // lifting it the view can't outgrow the clip, so the document never
+        // becomes taller than the viewport: no scrolling by wheel or caret.
+        textView.minSize = .zero
+        textView.maxSize = NSSize(
+            width: CGFloat.greatestFiniteMagnitude,
+            height: CGFloat.greatestFiniteMagnitude
+        )
 
         scrollView.documentView = textView
         editorContext.textView = textView

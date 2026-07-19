@@ -43,9 +43,48 @@ enum EditorMode: String, CaseIterable, Identifiable, Codable, Sendable {
     case plainText
     case html
     case markdown
-    /// Raw Markdown source with inline styling (bold/italic/links) applied
-    /// in place — rendered by `MarkdownSourceHighlighter`, not Textual/HTML.
-    case markdownStyled
+
+    var id: String { rawValue }
+
+    /// Display format written by builds that shipped "Markdown (Styled)" as a
+    /// fourth workspace mode. It is now plain `.markdown` plus a renderer
+    /// choice — see `MarkdownViewerStyle` / `MarkdownEditorStyle`.
+    static let legacyStyledRawValue = "markdownStyled"
+
+    init(from decoder: any Decoder) throws {
+        let raw = try decoder.singleValueContainer().decode(String.self)
+        // Prompts and history steps saved before the split still carry
+        // "markdownStyled". Fold unknown values into `.markdown` rather than
+        // throwing — a single stale prompt must not fail the whole library
+        // decode. `encode(to:)` stays synthesised, so we write the new value.
+        self = EditorMode(rawValue: raw) ?? .markdown
+    }
+}
+
+/// How read-only Markdown is rendered when the workspace display format is
+/// `.markdown`. Orthogonal to `EditorMode` so viewing and editing can differ.
+enum MarkdownViewerStyle: String, CaseIterable, Identifiable, Sendable {
+    /// Raw Markdown source coloured in place by `MarkdownSourceHighlighter`
+    /// (⌘-click opens links) — the read-only twin of `MarkdownEditorStyle.colored`.
+    case colored
+    /// Live-styled source via swift-markdown-engine, in read-only mode.
+    case styled
+    /// Fully rendered Markdown via `MarkdownPreviewView` — Textual or the HTML
+    /// editor, per `markdownRenderer`. ClipSlop's original viewer.
+    case rendered
+
+    var id: String { rawValue }
+}
+
+/// How Markdown source is presented while editing, when the workspace display
+/// format is `.markdown`.
+enum MarkdownEditorStyle: String, CaseIterable, Identifiable, Sendable {
+    /// Unstyled monospaced source.
+    case plain
+    /// Source with inline colour/weight from `MarkdownSourceHighlighter`.
+    case colored
+    /// swift-markdown-engine's live-styled editor.
+    case styled
 
     var id: String { rawValue }
 }
@@ -114,6 +153,18 @@ final class AppSettings {
 
     var markdownRenderer: MarkdownRenderer {
         didSet { UserDefaults.standard.set(markdownRenderer.rawValue, forKey: "markdownRenderer") }
+    }
+
+    /// Renderer used for read-only Markdown. Applies whenever the display
+    /// format is Markdown, so the workspace picker stays a single "Markdown".
+    var markdownViewer: MarkdownViewerStyle {
+        didSet { UserDefaults.standard.set(markdownViewer.rawValue, forKey: "markdownViewer") }
+    }
+
+    /// Renderer used while editing Markdown — chosen independently of
+    /// `markdownViewer`, so e.g. rendered viewing + plain editing is valid.
+    var markdownEditor: MarkdownEditorStyle {
+        didSet { UserDefaults.standard.set(markdownEditor.rawValue, forKey: "markdownEditor") }
     }
 
     var preserveImageWidths: Bool {
@@ -218,8 +269,18 @@ final class AppSettings {
         closeOnCopy = defaults.object(forKey: "closeOnCopy") as? Bool ?? true
         appColorScheme = defaults.string(forKey: "appColorScheme")
             .flatMap(AppColorScheme.init(rawValue:)) ?? .system
-        editorMode = defaults.string(forKey: "editorMode")
-            .flatMap(EditorMode.init(rawValue:)) ?? .markdown
+        // "Markdown (Styled)" used to be a fourth display format. It is now
+        // plain Markdown plus a renderer choice, so someone who had it
+        // selected keeps the styled renderer instead of silently losing it.
+        let storedEditorMode = defaults.string(forKey: "editorMode")
+        let hadStyledDisplayFormat = storedEditorMode == EditorMode.legacyStyledRawValue
+        editorMode = storedEditorMode.flatMap(EditorMode.init(rawValue:)) ?? .markdown
+        markdownViewer = defaults.string(forKey: "markdownViewer")
+            .flatMap(MarkdownViewerStyle.init(rawValue:))
+            ?? (hadStyledDisplayFormat ? .styled : .rendered)
+        markdownEditor = defaults.string(forKey: "markdownEditor")
+            .flatMap(MarkdownEditorStyle.init(rawValue:))
+            ?? (hadStyledDisplayFormat ? .styled : .colored)
         richTextMode = defaults.string(forKey: "richTextMode")
             .flatMap(RichTextMode.init(rawValue:)) ?? .markdown
         markdownAIOnlyRichText = defaults.object(forKey: "markdownAIOnlyRichText") as? Bool ?? true
@@ -233,6 +294,14 @@ final class AppSettings {
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
         // and the store performs a one-shot migration on first launch.
+
+        // `didSet` does not fire during init, so write the retired display
+        // format back by hand. Rewriting "editorMode" makes this one-shot.
+        if hadStyledDisplayFormat {
+            defaults.set(editorMode.rawValue, forKey: "editorMode")
+            defaults.set(markdownViewer.rawValue, forKey: "markdownViewer")
+            defaults.set(markdownEditor.rawValue, forKey: "markdownEditor")
+        }
     }
 }
 

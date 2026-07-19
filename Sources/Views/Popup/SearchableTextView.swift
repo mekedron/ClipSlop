@@ -41,6 +41,14 @@ struct SearchableTextView: NSViewRepresentable {
         textView.isVerticallyResizable = true
         textView.isHorizontallyResizable = false
         textView.autoresizingMask = [.width]
+        // NSTextView's default maxSize is its (zero) init frame — without
+        // lifting it the view can't outgrow the clip, so the document never
+        // becomes taller than the viewport: no scrolling by wheel or caret.
+        textView.minSize = .zero
+        textView.maxSize = NSSize(
+            width: CGFloat.greatestFiniteMagnitude,
+            height: CGFloat.greatestFiniteMagnitude
+        )
 
         scrollView.documentView = textView
         context.coordinator.textView = textView

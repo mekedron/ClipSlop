@@ -62,13 +62,13 @@ enum PromptLibraryTools {
         ToolDefinition(
             name: "create_prompt",
             description: "Create a new prompt. system_prompt is the instruction text sent to the AI when the prompt runs.",
-            parametersSchemaJSON: #"{"type":"object","properties":{"name":{"type":"string"},"system_prompt":{"type":"string"},"folder_id":{"type":"string","description":"Optional id of the folder to place it in; omit for the library root."},"mnemonic_key":{"type":"string","description":"Optional single character for in-popup navigation."},"display_mode":{"type":"string","enum":["default","plainText","html","markdown","markdownStyled"]},"select_all_before_capture":{"type":"boolean"}},"required":["name","system_prompt"],"additionalProperties":false}"#,
+            parametersSchemaJSON: #"{"type":"object","properties":{"name":{"type":"string"},"system_prompt":{"type":"string"},"folder_id":{"type":"string","description":"Optional id of the folder to place it in; omit for the library root."},"mnemonic_key":{"type":"string","description":"Optional single character for in-popup navigation."},"display_mode":{"type":"string","enum":["default","plainText","html","markdown"]},"select_all_before_capture":{"type":"boolean"}},"required":["name","system_prompt"],"additionalProperties":false}"#,
             isMutating: true
         ),
         ToolDefinition(
             name: "update_prompt",
             description: "Update an existing prompt. Only the fields you provide change. Use display_mode \"default\" to clear a per-prompt mode override.",
-            parametersSchemaJSON: #"{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"system_prompt":{"type":"string"},"mnemonic_key":{"type":"string"},"display_mode":{"type":"string","enum":["default","plainText","html","markdown","markdownStyled"]},"select_all_before_capture":{"type":"boolean"},"provider_name":{"type":"string","description":"Name of an AI provider to use for this prompt, or \"default\" to clear the override."}},"required":["id"],"additionalProperties":false}"#,
+            parametersSchemaJSON: #"{"type":"object","properties":{"id":{"type":"string"},"name":{"type":"string"},"system_prompt":{"type":"string"},"mnemonic_key":{"type":"string"},"display_mode":{"type":"string","enum":["default","plainText","html","markdown"]},"select_all_before_capture":{"type":"boolean"},"provider_name":{"type":"string","description":"Name of an AI provider to use for this prompt, or \"default\" to clear the override."}},"required":["id"],"additionalProperties":false}"#,
             isMutating: true
         ),
         ToolDefinition(
@@ -438,7 +438,7 @@ final class PromptLibraryToolExecutor {
         guard let raw else { return nil }
         if raw == "default" { return .some(nil) }
         guard let mode = EditorMode(rawValue: raw) else {
-            throw ToolError(message: "Unknown display_mode '\(raw)'. Use default, plainText, html, markdown, or markdownStyled.")
+            throw ToolError(message: "Unknown display_mode '\(raw)'. Use default, plainText, html, or markdown.")
         }
         return .some(mode)
     }

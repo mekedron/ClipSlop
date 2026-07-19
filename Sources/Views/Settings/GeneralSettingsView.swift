@@ -83,37 +83,65 @@ struct GeneralSettingsView: View {
                             .help(loc.t("settings.general.behavior.close_on_copy_help"))
                     }
                 }
-                LabeledContent(loc.t("settings.general.behavior.markdown_renderer")) {
-                    Picker("", selection: $settings.markdownRenderer) {
-                        ForEach(MarkdownRenderer.allCases) { renderer in
-                            Text(renderer.displayName).tag(renderer)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 200)
-                }
-                .help(loc.t("settings.general.behavior.markdown_renderer_help"))
-
-                if settings.markdownRenderer == .textual {
-                    Toggle(loc.t("settings.general.behavior.show_images_markdown"), isOn: $settings.showImagesInMarkdown)
-                        .help(loc.t("settings.general.behavior.show_images_markdown_help"))
-                }
-
-                if settings.markdownRenderer == .htmlEditor {
-                    Toggle(loc.t("settings.general.behavior.preserve_image_widths"), isOn: $settings.preserveImageWidths)
-                        .help(loc.t("settings.general.behavior.preserve_image_widths_help"))
-                }
                 LabeledContent(loc.t("settings.general.behavior.editor_mode")) {
                     Picker("", selection: $settings.editorMode) {
                         Text(loc.t("settings.general.behavior.editor_mode.plain")).tag(EditorMode.plainText)
                         Text(loc.t("settings.general.behavior.editor_mode.html")).tag(EditorMode.html)
                         Text(loc.t("settings.general.behavior.editor_mode.markdown")).tag(EditorMode.markdown)
-                        Text(loc.t("settings.general.behavior.editor_mode.markdown_styled")).tag(EditorMode.markdownStyled)
                     }
                     .pickerStyle(.segmented)
-                    .frame(width: 340)
+                    .frame(width: 260)
                 }
                 .help(loc.t("settings.general.behavior.editor_mode_help"))
+
+                // Reading and editing Markdown are separate choices, so the
+                // display format above stays a single "Markdown" entry.
+                LabeledContent(loc.t("settings.general.behavior.markdown_viewer")) {
+                    Picker("", selection: $settings.markdownViewer) {
+                        Text(loc.t("settings.general.behavior.markdown_viewer.colored")).tag(MarkdownViewerStyle.colored)
+                        Text(loc.t("settings.general.behavior.markdown_viewer.styled")).tag(MarkdownViewerStyle.styled)
+                        Text(loc.t("settings.general.behavior.markdown_viewer.rendered")).tag(MarkdownViewerStyle.rendered)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 300)
+                }
+                .help(loc.t("settings.general.behavior.markdown_viewer_help"))
+
+                // Backend for the rendered viewer only — the colored and
+                // styled viewers have no swappable backend.
+                if settings.markdownViewer == .rendered {
+                    LabeledContent(loc.t("settings.general.behavior.markdown_renderer")) {
+                        Picker("", selection: $settings.markdownRenderer) {
+                            ForEach(MarkdownRenderer.allCases) { renderer in
+                                Text(renderer.displayName).tag(renderer)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 200)
+                    }
+                    .help(loc.t("settings.general.behavior.markdown_renderer_help"))
+
+                    if settings.markdownRenderer == .textual {
+                        Toggle(loc.t("settings.general.behavior.show_images_markdown"), isOn: $settings.showImagesInMarkdown)
+                            .help(loc.t("settings.general.behavior.show_images_markdown_help"))
+                    }
+
+                    if settings.markdownRenderer == .htmlEditor {
+                        Toggle(loc.t("settings.general.behavior.preserve_image_widths"), isOn: $settings.preserveImageWidths)
+                            .help(loc.t("settings.general.behavior.preserve_image_widths_help"))
+                    }
+                }
+
+                LabeledContent(loc.t("settings.general.behavior.markdown_editor")) {
+                    Picker("", selection: $settings.markdownEditor) {
+                        Text(loc.t("settings.general.behavior.markdown_editor.plain")).tag(MarkdownEditorStyle.plain)
+                        Text(loc.t("settings.general.behavior.markdown_editor.colored")).tag(MarkdownEditorStyle.colored)
+                        Text(loc.t("settings.general.behavior.markdown_editor.styled")).tag(MarkdownEditorStyle.styled)
+                    }
+                    .pickerStyle(.segmented)
+                    .frame(width: 300)
+                }
+                .help(loc.t("settings.general.behavior.markdown_editor_help"))
                 LabeledContent(loc.t("settings.general.behavior.rich_text_mode")) {
                     Picker("", selection: $settings.richTextMode) {
                         Text(loc.t("settings.general.behavior.rich_text_mode.plain")).tag(RichTextMode.plainText)
