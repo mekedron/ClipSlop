@@ -122,6 +122,8 @@
 "settings.general.behavior.launch_login" = "Launch at login";
 "settings.general.behavior.keycodes" = "Use key codes (layout-independent shortcuts)";
 "settings.general.behavior.keycodes_help" = "Match by physical key position — mnemonics work with any keyboard layout";
+"settings.general.behavior.spotlight_indexing" = "Find prompts in Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Adds prompt names and folders to Spotlight so you can find them with ⌘Space. Prompt contents are never indexed.";
 "settings.general.behavior.markdown_renderer" = "Rendered with";
 "settings.general.behavior.markdown_renderer_help" = "Backend for the rendered viewer: Textual renders natively, HTML Editor uses a web view with richer formatting support";
 "settings.general.behavior.markdown_viewer" = "Markdown viewer";

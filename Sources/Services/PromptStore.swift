@@ -115,8 +115,17 @@ final class PromptStore {
     /// names (empty for root-level prompts). Used by the prompt-search feature
     /// to display "Folder / Subfolder" subtitles in flat result lists.
     func allPromptNodesWithPaths() -> [(node: PromptNode, path: [String])] {
+        Self.promptNodesWithPaths(in: prompts)
+    }
+
+    /// Actor-free form of `allPromptNodesWithPaths()`, so callers that hold a tree
+    /// but not the store — e.g. an App Intents query reading `prompts.json`
+    /// directly on a cold launch — get identical flattening.
+    nonisolated static func promptNodesWithPaths(
+        in nodes: [PromptNode]
+    ) -> [(node: PromptNode, path: [String])] {
         var result: [(node: PromptNode, path: [String])] = []
-        collectPromptsWithPaths(from: prompts, path: [], into: &result)
+        collectPromptsWithPaths(from: nodes, path: [], into: &result)
         return result
     }
 
@@ -214,7 +223,7 @@ final class PromptStore {
         }
     }
 
-    private func collectPromptsWithPaths(
+    nonisolated private static func collectPromptsWithPaths(
         from nodes: [PromptNode],
         path: [String],
         into result: inout [(node: PromptNode, path: [String])]
@@ -286,6 +295,16 @@ final class PromptStore {
     private func saveToDisk(_ nodes: [PromptNode]) {
         guard let data = try? JSONEncoder.pretty.encode(nodes) else { return }
         try? data.write(to: Constants.promptsFileURL)
+
+        // Posted unconditionally — deliberately ABOVE the isSyncing guard.
+        //
+        // `onPromptsChanged` is a single-assignment closure already claimed by
+        // AppState (iCloud upload + shortcut refresh), and it is suppressed during
+        // remote sync to avoid an echo loop. Consumers that only need to *observe*
+        // the library — like Spotlight indexing — must also see changes arriving
+        // from another Mac, so they hang off this instead.
+        NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
+
         if !isSyncing {
             onPromptsChanged?(data)
         }

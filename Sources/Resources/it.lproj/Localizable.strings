@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Avvia al login";
 "settings.general.behavior.keycodes" = "Usa codici tasto (scorciatoie indipendenti dal layout)";
 "settings.general.behavior.keycodes_help" = "Corrispondenza per posizione fisica del tasto: i mnemonici funzionano con qualsiasi layout di tastiera";
+"settings.general.behavior.spotlight_indexing" = "Trova i prompt in Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Aggiunge i nomi dei prompt e delle cartelle a Spotlight per trovarli con ⌘Spazio. Il contenuto dei prompt non viene mai indicizzato.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Aspetto";

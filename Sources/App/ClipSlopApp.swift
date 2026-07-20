@@ -46,4 +46,10 @@ struct ClipSlopApp: App {
 extension Notification.Name {
     static let clipSlopOpenSettings = Notification.Name("clipSlopOpenSettings")
     static let menuBarVisibilityChanged = Notification.Name("menuBarVisibilityChanged")
+
+    /// Fired by `PromptStore` after every save, including saves that originate
+    /// from an inbound iCloud sync. Use this — not `PromptStore.onPromptsChanged`,
+    /// which is single-assignment and skipped while syncing — to observe the
+    /// prompt library.
+    static let clipSlopPromptLibraryDidChange = Notification.Name("clipSlopPromptLibraryDidChange")
 }

@@ -348,13 +348,7 @@ final class PromptShortcutService {
         guard let appState, !isProcessingInline else { return }
         guard prompt.isPrompt, let systemPrompt = prompt.systemPrompt else { return }
 
-        let provider: AIProviderConfig
-        if let id = prompt.providerID,
-           let specific = appState.providerStore.providers.first(where: { $0.id == id }) {
-            provider = specific
-        } else if let defaultProvider = appState.providerStore.defaultProvider {
-            provider = defaultProvider
-        } else {
+        guard let provider = appState.providerStore.provider(preferring: prompt.providerID) else {
             return
         }
 

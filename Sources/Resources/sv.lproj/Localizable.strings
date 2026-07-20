@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Starta vid inloggning";
 "settings.general.behavior.keycodes" = "Använd tangentkoder (layoutoberoende genvägar)";
 "settings.general.behavior.keycodes_help" = "Matcha efter fysisk tangentposition — mnemoniska genvägar fungerar med alla tangentbordslayouter";
+"settings.general.behavior.spotlight_indexing" = "Hitta prompter i Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Lägger till promptnamn och mappar i Spotlight så att du hittar dem med ⌘Mellanslag. Promptinnehåll indexeras aldrig.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Utseende";

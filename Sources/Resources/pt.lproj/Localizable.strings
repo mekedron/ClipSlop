@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Iniciar ao fazer login";
 "settings.general.behavior.keycodes" = "Usar códigos de tecla (atalhos independentes do layout)";
 "settings.general.behavior.keycodes_help" = "Corresponder pela posição física da tecla — mnemónicos funcionam com qualquer layout de teclado";
+"settings.general.behavior.spotlight_indexing" = "Encontrar prompts no Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Adiciona nomes de prompts e pastas ao Spotlight para os encontrares com ⌘Espaço. O conteúdo dos prompts nunca é indexado.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Aparência";

@@ -145,6 +145,22 @@ jobs:
             done
           fi
 
+          # Generate App Intents metadata (Spotlight / Shortcuts / Siri actions).
+          # Must land here — inside Contents/Resources and BEFORE the codesign
+          # below — so it is covered by the signature seal. Adding it after
+          # signing would invalidate the signature and Gatekeeper would refuse to
+          # launch the app, which Sparkle cannot self-heal.
+          #
+          # --arch arm64: the universal build produces one const-values set per
+          # arch, but the metadata describes types and phrases, not code, so the
+          # two are equivalent (verified by diffing them). Feeding both would
+          # declare every intent twice.
+          ./Scripts/generate-appintents-metadata.sh \
+            --configuration release \
+            --arch arm64 \
+            --strict \
+            --output "${APP_DIR}/Resources"
+
           # Copy Sparkle.framework into the app bundle
           SPARKLE_FW=$(find .build -name "Sparkle.framework" -path "*/macos-arm64_x86_64/*" -type d 2>/dev/null | head -1)
           if [ -z "$SPARKLE_FW" ]; then
@@ -209,6 +225,27 @@ jobs:
             echo "::warning::No signing secrets configured — falling back to ad-hoc signature (Gatekeeper will warn)"
             codesign --force --deep --sign - "$APP_PATH"
           fi
+
+          # Guard both signing paths. A missing or empty Metadata.appintents
+          # produces NO error anywhere else in this pipeline: the DMG builds,
+          # notarization passes, the appcast updates, and users simply get an app
+          # with no Spotlight or Shortcuts actions. Fail loudly instead.
+          ACTIONS_DATA="$APP_PATH/Contents/Resources/Metadata.appintents/extract.actionsdata"
+          if [ ! -f "$ACTIONS_DATA" ]; then
+            echo "::error::Metadata.appintents missing from the app bundle — the release would ship with no App Intents"
+            exit 1
+          fi
+          if ! grep -q "RunPromptOnClipboardIntent" "$ACTIONS_DATA"; then
+            echo "::error::Metadata.appintents does not contain the expected intents"
+            exit 1
+          fi
+          # Prove the metadata is actually inside the signature seal, not merely
+          # present on disk.
+          if ! plutil -p "$APP_PATH/Contents/_CodeSignature/CodeResources" | grep -q "Metadata.appintents"; then
+            echo "::error::Metadata.appintents is not sealed by the code signature"
+            exit 1
+          fi
+          echo "Verified App Intents metadata is present and sealed"
 
           echo "App bundle created at $APP_PATH"
 

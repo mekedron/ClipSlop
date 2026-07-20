@@ -9,6 +9,26 @@ final class ProviderStore {
         providers.first(where: \.isDefault) ?? providers.first
     }
 
+    /// Resolves the provider a prompt should run on: its own override when set and
+    /// still present, otherwise the default.
+    func provider(preferring id: UUID?) -> AIProviderConfig? {
+        Self.resolve(preferring: id, in: providers)
+    }
+
+    /// Pure form of `provider(preferring:)`, extracted so the fallback chain can be
+    /// tested without a disk-backed store. A prompt's `providerID` can outlive the
+    /// provider it points at (the user deletes it in Settings), so a stale override
+    /// has to fall through to the default rather than fail.
+    nonisolated static func resolve(
+        preferring id: UUID?,
+        in providers: [AIProviderConfig]
+    ) -> AIProviderConfig? {
+        if let id, let specific = providers.first(where: { $0.id == id }) {
+            return specific
+        }
+        return providers.first(where: \.isDefault) ?? providers.first
+    }
+
     init() {
         providers = loadFromDisk() ?? []
     }

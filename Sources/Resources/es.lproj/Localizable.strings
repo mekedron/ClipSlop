@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Iniciar al arrancar";
 "settings.general.behavior.keycodes" = "Usar codigos de tecla (atajos independientes del idioma)";
 "settings.general.behavior.keycodes_help" = "Detecta por posicion fisica de la tecla: los atajos funcionan con cualquier distribucion de teclado";
+"settings.general.behavior.spotlight_indexing" = "Buscar prompts en Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Añade los nombres de prompts y carpetas a Spotlight para encontrarlos con ⌘Espacio. El contenido de los prompts nunca se indexa.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Apariencia";

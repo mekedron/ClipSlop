@@ -1,0 +1,62 @@
+name: CI
+
+# Deliberately separate from release.yml and non-gating for releases.
+#
+# The risk this guards is narrow but expensive: App Intents metadata is produced
+# by toolchain flags in Package.swift plus a script, none of which the compiler
+# checks. Remove the swiftSettings block or malform the protocol list and the
+# build still succeeds — it just silently ships an app with no intents. That is
+# only detectable by actually running the extraction, which is what this does.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-verify:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Resolve packages
+        run: swift package resolve
+
+      # Compiles the test target too, which is what would break if the
+      # unsafeFlags ever become invalid for a future toolchain.
+      - name: Build (including tests)
+        run: swift build --build-tests
+
+      - name: Verify App Intents metadata extraction
+        run: |
+          ./Scripts/generate-appintents-metadata.sh \
+            --configuration debug \
+            --strict \
+            --output "$RUNNER_TEMP/appintents"
+
+          ACTIONS_DATA="$RUNNER_TEMP/appintents/Metadata.appintents/extract.actionsdata"
+          for INTENT in RunPromptOnClipboardIntent RunPromptOnTextIntent \
+                        OpenPromptInEditorFromClipboardIntent OpenPromptInEditorWithTextIntent; do
+            if ! grep -q "$INTENT" "$ACTIONS_DATA"; then
+              echo "::error::$INTENT missing from generated metadata"
+              exit 1
+            fi
+          done
+          # The entity and its query are what make the prompt library selectable
+          # as a parameter; without them the actions appear but resolve nothing.
+          for SYMBOL in PromptEntity PromptEntityQuery; do
+            if ! grep -q "$SYMBOL" "$ACTIONS_DATA"; then
+              echo "::error::$SYMBOL missing from generated metadata"
+              exit 1
+            fi
+          done
+          echo "All four intents, the entity and its query are present"
+
+      # Integration suites hit the network and Keychain, so they are excluded
+      # rather than allowed to flake the build.
+      - name: Run unit tests
+        run: swift test --skip AnthropicIntegrationTests --skip ChatGPTIntegrationTests

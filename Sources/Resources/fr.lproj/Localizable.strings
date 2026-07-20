@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Lancer au démarrage";
 "settings.general.behavior.keycodes" = "Utiliser les codes de touches (raccourcis indépendants de la disposition)";
 "settings.general.behavior.keycodes_help" = "Associer par position physique — les mnémoniques fonctionnent avec toute disposition de clavier";
+"settings.general.behavior.spotlight_indexing" = "Trouver les prompts dans Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Ajoute les noms de prompts et de dossiers à Spotlight pour les retrouver avec ⌘Espace. Le contenu des prompts n’est jamais indexé.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Apparence";

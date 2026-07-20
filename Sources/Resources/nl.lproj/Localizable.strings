@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Starten bij inloggen";
 "settings.general.behavior.keycodes" = "Toetscodes gebruiken (lay-outonafhankelijke sneltoetsen)";
 "settings.general.behavior.keycodes_help" = "Herken op fysieke toetspositie — geheugensteuntjes werken met elke toetsenbordindeling";
+"settings.general.behavior.spotlight_indexing" = "Prompts vinden in Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Voegt promptnamen en mappen toe aan Spotlight zodat je ze met ⌘Spatie kunt vinden. Promptinhoud wordt nooit geïndexeerd.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Weergave";

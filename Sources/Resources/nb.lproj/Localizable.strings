@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Start ved innlogging";
 "settings.general.behavior.keycodes" = "Bruk tastekoder (layoutuavhengige snarveier)";
 "settings.general.behavior.keycodes_help" = "Matcher etter fysisk tasteposisjon — huskeord fungerer med alle tastaturoppsett";
+"settings.general.behavior.spotlight_indexing" = "Finn prompter i Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Legger til promptnavn og mapper i Spotlight så du finner dem med ⌘Mellomrom. Promptinnhold indekseres aldri.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Utseende";

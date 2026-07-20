@@ -210,6 +210,18 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultQuickAccess, forKey: "useDefaultQuickAccess") }
     }
 
+    /// Publishes prompt names and folder paths to the system-wide Spotlight index
+    /// so prompts can be found by name in ⌘Space, not just picked as a parameter.
+    ///
+    /// Prompt *bodies* are never indexed — see `PromptEntity.attributeSet`. Turning
+    /// this off deletes everything ClipSlop previously indexed.
+    var spotlightIndexingEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(spotlightIndexingEnabled, forKey: "spotlightIndexingEnabled")
+            PromptSpotlightIndexer.shared.settingChanged(enabled: spotlightIndexingEnabled)
+        }
+    }
+
     /// Collapses the prompt navigator in the popup to just the breadcrumb
     /// row — for users who drive prompts by mnemonics and want the space back.
     var promptLibraryCollapsed: Bool {
@@ -281,6 +293,7 @@ final class AppSettings {
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
+        spotlightIndexingEnabled = defaults.object(forKey: "spotlightIndexingEnabled") as? Bool ?? true
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
         adHocSystemPrompt = defaults.string(forKey: "adHocSystemPrompt") ?? AppSettings.defaultAdHocSystemPrompt
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,

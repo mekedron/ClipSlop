@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Käynnistä kirjautumisen yhteydessä";
 "settings.general.behavior.keycodes" = "Käytä näppäinkoodeja (asettelusta riippumattomat pikanäppäimet)";
 "settings.general.behavior.keycodes_help" = "Tunnistaa fyysisen näppäimen sijainnin — muistisäännöt toimivat millä tahansa näppäinasettelulla";
+"settings.general.behavior.spotlight_indexing" = "Etsi kehotteita Spotlightista";
+"settings.general.behavior.spotlight_indexing_help" = "Lisää kehotteiden ja kansioiden nimet Spotlightiin, jotta löydät ne ⌘Välilyönnillä. Kehotteiden sisältöä ei koskaan indeksoida.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Ulkoasu";

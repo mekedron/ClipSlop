@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Beim Anmelden starten";
 "settings.general.behavior.keycodes" = "Tastencodes verwenden (layoutunabhängige Kürzel)";
 "settings.general.behavior.keycodes_help" = "Nach physischer Tastenposition zuordnen — Mnemonics funktionieren mit jedem Tastaturlayout";
+"settings.general.behavior.spotlight_indexing" = "Prompts in Spotlight finden";
+"settings.general.behavior.spotlight_indexing_help" = "Fügt Prompt-Namen und Ordner zu Spotlight hinzu, damit du sie mit ⌘Leertaste findest. Prompt-Inhalte werden nie indiziert.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Darstellung";

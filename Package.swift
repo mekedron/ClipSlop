@@ -33,6 +33,24 @@ let package = Package(
             resources: [
                 .process("Resources")
             ],
+            swiftSettings: [
+                // App Intents metadata extraction. Xcode normally injects these
+                // via its own build system; SwiftPM does not, so `Metadata.appintents`
+                // would silently never be produced and no intent would exist at
+                // runtime. `Scripts/generate-appintents-metadata.sh` consumes the
+                // emitted .swiftconstvalues files.
+                //
+                // The protocol list ships in-repo rather than being read from the
+                // toolchain: Xcode's own copy is wrapped in a dict the Swift frontend
+                // rejects as malformed, and its path differs across Xcode/Xcode-beta/CI.
+                // The relative path resolves against the package root, same as the
+                // SupportingFiles/Info.plist linker flag below.
+                .unsafeFlags([
+                    "-Xfrontend", "-const-gather-protocols-file",
+                    "-Xfrontend", "SupportingFiles/AppIntentsConstValueProtocols.json",
+                    "-emit-const-values",
+                ])
+            ],
             linkerSettings: [
                 .unsafeFlags([
                     "-Xlinker", "-sectcreate",

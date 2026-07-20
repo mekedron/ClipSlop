@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Pornește la autentificare";
 "settings.general.behavior.keycodes" = "Folosește coduri de taste (scurtături independente de aspect)";
 "settings.general.behavior.keycodes_help" = "Potrivire după poziția fizică a tastei — mnemonicile funcționează cu orice aspect de tastatură";
+"settings.general.behavior.spotlight_indexing" = "Găsește prompturi în Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Adaugă numele prompturilor și folderelor în Spotlight ca să le găsești cu ⌘Spațiu. Conținutul prompturilor nu este niciodată indexat.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Aspect";

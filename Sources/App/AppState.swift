@@ -3,6 +3,32 @@ import SwiftUI
 @MainActor
 @Observable
 final class AppState {
+    /// The running instance, for code the SwiftUI environment cannot reach —
+    /// specifically App Intents, whose `perform()` is invoked by the system rather
+    /// than from any view.
+    ///
+    /// Assigned at the *end* of `setup()`, never in `init()`, so that a non-nil
+    /// value guarantees the stores are loaded and every service is wired. See
+    /// `AppStateBridge.waitUntilReady()` for the cold-launch case where Spotlight
+    /// dispatches an intent while the process is still starting.
+    /// Mirrors the `SparkleUpdater.shared` idiom used elsewhere in this codebase.
+    private(set) static var shared: AppState?
+
+    /// Launchers that are never a meaningful paste target or focus destination.
+    ///
+    /// `lastExternalApp` drives two things: where inline paste sends its ⌘V, and
+    /// which app regains focus when a ClipSlop window closes. Both are wrong if it
+    /// points at Spotlight — the user summoned Spotlight *from* some real app and
+    /// expects to land back there, not in a search field that has since closed.
+    /// This matters now that Spotlight is a supported way to invoke prompts, but
+    /// it was already reachable before via global hotkeys pressed while Spotlight
+    /// was open.
+    static let transientLauncherBundleIDs: Set<String> = [
+        "com.apple.Spotlight",
+        "com.apple.shortcuts",
+        "com.apple.siri.launcher",
+    ]
+
     let promptStore = PromptStore()
     let quickAccessStore = QuickAccessStore()
     let providerStore = ProviderStore()
@@ -321,7 +347,8 @@ final class AppState {
             queue: .main
         ) { [weak self] note in
             guard let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
-                  app.bundleIdentifier != myBundleID
+                  app.bundleIdentifier != myBundleID,
+                  !Self.transientLauncherBundleIDs.contains(app.bundleIdentifier ?? "")
             else { return }
             self?.lastExternalApp = app
         }
@@ -340,6 +367,14 @@ final class AppState {
         ) { [weak self] _ in
             self?.openSettings()
         }
+
+        // Publish only now that everything above is wired — App Intents may fire
+        // the moment this becomes non-nil.
+        Self.shared = self
+
+        // Must run on every launch, not just on change: parameterised App Shortcut
+        // phrases render "No Results" until the system has fetched entities once.
+        PromptSpotlightIndexer.shared.start(promptStore: promptStore)
     }
 
     /// Idempotent — safe to call from both the migration-finished notification
@@ -563,6 +598,13 @@ final class AppState {
 
     // MARK: - Session Management
 
+    /// Seam for App Intents, which need to seed the editor from text supplied by
+    /// the caller rather than from the clipboard or a selection. `startSession` is
+    /// file-private, so the intent extension cannot reach it directly.
+    func startSessionForIntent(text: String, html: String? = nil) {
+        startSession(text: text, html: html, source: .clipboard)
+    }
+
     private func startSession(text: String, html: String? = nil, source: TransformationSession.InputSource) {
         currentSession = TransformationSession(
             originalText: text,
@@ -702,13 +744,7 @@ final class AppState {
         guard !isProcessing, var session = currentSession else { return }
 
         // Use prompt-specific provider if set, otherwise fall back to default
-        let provider: AIProviderConfig
-        if let id = providerID,
-           let specific = providerStore.providers.first(where: { $0.id == id }) {
-            provider = specific
-        } else if let defaultProvider = providerStore.defaultProvider {
-            provider = defaultProvider
-        } else {
+        guard let provider = providerStore.provider(preferring: providerID) else {
             openSettingsToProviders()
             return
         }

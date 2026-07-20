@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Запускать при входе";
 "settings.general.behavior.keycodes" = "Использовать коды клавиш (независимые от раскладки)";
 "settings.general.behavior.keycodes_help" = "Привязка к физическому положению клавиш — мнемоники работают с любой раскладкой";
+"settings.general.behavior.spotlight_indexing" = "Искать промпты в Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Добавляет названия промптов и папок в Spotlight, чтобы находить их через ⌘Пробел. Содержимое промптов не индексируется.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Оформление";

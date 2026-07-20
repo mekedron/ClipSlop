@@ -2,11 +2,29 @@ import Foundation
 
 enum Constants {
     static let appName = "ClipSlop"
+
+    /// Keychain service name. Deliberately the *release* identifier even in dev
+    /// builds, so a locally-bundled ClipSlop can reuse the API keys already
+    /// stored on this machine instead of demanding they be re-entered.
     static let bundleIdentifier = "com.mekedron.clipslop"
 
+    /// True when running from the locally-built dev bundle (see Scripts/make-app-bundle.sh),
+    /// which ships as `com.mekedron.clipslop.dev` so it gets its own LaunchServices
+    /// registration and TCC identity instead of colliding with an installed release.
+    static let isDevBuild: Bool = Bundle.main.bundleIdentifier?.hasSuffix(".dev") == true
+
+    /// Data directory, scoped by build flavour.
+    ///
+    /// A dev bundle has a different bundle identifier, therefore a *different and
+    /// empty* UserDefaults domain — which means `useDefaultPrompts` reads back as
+    /// its `true` default and `PromptStore.init` immediately does
+    /// `saveToDisk(loadDefaults())`. If dev and release shared this directory that
+    /// would overwrite the real prompt library with the bundled defaults on first
+    /// launch, and iCloud would then propagate the loss to every other Mac.
     static let appSupportDirectory: URL = {
+        let folder = isDevBuild ? "ClipSlop-dev" : "ClipSlop"
         let url = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ClipSlop")
+            .appendingPathComponent(folder)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }()

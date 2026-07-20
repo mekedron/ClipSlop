@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Indítás bejelentkezéskor";
 "settings.general.behavior.keycodes" = "Billentyűkódok használata (elrendezésfüggetlen gyorsbillentyűk)";
 "settings.general.behavior.keycodes_help" = "Fizikai billentyűpozíció alapján — a mnemonikák bármilyen billentyűkiosztással működnek";
+"settings.general.behavior.spotlight_indexing" = "Promptok keresése a Spotlightban";
+"settings.general.behavior.spotlight_indexing_help" = "Hozzáadja a promptok és mappák nevét a Spotlighthoz, hogy ⌘Szóközzel megtaláld őket. A promptok tartalma soha nem kerül indexelésre.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Megjelenés";

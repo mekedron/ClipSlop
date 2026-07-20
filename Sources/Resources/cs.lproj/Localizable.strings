@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Spustit při přihlášení";
 "settings.general.behavior.keycodes" = "Používat kódy kláves (zkratky nezávislé na rozložení)";
 "settings.general.behavior.keycodes_help" = "Shoda podle fyzické pozice klávesy — mnemoniky fungují s libovolným rozložením klávesnice";
+"settings.general.behavior.spotlight_indexing" = "Najít prompty ve Spotlightu";
+"settings.general.behavior.spotlight_indexing_help" = "Přidá názvy promptů a složek do Spotlightu, abyste je našli přes ⌘Mezerník. Obsah promptů se nikdy neindexuje.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Vzhled";

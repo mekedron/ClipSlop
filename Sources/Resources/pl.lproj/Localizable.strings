@@ -118,6 +118,8 @@
 "settings.general.behavior.launch_login" = "Uruchamiaj przy logowaniu";
 "settings.general.behavior.keycodes" = "Używaj kodów klawiszy (skróty niezależne od układu)";
 "settings.general.behavior.keycodes_help" = "Dopasowuj po pozycji fizycznej klawisza — mnemoniki działają z każdym układem klawiatury";
+"settings.general.behavior.spotlight_indexing" = "Znajdź prompty w Spotlight";
+"settings.general.behavior.spotlight_indexing_help" = "Dodaje nazwy promptów i folderów do Spotlight, aby można je było znaleźć przez ⌘Spacja. Treść promptów nigdy nie jest indeksowana.";
 
 /* Settings - General - Appearance */
 "settings.general.appearance" = "Wygląd";

@@ -73,6 +73,9 @@ struct GeneralSettingsView: View {
                 LaunchAtLogin.Toggle(loc.t("settings.general.behavior.launch_login"))
                 Toggle(loc.t("settings.general.behavior.keycodes"), isOn: $settings.useKeyCodes)
                     .help(loc.t("settings.general.behavior.keycodes_help"))
+                Toggle(loc.t("settings.general.behavior.spotlight_indexing"),
+                       isOn: $settings.spotlightIndexingEnabled)
+                    .help(loc.t("settings.general.behavior.spotlight_indexing_help"))
                 Toggle(loc.t("settings.general.behavior.close_on_escape"), isOn: $settings.closeOnEscape)
                     .help(loc.t("settings.general.behavior.close_on_escape_help"))
                 Toggle(isOn: $settings.closeOnCopy) {
