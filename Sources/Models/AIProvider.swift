@@ -192,58 +192,6 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
         self.ollamaReasoningEffort = ollamaReasoningEffort
     }
 
-    enum CodingKeys: String, CodingKey {
-        case id
-        case name
-        case providerType
-        case baseURL
-        case apiKeyRef
-        case modelID
-        case isDefault
-        case maxTokens
-        case temperature
-        case reasoningEffort
-        case ollamaReasoningEffort
-        case ollamaThinkingEnabled
-    }
-
-    init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        id = try container.decode(UUID.self, forKey: .id)
-        name = try container.decode(String.self, forKey: .name)
-        providerType = try container.decode(AIProviderType.self, forKey: .providerType)
-        baseURL = try container.decode(String.self, forKey: .baseURL)
-        apiKeyRef = try container.decode(String.self, forKey: .apiKeyRef)
-        modelID = try container.decode(String.self, forKey: .modelID)
-        isDefault = try container.decode(Bool.self, forKey: .isDefault)
-        maxTokens = try container.decode(Int.self, forKey: .maxTokens)
-        temperature = try container.decode(Double.self, forKey: .temperature)
-        reasoningEffort = try container.decodeIfPresent(ReasoningEffort.self, forKey: .reasoningEffort)
-
-        if let effort = try container.decodeIfPresent(OllamaReasoningEffort.self, forKey: .ollamaReasoningEffort) {
-            ollamaReasoningEffort = effort
-        } else if let legacyThinking = try container.decodeIfPresent(Bool.self, forKey: .ollamaThinkingEnabled) {
-            ollamaReasoningEffort = legacyThinking ? .unset : OllamaReasoningEffort.none
-        } else {
-            ollamaReasoningEffort = nil
-        }
-    }
-
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(name, forKey: .name)
-        try container.encode(providerType, forKey: .providerType)
-        try container.encode(baseURL, forKey: .baseURL)
-        try container.encode(apiKeyRef, forKey: .apiKeyRef)
-        try container.encode(modelID, forKey: .modelID)
-        try container.encode(isDefault, forKey: .isDefault)
-        try container.encode(maxTokens, forKey: .maxTokens)
-        try container.encode(temperature, forKey: .temperature)
-        try container.encodeIfPresent(reasoningEffort, forKey: .reasoningEffort)
-        try container.encodeIfPresent(ollamaReasoningEffort, forKey: .ollamaReasoningEffort)
-    }
-
     static let builtInAnthropic = AIProviderConfig(
         name: "Anthropic",
         providerType: .anthropic,
