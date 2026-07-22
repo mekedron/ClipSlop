@@ -96,7 +96,8 @@ struct OpenAICompatibleService: AIService {
             ],
             maxTokens: config.maxTokens,
             temperature: config.temperature,
-            stream: stream
+            stream: stream,
+            reasoningEffort: config.ollamaOpenAICompatibleReasoningEffort
         )
 
         request.httpBody = try JSONEncoder().encode(body)
@@ -112,6 +113,7 @@ private struct OpenAIRequest: Encodable {
     let maxTokens: Int
     let temperature: Double
     let stream: Bool
+    let reasoningEffort: String?
 
     struct Message: Encodable {
         let role: String
@@ -120,6 +122,7 @@ private struct OpenAIRequest: Encodable {
 
     enum CodingKeys: String, CodingKey {
         case model, messages, temperature, stream
+        case reasoningEffort = "reasoning_effort"
         case maxTokens = "max_tokens"
     }
 }

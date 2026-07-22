@@ -20,6 +20,10 @@ Run everything locally. No data leaves your Mac, no API costs.
 
 ClipSlop will list every model Ollama has pulled.
 
+## Settings
+
+- **Reasoning Effort** — controls Ollama's OpenAI-compatible `reasoning_effort` field for this provider entry. Choose **Unset** to omit the field, or send one of Ollama's supported values: `none`, `low`, `medium`, `high`, or `max`.
+
 ## Recommended models for this workload
 
 ClipSlop transformations are short, single-shot, and benefit from instruction-following more than raw size. Good starting points:

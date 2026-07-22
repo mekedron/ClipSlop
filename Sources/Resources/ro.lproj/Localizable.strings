@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Copiază URL-ul de autentificare";
 "settings.providers.temperature" = "Temperatură";
 "settings.providers.reasoning_effort" = "Efort de raționament";
+"settings.providers.ollama.reasoning_effort" = "Efort de raționament";
+"settings.providers.ollama.reasoning_effort.unset" = "Nesetat";
+"settings.providers.ollama.reasoning_effort.none" = "Niciunul";
+"settings.providers.ollama.reasoning_effort.low" = "Scăzut";
+"settings.providers.ollama.reasoning_effort.medium" = "Mediu";
+"settings.providers.ollama.reasoning_effort.high" = "Ridicat";
+"settings.providers.ollama.reasoning_effort.max" = "Maxim";
 "settings.providers.test" = "Testează";
 "settings.providers.test_ok" = "Conexiune OK";
 "settings.providers.delete" = "Șterge";

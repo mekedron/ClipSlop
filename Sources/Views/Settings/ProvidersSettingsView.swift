@@ -188,6 +188,7 @@ struct ProviderDetailView: View {
     @State private var maxTokens: Int = 4096
     @State private var temperature: Double = 1.0
     @State private var reasoningEffort: ReasoningEffort = .low
+    @State private var ollamaReasoningEffort: OllamaReasoningEffort = .unset
     @State private var apiKey: String = ""
     @State private var cliToolAvailable: Bool = true
     @State private var availableModels: [String] = []
@@ -258,6 +259,15 @@ struct ProviderDetailView: View {
                         }
                         Slider(value: $temperature, in: 0...2, step: 0.1)
                             .onChange(of: temperature) { autoSave() }
+                    }
+
+                    if provider.providerType == .ollama {
+                        Picker(loc.t("settings.providers.ollama.reasoning_effort"), selection: $ollamaReasoningEffort) {
+                            ForEach(OllamaReasoningEffort.allCases) { effort in
+                                Text(effort.displayName).tag(effort)
+                            }
+                        }
+                        .onChange(of: ollamaReasoningEffort) { autoSave() }
                     }
 
                     if provider.providerType.supportsReasoningEffort {
@@ -460,6 +470,7 @@ struct ProviderDetailView: View {
         updated.maxTokens = maxTokens
         updated.temperature = temperature
         updated.reasoningEffort = provider.providerType.supportsReasoningEffort ? reasoningEffort : nil
+        updated.ollamaReasoningEffort = provider.providerType == .ollama ? ollamaReasoningEffort : nil
         providerStore.updateProvider(updated)
         if provider.providerType.requiresAPIKey {
             providerStore.setAPIKey(apiKey, for: updated)
@@ -481,6 +492,7 @@ struct ProviderDetailView: View {
                 testConfig.maxTokens = maxTokens
                 testConfig.temperature = temperature
                 testConfig.reasoningEffort = provider.providerType.supportsReasoningEffort ? reasoningEffort : nil
+                testConfig.ollamaReasoningEffort = provider.providerType == .ollama ? ollamaReasoningEffort : nil
                 let result = try await service.process(
                     text: "Reply with OK",
                     systemPrompt: "Reply with just OK, nothing else.",
@@ -537,6 +549,7 @@ struct ProviderDetailView: View {
         maxTokens = provider.maxTokens
         temperature = provider.temperature
         reasoningEffort = provider.reasoningEffort ?? .low
+        ollamaReasoningEffort = provider.ollamaReasoningEffort ?? .unset
         apiKey = providerStore.getAPIKey(for: provider)
         if provider.providerType == .cliTool {
             cliToolAvailable = CLIToolDetector.isAvailable(at: provider.baseURL)
@@ -778,7 +791,8 @@ struct DuplicateProviderSheet: View {
             modelID: source.modelID,
             maxTokens: source.maxTokens,
             temperature: source.temperature,
-            reasoningEffort: source.reasoningEffort
+            reasoningEffort: source.reasoningEffort,
+            ollamaReasoningEffort: source.ollamaReasoningEffort
         )
         providerStore.addProvider(config)
         // Copy API key if present
