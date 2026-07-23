@@ -541,6 +541,90 @@ final class MagicPressCoordinator {
         }
     }
 
+    // MARK: - Dry-run (debug surface, §17)
+
+    /// Captures the current field, runs plan → route → assemble without
+    /// executing anything, and puts the pretty-printed report on the
+    /// clipboard. The 600 ms delay lets focus return to the target app after
+    /// the menu closes.
+    func dryRunToClipboard() {
+        guard phase == .idle, let appState else { return }
+        let locale = Locale.preferredLanguages.first ?? "en"
+
+        Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: .milliseconds(600))
+            let snapshot = await self.snapshotService.capture(appInfo: self.frontmostAppInfo(), locale: locale)
+
+            let report: DryRunReport?
+            do {
+                let plan = try MagicPressPipeline.plan(
+                    workflowStore: self.workflowStore,
+                    coreStore: self.coreStore,
+                    roleStore: self.roleStore,
+                    providerStore: appState.providerStore
+                )
+                report = MagicPressPipeline.dryRun(plan: plan, snapshot: snapshot)
+            } catch {
+                self.showHint(error.localizedDescription)
+                return
+            }
+
+            guard let report else {
+                self.showHint(Loc.shared.t("magic.hud.no_target"))
+                return
+            }
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            if let data = try? encoder.encode(report) {
+                ClipboardService.setText(String(decoding: data, as: UTF8.self))
+                self.showHint("Dry-run report copied to clipboard")
+            }
+        }
+    }
+
+    // MARK: - Onboarding
+
+    /// Writes the onboarding interview into the core/ wiki. Only fields the
+    /// user actually filled are written; the seeded templates otherwise stay
+    /// untouched. The three sample messages land in writing-style.md — in V0
+    /// they ride the pinned slot (a structured few-shot store is a later
+    /// milestone).
+    func saveOnboardingProfile(name: String, role: String, sampleMessages: [String]) {
+        if !name.isEmpty || !role.isEmpty {
+            let identity = """
+            # Who I am
+
+            - Name: \(name)
+            - Role: \(role)
+            - Company / context:
+            - Languages I write in:
+            """
+            try? identity.write(
+                to: Constants.Engine.coreDirectory.appendingPathComponent("identity.md"),
+                atomically: true, encoding: .utf8
+            )
+        }
+
+        if !sampleMessages.isEmpty {
+            let styleURL = Constants.Engine.coreDirectory.appendingPathComponent("writing-style.md")
+            var style = (try? String(contentsOf: styleURL, encoding: .utf8)) ?? EngineSeedContent.writingStyle
+            let heading = "## Examples of how I actually write"
+            if let headingRange = style.range(of: heading) {
+                style = String(style[..<headingRange.lowerBound])
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            let examples = sampleMessages
+                .map { "> " + $0.replacingOccurrences(of: "\n", with: "\n> ") }
+                .joined(separator: "\n\n")
+            style = style.trimmingCharacters(in: .whitespacesAndNewlines)
+                + "\n\n\(heading)\n\n\(examples)\n"
+            try? style.write(to: styleURL, atomically: true, encoding: .utf8)
+        }
+
+        coreStore.reloadIfChanged()
+    }
+
     // MARK: - Traces & HUD
 
     private func submitTrace(_ trace: PressTrace) {

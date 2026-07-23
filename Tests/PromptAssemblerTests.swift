@@ -8,7 +8,8 @@ struct PromptAssemblerTests {
         writingStyle: "## General\n- Be direct.",
         constraintsText: "- Never invent facts.",
         aliases: "- Vika = Viktoria Lahtinen",
-        constraints: []
+        constraints: [],
+        systemPromptOverride: nil
     )
 
     private func assemble(
@@ -56,7 +57,7 @@ struct PromptAssemblerTests {
             snapshot: MagicTestSupport.makeSnapshot(value: huge, surroundingContent: huge),
             core: CoreFileSet(
                 identity: huge, writingStyle: huge, constraintsText: "- Never invent facts.",
-                aliases: huge, constraints: []
+                aliases: huge, constraints: [], systemPromptOverride: nil
             )
         )
         for slot in prompt.slots {
@@ -72,7 +73,8 @@ struct PromptAssemblerTests {
             writingStyle: huge,
             constraintsText: "- NEVER-TRIM-MARKER stays.",
             aliases: "- ALIAS-MARKER = Somebody",
-            constraints: []
+            constraints: [],
+            systemPromptOverride: nil
         ))
         let pinned = prompt.slots.first { $0.id == .pinned }!
         #expect(pinned.truncated)
@@ -164,10 +166,19 @@ struct PromptAssemblerTests {
         #expect(prompt.untrustedContext.contains("UNTRUSTED-POST"))
     }
 
-    @Test func systemPromptIsTheFixedTemplate() {
+    @Test func systemPromptIsTheTemplateByDefault() {
         let prompt = assemble()
         #expect(prompt.systemPrompt == PromptAssembler.systemPromptTemplate)
         #expect(prompt.systemPrompt.contains("Return ONLY the text to insert"))
+        #expect(prompt.systemPrompt.contains("LANGUAGE"))
+    }
+
+    @Test func systemPromptOverrideWinsWhenPresent() {
+        let prompt = assemble(core: CoreFileSet(
+            identity: "", writingStyle: "", constraintsText: "", aliases: "",
+            constraints: [], systemPromptOverride: "CUSTOM SYSTEM PROMPT"
+        ))
+        #expect(prompt.systemPrompt == "CUSTOM SYSTEM PROMPT")
     }
 
     @Test func removeSectionRemovesHeadingThroughNextHeading() {

@@ -19,8 +19,14 @@ struct CoreFileSet: Sendable {
     let constraintsText: String
     let aliases: String
     let constraints: [ConstraintRule]
+    /// `~/.clipslop/system-prompt.md` — replaces the built-in system prompt
+    /// when present and non-empty (edited from the Magic settings tab).
+    let systemPromptOverride: String?
 
-    static let empty = CoreFileSet(identity: "", writingStyle: "", constraintsText: "", aliases: "", constraints: [])
+    static let empty = CoreFileSet(
+        identity: "", writingStyle: "", constraintsText: "", aliases: "",
+        constraints: [], systemPromptOverride: nil
+    )
 }
 
 @MainActor
@@ -51,14 +57,20 @@ final class CoreFileStore {
         }
 
         let constraintsText = read("constraints.md")
+        let overrideText = (try? String(contentsOf: Self.systemPromptURL, encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         files = CoreFileSet(
             identity: read("identity.md"),
             writingStyle: read("writing-style.md"),
             constraintsText: constraintsText,
             aliases: read("aliases.md"),
-            constraints: Self.parseConstraints(constraintsText)
+            constraints: Self.parseConstraints(constraintsText),
+            systemPromptOverride: (overrideText?.isEmpty == false) ? overrideText : nil
         )
     }
+
+    nonisolated static let systemPromptURL =
+        Constants.Engine.rootDirectory.appendingPathComponent("system-prompt.md")
 
     /// Recognized bullet shapes, anywhere in the file:
     ///   - never say: "some phrase"     → case/diacritic-insensitive substring rule
@@ -111,6 +123,9 @@ final class CoreFileStore {
             signature[name] = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?
                 .contentModificationDate ?? .distantPast
         }
+        signature["system-prompt.md"] = (try? systemPromptURL.resourceValues(
+            forKeys: [.contentModificationDateKey]
+        ))?.contentModificationDate ?? .distantPast
         return signature
     }
 }

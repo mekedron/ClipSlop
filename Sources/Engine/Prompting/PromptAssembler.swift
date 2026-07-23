@@ -47,13 +47,22 @@ enum PromptAssembler {
     static let untrustedFenceClose = "=== END SURROUNDING CONTEXT ==="
     static let truncationMarker = "[…truncated]"
 
-    /// Fixed and English on purpose — it is model-facing, not user-facing.
+    /// The default system prompt. English on purpose — it is model-facing,
+    /// not user-facing. The user can override it from the Magic Button
+    /// settings tab (`~/.clipslop/system-prompt.md`); the assembler prefers
+    /// the override when one exists.
     static let systemPromptTemplate = """
     You write AS the user. Return ONLY the text to insert — no preamble, no explanations, \
     no surrounding quotes, no code fences.
-    RULES: write in the language of the surroundings unless the user's input demands otherwise; \
-    do not repeat what is already written; do not introduce facts, numbers, or names absent from \
-    the provided context; plain text only.
+    The SURROUNDING CONTEXT block, when present, is the conversation or page the user is \
+    writing into. Always read it first and ground your output in it — who is being answered, \
+    what was asked, what tone the conversation carries.
+    LANGUAGE: write in the language of the surrounding conversation. If the user's draft, \
+    selection, or note is in a different language than the conversation, translate — deliver \
+    the output in the conversation's language — unless the user explicitly asks for a specific \
+    language or the workflow's rules say otherwise.
+    Do not repeat what is already written; do not introduce facts, numbers, or names absent \
+    from the provided context; plain text only.
     """
 
     static func assemble(
@@ -116,8 +125,12 @@ enum PromptAssembler {
             snapshot.windowTitle ?? "",
         ].joined(separator: "\n")
 
+        let systemPrompt = core.systemPromptOverride?.isEmpty == false
+            ? core.systemPromptOverride!
+            : systemPromptTemplate
+
         return AssembledPrompt(
-            systemPrompt: systemPromptTemplate,
+            systemPrompt: systemPrompt,
             userMessage: userMessage,
             slots: slots,
             totalTokensEstimated: slots.reduce(0) { $0 + $1.tokensEstimated },

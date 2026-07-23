@@ -5,7 +5,7 @@ struct SettingsView: View {
 
     private let loc = Loc.shared
 
-    private let tabIcons = ["gear", "brain", "text.bubble", "square.grid.3x3.fill", "info.circle"]
+    private let tabIcons = ["gear", "brain", "text.bubble", "square.grid.3x3.fill", "wand.and.stars", "info.circle"]
 
     var body: some View {
         let tabNames = [
@@ -13,6 +13,7 @@ struct SettingsView: View {
             loc.t("settings.tab.providers"),
             loc.t("settings.tab.prompts"),
             loc.t("settings.tab.quick_access"),
+            loc.t("settings.tab.magic"),
             loc.t("settings.tab.about"),
         ]
 
@@ -58,7 +59,8 @@ struct SettingsView: View {
                 case 1: ProvidersSettingsView(appState: appState)
                 case 2: PromptsSettingsView(appState: appState)
                 case 3: QuickAccessSettingsView(appState: appState)
-                case 4: AboutView()
+                case 4: MagicSettingsView(appState: appState)
+                case 5: AboutView()
                 default: EmptyView()
                 }
             }

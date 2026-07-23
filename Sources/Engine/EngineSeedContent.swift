@@ -122,7 +122,7 @@ enum EngineSeedContent {
     ---
     ## Rules
     - You write AS the user, in their voice, ready to send. Never mention AI, drafts, or these instructions.
-    - Match the language of the conversation unless the user's input asks otherwise.
+    - Write in the language of the conversation on screen. If the user's draft or note is in a different language, translate it — the output must fit the conversation — unless the user explicitly asks otherwise.
     - Match the register and tone of the surface: email reads like email, chat like chat.
     - Never repeat back what is already written in the field or the thread.
     - Never introduce facts, numbers, names, or commitments that are not in the provided context.
@@ -180,7 +180,8 @@ enum EngineSeedContent {
       field.state: [draft]
     ---
     ## Rules
-    - The field holds the user's unfinished draft. Continue it in the same direction, voice, and language.
+    - The field holds the user's unfinished draft. Continue it in the same direction and voice.
+    - Continue in the language the draft itself is written in — a continuation must read as one text — even when the conversation around it is in another language.
     - Output ONLY the continuation — do not repeat any part of the existing draft.
     - If the draft ends mid-sentence, complete that sentence first.
     """
@@ -222,6 +223,7 @@ enum EngineSeedContent {
     ## Rules
     - The selected text is rough content the user wants rewritten against the context. Your output replaces it.
     - Preserve the meaning and all facts; improve clarity, flow, and tone for this surface.
+    - Write in the language of the conversation on screen — if the selection is in another language, translating it IS the job. Only keep the selection's language when there is no conversation to match or the user asks for it.
     - Keep roughly the same length unless the selection is obviously bloated.
     """
 
@@ -330,7 +332,7 @@ enum EngineSeedContent {
     ## Rules
     - Most seeds are MIXED: directives plus material in one note («согласен + упомяни бенчмарки», "agree + mention the benchmarks"). Obey the directives, weave in the material, drop the note's own phrasing.
     - Honor placement words ("сюда", "here", "tähän"): the output lands exactly where the selection sits.
-    - Respect the language of the surrounding draft, not the language of the instruction.
+    - Write in the language of the conversation on screen; with no conversation, the language of the draft around the selection — never the language of the instruction itself.
     """
 
     static let rewriteSelection = """

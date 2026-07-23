@@ -7,15 +7,18 @@ import AppKit
 /// overall deadline guarantee a press can never hang the app (R4).
 actor AXSnapshotService {
     struct Budget {
-        var remainingCalls: Int = 200
-        let maxAncestorDepth = 8
-        let maxSiblingsPerLevel = 12
-        let maxGatherDepth = 3
+        var remainingCalls: Int = 350
+        let maxAncestorDepth = 10
+        let maxSiblingsPerLevel = 16
+        let maxGatherDepth = 6
         let maxContentChars = 6000
         let maxFieldValueChars = 50_000
     }
 
     private var didConfigureTimeout = false
+    /// PIDs we already asked to build an accessibility tree (Chromium /
+    /// Electron enablement) — the request is per-process, once.
+    private var enabledPIDs: Set<pid_t> = []
 
     /// Roles whose text content the surrounding walk collects.
     private static let textRoles: Set<String> = [
@@ -32,8 +35,8 @@ actor AXSnapshotService {
     func capture(
         appInfo: MagicSnapshot.AppInfo,
         locale: String,
-        deadline: Duration = .milliseconds(1200)
-    ) -> MagicSnapshot {
+        deadline: Duration = .milliseconds(1600)
+    ) async -> MagicSnapshot {
         configureTimeoutOnce()
 
         let clock = ContinuousClock()
@@ -43,8 +46,23 @@ actor AXSnapshotService {
         func expired() -> Bool { clock.now >= deadlineInstant }
 
         let systemWide = AXUIElementCreateSystemWide()
-        guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget),
-              let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
+        guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget)
+        else {
+            return MagicSnapshot(
+                app: appInfo, windowTitle: nil, url: nil, field: nil,
+                surrounding: nil, locale: locale, ts: Date(), focusedElement: nil
+            )
+        }
+
+        // Chromium and Electron build their AX tree lazily and only for
+        // clients that announce themselves (§5.1). Ask once per process,
+        // give the renderer a beat to materialize the tree the first time.
+        let freshlyEnabled = enableAccessibilityIfNeeded(app: app, pid: appInfo.pid)
+        if freshlyEnabled {
+            try? await Task.sleep(for: .milliseconds(250))
+        }
+
+        guard let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
         else {
             return MagicSnapshot(
                 app: appInfo, windowTitle: nil, url: nil, field: nil,
@@ -137,10 +155,20 @@ actor AXSnapshotService {
         }
 
         // Budgeted surrounding walk (§5.2 rung 1: the AX tree).
-        let surroundingText = collectSurroundings(
+        var surroundingText = collectSurroundings(
             focused: focused, ancestors: ancestors,
             budget: &budget, expired: expired
         )
+        // First press in a freshly-enabled Chromium/Electron process often
+        // races the tree build — one retry with a fresh budget.
+        if surroundingText.isEmpty, freshlyEnabled, !expired() {
+            try? await Task.sleep(for: .milliseconds(300))
+            var retryBudget = Budget()
+            surroundingText = collectSurroundings(
+                focused: focused, ancestors: ancestors,
+                budget: &retryBudget, expired: expired
+            )
+        }
 
         return MagicSnapshot(
             app: appInfo,
@@ -246,6 +274,20 @@ actor AXSnapshotService {
     }
 
     // MARK: - AX plumbing
+
+    /// Asks a Chromium/Electron process to build its accessibility tree.
+    /// `AXManualAccessibility` is the documented Electron switch and is
+    /// honored by Chromium browsers; other apps simply report the attribute
+    /// unsupported. Returns true on the first request to a process (the
+    /// caller then waits for the tree).
+    private func enableAccessibilityIfNeeded(app: AXUIElement, pid: pid_t) -> Bool {
+        guard pid > 0, !enabledPIDs.contains(pid) else { return false }
+        enabledPIDs.insert(pid)
+        let result = AXUIElementSetAttributeValue(
+            app, "AXManualAccessibility" as CFString, kCFBooleanTrue
+        )
+        return result == .success
+    }
 
     /// One process-global messaging timeout (R4): a hung AX server answers
     /// with `kAXErrorCannotComplete` after 0.35 s instead of blocking us.

@@ -82,6 +82,17 @@ enum PasteboardTransaction {
         currentCount == ourWriteCount
     }
 
+    /// Adds the transient+concealed marker types to whatever is currently on
+    /// the pasteboard, without disturbing the content. Used by paths that
+    /// write via `ClipboardService`'s rich-text setters (the legacy inline
+    /// path) but still want clipboard managers to skip the generated draft.
+    static func markCurrentItemGenerated() {
+        let pasteboard = NSPasteboard.general
+        pasteboard.addTypes([transientType, concealedType], owner: nil)
+        pasteboard.setString("", forType: transientType)
+        pasteboard.setString("", forType: concealedType)
+    }
+
     /// Posts ⌘C and polls `changeCount` until the frontmost app has written
     /// (20 ms steps). Replaces the legacy fixed 200 ms sleep + string
     /// comparison — resolves in 40–80 ms on cooperative apps, and an

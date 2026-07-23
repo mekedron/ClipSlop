@@ -37,6 +37,15 @@ struct MenuBarView: View {
 
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
 
+        #if DEBUG
+        Divider()
+        // Dry-run (§17): capture + route + assemble for the focused field,
+        // report to the clipboard, execute nothing.
+        Button("Magic Dry-Run to Clipboard") {
+            appState.magicCoordinator.dryRunToClipboard()
+        }
+        #endif
+
         Divider()
 
         if let provider = appState.providerStore.defaultProvider {
