@@ -119,7 +119,9 @@ are never overwritten):
 │   ├── constraints.md   # hard rules; two bullet shapes are machine-checked
 │   └── aliases.md       # short name → person mappings
 ├── workflows/           # the routable behavior (see below)
-│   └── base/            # the generic layer — guarantees the button works everywhere
+│   ├── base/            # the generic layer — guarantees the button works everywhere
+│   └── library/         # the prompt library (§7.3) — folders = subdirectories,
+│                        #   prompts = when-less cards; _folder.md carries folder metadata
 └── logs/
     ├── traces-*.jsonl   # contentless per-press traces (always on)
     ├── spend-*.jsonl    # per-generation token spend (role/provider/model, monthly files)
@@ -195,6 +197,37 @@ The seeded set: `base.generation` (abstract conduct rules),
 plus `reply.thread` (native Mail/Slack), `reply.thread.web` (Gmail/Outlook
 by URL), `comment.social` (LinkedIn/X), `continue.draft`,
 `instruct.selection`, `rewrite.selection`.
+
+## The prompt library IS the workflow store (§7.3, M2)
+
+Library prompts live as cards under `workflows/library/**` — same parser
+(`FrontmatterParser` + `WorkflowCardParser`), same `WorkflowStore` catalog.
+A library card is `kind: workflow, mode: direct` with **no `when:`** — cards
+without `when:` never enter routing (`EngineRouter` filters them; they need
+no `summary`/`intents`) and are invocable by id/uuid only. Extra frontmatter
+carries the library identity and popup attributes: `uuid:` (the stable
+identity that `prompt_quickPaste_<uuid>` hotkeys, Quick Access tiles, and
+App Intents bind to), `title:`, `order:`, `mnemonic:` +
+`mnemonic_modifiers:`, `provider:` (provider UUID override),
+`display_mode:`, `select_all:`, and `shortcut_inline:`/`shortcut_popup:`
+(`{key: <carbon keyCode>, modifiers: <carbon mask>}` — the exact
+`ShortcutConfig` encoding). The card body is the prompt's system prompt.
+Folders are subdirectories; each carries a `_folder.md`
+(uuid/title/mnemonic/order) that `WorkflowStore.markdownFiles` skips.
+
+`PromptStore` is now a facade over that subtree: it loads/writes the
+markdown (diff-sync — untouched files keep their mtimes; mtime-signature
+hot reload on popup/Quick Access open), and keeps serving the `PromptNode`
+tree API unchanged. `prompts.json` in App Support survives as a **derived
+mirror**, regenerated after every mutation, so `CloudSyncService` uploads
+it unchanged (conflict policy still `.promptUser`) and the App Intents
+cold-launch path keeps reading it; inbound remote data is decoded and
+diff-written back into the markdown tree. First launch without
+`workflows/library/` materializes the tree from `prompts.json` (backed up
+as `prompts.json.pre-unification.bak`) or from `DefaultPrompts.json` while
+defaults are active. The library has **no `EngineSeedContent` seeding
+path** — `PromptStore`'s migration is its seeding; write-if-missing string
+seeds stay for the engine's own files only.
 
 ## Prompt assembly (§10.1)
 
@@ -375,7 +408,7 @@ Workflows never name models. Since M3 the provider layer is files-first:
   order, `timeout_seconds` (stamped onto the request), and
   `min_cost_class`, which **refuses generation instead of silently
   downgrading** (P9) when nothing qualified is in the chain. Roles:
-  `generation.magic` and `chat.assistant` (the Prompt Assistant's old
+  `generation.magic` and `chat.assistant` (the Settings Assistant's old
   private resolve chain now goes through this store).
 - **Resolution order** (`EngineRoleStore.resolve`, pure): bound provider →
   explicit fallbacks → app default → first (→ first *capable* for
@@ -407,11 +440,16 @@ Workflows never name models. Since M3 the provider layer is files-first:
   `regenerated`, `cancelled`, `copied`, `dismissed`, `dead:*`,
   `error:generation:<kind>`; `:unconfirmed` suffix when the paste could not
   be verified). One JSON line per press in `~/.clipslop/logs/`.
-- **Debug log** (opt-in checkbox in Settings → Magic): one markdown file
-  per press in `~/.clipslop/logs/debug/` with the *full* story — snapshot
-  (field value, selection, surroundings, ancestor AX roles), classification
-  signals, routing, the verbatim prompt, the raw model output, verifier
-  verdict, errors. Contains real screen content; pruned after 7 days.
+- **Debug log** (opt-in): one markdown file per press in
+  `~/.clipslop/logs/debug/` with the *full* story — snapshot (field value,
+  selection, surroundings, ancestor AX roles), classification signals,
+  routing, the verbatim prompt, the raw model output, verifier verdict,
+  errors. Contains real screen content; pruned after 7 days. The switch is
+  `debug_log_enabled: 0|1` in config.yaml — files-first so external agents
+  can reach it; the Settings → Magic checkbox is a view over that key
+  (`EngineConfigStore.setInteger`, a comment-preserving line edit), and the
+  old UserDefaults-only toggle is migrated once in
+  `MagicPressCoordinator.init`.
 - **Dry-run** (DEBUG builds: menu bar → “Magic Dry-Run to Clipboard”):
   captures, routes, and assembles for the currently focused field without
   executing anything, and puts the JSON report (including slot texts and
@@ -436,11 +474,38 @@ Workflows never name models. Since M3 the provider layer is files-first:
 
 All collector budgets/depths/caps, the warm-observer knobs
 (`warm_observer_enabled`, `warm_context_ttl_seconds`,
-`observer_debounce_ms`), the toast dismiss time, and the `no_cloud`
-app/domain list (see Providers and roles above) — hot-reloaded, clamped
-to safe ranges, with warnings surfaced in Settings → Magic. See the seeded
-file's comments for each key. Per-workflow prompt budgets live in the
-workflow frontmatter, not here.
+`observer_debounce_ms`), the toast dismiss time, the debug-log switch
+(`debug_log_enabled`), and the `no_cloud` app/domain list (see Providers
+and roles above) — hot-reloaded, clamped to safe ranges, with warnings
+surfaced in Settings → Magic. See the seeded file's comments for each key,
+or the bundled skill's `references/config-keys.md` for the full
+key/default/range table (drift-tested against `MagicEngineConfig`).
+Per-workflow prompt budgets live in the workflow frontmatter, not here.
+
+## The Agent Skill (single source of engine knowledge)
+
+`Sources/AgentSkill/clipslop/` is a portable skill package in the Agent
+Skills format (agentskills.io): `SKILL.md` (compact operating manual for
+any external AI agent — tree map, edit workflow, schemas, audit guidance)
+plus `references/` (full workflow-card schema, config key table,
+providers/roles schemas, trace vocabulary, prompt-library rules). It is
+bundled via a `.copy` resource rule (`.process` would flatten the
+directory) and surfaces in two ways:
+
+- **Settings → Magic → Install Agent Skill…** copies it to
+  `~/.claude/skills/clipslop/` (Claude Code user scope) or exports it to
+  any folder (`AgentSkill.install(intoParent:)`, overwrite-confirmed with
+  versions from the frontmatter `metadata.version`).
+- **The Settings Assistant embeds it**: the `engine-reference` region of
+  SKILL.md *is* the assistant's engine briefing
+  (`AgentSkill.engineReference()` → `AssistantSystemPrompt.build`) — one
+  knowledge source for the in-app chat and external agents alike.
+
+`AgentSkillTests` keeps it honest: config keys/ranges are regenerated from
+`MagicEngineConfig.keyTable()`, card keys from `WorkflowCardParser`,
+provider/role keys from `ProvidersFile`/`RolesFile`, trace fields from an
+encoded `PressTrace` — the bundled markdown must name them all, so the
+skill cannot rot silently.
 
 ## Invariants worth knowing before changing anything
 
