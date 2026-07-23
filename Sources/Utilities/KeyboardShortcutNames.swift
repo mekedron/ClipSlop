@@ -35,4 +35,15 @@ extension KeyboardShortcuts.Name {
         "togglePromptAssistant",
         default: .init(.p, modifiers: [.command, .control, .option])
     )
+
+    static let triggerMagic = Self(
+        "triggerMagic",
+        default: .init(.m, modifiers: [.command, .control])
+    )
+
+    /// Modifier variant that always shows the chip panel (§3.3 override).
+    static let triggerMagicChips = Self(
+        "triggerMagicChips",
+        default: .init(.m, modifiers: [.command, .control, .shift])
+    )
 }

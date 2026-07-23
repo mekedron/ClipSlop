@@ -36,6 +36,7 @@ final class AppState {
     let hotkeyService = HotkeyService()
     let promptShortcutService = PromptShortcutService()
     let promptAssistant = PromptAssistantService()
+    let magicCoordinator = MagicPressCoordinator()
     let settings = AppSettings.shared
     let syncService = CloudSyncService(
         syncFileName: "prompts.json",
@@ -279,6 +280,12 @@ final class AppState {
         hotkeyService.onTriggerPromptAssistant = { [weak self] in
             self?.toggleAssistant()
         }
+        hotkeyService.onTriggerMagic = { [weak self] in
+            self?.magicCoordinator.handlePress(forceChips: false)
+        }
+        hotkeyService.onTriggerMagicChips = { [weak self] in
+            self?.magicCoordinator.handlePress(forceChips: true)
+        }
         hotkeyService.register()
 
         // Wire prompt shortcut service
@@ -288,6 +295,9 @@ final class AppState {
 
         // Wire the prompt-library assistant
         promptAssistant.appState = self
+
+        // Wire the Magic Button press band
+        magicCoordinator.appState = self
 
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore
