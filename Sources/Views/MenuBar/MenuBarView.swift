@@ -44,6 +44,13 @@ struct MenuBarView: View {
         Button("Magic Dry-Run to Clipboard") {
             appState.magicCoordinator.dryRunToClipboard()
         }
+        Button("Magic Trace Stats to Clipboard") {
+            appState.magicCoordinator.traceStatsToClipboard()
+        }
+        // R1 spike: real inserter, canned string, no LLM call.
+        Button("Magic Insert Test String") {
+            appState.magicCoordinator.insertTestString()
+        }
         #endif
 
         Divider()

@@ -28,6 +28,23 @@ struct EngineConfigTests {
         #expect(config.observerDebounceMs == MagicEngineConfig.default.observerDebounceMs)
     }
 
+    @Test func noCloudListParses() {
+        let (config, warnings) = MagicEngineConfig.parse("""
+        ---
+        no_cloud: [Telegram, com.tinyspeck.slackmacgap, Gmail.com]
+        ---
+        """)
+        #expect(warnings.isEmpty)
+        #expect(config.noCloud == ["telegram", "com.tinyspeck.slackmacgap", "gmail.com"])
+
+        let (single, _) = MagicEngineConfig.parse("---\nno_cloud: telegram\n---")
+        #expect(single.noCloud == ["telegram"])
+
+        let (empty, emptyWarnings) = MagicEngineConfig.parse("---\nno_cloud: []\n---")
+        #expect(empty.noCloud.isEmpty)
+        #expect(emptyWarnings.isEmpty)
+    }
+
     @Test func outOfRangeValuesClampWithWarning() {
         let (config, warnings) = MagicEngineConfig.parse("""
         ---

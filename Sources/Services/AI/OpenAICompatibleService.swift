@@ -3,6 +3,10 @@ import Foundation
 /// Works with OpenAI, Ollama, and any OpenAI-compatible API
 struct OpenAICompatibleService: AIService {
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
+        try await processWithUsage(text: text, systemPrompt: systemPrompt, config: config).text
+    }
+
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
         let request = try buildRequest(text: text, systemPrompt: systemPrompt, config: config, stream: false)
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -21,7 +25,11 @@ struct OpenAICompatibleService: AIService {
         guard let text = decoded.choices.first?.message.content, !text.isEmpty else {
             throw AIServiceError.emptyResponse
         }
-        return text
+        return AIGenerationResult(
+            text: text,
+            inputTokens: decoded.usage?.promptTokens,
+            outputTokens: decoded.usage?.completionTokens
+        )
     }
 
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
@@ -82,6 +90,7 @@ struct OpenAICompatibleService: AIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
@@ -129,6 +138,7 @@ private struct OpenAIRequest: Encodable {
 
 private struct OpenAIResponse: Decodable {
     let choices: [Choice]
+    let usage: Usage?
 
     struct Choice: Decodable {
         let message: Message
@@ -136,6 +146,16 @@ private struct OpenAIResponse: Decodable {
 
     struct Message: Decodable {
         let content: String?
+    }
+
+    struct Usage: Decodable {
+        let promptTokens: Int?
+        let completionTokens: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case promptTokens = "prompt_tokens"
+            case completionTokens = "completion_tokens"
+        }
     }
 }
 

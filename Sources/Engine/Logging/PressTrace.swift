@@ -47,6 +47,11 @@ struct PressTrace: Codable, Sendable {
         var assemble: Int = 0
         var generate: Int = 0
         var verify: Int = 0
+        /// Press → paste landed (the §3.6 SLO number). Optional: absent on
+        /// presses that never inserted and on pre-M1 trace lines.
+        var paste: Int?
+        /// Press → outcome stamped (includes toast lifetime / user think
+        /// time — NOT the SLO number).
         var total: Int = 0
     }
 

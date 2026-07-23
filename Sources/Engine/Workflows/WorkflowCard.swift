@@ -286,7 +286,7 @@ enum WorkflowCardParser {
         case nil: return nil
         case .scalar(let scalar): return [scalar]
         case .list(let items): return items
-        case .map: throw error(key, document, "must be a list")
+        case .map, .mapList: throw error(key, document, "must be a list")
         }
     }
 

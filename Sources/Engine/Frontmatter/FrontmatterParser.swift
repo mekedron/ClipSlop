@@ -7,6 +7,16 @@ enum FrontmatterValue: Sendable, Equatable {
     case scalar(String)
     case list([String])
     case map([String: FrontmatterValue])
+    /// Block list of flat maps (`providers.yaml` / `roles.yaml` records):
+    ///
+    ///     providers:
+    ///       - id: aaa
+    ///         name: One
+    ///       - id: bbb
+    ///
+    /// Item values are scalars or flow collections; deeper block nesting
+    /// inside an item stays outside the subset.
+    case mapList([[String: FrontmatterValue]])
 }
 
 struct FrontmatterDocument: Sendable {
@@ -103,8 +113,17 @@ enum FrontmatterParser {
     ) throws -> (FrontmatterValue, Int) {
         var map: [String: FrontmatterValue] = [:]
         var listItems: [String] = []
+        var mapItems: [[String: FrontmatterValue]] = []
+        var currentItem: [String: FrontmatterValue]?
         var consumed = 0
         var index = startIndex
+
+        func flushItem() {
+            if let item = currentItem {
+                mapItems.append(item)
+                currentItem = nil
+            }
+        }
 
         while index < lines.count {
             let rawLine = lines[index]
@@ -122,9 +141,38 @@ enum FrontmatterParser {
                 guard map.isEmpty else {
                     throw FrontmatterError(line: fileLine, message: "cannot mix '- item' entries with 'key: value' entries under '\(parentKey):'")
                 }
-                listItems.append(try parseScalar(String(trimmed.dropFirst(2)), line: fileLine))
+                let itemText = String(trimmed.dropFirst(2))
+                if looksLikeMapEntry(itemText) {
+                    // `- key: value` starts a record in a block list of maps.
+                    guard listItems.isEmpty else {
+                        throw FrontmatterError(line: fileLine, message: "cannot mix plain '- item' entries with '- key: value' records under '\(parentKey):'")
+                    }
+                    flushItem()
+                    let (key, rest) = try splitKey(itemText, line: fileLine)
+                    guard !rest.isEmpty else {
+                        throw FrontmatterError(line: fileLine, message: "'\(parentKey)' record field '\(key)' has no value — block nesting inside list records is not supported")
+                    }
+                    currentItem = [key: try parseInlineValue(rest, line: fileLine)]
+                    fieldLines["\(parentKey).\(mapItems.count).\(key)"] = fileLine
+                } else {
+                    guard currentItem == nil, mapItems.isEmpty else {
+                        throw FrontmatterError(line: fileLine, message: "cannot mix plain '- item' entries with '- key: value' records under '\(parentKey):'")
+                    }
+                    listItems.append(try parseScalar(itemText, line: fileLine))
+                }
+            } else if currentItem != nil {
+                // Continuation field of the current record (indented past the dash).
+                guard rawLine.hasPrefix("    ") else {
+                    throw FrontmatterError(line: fileLine, message: "record fields under '\(parentKey):' must be indented under their '- ' entry")
+                }
+                let (key, rest) = try splitKey(trimmed, line: fileLine)
+                guard !rest.isEmpty else {
+                    throw FrontmatterError(line: fileLine, message: "'\(parentKey)' record field '\(key)' has no value — block nesting inside list records is not supported")
+                }
+                currentItem?[key] = try parseInlineValue(rest, line: fileLine)
+                fieldLines["\(parentKey).\(mapItems.count).\(key)"] = fileLine
             } else {
-                guard listItems.isEmpty else {
+                guard listItems.isEmpty, mapItems.isEmpty else {
                     throw FrontmatterError(line: fileLine, message: "cannot mix 'key: value' entries with '- item' entries under '\(parentKey):'")
                 }
                 let (key, rest) = try splitKey(trimmed, line: fileLine)
@@ -140,11 +188,25 @@ enum FrontmatterParser {
             index += 1
             consumed += 1
         }
+        flushItem()
 
-        if map.isEmpty && listItems.isEmpty {
+        if map.isEmpty && listItems.isEmpty && mapItems.isEmpty {
             throw FrontmatterError(line: startIndex + 1, message: "'\(parentKey):' has no value")
         }
+        if !mapItems.isEmpty { return (.mapList(mapItems), consumed) }
         return (listItems.isEmpty ? .map(map) : .list(listItems), consumed)
+    }
+
+    /// Distinguishes `- key: value` (a record) from `- https://plain.scalar`:
+    /// a record needs a valid key followed by `:` and then a space or
+    /// end-of-line — exactly YAML's own rule.
+    private static func looksLikeMapEntry(_ text: String) -> Bool {
+        guard let colonIndex = text.firstIndex(of: ":") else { return false }
+        let key = String(text[..<colonIndex]).trimmingCharacters(in: .whitespaces)
+        let keyCharacters = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.-")
+        guard !key.isEmpty, key.unicodeScalars.allSatisfy(keyCharacters.contains) else { return false }
+        let afterColon = text.index(after: colonIndex)
+        return afterColon == text.endIndex || text[afterColon] == " "
     }
 
     // MARK: - Inline values

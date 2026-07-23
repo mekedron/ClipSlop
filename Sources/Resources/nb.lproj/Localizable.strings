@@ -158,6 +158,20 @@
 
 /* Settings - Providers */
 "settings.providers.select" = "Velg en leverandor";
+"settings.routing.title" = "Model routing";
+"settings.routing.role.generation.magic" = "Magic Button generation";
+"settings.routing.role.chat.assistant" = "Prompt Assistant chat";
+"settings.routing.provider_default" = "App default";
+"settings.routing.min_cost" = "Min cost";
+"settings.routing.timeout" = "Timeout (s)";
+"settings.routing.off" = "Off";
+"settings.routing.spend" = "Tokens: %@ today · %@ this month";
+"settings.routing.warnings" = "Configuration warnings";
+"settings.routing.fallbacks_hint" = "Fallback chains are edited in roles.yaml (see the file header for the format).";
+"settings.routing.missing_key" = "%@ has no API key";
+"settings.routing.falls_back" = "Configured provider unavailable — falls back to %@";
+"settings.routing.refused_cost" = "No provider meets min cost class %@ — generation will refuse";
+"settings.routing.no_provider" = "No provider available for this role";
 "settings.providers.add" = "Legg til leverandor";
 "settings.providers.name" = "Navn";
 "settings.providers.type" = "Type";
@@ -517,6 +531,7 @@
 "magic.toast.undo" = "Undo";
 "magic.toast.regenerate" = "Regenerate";
 "magic.toast.copy" = "Copy";
+"magic.toast.close" = "Close";
 "magic.toast.refine" = "Refine…";
 "magic.toast.refine_hint" = "Describe how to change the draft";
 "magic.toast.refine_send" = "Apply";

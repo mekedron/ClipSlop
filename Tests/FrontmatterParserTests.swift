@@ -155,4 +155,82 @@ struct FrontmatterParserTests {
             """)
         }
     }
+
+    // MARK: Block lists of maps (providers.yaml / roles.yaml records)
+
+    @Test func parsesBlockListOfMaps() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        providers:
+          - id: aaa
+            name: "First One"
+            fallbacks: [bbb, ccc]
+          # a comment between records
+          - id: bbb
+            temperature: 0.7
+        ---
+        """)
+        guard case .mapList(let items) = doc.fields["providers"] else {
+            Issue.record("expected mapList, got \(String(describing: doc.fields["providers"]))")
+            return
+        }
+        #expect(items.count == 2)
+        #expect(items[0]["id"] == .scalar("aaa"))
+        #expect(items[0]["name"] == .scalar("First One"))
+        #expect(items[0]["fallbacks"] == .list(["bbb", "ccc"]))
+        #expect(items[1]["id"] == .scalar("bbb"))
+        #expect(items[1]["temperature"] == .scalar("0.7"))
+        // Line numbers survive for per-record validation errors.
+        #expect(doc.fieldLines["providers.0.id"] == 3)
+        #expect(doc.fieldLines["providers.1.temperature"] == 8)
+    }
+
+    @Test func urlListItemsStayScalars() throws {
+        // "https://x.com" contains a colon but is not `key: value` (no space
+        // after the colon) — it must remain a plain scalar list item.
+        let doc = try FrontmatterParser.parse("""
+        ---
+        sources:
+          - https://example.com/a
+          - https://example.com/b
+        ---
+        """)
+        #expect(doc.fields["sources"] == .list(["https://example.com/a", "https://example.com/b"]))
+    }
+
+    @Test func rejectsMixingRecordsWithPlainItems() {
+        #expect(throws: FrontmatterError.self) {
+            try FrontmatterParser.parse("""
+            ---
+            providers:
+              - id: aaa
+              - plain item
+            ---
+            """)
+        }
+    }
+
+    @Test func rejectsUnindentedRecordContinuation() {
+        #expect(throws: FrontmatterError.self) {
+            try FrontmatterParser.parse("""
+            ---
+            providers:
+              - id: aaa
+              name: not indented under the dash
+            ---
+            """)
+        }
+    }
+
+    @Test func rejectsBlockNestingInsideRecord() {
+        #expect(throws: FrontmatterError.self) {
+            try FrontmatterParser.parse("""
+            ---
+            providers:
+              - id: aaa
+                nested:
+            ---
+            """)
+        }
+    }
 }

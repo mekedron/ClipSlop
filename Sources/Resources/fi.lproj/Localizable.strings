@@ -158,6 +158,20 @@
 
 /* Settings - Providers */
 "settings.providers.select" = "Valitse palvelu";
+"settings.routing.title" = "Mallien reititys";
+"settings.routing.role.generation.magic" = "Magic Button -generointi";
+"settings.routing.role.chat.assistant" = "Prompt Assistant -keskustelu";
+"settings.routing.provider_default" = "Sovelluksen oletus";
+"settings.routing.min_cost" = "Vähimmäisluokka";
+"settings.routing.timeout" = "Aikakatkaisu (s)";
+"settings.routing.off" = "Pois";
+"settings.routing.spend" = "Tokenit: %@ tänään · %@ tässä kuussa";
+"settings.routing.warnings" = "Määritysvaroitukset";
+"settings.routing.fallbacks_hint" = "Varaketjut muokataan roles.yaml-tiedostossa (muoto tiedoston alussa).";
+"settings.routing.missing_key" = "Palvelulla %@ ei ole API-avainta";
+"settings.routing.falls_back" = "Määritetty palvelu ei ole käytettävissä — käytetään %@";
+"settings.routing.refused_cost" = "Mikään palvelu ei täytä vähimmäisluokkaa %@ — generointi estetään";
+"settings.routing.no_provider" = "Roolille ei ole käytettävissä palvelua";
 "settings.providers.add" = "Lisää palvelu";
 "settings.providers.name" = "Nimi";
 "settings.providers.type" = "Tyyppi";
@@ -517,6 +531,7 @@
 "magic.toast.undo" = "Kumoa";
 "magic.toast.regenerate" = "Uudelleen";
 "magic.toast.copy" = "Kopioi";
+"magic.toast.close" = "Sulje";
 "magic.toast.refine" = "Tarkenna…";
 "magic.toast.refine_hint" = "Kuvaile miten luonnosta pitäisi muuttaa";
 "magic.toast.refine_send" = "Käytä";

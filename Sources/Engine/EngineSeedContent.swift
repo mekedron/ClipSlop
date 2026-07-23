@@ -79,6 +79,13 @@ enum EngineSeedContent {
     warm_observer_enabled: 1
     warm_context_ttl_seconds: 30
     observer_debounce_ms: 200
+
+    # Apps/domains whose text must never reach a cloud model (P7).
+    # Entries match the app bundle id as a substring, or the page's domain
+    # exactly / by suffix. A press there uses a local provider from the
+    # role's chain, or refuses with a clear message when none exists.
+    # Example: [telegram, com.tinyspeck.slackmacgap, gmail.com]
+    no_cloud: []
     ---
     """
 

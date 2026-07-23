@@ -299,6 +299,7 @@ final class AppState {
         // Wire the Magic Button press band + the warm frontmost-app observer
         magicCoordinator.appState = self
         magicCoordinator.startWarmObserver()
+        magicCoordinator.logProviderLayerHealth()
 
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore

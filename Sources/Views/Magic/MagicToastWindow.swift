@@ -115,14 +115,14 @@ struct MagicToastView: View {
                 closeButton { coordinator.dismissToast(outcome: nil) }
             }
             HStack(spacing: 8) {
-                toastAction("arrow.uturn.backward", Loc.shared.t("magic.toast.undo")) {
+                toastAction("arrow.uturn.backward", Loc.shared.t("magic.toast.undo"), id: "undo") {
                     coordinator.undoOrRestore()
                 }
-                toastAction("arrow.clockwise", Loc.shared.t("magic.toast.regenerate")) {
+                toastAction("arrow.clockwise", Loc.shared.t("magic.toast.regenerate"), id: "regenerate") {
                     coordinator.regenerate()
                 }
                 .keyboardShortcut("r", modifiers: .command)
-                toastAction("doc.on.doc", Loc.shared.t("magic.toast.copy")) {
+                toastAction("doc.on.doc", Loc.shared.t("magic.toast.copy"), id: "copy") {
                     coordinator.copyResult()
                 }
                 Spacer()
@@ -165,11 +165,12 @@ struct MagicToastView: View {
             .frame(maxHeight: 120)
 
             HStack(spacing: 8) {
-                toastAction("doc.on.doc", Loc.shared.t("magic.toast.copy")) {
+                toastAction("doc.on.doc", Loc.shared.t("magic.toast.copy"), id: "copy") {
                     coordinator.copyResult()
                 }
                 if reason == .verifierFailed {
                     holdToInsertButton
+                        .accessibilityIdentifier("magic.toast.insert_anyway")
                 }
                 Spacer()
             }
@@ -194,6 +195,7 @@ struct MagicToastView: View {
                         Button(Loc.shared.t("magic.toast.refine_send")) {
                             submitRefine()
                         }
+                        .accessibilityIdentifier("magic.toast.refine_send")
                         .controlSize(.small)
                         .keyboardShortcut(.return, modifiers: [])
                         .disabled(refineText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -214,6 +216,8 @@ struct MagicToastView: View {
                     .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(Loc.shared.t("magic.toast.refine"))
+                .accessibilityIdentifier("magic.toast.refine")
             }
         }
     }
@@ -263,7 +267,10 @@ struct MagicToastView: View {
             )
     }
 
-    private func toastAction(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
+    // Plain-style buttons with custom label views lose their AX titles in
+    // the hosting-view bridge — VoiceOver (and the QA rig) saw five
+    // nameless buttons. Label + stable identifier are set explicitly.
+    private func toastAction(_ symbol: String, _ title: String, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Image(systemName: symbol)
@@ -276,6 +283,8 @@ struct MagicToastView: View {
             .contentShape(RoundedRectangle(cornerRadius: 6))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityIdentifier("magic.toast.\(id)")
     }
 
     private func closeButton(action: @escaping () -> Void) -> some View {
@@ -286,6 +295,8 @@ struct MagicToastView: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(Loc.shared.t("magic.toast.close"))
+        .accessibilityIdentifier("magic.toast.close")
     }
 
     private func reasonTitle(_ reason: MagicToastPanelReason) -> String {

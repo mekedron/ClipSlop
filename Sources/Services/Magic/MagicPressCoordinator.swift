@@ -47,6 +47,7 @@ final class MagicPressCoordinator {
     @ObservationIgnored private let debugLogger = MagicDebugLogger()
     @ObservationIgnored private let snapshotService = AXSnapshotService()
     @ObservationIgnored private let inserter = MagicInserter()
+    @ObservationIgnored private let spendLedger = SpendLedger()
     /// M1 warm collector (§5.1): one AXObserver on the frontmost app keeps
     /// cheap context fresh and pre-builds Chromium AX trees.
     @ObservationIgnored private(set) var frontmostObserver: FrontmostObserver!
@@ -97,6 +98,30 @@ final class MagicPressCoordinator {
     /// on the next app activation after the grant.
     func startWarmObserver() {
         frontmostObserver.start()
+    }
+
+    /// Startup validation (§14): file-load warnings and per-role resolution
+    /// problems go to the log with clear messages. The same facts render as
+    /// badges in Settings → Providers; failure is visible, never silent
+    /// (§15.3).
+    func logProviderLayerHealth() {
+        guard let providerStore = appState?.providerStore else { return }
+        for warning in providerStore.loadWarnings + roleStore.loadWarnings {
+            Self.logger.warning("provider layer: \(warning, privacy: .public)")
+        }
+        for role in EngineRole.allCases {
+            switch roleStore.resolution(for: role, in: providerStore) {
+            case .resolved(let provider):
+                if provider.providerType.requiresAPIKey,
+                   KeychainService.load(key: provider.apiKeyRef)?.isEmpty != false {
+                    Self.logger.warning("role \(role.rawValue, privacy: .public): provider \(provider.name, privacy: .public) has no API key")
+                }
+            case .refusedBelowMinCost(let min):
+                Self.logger.error("role \(role.rawValue, privacy: .public): no provider meets min_cost_class \(min.rawValue, privacy: .public) — will refuse")
+            case .noneAvailable:
+                Self.logger.error("role \(role.rawValue, privacy: .public): no provider available")
+            }
+        }
     }
 
     /// True when the press targets ClipSlop's own windows (the onboarding
@@ -175,7 +200,8 @@ final class MagicPressCoordinator {
                 workflowStore: workflowStore,
                 coreStore: coreStore,
                 roleStore: roleStore,
-                providerStore: appState.providerStore
+                providerStore: appState.providerStore,
+                config: configStore.config
             )
         } catch {
             logBareTrace(snapshot: snapshot, outcome: "error:plan")
@@ -317,6 +343,16 @@ final class MagicPressCoordinator {
     private func handleResult(_ result: MagicPressResult) async {
         guard var press = activePress else { return }
         press.result = result
+        let spend = SpendRecord(
+            ts: Date(),
+            role: EngineRole.generationMagic.rawValue,
+            provider: result.traceDraft.providerType ?? "unknown",
+            model: result.traceDraft.modelID ?? "unknown",
+            inputTokens: result.inputTokens,
+            outputTokens: result.outputTokens,
+            estimated: result.usageEstimated
+        )
+        Task { [spendLedger] in await spendLedger.append(spend) }
         var trace = result.traceDraft
         trace.latencyMs.snapshot = press.trace.latencyMs.snapshot
         trace.presentation = press.trace.presentation
@@ -343,6 +379,9 @@ final class MagicPressCoordinator {
         reassertSelectionIfLost(press.snapshot)
 
         let outcome = await inserter.insert(text, against: press.snapshot)
+        if let start = pressStart {
+            press.trace.latencyMs.paste = Self.ms(ContinuousClock().now - start)
+        }
         switch outcome {
         case .inserted(let record):
             press.record = record
@@ -391,6 +430,14 @@ final class MagicPressCoordinator {
     /// "emptyResponse") — enough to see failure patterns without logging
     /// message text.
     private static func errorKind(_ error: Error) -> String {
+        if let pipelineError = error as? MagicPressPipelineError {
+            switch pipelineError {
+            case .noProvider: return "noProvider"
+            case .noWorkflows: return "noWorkflows"
+            case .downgradeRefused: return "downgradeRefused"
+            case .noCloudRefused: return "noCloud"
+            }
+        }
         if let aiError = error as? AIServiceError {
             switch aiError {
             case .httpError(let statusCode, _): return "http\(statusCode)"
@@ -644,7 +691,8 @@ final class MagicPressCoordinator {
                     workflowStore: self.workflowStore,
                     coreStore: self.coreStore,
                     roleStore: self.roleStore,
-                    providerStore: appState.providerStore
+                    providerStore: appState.providerStore,
+                    config: config
                 )
                 report = MagicPressPipeline.dryRun(plan: plan, snapshot: snapshot)
             } catch {
@@ -661,6 +709,52 @@ final class MagicPressCoordinator {
             if let data = try? encoder.encode(report) {
                 ClipboardService.setText(String(decoding: data, as: UTF8.self))
                 self.showHint("Dry-run report copied to clipboard")
+            }
+        }
+    }
+
+    /// Aggregates every trace file into the gate report (SLO percentiles,
+    /// chip top-1, warm-hit rate, R4 axErrors) and copies it as markdown.
+    func traceStatsToClipboard() {
+        Task { [weak self] in
+            let stats = await Task.detached {
+                TraceStats.load(from: Constants.Engine.logsDirectory)
+            }.value
+            ClipboardService.setText(stats.markdown())
+            self?.showHint("Trace stats copied (\(stats.overall.presses) presses)")
+        }
+    }
+
+    /// R1 spike surface: run the real inserter against the focused field
+    /// with a canned multi-word string — no LLM call — so undo atomicity
+    /// can be probed (insert → ⌘Z → re-read) deterministically and free.
+    /// The 600 ms delay lets focus return to the target after the menu
+    /// closes, same as the dry-run.
+    func insertTestString() {
+        guard phase == .idle else { return }
+        let locale = Locale.preferredLanguages.first ?? "en"
+        configStore.reloadIfChanged()
+        let config = configStore.config
+
+        let warm = frontmostObserver.warm
+        Task { [weak self] in
+            guard let self else { return }
+            try? await Task.sleep(for: .milliseconds(600))
+            let snapshot = await self.snapshotService.capture(
+                appInfo: self.frontmostAppInfo(), locale: locale, config: config, warm: warm
+            )
+            guard snapshot.grammarRow != .noTarget, snapshot.grammarRow != .secure else {
+                self.showHint(Loc.shared.t("magic.hud.no_target"))
+                return
+            }
+            let text = "R1SPIKE alpha bravo, charlie — delta echo."
+            switch await self.inserter.insert(text, against: snapshot) {
+            case .inserted(let record):
+                self.showHint("Test insert: landed (confirmed: \(record.pasteConfirmed))")
+            case .focusMismatch:
+                self.showHint("Test insert: focus mismatch")
+            case .panelOnly:
+                self.showHint("Test insert: non-editable, clipboard only")
             }
         }
     }

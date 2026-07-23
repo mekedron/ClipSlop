@@ -16,10 +16,18 @@ extension Constants {
         static let workflowsDirectory = rootDirectory.appendingPathComponent("workflows")
         static let logsDirectory = rootDirectory.appendingPathComponent("logs")
 
-        /// Role→provider mapping stays beside providers.json: credentials and
-        /// provider configuration remain where the app already keeps them.
-        /// (The design doc's providers.yaml unification is a later milestone.)
-        static let rolesFileURL = Constants.appSupportDirectory.appendingPathComponent("roles.json")
+        /// Provider list as a hand-editable engine file (§14). API keys stay
+        /// in Keychain (referenced by id), OAuth state stays app-internal —
+        /// only configuration lives here.
+        static let providersFileURL = rootDirectory.appendingPathComponent("providers.yaml")
+
+        /// Role→provider mapping with fallback chains (§14). Successor of
+        /// the App Support roles.json (migrated on first launch).
+        static let rolesYamlURL = rootDirectory.appendingPathComponent("roles.yaml")
+
+        /// Legacy locations, read once for migration.
+        static let legacyRolesFileURL = Constants.appSupportDirectory.appendingPathComponent("roles.json")
+        static let legacyProvidersFileURL = Constants.providersFileURL
 
         static func ensureDirectoriesExist() {
             for url in [rootDirectory, coreDirectory, workflowsDirectory,

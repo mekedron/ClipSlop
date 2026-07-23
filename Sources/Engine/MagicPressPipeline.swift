@@ -7,6 +7,11 @@ struct MagicPressPlan: Sendable {
     let core: CoreFileSet
     let provider: AIProviderConfig
     let workflowLoadErrors: [WorkflowLoadError]
+    // Privacy binding inputs (§14, P7) — enforcement runs in `execute()`
+    // where the snapshot (app/domain) is known.
+    var roleBinding: RoleBinding = RoleBinding()
+    var providers: [AIProviderConfig] = []
+    var noCloud: [String] = []
 }
 
 struct MagicPressResult: Sendable {
@@ -17,6 +22,11 @@ struct MagicPressResult: Sendable {
     /// Outcome unstamped — the press band records what actually happened
     /// (inserted / cancelled / insert-anyway…) and submits the trace once.
     let traceDraft: PressTrace
+    /// Spend accounting (§14): reported usage, or chars/4 estimates
+    /// flagged as such.
+    let inputTokens: Int
+    let outputTokens: Int
+    let usageEstimated: Bool
 }
 
 /// Dry-run (§17): the full decision and assembly without executing anything.
@@ -49,6 +59,11 @@ struct DryRunReport: Codable, Sendable {
 enum MagicPressPipelineError: LocalizedError {
     case noProvider
     case noWorkflows
+    /// P9: nothing in the chain meets the role's `min_cost_class` — refuse
+    /// honestly rather than silently generating on a cheaper model.
+    case downgradeRefused(min: ProviderCostClass)
+    /// P7: the surface is marked `no_cloud` and no local provider exists.
+    case noCloudRefused
 
     var errorDescription: String? {
         switch self {
@@ -56,6 +71,10 @@ enum MagicPressPipelineError: LocalizedError {
             String(localized: "No AI provider is configured for the Magic Button.")
         case .noWorkflows:
             String(localized: "No workflows could be loaded from the workflows folder.")
+        case .downgradeRefused(let min):
+            String(localized: "No provider meets this role's minimum cost class (\(min.rawValue)) — generation refused instead of silently downgrading.")
+        case .noCloudRefused:
+            String(localized: "This app or site is marked no-cloud and no local model is configured — nothing was sent.")
         }
     }
 }
@@ -68,12 +87,21 @@ enum MagicPressPipeline {
         workflowStore: WorkflowStore,
         coreStore: CoreFileStore,
         roleStore: EngineRoleStore,
-        providerStore: ProviderStore
+        providerStore: ProviderStore,
+        config: MagicEngineConfig = .default
     ) throws -> MagicPressPlan {
         workflowStore.reloadIfChanged()
         coreStore.reloadIfChanged()
+        providerStore.reloadIfChanged()
+        roleStore.reloadIfChanged()
 
-        guard let provider = roleStore.provider(for: .generationMagic, in: providerStore) else {
+        let provider: AIProviderConfig
+        switch roleStore.resolution(for: .generationMagic, in: providerStore) {
+        case .resolved(let resolved):
+            provider = resolved
+        case .refusedBelowMinCost(let min):
+            throw MagicPressPipelineError.downgradeRefused(min: min)
+        case .noneAvailable:
             throw MagicPressPipelineError.noProvider
         }
         guard !workflowStore.catalog.workflows.isEmpty else {
@@ -84,7 +112,10 @@ enum MagicPressPipeline {
             catalog: workflowStore.catalog,
             core: coreStore.files,
             provider: provider,
-            workflowLoadErrors: workflowStore.loadErrors
+            workflowLoadErrors: workflowStore.loadErrors,
+            roleBinding: roleStore.binding(for: .generationMagic),
+            providers: providerStore.providers,
+            noCloud: config.noCloud
         )
     }
 
@@ -120,8 +151,22 @@ enum MagicPressPipeline {
         var trace = PressTrace(snapshot: snapshot, decision: decision, classification: classification)
         trace.chosenID = workflow.id
         trace.hintUsed = (hint?.isEmpty == false)
-        trace.providerType = plan.provider.providerType.rawValue
-        trace.modelID = plan.provider.modelID
+
+        // Privacy binding (P7): a no-cloud surface swaps to a local provider
+        // from the chain, or the press refuses before anything is assembled.
+        let provider: AIProviderConfig
+        switch PrivacyBinding.enforce(
+            resolved: plan.provider, binding: plan.roleBinding, providers: plan.providers,
+            noCloud: plan.noCloud, bundleId: snapshot.app.bundleId,
+            urlHost: EngineRouter.urlHost(of: snapshot.url)
+        ) {
+        case .allowed(let allowed):
+            provider = allowed
+        case .refused:
+            throw MagicPressPipelineError.noCloudRefused
+        }
+        trace.providerType = provider.providerType.rawValue
+        trace.modelID = provider.modelID
 
         let assembleStart = clock.now
         let assembled = PromptAssembler.assemble(
@@ -136,16 +181,18 @@ enum MagicPressPipeline {
         trace.totalTokens = assembled.totalTokensEstimated
 
         let generateStart = clock.now
-        let service = AIServiceFactory.service(for: plan.provider.providerType)
-        let raw = try await service.process(
+        let service = AIServiceFactory.service(for: provider.providerType)
+        let generation = try await service.processWithUsage(
             text: assembled.userMessage,
             systemPrompt: assembled.systemPrompt,
-            config: plan.provider
+            config: provider
         )
+        let raw = generation.text
         trace.latencyMs.generate = Self.ms(clock.now - generateStart)
 
-        let output = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        var output = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !output.isEmpty else { throw AIServiceError.emptyResponse }
+        output = ContinuationSeam.adjust(output: output, for: snapshot)
 
         let verifyStart = clock.now
         let verdict = DeterministicVerifier.verify(
@@ -159,7 +206,12 @@ enum MagicPressPipeline {
         trace.verifierPassed = verdict.passed
         trace.verifierChecks = verdict.warnings.map(\.check.rawValue)
 
-        return MagicPressResult(output: output, verdict: verdict, assembled: assembled, traceDraft: trace)
+        return MagicPressResult(
+            output: output, verdict: verdict, assembled: assembled, traceDraft: trace,
+            inputTokens: generation.inputTokens ?? assembled.totalTokensEstimated,
+            outputTokens: generation.outputTokens ?? TokenEstimator.estimate(output),
+            usageEstimated: generation.inputTokens == nil || generation.outputTokens == nil
+        )
     }
 
     /// Plan → route → assemble, and stop. Nothing executes, nothing is sent.

@@ -42,32 +42,30 @@ final class PromptAssistantService {
     /// Set by AppState after init (same pattern as PromptShortcutService).
     weak var appState: AppState?
 
+    /// The assistant dispatches through the `chat.assistant` engine role
+    /// (§14) — same store the Magic settings edit, persisted in roles.yaml.
+    private var roleStore: EngineRoleStore? { appState?.magicCoordinator.roleStore }
+
     /// Provider chosen for this chat (nil = follow the app default). Only
     /// tool-calling-capable providers are offered.
-    var selectedProviderID: UUID?
+    var selectedProviderID: UUID? { roleStore?.mapping[.chatAssistant] }
 
     /// All configured providers that can drive the assistant.
     var toolCallingProviders: [AIProviderConfig] {
         appState?.providerStore.providers.filter { $0.providerType.supportsToolCalling } ?? []
     }
 
-    /// The provider the assistant will actually use: the explicit selection if
-    /// it's still valid, otherwise the app default when it qualifies, otherwise
-    /// the first tool-calling provider. `nil` means none can do tool calling.
+    /// The provider the assistant will actually use, via role resolution:
+    /// the bound provider if still valid, else the app default when it
+    /// qualifies, else the first tool-calling provider. `nil` means none
+    /// can do tool calling.
     var activeProvider: AIProviderConfig? {
-        let candidates = toolCallingProviders
-        if let id = selectedProviderID, let match = candidates.first(where: { $0.id == id }) {
-            return match
-        }
-        if let defaultProvider = appState?.providerStore.defaultProvider,
-           candidates.contains(where: { $0.id == defaultProvider.id }) {
-            return defaultProvider
-        }
-        return candidates.first
+        guard let appState, let roleStore else { return nil }
+        return roleStore.provider(for: .chatAssistant, in: appState.providerStore)
     }
 
     func selectProvider(_ id: UUID) {
-        selectedProviderID = id
+        roleStore?.setProvider(id, for: .chatAssistant)
     }
 
     // MARK: - Loop internals (not observed)

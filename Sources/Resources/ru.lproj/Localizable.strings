@@ -158,6 +158,20 @@
 
 /* Settings - Providers */
 "settings.providers.select" = "Выберите провайдера";
+"settings.routing.title" = "Маршрутизация моделей";
+"settings.routing.role.generation.magic" = "Генерация Magic Button";
+"settings.routing.role.chat.assistant" = "Чат ассистента промптов";
+"settings.routing.provider_default" = "По умолчанию";
+"settings.routing.min_cost" = "Мин. класс";
+"settings.routing.timeout" = "Таймаут (с)";
+"settings.routing.off" = "Выкл";
+"settings.routing.spend" = "Токены: %@ сегодня · %@ за месяц";
+"settings.routing.warnings" = "Предупреждения конфигурации";
+"settings.routing.fallbacks_hint" = "Цепочки фолбэков редактируются в roles.yaml (формат — в шапке файла).";
+"settings.routing.missing_key" = "У %@ нет API-ключа";
+"settings.routing.falls_back" = "Настроенный провайдер недоступен — используется %@";
+"settings.routing.refused_cost" = "Нет провайдера класса %@ — генерация будет отклонена";
+"settings.routing.no_provider" = "Нет доступного провайдера для этой роли";
 "settings.providers.add" = "Добавить провайдера";
 "settings.providers.name" = "Имя";
 "settings.providers.type" = "Тип";
@@ -517,6 +531,7 @@
 "magic.toast.undo" = "Отменить";
 "magic.toast.regenerate" = "Заново";
 "magic.toast.copy" = "Копировать";
+"magic.toast.close" = "Закрыть";
 "magic.toast.refine" = "Уточнить…";
 "magic.toast.refine_hint" = "Опишите, как изменить черновик";
 "magic.toast.refine_send" = "Применить";

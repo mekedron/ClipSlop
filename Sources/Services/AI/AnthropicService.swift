@@ -2,6 +2,10 @@ import Foundation
 
 struct AnthropicService: AIService {
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
+        try await processWithUsage(text: text, systemPrompt: systemPrompt, config: config).text
+    }
+
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
         let (request, _) = try buildRequest(text: text, systemPrompt: systemPrompt, config: config, stream: false)
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -20,7 +24,11 @@ struct AnthropicService: AIService {
         guard let text = decoded.content.first?.text, !text.isEmpty else {
             throw AIServiceError.emptyResponse
         }
-        return text
+        return AIGenerationResult(
+            text: text,
+            inputTokens: decoded.usage?.inputTokens,
+            outputTokens: decoded.usage?.outputTokens
+        )
     }
 
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
@@ -80,6 +88,7 @@ struct AnthropicService: AIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue(Constants.Anthropic.apiVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
@@ -123,10 +132,21 @@ private struct AnthropicRequest: Encodable {
 
 private struct AnthropicResponse: Decodable {
     let content: [ContentBlock]
+    let usage: Usage?
 
     struct ContentBlock: Decodable {
         let type: String
         let text: String?
+    }
+
+    struct Usage: Decodable {
+        let inputTokens: Int?
+        let outputTokens: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case inputTokens = "input_tokens"
+            case outputTokens = "output_tokens"
+        }
     }
 }
 

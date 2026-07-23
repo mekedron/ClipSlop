@@ -38,6 +38,12 @@ struct MagicEngineConfig: Sendable, Equatable {
     var warmContextTtlSeconds = 30
     /// Debounce between a focus-change notification and the cheap read.
     var observerDebounceMs = 200
+    /// Apps/domains whose field content must never reach a cloud provider
+    /// (P7). Entries are matched case-insensitively: substring of the app
+    /// bundle id, or exact/suffix match of the URL host. A matching press
+    /// switches to a local provider from the role's chain, or refuses
+    /// honestly (P9) when none exists.
+    var noCloud: [String] = []
 
     static let `default` = MagicEngineConfig()
 
@@ -83,6 +89,17 @@ struct MagicEngineConfig: Sendable, Equatable {
 
         let known = Dictionary(uniqueKeysWithValues: ranges().map { ($0.key, $0) })
         for (key, value) in document.fields {
+            if key == "no_cloud" {
+                switch value {
+                case .list(let items):
+                    config.noCloud = items.map { $0.lowercased() }.filter { !$0.isEmpty }
+                case .scalar(let scalar) where !scalar.isEmpty:
+                    config.noCloud = [scalar.lowercased()]
+                default:
+                    warnings.append("'no_cloud' must be a list like [com.tinyspeck.slackmacgap, gmail.com]")
+                }
+                continue
+            }
             guard let entry = known[key] else {
                 warnings.append("unknown key '\(key)' (line \(document.fieldLines[key] ?? 0)) — ignored")
                 continue

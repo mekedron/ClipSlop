@@ -125,6 +125,33 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
     }
 }
 
+/// Where a provider sends the user's text (P7 privacy binding). About the
+/// *data path*, not the binary: a CLI tool runs locally but usually calls a
+/// cloud API, so it derives `.cloud`; only same-machine endpoints derive
+/// `.local`. User-overridable per provider in providers.yaml.
+enum ProviderLocality: String, Codable, Sendable, CaseIterable {
+    case local
+    case cloud
+}
+
+/// Coarse spend/quality class (§14). `min_cost_class` on a role forbids
+/// silent downgrade below it (P9).
+enum ProviderCostClass: String, Codable, Sendable, CaseIterable, Comparable {
+    case local
+    case mid
+    case premium
+
+    private var rank: Int {
+        switch self {
+        case .local: 0
+        case .mid: 1
+        case .premium: 2
+        }
+    }
+
+    static func < (lhs: Self, rhs: Self) -> Bool { lhs.rank < rhs.rank }
+}
+
 enum ReasoningEffort: String, Codable, Sendable, CaseIterable, Identifiable {
     case none
     case low
@@ -163,6 +190,35 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
     var temperature: Double
     /// nil means unset: no effort field is sent and the provider's own default applies.
     var reasoningEffort: ReasoningEffort?
+    /// nil means derived (see `effectiveLocality`); set only by an explicit
+    /// override in providers.yaml.
+    var locality: ProviderLocality?
+    /// nil means derived (see `effectiveCostClass`).
+    var costClass: ProviderCostClass?
+    /// Per-request timeout stamped by role resolution (§14). Transient —
+    /// never persisted; nil keeps the URLSession default.
+    var requestTimeout: TimeInterval?
+
+    /// Data-path locality with a conservative derivation: local only when
+    /// the endpoint is provably this machine.
+    var effectiveLocality: ProviderLocality {
+        if let locality { return locality }
+        if providerType == .cliTool { return .cloud }  // claude/codex CLIs call out
+        if let host = URL(string: baseURL)?.host?.lowercased(),
+           ["localhost", "127.0.0.1", "::1", "[::1]"].contains(host) {
+            return .local
+        }
+        return .cloud
+    }
+
+    var effectiveCostClass: ProviderCostClass {
+        if let costClass { return costClass }
+        if effectiveLocality == .local { return .local }
+        switch providerType {
+        case .anthropic, .openAI, .openAIChatGPT: return .premium
+        case .openAICompatible, .cliTool, .ollama: return .mid
+        }
+    }
 
     init(
         id: UUID = UUID(),
@@ -174,7 +230,9 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
         isDefault: Bool = false,
         maxTokens: Int = Constants.Defaults.maxTokens,
         temperature: Double = Constants.Defaults.temperature,
-        reasoningEffort: ReasoningEffort? = nil
+        reasoningEffort: ReasoningEffort? = nil,
+        locality: ProviderLocality? = nil,
+        costClass: ProviderCostClass? = nil
     ) {
         self.id = id
         self.name = name
@@ -186,11 +244,14 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
         self.maxTokens = maxTokens
         self.temperature = temperature
         self.reasoningEffort = reasoningEffort ?? providerType.defaultReasoningEffort
+        self.locality = locality
+        self.costClass = costClass
     }
 
     private enum CodingKeys: String, CodingKey {
         case id, name, providerType, baseURL, apiKeyRef, modelID, isDefault, maxTokens, temperature
         case reasoningEffortSetting
+        case locality, costClass
         case legacyReasoningEffort = "reasoningEffort"
         case legacyOllamaReasoningEffort = "ollamaReasoningEffort"
     }
@@ -225,6 +286,8 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
             nil
         }
         reasoningEffort = storedEffort.flatMap(ReasoningEffort.init(rawValue:))
+        locality = try container.decodeIfPresent(ProviderLocality.self, forKey: .locality)
+        costClass = try container.decodeIfPresent(ProviderCostClass.self, forKey: .costClass)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -239,6 +302,8 @@ struct AIProviderConfig: Codable, Identifiable, Hashable, Sendable {
         try container.encode(maxTokens, forKey: .maxTokens)
         try container.encode(temperature, forKey: .temperature)
         try container.encodeIfPresent(reasoningEffort, forKey: .reasoningEffortSetting)
+        try container.encodeIfPresent(locality, forKey: .locality)
+        try container.encodeIfPresent(costClass, forKey: .costClass)
     }
 
     static let builtInAnthropic = AIProviderConfig(
