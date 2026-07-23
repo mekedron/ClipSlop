@@ -236,7 +236,7 @@ struct OnboardingView: View {
                 )
                 ShortcutRow(
                     label: loc.t("onboarding.shortcuts.assistant"),
-                    name: .togglePromptAssistant
+                    name: .toggleSettingsAssistant
                 )
                 ShortcutRow(
                     label: loc.t("onboarding.shortcuts.magic"),
@@ -268,7 +268,7 @@ struct OnboardingView: View {
         OnboardingDemoView(appState: appState)
     }
 
-    // MARK: - Step 8: Prompt Assistant
+    // MARK: - Step 8: Settings Assistant
 
     private var assistantStep: some View {
         VStack(spacing: 20) {

@@ -16,11 +16,13 @@ struct EngineConfigTests {
         toast_dismiss_seconds: 20
         warm_observer_enabled: 0
         warm_context_ttl_seconds: 60
+        output_max_chars_default: 3000
         ---
         """)
         #expect(warnings.isEmpty)
         #expect(config.webCallBudget == 1500)
         #expect(config.toastDismissSeconds == 20)
+        #expect(config.outputMaxCharsDefault == 3000)
         #expect(config.warmObserverEnabled == 0)
         #expect(config.warmContextTtlSeconds == 60)
         // Untouched keys keep defaults.

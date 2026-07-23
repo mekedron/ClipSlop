@@ -65,7 +65,7 @@ struct GeneralSettingsView: View {
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipboard"), name: .triggerOCRToClipboard)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.ocr_clipslop"), name: .triggerScreenCapture)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.quick_access"), name: .triggerQuickAccess)
-                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.assistant"), name: .togglePromptAssistant)
+                KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.assistant"), name: .toggleSettingsAssistant)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.magic"), name: .triggerMagic)
                 KeyboardShortcuts.Recorder(loc.t("settings.general.shortcuts.magic_chips"), name: .triggerMagicChips)
             }

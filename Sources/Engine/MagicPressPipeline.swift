@@ -12,6 +12,9 @@ struct MagicPressPlan: Sendable {
     var roleBinding: RoleBinding = RoleBinding()
     var providers: [AIProviderConfig] = []
     var noCloud: [String] = []
+    /// Output ceiling for cards without an explicit `output.max_chars`
+    /// (config.yaml `output_max_chars_default`).
+    var outputMaxCharsDefault: Int = MagicEngineConfig.default.outputMaxCharsDefault
 }
 
 struct MagicPressResult: Sendable {
@@ -115,7 +118,8 @@ enum MagicPressPipeline {
             workflowLoadErrors: workflowStore.loadErrors,
             roleBinding: roleStore.binding(for: .generationMagic),
             providers: providerStore.providers,
-            noCloud: config.noCloud
+            noCloud: config.noCloud,
+            outputMaxCharsDefault: config.outputMaxCharsDefault
         )
     }
 
@@ -168,13 +172,16 @@ enum MagicPressPipeline {
         trace.providerType = provider.providerType.rawValue
         trace.modelID = provider.modelID
 
+        let outputMaxChars = workflow.card.output.maxChars ?? plan.outputMaxCharsDefault
+
         let assembleStart = clock.now
         let assembled = PromptAssembler.assemble(
             workflow: workflow,
             snapshot: snapshot,
             core: plan.core,
             classification: classification,
-            hint: hint
+            hint: hint,
+            outputMaxChars: outputMaxChars
         )
         trace.latencyMs.assemble = Self.ms(clock.now - assembleStart)
         trace.slotTokens = Dictionary(uniqueKeysWithValues: assembled.slots.map { ($0.id.rawValue, $0.tokensEstimated) })
@@ -200,7 +207,8 @@ enum MagicPressPipeline {
             workflow: workflow,
             prompt: assembled,
             snapshot: snapshot,
-            constraints: plan.core.constraints
+            constraints: plan.core.constraints,
+            outputMaxChars: outputMaxChars
         )
         trace.latencyMs.verify = Self.ms(clock.now - verifyStart)
         trace.verifierPassed = verdict.passed
@@ -224,7 +232,8 @@ enum MagicPressPipeline {
             snapshot: snapshot,
             core: plan.core,
             classification: classification,
-            hint: nil
+            hint: nil,
+            outputMaxChars: workflow.card.output.maxChars ?? plan.outputMaxCharsDefault
         )
 
         let presentation: String

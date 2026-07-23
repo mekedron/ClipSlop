@@ -19,7 +19,8 @@ struct DeterministicVerifierTests {
         )
         return DeterministicVerifier.verify(
             output: output, workflow: workflow, prompt: prompt,
-            snapshot: snapshot, constraints: constraints
+            snapshot: snapshot, constraints: constraints,
+            outputMaxChars: workflow.card.output.maxChars ?? MagicEngineConfig.default.outputMaxCharsDefault
         )
     }
 
@@ -213,7 +214,8 @@ struct DeterministicVerifierTests {
                 workflow: MagicTestSupport.makeWorkflow(id: "perf"),
                 prompt: prompt,
                 snapshot: snapshot,
-                constraints: constraints
+                constraints: constraints,
+                outputMaxChars: 100_000
             )
             best = min(best, verdict.elapsedMs)
         }

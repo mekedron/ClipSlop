@@ -87,6 +87,14 @@ final class MagicPressCoordinator {
             snapshotService: snapshotService,
             configProvider: { [configStore] in configStore.config }
         )
+        // One-shot migration: debug logging used to be a UserDefaults-only
+        // toggle; it now lives in config.yaml (`debug_log_enabled`) so
+        // file-editing agents can reach it. Config is the authority from
+        // here on.
+        if UserDefaults.standard.bool(forKey: "magicDebugLogging") {
+            configStore.setInteger(1, forKey: "debug_log_enabled")
+        }
+        UserDefaults.standard.removeObject(forKey: "magicDebugLogging")
         Task { [traceLogger, debugLogger] in
             await traceLogger.pruneOldLogs()
             await debugLogger.pruneOldLogs()
@@ -810,9 +818,10 @@ final class MagicPressCoordinator {
         }
         Task { [traceLogger] in await traceLogger.append(stamped) }
 
-        // Full-content debug log (opt-in, Settings → Magic): everything the
-        // contentless trace deliberately omits.
-        guard appState?.settings.magicDebugLogging == true else { return }
+        // Full-content debug log (opt-in via `debug_log_enabled` in
+        // config.yaml — the Settings → Magic checkbox is a view over that
+        // key): everything the contentless trace deliberately omits.
+        guard configStore.config.debugLogEnabled == 1 else { return }
         let press = activePress
         let entry = MagicDebugEntry(
             trace: stamped,

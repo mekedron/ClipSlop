@@ -31,7 +31,10 @@ extension KeyboardShortcuts.Name {
         default: .init(.space, modifiers: [.option, .shift])
     )
 
-    static let togglePromptAssistant = Self(
+    /// The Settings Assistant window. The raw value keeps the pre-rename
+    /// name — user-recorded shortcuts persist in UserDefaults under it, and
+    /// changing it would silently drop them.
+    static let toggleSettingsAssistant = Self(
         "togglePromptAssistant",
         default: .init(.p, modifiers: [.command, .control, .option])
     )

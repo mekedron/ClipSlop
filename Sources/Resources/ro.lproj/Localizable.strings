@@ -160,7 +160,7 @@
 "settings.providers.select" = "Selectează un furnizor";
 "settings.routing.title" = "Model routing";
 "settings.routing.role.generation.magic" = "Magic Button generation";
-"settings.routing.role.chat.assistant" = "Prompt Assistant chat";
+"settings.routing.role.chat.assistant" = "Settings Assistant chat";
 "settings.routing.provider_default" = "App default";
 "settings.routing.min_cost" = "Min cost";
 "settings.routing.timeout" = "Timeout (s)";
@@ -488,38 +488,38 @@
 "shortcuts.settings" = "Setări";
 
 /* Prompt Assistant */
-"settings.general.shortcuts.assistant" = "Asistent de prompturi:";
-"assistant.window.title" = "Asistent de prompturi";
+"settings.general.shortcuts.assistant" = "Settings Assistant:";
+"assistant.window.title" = "Settings Assistant";
 "assistant.using" = "Folosește %@";
 "assistant.new_chat" = "Conversație nouă";
-"assistant.empty.title" = "Editează-ți biblioteca de prompturi conversând";
-"assistant.empty.body" = "Cere-mi să creez, editez, mut sau șterg prompturi și foldere sau să setez scurtături. Îți voi arăta fiecare modificare pentru aprobare.";
+"assistant.empty.title" = "Manage ClipSlop by chatting";
+"assistant.empty.body" = "Ask me to edit prompts and folders, tune the Magic Button engine — workflows, core files, config, model routing — or explain what a press did. I'll show every change for you to approve.";
 "assistant.thinking" = "Se gândește…";
-"assistant.input.placeholder" = "Cere modificarea unui prompt…";
+"assistant.input.placeholder" = "Ask to change or explain something…";
 "assistant.send" = "Trimite";
 "assistant.approve" = "Aprobă";
 "assistant.reject" = "Respinge";
 "assistant.applied" = "Aplicat";
 "assistant.declined" = "Respins";
 "assistant.unsupported.title" = "Este necesar apelul de instrumente";
-"assistant.unsupported.body" = "Asistentul de prompturi are nevoie de un furnizor care acceptă apelul de instrumente, precum OpenAI sau Anthropic. Schimbă furnizorul implicit pentru a-l folosi.";
+"assistant.unsupported.body" = "The Settings Assistant needs a provider that supports tool calling, like OpenAI or Anthropic. Switch your default provider to use it.";
 "assistant.unsupported.open_settings" = "Deschide setările furnizorilor";
 "assistant.error.no_provider" = "Niciun furnizor AI cu suport pentru apelul de instrumente nu este setat ca implicit. Adaugă sau selectează OpenAI sau Anthropic în Setări.";
 "assistant.error.max_steps" = "Am atins numărul maxim de pași pentru un mesaj. Spune-mi cum vrei să continui.";
 "assistant.error.empty" = "Asistentul a returnat un răspuns gol. Încearcă din nou.";
 
 /* Prompt Assistant onboarding */
-"onboarding.shortcuts.assistant" = "Asistent de prompturi";
-"onboarding.assistant.title" = "Fă cunoștință cu asistentul de prompturi";
-"onboarding.assistant.subtitle" = "Deschide o conversație și doar cere-i: îți editează biblioteca de prompturi, ca să nu mai cauți prin setări. Fiecare modificare îți este arătată mai întâi spre aprobare.";
+"onboarding.shortcuts.assistant" = "Settings Assistant";
+"onboarding.assistant.title" = "Meet the Settings Assistant";
+"onboarding.assistant.subtitle" = "Open a chat and just ask — it edits your prompt library and tunes the Magic Button engine for you, so you never have to dig through settings again. Every change is shown for you to approve first.";
 "onboarding.assistant.feature.edit" = "Creează și editează prompturi conversând";
 "onboarding.assistant.feature.organize" = "Organizează folderele și mută prompturile";
 "onboarding.assistant.feature.shortcuts" = "Atribuie scurtături și setează moduri";
 "onboarding.assistant.try" = "Încearcă acum";
 "assistant.intro_message" = "Salut! Cu ce mă poți ajuta și ce știi să faci?";
-"menu.assistant" = "Asistent de prompturi";
-"settings.prompts.assistant.title" = "Asistent de prompturi cu IA";
-"settings.prompts.assistant.hint" = "Cere-i asistentului să creeze, editeze, mute sau organizeze prompturile tale în limbaj natural.";
+"menu.assistant" = "Settings Assistant";
+"settings.prompts.assistant.title" = "Settings Assistant";
+"settings.prompts.assistant.hint" = "Ask the assistant to create, edit, move, or organize your prompts in plain language — it can also tune the whole Magic Button engine.";
 "settings.prompts.assistant.open" = "Deschide asistentul";
 
 // Magic Button (context engine V0)
@@ -580,3 +580,17 @@
 "settings.magic.section.engine" = "Engine";
 "settings.magic.debug_log" = "Debug log";
 "settings.magic.debug_log.help" = "Writes a full record of every press — complete prompts, screen content, and model output — to ~/.clipslop/logs/debug/ (pruned after 7 days).";
+"settings.magic.skill.install" = "Install Agent Skill…";
+"settings.magic.skill.help" = "Export the bundled Agent Skill — a knowledge package that teaches AI agents (Claude Code and others) to configure and audit ClipSlop through ~/.clipslop.";
+"settings.magic.skill.claude_code" = "Claude Code (~/.claude/skills)";
+"settings.magic.skill.export" = "Export…";
+"settings.magic.skill.export.prompt" = "Export";
+"settings.magic.skill.export.message" = "Choose a folder — the skill is created inside it as a 'clipslop' directory.";
+"settings.magic.skill.overwrite.title" = "Replace the installed skill?";
+"settings.magic.skill.overwrite.message" = "A ClipSlop skill (version %@) already exists at this location. Replace it with version %@?";
+"settings.magic.skill.overwrite.replace" = "Replace";
+"settings.magic.skill.overwrite.cancel" = "Cancel";
+"settings.magic.skill.done.title" = "Agent Skill installed";
+"settings.magic.skill.done.message" = "The skill is now at %@.";
+"settings.magic.skill.done.ok" = "OK";
+"settings.magic.skill.error.title" = "Could not install the skill";

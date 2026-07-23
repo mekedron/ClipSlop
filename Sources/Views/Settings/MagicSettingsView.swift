@@ -34,10 +34,25 @@ struct MagicSettingsView: View {
                 Spacer()
                 // Full-content debug logging: complete prompts, screen
                 // content, and model output per press — unlike the always-on
-                // contentless traces. Off by default.
-                Toggle(loc.t("settings.magic.debug_log"), isOn: Bindable(appState.settings).magicDebugLogging)
+                // contentless traces. Off by default. The checkbox is a view
+                // over `debug_log_enabled` in config.yaml (the authority),
+                // so file-editing agents flip the same switch.
+                Toggle(loc.t("settings.magic.debug_log"), isOn: debugLogBinding)
                     .toggleStyle(.checkbox)
                     .help(loc.t("settings.magic.debug_log.help"))
+                // The bundled Agent Skill (SKILL.md + references/): teaches
+                // any external agent to manage ClipSlop through ~/.clipslop.
+                Menu(loc.t("settings.magic.skill.install")) {
+                    Button(loc.t("settings.magic.skill.claude_code")) {
+                        confirmAndInstallSkill(intoParent: AgentSkill.claudeCodeSkillsDirectory)
+                    }
+                    Button(loc.t("settings.magic.skill.export")) {
+                        exportSkill()
+                    }
+                }
+                .fixedSize()
+                .controlSize(.small)
+                .help(loc.t("settings.magic.skill.help"))
                 Button(loc.t("settings.magic.reveal_folder")) {
                     NSWorkspace.shared.activateFileViewerSelecting([Constants.Engine.rootDirectory])
                 }
@@ -115,6 +130,10 @@ struct MagicSettingsView: View {
             let relative = url.path.replacingOccurrences(
                 of: Constants.Engine.rootDirectory.path + "/", with: ""
             )
+            // The prompt library (§7.3) lives in the same tree but has its
+            // own management surface — the Prompts tab. Listing its ~47
+            // cards here would drown the engine's own workflows.
+            if relative.hasPrefix("workflows/library/") { continue }
             result.append(FileItem(
                 id: relative,
                 title: url.deletingPathExtension().lastPathComponent,
@@ -261,5 +280,74 @@ struct MagicSettingsView: View {
             get: { coordinator.roleStore.mapping[.generationMagic] },
             set: { coordinator.roleStore.setProvider($0, for: .generationMagic) }
         )
+    }
+
+    /// The debug-log checkbox reads and writes `debug_log_enabled` in
+    /// config.yaml — no parallel UserDefaults state.
+    private var debugLogBinding: Binding<Bool> {
+        Binding(
+            get: { coordinator.configStore.config.debugLogEnabled == 1 },
+            set: { coordinator.configStore.setInteger($0 ? 1 : 0, forKey: "debug_log_enabled") }
+        )
+    }
+
+    // MARK: - Agent Skill install / export
+
+    /// Installs the bundled skill into `parent/clipslop/`, asking before
+    /// replacing an existing installation (versions shown).
+    private func confirmAndInstallSkill(intoParent parent: URL) {
+        let destination = parent.appendingPathComponent(AgentSkill.directoryName)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            let alert = NSAlert()
+            alert.alertStyle = .warning
+            alert.messageText = loc.t("settings.magic.skill.overwrite.title")
+            alert.informativeText = loc.t(
+                "settings.magic.skill.overwrite.message",
+                AgentSkill.installedVersion(at: destination) ?? "?",
+                AgentSkill.bundledVersion ?? "?"
+            )
+            alert.addButton(withTitle: loc.t("settings.magic.skill.overwrite.replace"))
+            alert.addButton(withTitle: loc.t("settings.magic.skill.overwrite.cancel"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return }
+        }
+        do {
+            let installed = try AgentSkill.install(intoParent: parent)
+            let alert = NSAlert()
+            alert.messageText = loc.t("settings.magic.skill.done.title")
+            alert.informativeText = loc.t("settings.magic.skill.done.message", installed.path)
+            alert.addButton(withTitle: loc.t("settings.magic.skill.done.ok"))
+            alert.addButton(withTitle: loc.t("settings.magic.reveal"))
+            if alert.runModal() == .alertSecondButtonReturn {
+                NSWorkspace.shared.activateFileViewerSelecting([installed])
+            }
+        } catch {
+            let alert = NSAlert()
+            alert.alertStyle = .critical
+            alert.messageText = loc.t("settings.magic.skill.error.title")
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
+        }
+    }
+
+    /// Generic export: the user picks any directory; the skill lands in a
+    /// `clipslop/` subdirectory (the spec requires that directory name).
+    private func exportSkill() {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = false
+        panel.canChooseDirectories = true
+        panel.canCreateDirectories = true
+        panel.prompt = loc.t("settings.magic.skill.export.prompt")
+        panel.message = loc.t("settings.magic.skill.export.message")
+        let handler: (NSApplication.ModalResponse) -> Void = { response in
+            guard response == .OK, let url = panel.url else { return }
+            // Defer past the sheet's dismissal — the confirm/done alerts
+            // run modally and must not start while the sheet is closing.
+            Task { @MainActor in confirmAndInstallSkill(intoParent: url) }
+        }
+        if let window = NSApp.keyWindow {
+            panel.beginSheetModal(for: window, completionHandler: handler)
+        } else {
+            panel.begin(completionHandler: handler)
+        }
     }
 }

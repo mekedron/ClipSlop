@@ -96,7 +96,10 @@ final class WorkflowStore {
         ) else { return [] }
 
         var files: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "md" {
+        // `_folder.md` files are the library tree's per-directory metadata
+        // (§7.3 — folder name/mnemonic/order), not workflow cards.
+        for case let url as URL in enumerator
+        where url.pathExtension == "md" && url.lastPathComponent != PromptLibraryFiles.folderFileName {
             files.append(url)
         }
         return files.sorted { $0.path < $1.path }

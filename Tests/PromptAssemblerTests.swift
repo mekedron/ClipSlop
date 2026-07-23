@@ -17,11 +17,13 @@ struct PromptAssemblerTests {
         snapshot: MagicSnapshot = MagicTestSupport.makeSnapshot(),
         core: CoreFileSet? = nil,
         classification: SelectionClassification? = nil,
-        hint: String? = nil
+        hint: String? = nil,
+        outputMaxChars: Int = 1200
     ) -> AssembledPrompt {
         PromptAssembler.assemble(
             workflow: workflow, snapshot: snapshot,
-            core: core ?? self.core, classification: classification, hint: hint
+            core: core ?? self.core, classification: classification, hint: hint,
+            outputMaxChars: outputMaxChars
         )
     }
 
@@ -96,6 +98,17 @@ struct PromptAssemblerTests {
         #expect(slot.truncated)
         #expect(!slot.text.contains("ANTI-MARKER"))
         #expect(slot.text.contains("RULE-MARKER"))
+    }
+
+    @Test func lengthCeilingReachesTheModelAndSurvivesTrimming() {
+        let hugeBody = "## Rules\n" + String(repeating: "- filler rule line to overflow the slot budget.\n", count: 120)
+        let prompt = assemble(
+            workflow: MagicTestSupport.makeWorkflow(id: "big", body: hugeBody),
+            outputMaxChars: 3000
+        )
+        let slot = prompt.slots.first { $0.id == .workflowBody }!
+        #expect(slot.truncated)
+        #expect(slot.text.contains("never exceed 3000 characters"))
     }
 
     @Test func selectionAndHintAreNeverTruncated() {

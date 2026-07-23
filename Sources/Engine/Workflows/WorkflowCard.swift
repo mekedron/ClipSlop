@@ -48,10 +48,12 @@ struct OutputSpec: Sendable, Equatable {
     }
 
     let lang: Lang
-    let maxChars: Int
+    /// Per-card character ceiling. `nil` means the card sets no limit and
+    /// the engine-wide `output_max_chars_default` (config.yaml) applies.
+    let maxChars: Int?
     let format: String
 
-    static let `default` = OutputSpec(lang: .matchContext, maxChars: 1200, format: "plain")
+    static let `default` = OutputSpec(lang: .matchContext, maxChars: nil, format: "plain")
 }
 
 /// The YAML frontmatter of a workflow file, typed and validated. The card is
@@ -73,9 +75,67 @@ struct WorkflowCard: Sendable, Equatable {
     let when: WhenPredicate?
     let budget: BudgetSpec
     let output: OutputSpec
+    /// §7.3 library metadata — present on prompt-library cards under
+    /// `workflows/library/`. Never inherited via `extends`.
+    let library: LibraryMeta?
 
     enum Surface: String, Sendable {
         case `public`, team, `private`
+    }
+
+    /// Optional metadata carried by prompt-library cards (§7.3 file-store
+    /// unification): the stable UUID identity that hotkeys, Quick Access
+    /// tiles, and App Intents bind to, plus the popup-UI attributes that
+    /// have no meaning for routed workflows. Cards carrying this metadata
+    /// usually have no `when:` and therefore never enter routing — they are
+    /// invocable by id/uuid only.
+    struct LibraryMeta: Sendable, Equatable {
+        /// Identity for `prompt_quickPaste_<uuid>` shortcut names,
+        /// `QuickAccessTile.promptID`, and `PromptEntity.id`.
+        let uuid: UUID?
+        /// Display name. The filename stays the slug.
+        let title: String?
+        /// Position among siblings in the popup list.
+        let order: Int?
+        /// Single-key popup navigation ("t", "delete", "f5").
+        let mnemonic: String?
+        let mnemonicModifiers: MnemonicModifiers?
+        /// Per-prompt AI provider override (provider UUID).
+        let providerID: UUID?
+        let displayMode: EditorMode?
+        let selectAll: Bool?
+        /// Global hotkey slots, carbon keyCode + carbon modifiers — the
+        /// exact encoding `ShortcutConfig` stores, kept round-trippable.
+        let shortcutInline: ShortcutConfig?
+        let shortcutPopup: ShortcutConfig?
+    }
+
+    init(
+        id: String,
+        version: Int,
+        extends: String?,
+        isAbstract: Bool,
+        priority: Int,
+        surface: Surface,
+        summary: String?,
+        intents: [String],
+        when: WhenPredicate?,
+        budget: BudgetSpec,
+        output: OutputSpec,
+        library: LibraryMeta? = nil
+    ) {
+        self.id = id
+        self.version = version
+        self.extends = extends
+        self.isAbstract = isAbstract
+        self.priority = priority
+        self.surface = surface
+        self.summary = summary
+        self.intents = intents
+        self.when = when
+        self.budget = budget
+        self.output = output
+        self.library = library
     }
 
     var tier: MatchTier { when?.tier ?? .base }
@@ -89,6 +149,13 @@ enum WorkflowCardParser {
     static let knownKeys: Set<String> = [
         "id", "kind", "mode", "version", "extends", "abstract", "priority",
         "surface", "when", "summary", "intents", "budget", "output",
+        // §7.3 library metadata (prompt-library cards).
+        "uuid", "title", "order", "mnemonic", "mnemonic_modifiers",
+        "provider", "display_mode", "select_all", "shortcut_inline", "shortcut_popup",
+    ]
+    static let libraryKeys: Set<String> = [
+        "uuid", "title", "order", "mnemonic", "mnemonic_modifiers",
+        "provider", "display_mode", "select_all", "shortcut_inline", "shortcut_popup",
     ]
     static let ignoredForwardKeys: Set<String> = ["needs", "authorship", "execution", "permissions"]
     static let knownWhenKeys: Set<String> = ["app", "url", "field.role", "field.state", "selection"]
@@ -139,18 +206,20 @@ enum WorkflowCardParser {
 
         let summary = try scalarValue("summary", in: document)
         let intents = try listValue("intents", in: document) ?? []
-        if !isAbstract {
+        let when = try parseWhen(document)
+        if !isAbstract, when != nil {
             // `summary` is never inherited — every routable card labels its own
             // chip. `intents` may come from an ancestor; the resolver checks
-            // the effective value.
+            // the effective value. Cards without `when:` never enter routing
+            // (§7.3 — invocable by id/uuid only), so they need no chip label.
             guard summary?.isEmpty == false else {
                 throw FrontmatterError(line: 1, message: "'summary' is required (it becomes the chip label)")
             }
         }
 
-        let when = try parseWhen(document)
         let budget = try parseBudget(document)
         let output = try parseOutput(document)
+        let library = try parseLibrary(document)
 
         let card = WorkflowCard(
             id: id,
@@ -163,7 +232,8 @@ enum WorkflowCardParser {
             intents: intents,
             when: when,
             budget: budget,
-            output: output
+            output: output,
+            library: library
         )
         return (card, Set(document.fields.keys), warnings)
     }
@@ -246,9 +316,84 @@ enum WorkflowCardParser {
         }
         return OutputSpec(
             lang: lang,
-            maxChars: try intValue(map["max_chars"], key: "output.max_chars", document) ?? OutputSpec.default.maxChars,
+            maxChars: try intValue(map["max_chars"], key: "output.max_chars", document),
             format: format
         )
+    }
+
+    /// §7.3 library metadata. Returns `nil` when the card carries none of the
+    /// library keys — routed engine workflows stay metadata-free.
+    private static func parseLibrary(_ document: FrontmatterDocument) throws -> WorkflowCard.LibraryMeta? {
+        guard document.fields.keys.contains(where: { libraryKeys.contains($0) }) else { return nil }
+
+        var uuid: UUID?
+        if let raw = try scalarValue("uuid", in: document) {
+            guard let parsed = UUID(uuidString: raw) else {
+                throw error("uuid", document, "'\(raw)' is not a valid UUID")
+            }
+            uuid = parsed
+        }
+
+        var providerID: UUID?
+        if let raw = try scalarValue("provider", in: document) {
+            guard let parsed = UUID(uuidString: raw) else {
+                throw error("provider", document, "'\(raw)' is not a valid provider UUID")
+            }
+            providerID = parsed
+        }
+
+        var mnemonicModifiers: MnemonicModifiers?
+        if let raw = try listValue("mnemonic_modifiers", in: document) {
+            var set: MnemonicModifiers = []
+            for item in raw {
+                switch item {
+                case "shift": set.insert(.shift)
+                case "control": set.insert(.control)
+                case "option": set.insert(.option)
+                case "command": set.insert(.command)
+                default:
+                    throw error("mnemonic_modifiers", document, "unknown modifier '\(item)' — expected shift, control, option, or command")
+                }
+            }
+            mnemonicModifiers = set
+        }
+
+        var displayMode: EditorMode?
+        if let raw = try scalarValue("display_mode", in: document) {
+            guard let mode = EditorMode(rawValue: raw) else {
+                throw error("display_mode", document, "'\(raw)' — expected plainText, html, or markdown")
+            }
+            displayMode = mode
+        }
+
+        return WorkflowCard.LibraryMeta(
+            uuid: uuid,
+            title: try scalarValue("title", in: document),
+            order: try intValue("order", in: document),
+            mnemonic: try scalarValue("mnemonic", in: document),
+            mnemonicModifiers: mnemonicModifiers,
+            providerID: providerID,
+            displayMode: displayMode,
+            selectAll: try boolValue("select_all", in: document),
+            shortcutInline: try shortcutValue("shortcut_inline", in: document),
+            shortcutPopup: try shortcutValue("shortcut_popup", in: document)
+        )
+    }
+
+    /// Shortcut slots use the exact `ShortcutConfig` storage encoding —
+    /// carbon keyCode + carbon modifier mask — so hand edits stay
+    /// round-trippable with what `KeyboardShortcuts` registers.
+    private static func shortcutValue(_ key: String, in document: FrontmatterDocument) throws -> ShortcutConfig? {
+        guard let value = document.fields[key] else { return nil }
+        guard case .map(let map) = value else {
+            throw error(key, document, "must be a flow map like {key: 5, modifiers: 768}")
+        }
+        guard let keyCode = try intValue(map["key"], key: "\(key).key", document),
+              let modifiers = try intValue(map["modifiers"], key: "\(key).modifiers", document)
+        else {
+            throw error(key, document, "needs both 'key' and 'modifiers' integers, like {key: 5, modifiers: 768}")
+        }
+        return ShortcutConfig(carbonKeyCode: keyCode, carbonModifiers: modifiers)
     }
 
     // MARK: - Field access helpers

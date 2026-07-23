@@ -133,7 +133,7 @@ struct WorkflowCardParsingTests {
         #expect(parsed.isAbstract)
     }
 
-    @Test func nonAbstractCardRequiresSummary() {
+    @Test func routableCardRequiresSummary() {
         #expect(throws: FrontmatterError.self) {
             _ = try card("""
             ---
@@ -142,9 +142,29 @@ struct WorkflowCardParsingTests {
             mode: direct
             version: 1
             intents: [write]
+            when:
+              field.state: [empty]
             ---
             """)
         }
+    }
+
+    @Test func whenLessCardNeedsNoSummaryOrIntents() throws {
+        // §7.3 library cards: no `when:` → never routed → no chip label and
+        // no intent needed. Invocable by id/uuid only.
+        let (parsed, _, warnings) = try card("""
+        ---
+        id: library.fix-grammar
+        kind: workflow
+        mode: direct
+        version: 1
+        ---
+        Fix all grammar mistakes.
+        """)
+        #expect(parsed.summary == nil)
+        #expect(parsed.intents.isEmpty)
+        #expect(parsed.when == nil)
+        #expect(warnings.isEmpty)
     }
 }
 
@@ -153,7 +173,7 @@ struct WorkflowResolutionTests {
     private func raw(
         id: String, extends: String? = nil, abstract: Bool = false,
         priority: Int? = nil, surface: WorkflowCard.Surface? = nil,
-        intents: [String]? = nil, body: String = ""
+        intents: [String]? = nil, when: WhenPredicate? = nil, body: String = ""
     ) -> RawWorkflow {
         var explicit: Set<String> = ["id", "kind", "mode", "version"]
         if extends != nil { explicit.insert("extends") }
@@ -161,18 +181,24 @@ struct WorkflowResolutionTests {
         if priority != nil { explicit.insert("priority") }
         if surface != nil { explicit.insert("surface") }
         if intents != nil { explicit.insert("intents") }
+        if when != nil { explicit.insert("when") }
         if !abstract { explicit.insert("summary") }
         return RawWorkflow(
             card: WorkflowCard(
                 id: id, version: 1, extends: extends, isAbstract: abstract,
                 priority: priority ?? 50, surface: surface ?? .private,
                 summary: abstract ? nil : "Summary of \(id)",
-                intents: intents ?? [], when: nil, budget: .default, output: .default
+                intents: intents ?? [], when: when, budget: .default, output: .default
             ),
             explicitKeys: explicit,
             body: body,
             fileURL: URL(fileURLWithPath: "/w/\(id).md")
         )
+    }
+
+    /// A minimal routable predicate for tests exercising routable-card rules.
+    private var anyWhen: WhenPredicate {
+        WhenPredicate(apps: nil, urlPattern: nil, fieldRoles: nil, fieldStates: [.empty], selectionClasses: nil)
     }
 
     @Test func inheritsUnsetFieldsFromAncestors() throws {
@@ -238,13 +264,25 @@ struct WorkflowResolutionTests {
         #expect(errors.allSatisfy { $0.message.contains("duplicate") })
     }
 
-    @Test func missingIntentsEverywhereIsAnError() {
+    @Test func missingIntentsOnARoutableCardIsAnError() {
         let (resolved, errors) = WorkflowResolver.resolve([
-            raw(id: "orphan"),
+            raw(id: "orphan", when: anyWhen),
         ])
         #expect(resolved.isEmpty)
         #expect(errors.count == 1)
         #expect(errors[0].message.contains("intents"))
+    }
+
+    @Test func whenLessCardResolvesWithoutIntents() throws {
+        // §7.3 library cards resolve (invocable by id) even with no intents
+        // and no summary anywhere in the chain.
+        let (resolved, errors) = WorkflowResolver.resolve([
+            raw(id: "library.fix-grammar", body: "Fix all grammar mistakes."),
+        ])
+        #expect(errors.isEmpty)
+        let card = try #require(resolved.first)
+        #expect(card.id == "library.fix-grammar")
+        #expect(card.body == "Fix all grammar mistakes.")
     }
 }
 

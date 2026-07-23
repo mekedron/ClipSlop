@@ -72,6 +72,12 @@ enum EngineSeedContent {
     # Post-insert toast auto-dismiss, in seconds.
     toast_dismiss_seconds: 8
 
+    # Character ceiling for generated output when the routed workflow card
+    # sets no output.max_chars of its own. The model is told this number and
+    # the verifier warns when the output exceeds it. A card's explicit
+    # output.max_chars always wins over this default.
+    output_max_chars_default: 1200
+
     # Warm frontmost-app observer: keeps cheap context (URL, window title,
     # focused field) fresh between presses and pre-builds Chromium's
     # accessibility tree on app switch. Set warm_observer_enabled: 0 to turn
@@ -79,6 +85,14 @@ enum EngineSeedContent {
     warm_observer_enabled: 1
     warm_context_ttl_seconds: 30
     observer_debounce_ms: 200
+
+    # Full-content debug log: one markdown file per press in logs/debug/
+    # with the complete snapshot, the exact prompt, and the raw model
+    # output. Unlike the always-on contentless traces these files contain
+    # your REAL screen content and drafts — that is the privacy tradeoff.
+    # Pruned automatically after 7 days. Same switch as the checkbox in
+    # Settings -> Magic (this file is the authority).
+    debug_log_enabled: 0
 
     # Apps/domains whose text must never reach a cloud model (P7).
     # Entries match the app bundle id as a substring, or the page's domain

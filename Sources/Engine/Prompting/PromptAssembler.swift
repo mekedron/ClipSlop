@@ -70,12 +70,13 @@ enum PromptAssembler {
         snapshot: MagicSnapshot,
         core: CoreFileSet,
         classification: SelectionClassification?,
-        hint: String?
+        hint: String?,
+        outputMaxChars: Int
     ) -> AssembledPrompt {
         var slots: [AssembledSlot] = []
 
         slots.append(pinnedSlot(core: core))
-        slots.append(workflowBodySlot(workflow: workflow))
+        slots.append(workflowBodySlot(workflow: workflow, outputMaxChars: outputMaxChars))
         // FEW-SHOT is structurally present but empty in V0 — there is no
         // example store yet. Kept so dry-run shows the slot at 0 and the
         // upgrade is additive.
@@ -186,8 +187,14 @@ enum PromptAssembler {
 
     /// WORKFLOW BODY: anti-examples are trimmed before examples, examples
     /// before rules (§10.1 "body examples trimmed before rules").
-    private static func workflowBodySlot(workflow: ResolvedWorkflow) -> AssembledSlot {
-        let budget = SlotID.workflowBody.budgetTokens
+    /// The length ceiling is appended after all trims so the model always
+    /// sees the same number the verifier will check the output against.
+    private static func workflowBodySlot(workflow: ResolvedWorkflow, outputMaxChars: Int) -> AssembledSlot {
+        let limitLine = "LENGTH CEILING: never exceed \(outputMaxChars) characters. "
+            + "It is a ceiling, not a target — within it, the content and the surface decide the right length."
+        // The ceiling line spends from the same slot budget, reserved up
+        // front so appending it after the trims can never overflow the slot.
+        let budget = max(0, SlotID.workflowBody.budgetTokens - TokenEstimator.estimate(limitLine))
         var body = workflow.body
         var truncated = false
 
@@ -202,7 +209,9 @@ enum PromptAssembler {
             (body, _) = trimToTokens(body, tokens: budget)
         }
 
-        let text = body.isEmpty ? "" : section("HOW TO WRITE THIS (workflow: \(workflow.id))", body)
+        body = body.isEmpty ? limitLine : body + "\n\n" + limitLine
+
+        let text = section("HOW TO WRITE THIS (workflow: \(workflow.id))", body)
         return AssembledSlot(
             id: .workflowBody, text: text,
             tokensEstimated: TokenEstimator.estimate(text),

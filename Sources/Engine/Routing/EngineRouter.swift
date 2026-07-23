@@ -48,8 +48,13 @@ enum EngineRouter {
         snapshot: MagicSnapshot,
         classification: SelectionClassification?
     ) -> RoutingDecision {
+        // Cards without `when:` never enter routing (§7.3): they are
+        // deterministic workflows — library prompts and other id/uuid-bound
+        // cards — with no situation predicate to match. Every routable seed
+        // declares an explicit `when:`.
         let matches = catalog.workflows.filter {
-            matchesWhen($0.card.when, snapshot: snapshot, classification: classification)
+            $0.card.when != nil
+                && matchesWhen($0.card.when, snapshot: snapshot, classification: classification)
         }
 
         let topTier = matches.map(\.card.tier).max() ?? .base

@@ -160,7 +160,7 @@
 "settings.providers.select" = "Valitse palvelu";
 "settings.routing.title" = "Mallien reititys";
 "settings.routing.role.generation.magic" = "Magic Button -generointi";
-"settings.routing.role.chat.assistant" = "Prompt Assistant -keskustelu";
+"settings.routing.role.chat.assistant" = "Asetusavustajan keskustelu";
 "settings.routing.provider_default" = "Sovelluksen oletus";
 "settings.routing.min_cost" = "Vähimmäisluokka";
 "settings.routing.timeout" = "Aikakatkaisu (s)";
@@ -488,38 +488,38 @@
 "shortcuts.settings" = "Asetukset";
 
 /* Prompt Assistant */
-"settings.general.shortcuts.assistant" = "Prompti-avustaja:";
-"assistant.window.title" = "Prompti-avustaja";
+"settings.general.shortcuts.assistant" = "Asetusavustaja:";
+"assistant.window.title" = "Asetusavustaja";
 "assistant.using" = "Käyttää %@";
 "assistant.new_chat" = "Uusi keskustelu";
-"assistant.empty.title" = "Muokkaa promptikirjastoasi keskustelemalla";
-"assistant.empty.body" = "Pyydä minua luomaan, muokkaamaan, siirtämään tai poistamaan prompteja ja kansioita tai asettamaan pikanäppäimiä. Näytän jokaisen muutoksen hyväksyttäväksi.";
+"assistant.empty.title" = "Hallitse ClipSlopia keskustelemalla";
+"assistant.empty.body" = "Pyydä minua muokkaamaan prompteja ja kansioita, säätämään taikanapin moottoria — työnkulkuja, ydintiedostoja, asetuksia, mallien reititystä — tai selittämään mitä painallus teki. Näytän jokaisen muutoksen hyväksyttäväksesi.";
 "assistant.thinking" = "Ajattelee…";
-"assistant.input.placeholder" = "Pyydä muuttamaan promptia…";
+"assistant.input.placeholder" = "Pyydä muuttamaan tai selittämään jotain…";
 "assistant.send" = "Lähetä";
 "assistant.approve" = "Hyväksy";
 "assistant.reject" = "Hylkää";
 "assistant.applied" = "Otettu käyttöön";
 "assistant.declined" = "Hylätty";
 "assistant.unsupported.title" = "Työkalukutsut vaaditaan";
-"assistant.unsupported.body" = "Prompti-avustaja tarvitsee palveluntarjoajan, joka tukee työkalukutsuja, kuten OpenAI tai Anthropic. Vaihda oletuspalveluntarjoaja käyttääksesi sitä.";
+"assistant.unsupported.body" = "Asetusavustaja tarvitsee palveluntarjoajan, joka tukee työkalukutsuja, kuten OpenAI tai Anthropic. Vaihda oletuspalveluntarjoaja käyttääksesi sitä.";
 "assistant.unsupported.open_settings" = "Avaa palveluntarjoajien asetukset";
 "assistant.error.no_provider" = "Oletukseksi ei ole asetettu tekoälypalvelua, joka tukee työkalukutsuja. Lisää tai valitse OpenAI tai Anthropic asetuksissa.";
 "assistant.error.max_steps" = "Saavutin yhden viestin enimmäisaskelmäärän. Kerro, miten haluat jatkaa.";
 "assistant.error.empty" = "Avustaja palautti tyhjän vastauksen. Yritä uudelleen.";
 
 /* Prompt Assistant onboarding */
-"onboarding.shortcuts.assistant" = "Prompti-avustaja";
-"onboarding.assistant.title" = "Tässä on prompti-avustaja";
-"onboarding.assistant.subtitle" = "Avaa keskustelu ja pyydä vain – se muokkaa promptikirjastoasi puolestasi, joten sinun ei tarvitse enää etsiä asetuksista. Jokainen muutos näytetään ensin hyväksyttäväksi.";
+"onboarding.shortcuts.assistant" = "Asetusavustaja";
+"onboarding.assistant.title" = "Tässä on asetusavustaja";
+"onboarding.assistant.subtitle" = "Avaa keskustelu ja pyydä vain — se muokkaa promptikirjastoasi ja säätää taikanapin moottoria puolestasi, joten sinun ei tarvitse enää kaivella asetuksia. Jokainen muutos näytetään ensin hyväksyttäväksesi.";
 "onboarding.assistant.feature.edit" = "Luo ja muokkaa prompteja keskustelemalla";
 "onboarding.assistant.feature.organize" = "Järjestä kansioita ja siirrä prompteja";
 "onboarding.assistant.feature.shortcuts" = "Määritä pikanäppäimet ja promptitilat";
 "onboarding.assistant.try" = "Kokeile nyt";
 "assistant.intro_message" = "Hei! Missä voit auttaa minua ja mitä osaat tehdä?";
-"menu.assistant" = "Prompti-avustaja";
-"settings.prompts.assistant.title" = "Tekoäly-prompti-avustaja";
-"settings.prompts.assistant.hint" = "Pyydä avustajaa luomaan, muokkaamaan, siirtämään tai järjestämään promptejasi tavallisella kielellä.";
+"menu.assistant" = "Asetusavustaja";
+"settings.prompts.assistant.title" = "Asetusavustaja";
+"settings.prompts.assistant.hint" = "Pyydä avustajaa luomaan, muokkaamaan, siirtämään tai järjestämään promptejasi omin sanoin — se osaa myös säätää koko taikanapin moottoria.";
 "settings.prompts.assistant.open" = "Avaa avustaja";
 
 // Magic Button (context engine V0)
@@ -580,3 +580,17 @@
 "settings.magic.section.engine" = "Moottori";
 "settings.magic.debug_log" = "Vianetsintäloki";
 "settings.magic.debug_log.help" = "Tallentaa jokaisesta painalluksesta täyden tietueen — kehotteet, näytön sisällön ja mallin vastauksen — kansioon ~/.clipslop/logs/debug/ (siivotaan 7 päivän jälkeen).";
+"settings.magic.skill.install" = "Asenna Agent Skill…";
+"settings.magic.skill.help" = "Vie sovelluksen mukana tulevan Agent Skillin — tietopaketin, joka opettaa tekoälyagentit (Claude Code ja muut) hallitsemaan ja auditoimaan ClipSlopia ~/.clipslop-puun kautta.";
+"settings.magic.skill.claude_code" = "Claude Code (~/.claude/skills)";
+"settings.magic.skill.export" = "Vie…";
+"settings.magic.skill.export.prompt" = "Vie";
+"settings.magic.skill.export.message" = "Valitse kansio — skilli luodaan sen sisään 'clipslop'-hakemistona.";
+"settings.magic.skill.overwrite.title" = "Korvataanko asennettu skilli?";
+"settings.magic.skill.overwrite.message" = "ClipSlop-skilli (versio %@) on jo asennettu tähän sijaintiin. Korvataanko se versiolla %@?";
+"settings.magic.skill.overwrite.replace" = "Korvaa";
+"settings.magic.skill.overwrite.cancel" = "Peruuta";
+"settings.magic.skill.done.title" = "Agent Skill asennettu";
+"settings.magic.skill.done.message" = "Skilli on nyt sijainnissa %@.";
+"settings.magic.skill.done.ok" = "OK";
+"settings.magic.skill.error.title" = "Skillin asennus epäonnistui";

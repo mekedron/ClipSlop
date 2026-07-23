@@ -7,7 +7,7 @@ import SwiftUI
 ///
 /// The hosting window's key monitor owns Enter/Esc; plain keys reach this view
 /// as the first responder. Shared by the ⌘K ad-hoc bar (`AdHocPromptBar`) and
-/// the prompt-assistant chat window (`AssistantChatView`).
+/// the Settings Assistant chat window (`AssistantChatView`).
 struct ChatInputTextView: NSViewRepresentable {
     @Binding var text: String
     let verticalInset: CGFloat

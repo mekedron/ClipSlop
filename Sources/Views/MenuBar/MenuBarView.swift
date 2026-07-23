@@ -31,10 +31,6 @@ struct MenuBarView: View {
             appState.showQuickAccess()
         }
 
-        menuButton(loc.t("menu.assistant"), shortcut: .togglePromptAssistant) {
-            appState.showAssistant()
-        }
-
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
 
         #if DEBUG
@@ -63,6 +59,12 @@ struct MenuBarView: View {
         }
 
         Divider()
+
+        // The assistant sits next to Settings on purpose: it IS the
+        // conversational way to change settings.
+        menuButton(loc.t("menu.assistant"), shortcut: .toggleSettingsAssistant) {
+            appState.showAssistant()
+        }
 
         Button(loc.t("menu.settings")) {
             appState.openSettings()

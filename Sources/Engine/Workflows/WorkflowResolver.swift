@@ -73,12 +73,18 @@ enum WorkflowResolver {
                 errors.append(error)
             case .success(let chain):
                 let effective = mergeChain(chain)
-                guard !effective.card.intents.isEmpty else {
-                    errors.append(WorkflowLoadError(
-                        fileURL: raw.fileURL, workflowID: raw.card.id,
-                        message: "no 'intents' set here or on any ancestor"
-                    ))
-                    continue
+                // Only routable cards (own `when:`) need intents — the router
+                // dedups chips by primary intent. When-less cards never route
+                // (§7.3 library cards, invocable by id/uuid only), so they
+                // resolve without one.
+                if effective.card.when != nil {
+                    guard !effective.card.intents.isEmpty else {
+                        errors.append(WorkflowLoadError(
+                            fileURL: raw.fileURL, workflowID: raw.card.id,
+                            message: "no 'intents' set here or on any ancestor"
+                        ))
+                        continue
+                    }
                 }
                 resolved.append(effective)
             }
@@ -127,8 +133,9 @@ enum WorkflowResolver {
     // MARK: - Merge
 
     /// Child wins per explicitly-set field. `id`, `when`, `summary`,
-    /// `abstract`, and `version` are never inherited — a predicate belongs to
-    /// exactly one card. `budget`/`output` inherit at whole-field granularity
+    /// `abstract`, `version`, and the §7.3 library metadata are never
+    /// inherited — a predicate (and a library identity) belongs to exactly
+    /// one card. `budget`/`output` inherit at whole-field granularity
     /// (a child that sets `output:` at all replaces the ancestor's spec).
     private static func mergeChain(_ chain: [RawWorkflow]) -> ResolvedWorkflow {
         let leaf = chain.last!
@@ -148,7 +155,8 @@ enum WorkflowResolver {
             intents: lastExplicit("intents", { $0.card.intents }) ?? [],
             when: leaf.card.when,
             budget: lastExplicit("budget", { $0.card.budget }) ?? .default,
-            output: lastExplicit("output", { $0.card.output }) ?? .default
+            output: lastExplicit("output", { $0.card.output }) ?? .default,
+            library: leaf.card.library
         )
 
         let body = chain

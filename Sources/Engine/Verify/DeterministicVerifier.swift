@@ -2,7 +2,9 @@ import Foundation
 import NaturalLanguage
 
 struct VerifierWarning: Sendable, Codable, Equatable {
-    enum Check: String, Sendable, Codable {
+    /// `CaseIterable` so the Agent Skill drift tests can assert the bundled
+    /// trace reference names every check id.
+    enum Check: String, Sendable, Codable, CaseIterable {
         case language
         case length
         case constraints
@@ -34,14 +36,15 @@ enum DeterministicVerifier {
         workflow: ResolvedWorkflow,
         prompt: AssembledPrompt,
         snapshot: MagicSnapshot,
-        constraints: [ConstraintRule]
+        constraints: [ConstraintRule],
+        outputMaxChars: Int
     ) -> VerifierVerdict {
         let clock = ContinuousClock()
         let start = clock.now
         var warnings: [VerifierWarning] = []
 
         warnings.append(contentsOf: languageWarnings(output: output, workflow: workflow, snapshot: snapshot))
-        warnings.append(contentsOf: lengthWarnings(output: output, workflow: workflow))
+        warnings.append(contentsOf: lengthWarnings(output: output, maxChars: outputMaxChars))
         warnings.append(contentsOf: constraintWarnings(output: output, constraints: constraints))
         warnings.append(contentsOf: concretenessWarnings(output: output, prompt: prompt))
 
@@ -117,8 +120,9 @@ enum DeterministicVerifier {
 
     // MARK: - Length
 
-    static func lengthWarnings(output: String, workflow: ResolvedWorkflow) -> [VerifierWarning] {
-        let maxChars = workflow.card.output.maxChars
+    /// `maxChars` is the resolved ceiling: the card's own `output.max_chars`
+    /// or, absent that, config.yaml's `output_max_chars_default`.
+    static func lengthWarnings(output: String, maxChars: Int) -> [VerifierWarning] {
         guard output.count > maxChars else { return [] }
         return [VerifierWarning(
             check: .length,

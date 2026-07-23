@@ -35,7 +35,7 @@ final class AppState {
     let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
     let promptShortcutService = PromptShortcutService()
-    let promptAssistant = PromptAssistantService()
+    let settingsAssistant = SettingsAssistantService()
     let magicCoordinator = MagicPressCoordinator()
     let settings = AppSettings.shared
     let syncService = CloudSyncService(
@@ -294,7 +294,7 @@ final class AppState {
         promptShortcutService.registerAll()
 
         // Wire the prompt-library assistant
-        promptAssistant.appState = self
+        settingsAssistant.appState = self
 
         // Wire the Magic Button press band + the warm frontmost-app observer
         magicCoordinator.appState = self
@@ -1038,6 +1038,9 @@ final class AppState {
     // MARK: - Popup
 
     func showPopup() {
+        // External edits to the markdown library (§7.3) are live on the next
+        // open, the same way workflow edits are live on the next press.
+        promptStore.reloadIfChanged()
         if popupWindow == nil {
             popupWindow = PopupWindow(appState: self)
         }
@@ -1104,6 +1107,7 @@ final class AppState {
     // MARK: - Quick Access
 
     func showQuickAccess() {
+        promptStore.reloadIfChanged()
         if quickAccessWindow == nil {
             quickAccessWindow = QuickAccessWindow(appState: self)
         }
@@ -1137,7 +1141,7 @@ final class AppState {
         }
     }
 
-    // MARK: - Prompt-library assistant
+    // MARK: - Settings Assistant
 
     func showAssistant(initialMessage: String? = nil) {
         if assistantWindow == nil {
@@ -1147,8 +1151,8 @@ final class AppState {
         isAssistantVisible = true
         // Auto-send a first message (used by the onboarding "Try it" button) only
         // when starting fresh, so reopening an existing chat doesn't re-send.
-        if let initialMessage, promptAssistant.items.isEmpty, !promptAssistant.isBusy {
-            promptAssistant.send(initialMessage)
+        if let initialMessage, settingsAssistant.items.isEmpty, !settingsAssistant.isBusy {
+            settingsAssistant.send(initialMessage)
         }
     }
 
@@ -1157,7 +1161,7 @@ final class AppState {
         // Auto-reject any pending confirmation so a closed window doesn't leave
         // the agent loop blocked on a card nobody can approve. The conversation
         // itself is preserved for when the window reopens.
-        promptAssistant.resolveConfirmation(approved: false)
+        settingsAssistant.resolveConfirmation(approved: false)
         isAssistantVisible = false
         assistantWindow?.close()
 
@@ -1194,7 +1198,7 @@ final class AppState {
     func assistantWindowWillClose() {
         guard isAssistantVisible else { return }
         isAssistantVisible = false
-        promptAssistant.resolveConfirmation(approved: false)
+        settingsAssistant.resolveConfirmation(approved: false)
     }
 
     func activateQuickAccessTile(_ tile: QuickAccessTile) {

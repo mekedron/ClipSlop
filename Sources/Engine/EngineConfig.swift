@@ -30,6 +30,10 @@ struct MagicEngineConfig: Sendable, Equatable {
     var fieldValueMaxChars = 50_000
     /// Post-insert toast auto-dismiss.
     var toastDismissSeconds = 8
+    /// Character ceiling for generated output when the routed workflow card
+    /// sets no `output.max_chars` of its own. Told to the model at assembly
+    /// and checked by the verifier — a card's explicit value always wins.
+    var outputMaxCharsDefault = 1200
     /// Warm frontmost-app observer (§5.1). 0 disables the whole subsystem —
     /// presses then behave exactly like V0 collect-on-press.
     var warmObserverEnabled = 1
@@ -38,6 +42,12 @@ struct MagicEngineConfig: Sendable, Equatable {
     var warmContextTtlSeconds = 30
     /// Debounce between a focus-change notification and the cheap read.
     var observerDebounceMs = 200
+    /// Full-content per-press debug log (`logs/debug/`, 7-day prune).
+    /// Lives in config.yaml — not UserDefaults — so file-editing agents can
+    /// flip it; the Settings → Magic checkbox is a view over this key
+    /// (config.yaml is authoritative, see `EngineConfigStore.setInteger`).
+    /// Off by default: these files contain real screen content.
+    var debugLogEnabled = 0
     /// Apps/domains whose field content must never reach a cloud provider
     /// (P7). Entries are matched case-insensitively: substring of the app
     /// bundle id, or exact/suffix match of the URL host. A matching press
@@ -65,10 +75,21 @@ struct MagicEngineConfig: Sendable, Equatable {
         ("web_after_keep_chars", 0...20_000, \.webAfterKeepChars),
         ("field_value_max_chars", 1_000...500_000, \.fieldValueMaxChars),
         ("toast_dismiss_seconds", 2...120, \.toastDismissSeconds),
+        ("output_max_chars_default", 100...100_000, \.outputMaxCharsDefault),
         ("warm_observer_enabled", 0...1, \.warmObserverEnabled),
         ("warm_context_ttl_seconds", 5...300, \.warmContextTtlSeconds),
         ("observer_debounce_ms", 50...2_000, \.observerDebounceMs),
+        ("debug_log_enabled", 0...1, \.debugLogEnabled),
         ]
+    }
+
+    /// Every integer key with its range and default — the source the
+    /// Agent Skill's drift tests (`AgentSkillTests`) regenerate the
+    /// config-key table from. (`no_cloud` is the one non-integer key and is
+    /// asserted separately.) Key paths stay private; this exposes only data.
+    static func keyTable() -> [(key: String, range: ClosedRange<Int>, defaultValue: Int)] {
+        let defaults = MagicEngineConfig.default
+        return ranges().map { ($0.key, $0.range, defaults[keyPath: $0.path]) }
     }
 
     /// Parses the config file (same constrained YAML subset as workflow
@@ -148,5 +169,36 @@ final class EngineConfigStore {
             return
         }
         (config, warnings) = MagicEngineConfig.parse(text)
+    }
+
+    /// Sets one integer key in config.yaml, preserving comments and every
+    /// other line (the same line-wise edit discipline the Settings
+    /// Assistant's `set_config` tool uses). This is how UI toggles write
+    /// config-backed switches — config.yaml is the single authority; the
+    /// UI is a view over it.
+    func setInteger(_ value: Int, forKey key: String) {
+        let text = (try? String(contentsOf: Self.fileURL, encoding: .utf8))
+            ?? EngineSeedContent.engineConfig
+        try? Self.settingInteger(value, forKey: key, in: text)
+            .write(to: Self.fileURL, atomically: true, encoding: .utf8)
+        reloadIfChanged()
+    }
+
+    /// Pure edit: replace the key's line, or insert before the closing
+    /// `---` fence (end of file when there is none).
+    nonisolated static func settingInteger(_ value: Int, forKey key: String, in text: String) -> String {
+        var lines = text.components(separatedBy: "\n")
+        if let index = lines.firstIndex(where: {
+            $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
+        }) {
+            lines[index] = "\(key): \(value)"
+        } else if let closing = lines.lastIndex(where: {
+            $0.trimmingCharacters(in: .whitespaces) == "---"
+        }), closing > 0 {
+            lines.insert("\(key): \(value)", at: closing)
+        } else {
+            lines.append("\(key): \(value)")
+        }
+        return lines.joined(separator: "\n")
     }
 }

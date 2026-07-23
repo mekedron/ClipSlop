@@ -160,7 +160,7 @@
 "settings.providers.select" = "Válassz szolgáltatót";
 "settings.routing.title" = "Model routing";
 "settings.routing.role.generation.magic" = "Magic Button generation";
-"settings.routing.role.chat.assistant" = "Prompt Assistant chat";
+"settings.routing.role.chat.assistant" = "Settings Assistant chat";
 "settings.routing.provider_default" = "App default";
 "settings.routing.min_cost" = "Min cost";
 "settings.routing.timeout" = "Timeout (s)";
@@ -488,38 +488,38 @@
 "shortcuts.settings" = "Beállítások";
 
 /* Prompt Assistant */
-"settings.general.shortcuts.assistant" = "Prompt asszisztens:";
-"assistant.window.title" = "Prompt asszisztens";
+"settings.general.shortcuts.assistant" = "Settings Assistant:";
+"assistant.window.title" = "Settings Assistant";
 "assistant.using" = "Használt: %@";
 "assistant.new_chat" = "Új csevegés";
-"assistant.empty.title" = "Szerkeszd a promptkönyvtárad csevegéssel";
-"assistant.empty.body" = "Kérj meg, hogy hozzak létre, szerkesszek, mozgassak vagy töröljek prompteket és mappákat, vagy állítsak be gyorsbillentyűket. Minden változtatást megmutatok jóváhagyásra.";
+"assistant.empty.title" = "Manage ClipSlop by chatting";
+"assistant.empty.body" = "Ask me to edit prompts and folders, tune the Magic Button engine — workflows, core files, config, model routing — or explain what a press did. I'll show every change for you to approve.";
 "assistant.thinking" = "Gondolkodom…";
-"assistant.input.placeholder" = "Kérj egy prompt módosítást…";
+"assistant.input.placeholder" = "Ask to change or explain something…";
 "assistant.send" = "Küldés";
 "assistant.approve" = "Jóváhagyás";
 "assistant.reject" = "Elutasítás";
 "assistant.applied" = "Alkalmazva";
 "assistant.declined" = "Elutasítva";
 "assistant.unsupported.title" = "Eszközhívás szükséges";
-"assistant.unsupported.body" = "A prompt asszisztenshez eszközhívást támogató szolgáltató kell, például OpenAI vagy Anthropic. Válts alapértelmezett szolgáltatót a használatához.";
+"assistant.unsupported.body" = "The Settings Assistant needs a provider that supports tool calling, like OpenAI or Anthropic. Switch your default provider to use it.";
 "assistant.unsupported.open_settings" = "Szolgáltatói beállítások megnyitása";
 "assistant.error.no_provider" = "Nincs eszközhívást támogató MI-szolgáltató beállítva alapértelmezettként. Adj hozzá vagy válassz OpenAI-t vagy Anthropicot a Beállításokban.";
 "assistant.error.max_steps" = "Elértem az egy üzenetre eső lépések maximumát. Mondd meg, hogyan folytassam.";
 "assistant.error.empty" = "Az asszisztens üres választ adott. Kérlek, próbáld újra.";
 
 /* Prompt Assistant onboarding */
-"onboarding.shortcuts.assistant" = "Prompt asszisztens";
-"onboarding.assistant.title" = "Ismerd meg a prompt asszisztenst";
-"onboarding.assistant.subtitle" = "Nyiss egy csevegést, és csak kérd – helyetted szerkeszti a promptkönyvtáradat, így soha többé nem kell a beállítások közt keresgélned. Minden változtatást előbb jóváhagyásra mutat.";
+"onboarding.shortcuts.assistant" = "Settings Assistant";
+"onboarding.assistant.title" = "Meet the Settings Assistant";
+"onboarding.assistant.subtitle" = "Open a chat and just ask — it edits your prompt library and tunes the Magic Button engine for you, so you never have to dig through settings again. Every change is shown for you to approve first.";
 "onboarding.assistant.feature.edit" = "Prompteket hozhatsz létre és szerkeszthetsz csevegéssel";
 "onboarding.assistant.feature.organize" = "Rendezd a mappákat és mozgasd a prompteket";
 "onboarding.assistant.feature.shortcuts" = "Rendelj hozzá gyorsbillentyűket és módokat";
 "onboarding.assistant.try" = "Kipróbálom";
 "assistant.intro_message" = "Szia! Miben tudsz segíteni, és mit tudsz csinálni?";
-"menu.assistant" = "Prompt asszisztens";
-"settings.prompts.assistant.title" = "MI prompt asszisztens";
-"settings.prompts.assistant.hint" = "Kérd meg az asszisztenst, hogy hozzon létre, szerkesszen, mozgasson vagy rendezzen prompteket köznyelven.";
+"menu.assistant" = "Settings Assistant";
+"settings.prompts.assistant.title" = "Settings Assistant";
+"settings.prompts.assistant.hint" = "Ask the assistant to create, edit, move, or organize your prompts in plain language — it can also tune the whole Magic Button engine.";
 "settings.prompts.assistant.open" = "Asszisztens megnyitása";
 
 // Magic Button (context engine V0)
@@ -580,3 +580,17 @@
 "settings.magic.section.engine" = "Engine";
 "settings.magic.debug_log" = "Debug log";
 "settings.magic.debug_log.help" = "Writes a full record of every press — complete prompts, screen content, and model output — to ~/.clipslop/logs/debug/ (pruned after 7 days).";
+"settings.magic.skill.install" = "Install Agent Skill…";
+"settings.magic.skill.help" = "Export the bundled Agent Skill — a knowledge package that teaches AI agents (Claude Code and others) to configure and audit ClipSlop through ~/.clipslop.";
+"settings.magic.skill.claude_code" = "Claude Code (~/.claude/skills)";
+"settings.magic.skill.export" = "Export…";
+"settings.magic.skill.export.prompt" = "Export";
+"settings.magic.skill.export.message" = "Choose a folder — the skill is created inside it as a 'clipslop' directory.";
+"settings.magic.skill.overwrite.title" = "Replace the installed skill?";
+"settings.magic.skill.overwrite.message" = "A ClipSlop skill (version %@) already exists at this location. Replace it with version %@?";
+"settings.magic.skill.overwrite.replace" = "Replace";
+"settings.magic.skill.overwrite.cancel" = "Cancel";
+"settings.magic.skill.done.title" = "Agent Skill installed";
+"settings.magic.skill.done.message" = "The skill is now at %@.";
+"settings.magic.skill.done.ok" = "OK";
+"settings.magic.skill.error.title" = "Could not install the skill";

@@ -10,7 +10,7 @@ final class HotkeyService {
         .triggerScreenCapture,
         .triggerOCRToClipboard,
         .triggerQuickAccess,
-        .togglePromptAssistant,
+        .toggleSettingsAssistant,
         .triggerMagic,
         .triggerMagicChips,
     ]
@@ -60,7 +60,7 @@ final class HotkeyService {
         KeyboardShortcuts.onKeyUp(for: .triggerQuickAccess) { [weak self] in
             self?.onTriggerQuickAccess?()
         }
-        KeyboardShortcuts.onKeyUp(for: .togglePromptAssistant) { [weak self] in
+        KeyboardShortcuts.onKeyUp(for: .toggleSettingsAssistant) { [weak self] in
             self?.onTriggerPromptAssistant?()
         }
         KeyboardShortcuts.onKeyUp(for: .triggerMagic) { [weak self] in
