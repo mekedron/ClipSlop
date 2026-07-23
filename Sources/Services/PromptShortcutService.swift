@@ -63,6 +63,7 @@ final class PromptShortcutService {
     // MARK: - HUD
 
     private var hudWindow: ProcessingHUDWindow?
+    private var errorHudWindow: ErrorHUDWindow?
 
     /// Re-entrancy guard for syncFromModel to prevent onPromptsChanged feedback loops.
     private var isSyncing = false
@@ -498,7 +499,15 @@ final class PromptShortcutService {
             ClipboardService.simulatePaste()
         } catch {
             dismissHUD()
+            guard !Task.isCancelled, !Self.isCancellation(error) else { return }
+            showErrorHUD(promptName: promptName, message: error.localizedDescription)
         }
+    }
+
+    private static func isCancellation(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        if case AIServiceError.cancelled = error { return true }
+        return (error as? URLError)?.code == .cancelled
     }
 
     private func finishInlineProcessing() {
@@ -535,6 +544,7 @@ final class PromptShortcutService {
 
     private func showHUD(promptName: String) {
         dismissHUD()
+        dismissErrorHUD()
         let hud = ProcessingHUDWindow(promptName: promptName) { [weak self] in
             self?.cancelInlineProcessing()
         }
@@ -545,6 +555,25 @@ final class PromptShortcutService {
     private func dismissHUD() {
         hudWindow?.close()
         hudWindow = nil
+    }
+
+    private func showErrorHUD(promptName: String, message: String) {
+        dismissErrorHUD()
+        let hud = ErrorHUDWindow(promptName: promptName, message: message) { [weak self] in
+            self?.dismissErrorHUD()
+        }
+        hud.showAtCenter()
+        errorHudWindow = hud
+        Task { [weak self, weak hud] in
+            try? await Task.sleep(for: .seconds(6))
+            guard let self, let hud, self.errorHudWindow === hud else { return }
+            self.dismissErrorHUD()
+        }
+    }
+
+    private func dismissErrorHUD() {
+        errorHudWindow?.close()
+        errorHudWindow = nil
     }
 
     func cancelInlineProcessing() {
