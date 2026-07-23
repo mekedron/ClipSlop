@@ -481,6 +481,10 @@ final class MagicPressCoordinator {
             returnFocusToTarget(excluding: toastWindow)
         }
         Task { [weak self] in
+            // Let the mouse-up's event-tracking session fully close before
+            // the synthetic ⌘V — a keystroke posted mid-session routes to
+            // this panel, not the target app.
+            try? await Task.sleep(for: .milliseconds(150))
             await self?.performInsert(text)
         }
     }

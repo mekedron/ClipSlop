@@ -180,26 +180,24 @@ actor AXSnapshotService {
         // levels away from the composer).
         func walk(_ budget: inout Budget) -> String {
             if let webArea {
-                // Locality ladder (§5.2 "walk up from focus"): sweep a near
-                // ancestor's subtree first and widen only while context is
-                // thin. Sweeping the page root directly drags in sidebars —
-                // on chat surfaces that means *other conversations'*
-                // previews polluting the thread.
                 budget.remainingCalls = max(budget.remainingCalls, Budget.webSweepCalls)
                 let webAreaIndex = ancestors.firstIndex { CFEqual($0, webArea) } ?? 0
-                var rootIndices: [Int] = []
-                for candidate in [min(5, webAreaIndex), min(10, webAreaIndex), webAreaIndex]
-                where !rootIndices.contains(candidate) {
-                    rootIndices.append(candidate)
-                }
-                var result = ""
-                for index in rootIndices {
-                    result = collectWebAreaSurroundings(
-                        root: ancestors[index], focused: focused, budget: &budget, expired: expired
+                if webAreaIndex == 0 {
+                    // Mail-style: focus IS the web area — its own content
+                    // (draft + quoted thread) is the context.
+                    return collectWebAreaSurroundings(
+                        root: webArea, focused: focused, budget: &budget, expired: expired
                     )
-                    if result.count >= 300 || budget.remainingCalls <= 0 || expired() { break }
                 }
-                return result
+                // Chat-style: walk outward from the composer, collecting the
+                // *nearest* content first. A top-down page sweep on a long
+                // thread burns its budget on months-old messages and never
+                // reaches the ones being replied to; sidebars only get
+                // pulled in when the thread itself is thin.
+                return collectWebNearestFirst(
+                    ancestors: ancestors, webAreaIndex: webAreaIndex,
+                    budget: &budget, expired: expired
+                )
             }
             return collectSurroundings(
                 focused: focused, ancestors: ancestors, budget: &budget, expired: expired
@@ -232,6 +230,74 @@ actor AXSnapshotService {
     }
 
     // MARK: - Surrounding walk (web content)
+
+    /// Nearest-first outward walk for web content: at each ancestor level of
+    /// the focused element, gather the siblings *before* the focused path in
+    /// reverse document order (nearest first — in a chat, the newest
+    /// messages) until the keep budget is full, plus a little of what
+    /// follows. Collected pieces are then flipped back to document order.
+    private func collectWebNearestFirst(
+        ancestors: [AXUIElement],
+        webAreaIndex: Int,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> String {
+        var beforeReversed: [String] = []
+        var after: [String] = []
+        var beforeChars = 0
+        var afterChars = 0
+
+        /// Deep text gather. `reverse` visits children bottom-up so pieces
+        /// arrive nearest-first.
+        func gather(_ element: AXUIElement, depth: Int, reverse: Bool, into pieces: inout [String], chars: inout Int, cap: Int) {
+            guard depth < budget.maxWebDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return }
+            guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
+            if Self.textRoles.contains(role) {
+                let text = copyString(element, kAXValueAttribute, &budget)
+                    ?? copyString(element, kAXTitleAttribute, &budget)
+                if let text {
+                    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if cleaned.count > 1 {
+                        pieces.append(cleaned)
+                        chars += cleaned.count
+                    }
+                }
+                return
+            }
+            guard let children: [AXUIElement] = copyElementArray(element, kAXChildrenAttribute, &budget) else { return }
+            let ordered = reverse
+                ? Array(children.suffix(budget.maxWebChildrenPerNode).reversed())
+                : Array(children.prefix(budget.maxWebChildrenPerNode))
+            for child in ordered {
+                gather(child, depth: depth + 1, reverse: reverse, into: &pieces, chars: &chars, cap: cap)
+            }
+        }
+
+        for level in 1...webAreaIndex {
+            guard beforeChars < budget.webBeforeKeepChars, budget.remainingCalls > 0, !expired() else { break }
+            let parent = ancestors[level]
+            let pathChild = ancestors[level - 1]
+            guard let children: [AXUIElement] = copyElementArray(parent, kAXChildrenAttribute, &budget),
+                  let pathIndex = children.firstIndex(where: { CFEqual($0, pathChild) })
+            else { continue }
+
+            for sibling in children[..<pathIndex].reversed() {
+                guard beforeChars < budget.webBeforeKeepChars else { break }
+                gather(sibling, depth: 0, reverse: true, into: &beforeReversed, chars: &beforeChars,
+                       cap: budget.webBeforeKeepChars)
+            }
+            for sibling in children[(pathIndex + 1)...] {
+                guard afterChars < budget.webAfterKeepChars else { break }
+                gather(sibling, depth: 0, reverse: false, into: &after, chars: &afterChars,
+                       cap: budget.webAfterKeepChars)
+            }
+        }
+
+        return Self.assembleContent(
+            pieces: beforeReversed.reversed() + after,
+            maxChars: budget.maxContentChars
+        )
+    }
 
     /// Document-order text sweep of a web subtree, split around the focused
     /// element. For a chat this keeps the messages immediately above the

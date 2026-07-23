@@ -33,7 +33,7 @@ final class MagicToastWindow: NSPanel {
         becomesKeyOnlyIfNeeded = true
         collectionBehavior = [.canJoinAllSpaces, .transient]
 
-        contentView = NSHostingView(rootView: MagicToastView(coordinator: coordinator))
+        contentView = FirstMouseHostingView(rootView: MagicToastView(coordinator: coordinator))
     }
 
     @MainActor
@@ -52,6 +52,13 @@ final class MagicToastWindow: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
+/// The toast belongs to an app that is usually *inactive* — without
+/// first-mouse acceptance the initial click on any control is swallowed by
+/// AppKit as "the activating click" and buttons need a second attempt.
+private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 // MARK: - Content
 
 struct MagicToastView: View {
@@ -61,6 +68,7 @@ struct MagicToastView: View {
     @State private var refineExpanded = false
     @State private var refineHeight: CGFloat = 22
     @State private var insertAnywayArmed = false
+    @State private var holdStartedAt: ContinuousClock.Instant?
 
     var body: some View {
         Group {
@@ -220,6 +228,11 @@ struct MagicToastView: View {
 
     /// Hold-to-confirm (§10.2): "Insert anyway" is deliberately
     /// high-friction, and every use is logged as a guard-health signal.
+    ///
+    /// The insert fires on *release*, never mid-hold: while the mouse button
+    /// is down over this panel our app owns the event-tracking session, and
+    /// a synthetic ⌘V posted then never reaches the target app — the exact
+    /// live-test failure ("held it, nothing inserted").
     private var holdToInsertButton: some View {
         Text(insertAnywayArmed
              ? Loc.shared.t("magic.toast.insert_anyway_release")
@@ -229,12 +242,25 @@ struct MagicToastView: View {
             .padding(.vertical, 4)
             .background(insertAnywayArmed ? AnyShapeStyle(.yellow.opacity(0.4)) : AnyShapeStyle(.quaternary),
                         in: RoundedRectangle(cornerRadius: 6))
-            .onLongPressGesture(minimumDuration: 0.6) {
-                insertAnywayArmed = false
-                coordinator.insertAnyway()
-            } onPressingChanged: { pressing in
-                insertAnywayArmed = pressing
-            }
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { _ in
+                        guard holdStartedAt == nil else { return }
+                        holdStartedAt = ContinuousClock().now
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .milliseconds(600))
+                            if holdStartedAt != nil { insertAnywayArmed = true }
+                        }
+                    }
+                    .onEnded { _ in
+                        let start = holdStartedAt
+                        holdStartedAt = nil
+                        insertAnywayArmed = false
+                        if let start, ContinuousClock().now - start >= .milliseconds(600) {
+                            coordinator.insertAnyway()
+                        }
+                    }
+            )
     }
 
     private func toastAction(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
