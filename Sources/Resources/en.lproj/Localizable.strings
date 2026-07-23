@@ -554,3 +554,6 @@
 "settings.magic.reveal" = "Show in Finder";
 "settings.magic.reveal_folder" = "Open ~/.clipslop";
 "settings.magic.select_file" = "Select a file to edit";
+"settings.magic.section.engine" = "Engine";
+"settings.magic.debug_log" = "Debug log";
+"settings.magic.debug_log.help" = "Writes a full record of every press — complete prompts, screen content, and model output — to ~/.clipslop/logs/debug/ (pruned after 7 days).";

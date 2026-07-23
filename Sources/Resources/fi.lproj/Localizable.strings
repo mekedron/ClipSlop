@@ -562,3 +562,6 @@
 "settings.magic.reveal" = "Näytä Finderissa";
 "settings.magic.reveal_folder" = "Avaa ~/.clipslop";
 "settings.magic.select_file" = "Valitse muokattava tiedosto";
+"settings.magic.section.engine" = "Moottori";
+"settings.magic.debug_log" = "Vianetsintäloki";
+"settings.magic.debug_log.help" = "Tallentaa jokaisesta painalluksesta täyden tietueen — kehotteet, näytön sisällön ja mallin vastauksen — kansioon ~/.clipslop/logs/debug/ (siivotaan 7 päivän jälkeen).";

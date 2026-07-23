@@ -42,7 +42,9 @@ final class MagicPressCoordinator {
     @ObservationIgnored let workflowStore: WorkflowStore
     @ObservationIgnored let coreStore: CoreFileStore
     @ObservationIgnored let roleStore: EngineRoleStore
+    @ObservationIgnored let configStore: EngineConfigStore
     @ObservationIgnored private let traceLogger = EngineTraceLogger()
+    @ObservationIgnored private let debugLogger = MagicDebugLogger()
     @ObservationIgnored private let snapshotService = AXSnapshotService()
     @ObservationIgnored private let inserter = MagicInserter()
 
@@ -76,7 +78,11 @@ final class MagicPressCoordinator {
         workflowStore = WorkflowStore()
         coreStore = CoreFileStore()
         roleStore = EngineRoleStore()
-        Task { [traceLogger] in await traceLogger.pruneOldLogs() }
+        configStore = EngineConfigStore()
+        Task { [traceLogger, debugLogger] in
+            await traceLogger.pruneOldLogs()
+            await debugLogger.pruneOldLogs()
+        }
     }
 
     /// True when the press targets ClipSlop's own windows (the onboarding
@@ -113,12 +119,14 @@ final class MagicPressCoordinator {
         pressStart = ContinuousClock().now
         let appInfo = frontmostAppInfo()
         let locale = Locale.preferredLanguages.first ?? "en"
+        configStore.reloadIfChanged()
+        let config = configStore.config
 
         Task { [weak self] in
             guard let self else { return }
             let clock = ContinuousClock()
             let snapshotStart = clock.now
-            var snapshot = await self.snapshotService.capture(appInfo: appInfo, locale: locale)
+            var snapshot = await self.snapshotService.capture(appInfo: appInfo, locale: locale, config: config)
             if MagicSelectionCapture.isNeeded(for: snapshot) {
                 snapshot = await MagicSelectionCapture.refine(snapshot)
             }
@@ -352,6 +360,8 @@ final class MagicPressCoordinator {
         Self.logger.error("magic generation failed: \(error.localizedDescription, privacy: .public)")
         if var press = activePress {
             press.trace.outcome = "error:generation:\(Self.errorKind(error))"
+            lastErrorDescription = error.localizedDescription
+            activePress = press
             submitTrace(press.trace)
             activePress = nil
         }
@@ -530,8 +540,9 @@ final class MagicPressCoordinator {
         cancelToastDismiss()
         guard phase == .toast, !toastHovered else { return }
         guard toastWindow?.isKeyWindow != true else { return }
+        let dismissAfter = configStore.config.toastDismissSeconds
         toastDismissTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(8))
+            try? await Task.sleep(for: .seconds(dismissAfter))
             guard !Task.isCancelled else { return }
             self?.dismissToast(outcome: nil)
         }
@@ -599,11 +610,15 @@ final class MagicPressCoordinator {
     func dryRunToClipboard() {
         guard phase == .idle, let appState else { return }
         let locale = Locale.preferredLanguages.first ?? "en"
+        configStore.reloadIfChanged()
+        let config = configStore.config
 
         Task { [weak self] in
             guard let self else { return }
             try? await Task.sleep(for: .milliseconds(600))
-            let snapshot = await self.snapshotService.capture(appInfo: self.frontmostAppInfo(), locale: locale)
+            let snapshot = await self.snapshotService.capture(
+                appInfo: self.frontmostAppInfo(), locale: locale, config: config
+            )
 
             let report: DryRunReport?
             do {
@@ -682,11 +697,38 @@ final class MagicPressCoordinator {
             stamped.latencyMs.total = Self.ms(ContinuousClock().now - start)
         }
         Task { [traceLogger] in await traceLogger.append(stamped) }
+
+        // Full-content debug log (opt-in, Settings → Magic): everything the
+        // contentless trace deliberately omits.
+        guard appState?.settings.magicDebugLogging == true else { return }
+        let press = activePress
+        let entry = MagicDebugEntry(
+            trace: stamped,
+            snapshot: press?.snapshot ?? lastBareSnapshot,
+            classification: press?.classification,
+            decision: press?.decision,
+            workflowID: press?.workflow?.id ?? stamped.chosenID,
+            workflowChain: press?.workflow?.chain,
+            hint: press?.hint,
+            assembled: press?.result?.assembled,
+            output: press?.result?.output,
+            verdict: press?.result?.verdict,
+            errorDescription: lastErrorDescription
+        )
+        lastBareSnapshot = nil
+        lastErrorDescription = nil
+        Task { [debugLogger] in await debugLogger.write(entry) }
     }
+
+    /// Context for debug entries on paths that have no ActivePress (dead
+    /// presses) or that carry an error.
+    @ObservationIgnored private var lastBareSnapshot: MagicSnapshot?
+    @ObservationIgnored private var lastErrorDescription: String?
 
     private func logBareTrace(snapshot: MagicSnapshot, outcome: String) {
         var trace = PressTrace(snapshot: snapshot, decision: nil, classification: nil)
         trace.outcome = outcome
+        lastBareSnapshot = snapshot
         submitTrace(trace)
     }
 

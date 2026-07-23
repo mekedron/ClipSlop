@@ -6,25 +6,38 @@ import AppKit
 /// the process-wide AX messaging timeout plus a hard call budget and an
 /// overall deadline guarantee a press can never hang the app (R4).
 actor AXSnapshotService {
+    /// Per-capture spending limits, seeded from the user-tunable engine
+    /// config (`~/.clipslop/config.yaml`).
     struct Budget {
-        var remainingCalls: Int = 350
-        let maxAncestorDepth = 10
-        let maxSiblingsPerLevel = 16
-        let maxGatherDepth = 6
-        let maxContentChars = 6000
-        let maxFieldValueChars = 50_000
-
-        /// The web-area document-order sweep visits far more nodes than the
-        /// native sibling walk (every div is an AXGroup); in-process AX IPC
-        /// is cheap once the tree is built, and the overall capture deadline
-        /// still bounds the worst case.
-        static let webSweepCalls = 900
-        let maxWebDepth = 30
-        let maxWebChildrenPerNode = 60
-        /// The sweep over-collects, then keeps what's nearest the field.
+        var remainingCalls: Int
+        let maxSiblingsPerLevel: Int
+        let maxGatherDepth: Int
+        let maxContentChars: Int
+        let maxFieldValueChars: Int
+        /// The web walk visits far more nodes than the native sibling walk
+        /// (every div is an AXGroup); in-process AX IPC is cheap once the
+        /// tree is built, and the capture deadline bounds the worst case.
+        let webSweepCalls: Int
+        let maxWebDepth: Int
+        let maxWebChildrenPerNode: Int
+        /// The Mail-style inside-webarea sweep over-collects, then keeps
+        /// what's nearest the field.
         let maxWebCollectChars = 24_000
-        let webBeforeKeepChars = 4500
-        let webAfterKeepChars = 1000
+        let webBeforeKeepChars: Int
+        let webAfterKeepChars: Int
+
+        init(config: MagicEngineConfig) {
+            remainingCalls = config.axCallBudget
+            maxSiblingsPerLevel = config.maxSiblingsPerLevel
+            maxGatherDepth = config.maxGatherDepth
+            maxContentChars = config.surroundingMaxChars
+            maxFieldValueChars = config.fieldValueMaxChars
+            webSweepCalls = config.webCallBudget
+            maxWebDepth = config.maxWebDepth
+            maxWebChildrenPerNode = config.maxWebChildrenPerNode
+            webBeforeKeepChars = config.webBeforeKeepChars
+            webAfterKeepChars = config.webAfterKeepChars
+        }
     }
 
     private var didConfigureTimeout = false
@@ -47,13 +60,13 @@ actor AXSnapshotService {
     func capture(
         appInfo: MagicSnapshot.AppInfo,
         locale: String,
-        deadline: Duration = .milliseconds(1600)
+        config: MagicEngineConfig = .default
     ) async -> MagicSnapshot {
         configureTimeoutOnce()
 
         let clock = ContinuousClock()
-        let deadlineInstant = clock.now + deadline
-        var budget = Budget()
+        let deadlineInstant = clock.now + .milliseconds(config.captureDeadlineMs)
+        var budget = Budget(config: config)
 
         func expired() -> Bool { clock.now >= deadlineInstant }
 
@@ -180,7 +193,7 @@ actor AXSnapshotService {
         // levels away from the composer).
         func walk(_ budget: inout Budget) -> String {
             if let webArea {
-                budget.remainingCalls = max(budget.remainingCalls, Budget.webSweepCalls)
+                budget.remainingCalls = max(budget.remainingCalls, budget.webSweepCalls)
                 let webAreaIndex = ancestors.firstIndex { CFEqual($0, webArea) } ?? 0
                 if webAreaIndex == 0 {
                     // Mail-style: focus IS the web area — its own content
@@ -209,8 +222,8 @@ actor AXSnapshotService {
         // races the tree build — one retry with a fresh budget.
         if surroundingText.isEmpty, freshlyEnabled, !expired() {
             try? await Task.sleep(for: .milliseconds(300))
-            var retryBudget = Budget()
-            retryBudget.remainingCalls = Budget.webSweepCalls
+            var retryBudget = Budget(config: config)
+            retryBudget.remainingCalls = retryBudget.webSweepCalls
             surroundingText = walk(&retryBudget)
         }
 

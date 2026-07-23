@@ -562,3 +562,6 @@
 "settings.magic.reveal" = "Показать в Finder";
 "settings.magic.reveal_folder" = "Открыть ~/.clipslop";
 "settings.magic.select_file" = "Выберите файл для редактирования";
+"settings.magic.section.engine" = "Движок";
+"settings.magic.debug_log" = "Отладочный лог";
+"settings.magic.debug_log.help" = "Пишет полную запись каждого нажатия — промпты целиком, контент экрана и ответ модели — в ~/.clipslop/logs/debug/ (очищается через 7 дней).";

@@ -32,6 +32,12 @@ struct MagicSettingsView: View {
                 .labelsHidden()
                 .frame(maxWidth: 260)
                 Spacer()
+                // Full-content debug logging: complete prompts, screen
+                // content, and model output per press — unlike the always-on
+                // contentless traces. Off by default.
+                Toggle(loc.t("settings.magic.debug_log"), isOn: Bindable(appState.settings).magicDebugLogging)
+                    .toggleStyle(.checkbox)
+                    .help(loc.t("settings.magic.debug_log.help"))
                 Button(loc.t("settings.magic.reveal_folder")) {
                     NSWorkspace.shared.activateFileViewerSelecting([Constants.Engine.rootDirectory])
                 }
@@ -45,7 +51,10 @@ struct MagicSettingsView: View {
             HSplitView {
                 List(selection: $selectedID) {
                     Section(loc.t("settings.magic.section.system")) {
-                        fileRow(items.first!)
+                        ForEach(items.filter { $0.section == .system }) { fileRow($0) }
+                    }
+                    Section(loc.t("settings.magic.section.engine")) {
+                        ForEach(items.filter { $0.section == .engine }) { fileRow($0) }
                     }
                     Section(loc.t("settings.magic.section.core")) {
                         ForEach(items.filter { $0.section == .core }) { fileRow($0) }
@@ -67,7 +76,7 @@ struct MagicSettingsView: View {
     // MARK: - File inventory
 
     struct FileItem: Identifiable, Hashable {
-        enum Section { case system, core, workflows }
+        enum Section { case system, engine, core, workflows }
         let id: String
         let title: String
         let url: URL
@@ -76,6 +85,7 @@ struct MagicSettingsView: View {
     }
 
     private var items: [FileItem] {
+        let seedByPath = Dictionary(uniqueKeysWithValues: EngineSeedContent.seeds)
         var result: [FileItem] = [
             FileItem(
                 id: "system-prompt",
@@ -83,9 +93,15 @@ struct MagicSettingsView: View {
                 url: CoreFileStore.systemPromptURL,
                 defaultContent: PromptAssembler.systemPromptTemplate,
                 section: .system
-            )
+            ),
+            FileItem(
+                id: "config.yaml",
+                title: "config.yaml",
+                url: EngineConfigStore.fileURL,
+                defaultContent: seedByPath["config.yaml"],
+                section: .engine
+            ),
         ]
-        let seedByPath = Dictionary(uniqueKeysWithValues: EngineSeedContent.seeds)
         for name in ["identity.md", "writing-style.md", "constraints.md", "aliases.md"] {
             result.append(FileItem(
                 id: "core/\(name)",
@@ -115,7 +131,7 @@ struct MagicSettingsView: View {
             Text(item.title)
                 .lineLimit(1)
             Spacer()
-            if !errors(for: item).isEmpty {
+            if !problems(for: item).isEmpty {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundStyle(.yellow)
                     .font(.caption)
@@ -124,8 +140,15 @@ struct MagicSettingsView: View {
         .tag(item.id)
     }
 
-    private func errors(for item: FileItem) -> [WorkflowLoadError] {
-        coordinator.workflowStore.loadErrors.filter { $0.fileURL == item.url && !$0.isWarning }
+    private func problems(for item: FileItem) -> [String] {
+        if item.section == .engine {
+            return coordinator.configStore.warnings
+        }
+        return coordinator.workflowStore.loadErrors
+            .filter { $0.fileURL == item.url && !$0.isWarning }
+            .map { error in
+                error.line.map { "Line \($0): " + error.message } ?? error.message
+            }
     }
 
     // MARK: - Editor
@@ -166,11 +189,11 @@ struct MagicSettingsView: View {
                         .padding(8)
                         .onChange(of: editorText) { scheduleSave(for: item) }
 
-                    ForEach(errors(for: item)) { error in
+                    ForEach(problems(for: item), id: \.self) { message in
                         HStack(alignment: .top, spacing: 6) {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(.yellow)
-                            Text(error.line.map { "Line \($0): " + error.message } ?? error.message)
+                            Text(message)
                                 .font(.caption)
                                 .textSelection(.enabled)
                         }
@@ -222,6 +245,7 @@ struct MagicSettingsView: View {
         try? text.write(to: item.url, atomically: true, encoding: .utf8)
         coordinator.workflowStore.reloadIfChanged()
         coordinator.coreStore.reloadIfChanged()
+        coordinator.configStore.reloadIfChanged()
     }
 
     private func resetToDefault(_ item: FileItem) {

@@ -18,6 +18,7 @@ enum EngineSeedContent {
     }
 
     static let seeds: [(path: String, content: String)] = [
+        ("config.yaml", engineConfig),
         ("core/identity.md", identity),
         ("core/writing-style.md", writingStyle),
         ("core/constraints.md", constraints),
@@ -35,6 +36,43 @@ enum EngineSeedContent {
         ("workflows/instruct.selection.md", instructSelection),
         ("workflows/rewrite.selection.md", rewriteSelection),
     ]
+
+    // MARK: - Engine config
+
+    static let engineConfig = """
+    ---
+    # Magic Button engine tuning. Values outside their safe range are clamped;
+    # unknown keys are ignored (both show as warnings in Settings → Magic).
+    # Delete a line to fall back to its default. "Reset to Default" restores
+    # this whole file.
+
+    # Snapshot capture: total deadline for reading the screen on a press.
+    capture_deadline_ms: 1600
+
+    # Accessibility call budgets. Native apps need few calls; web pages
+    # (Chromium wraps everything in groups) need many.
+    ax_call_budget: 350
+    web_call_budget: 900
+
+    # Tree traversal depths and widths.
+    max_gather_depth: 6
+    max_web_depth: 30
+    max_siblings_per_level: 16
+    max_web_children_per_node: 60
+
+    # How much surrounding text reaches the prompt, and how the web walk
+    # splits it: text before the field (a chat's newest messages) vs after.
+    surrounding_max_chars: 6000
+    web_before_keep_chars: 4500
+    web_after_keep_chars: 1000
+
+    # Cap on reading the focused field's own content.
+    field_value_max_chars: 50000
+
+    # Post-insert toast auto-dismiss, in seconds.
+    toast_dismiss_seconds: 8
+    ---
+    """
 
     // MARK: - Core files
 

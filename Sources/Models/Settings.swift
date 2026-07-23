@@ -228,6 +228,14 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(promptLibraryCollapsed, forKey: "promptLibraryCollapsed") }
     }
 
+    /// Magic Button full-content debug logging (~/.clipslop/logs/debug/):
+    /// complete prompts, screen content, and model output per press. Off by
+    /// default — unlike the always-on traces, these files contain real
+    /// content.
+    var magicDebugLogging: Bool {
+        didSet { UserDefaults.standard.set(magicDebugLogging, forKey: "magicDebugLogging") }
+    }
+
     /// System prompt template for the ⌘K one-off instruction bar. The typed
     /// instruction replaces `{instruction}`, or is appended when the
     /// placeholder is absent — see `AdHocPromptComposer`.
@@ -295,6 +303,7 @@ final class AppSettings {
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
         spotlightIndexingEnabled = defaults.object(forKey: "spotlightIndexingEnabled") as? Bool ?? true
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
+        magicDebugLogging = defaults.bool(forKey: "magicDebugLogging")
         adHocSystemPrompt = defaults.string(forKey: "adHocSystemPrompt") ?? AppSettings.defaultAdHocSystemPrompt
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
         // iCloud-synced, exportable). It used to live here in UserDefaults
