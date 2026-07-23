@@ -47,6 +47,9 @@ final class MagicPressCoordinator {
     @ObservationIgnored private let debugLogger = MagicDebugLogger()
     @ObservationIgnored private let snapshotService = AXSnapshotService()
     @ObservationIgnored private let inserter = MagicInserter()
+    /// M1 warm collector (§5.1): one AXObserver on the frontmost app keeps
+    /// cheap context fresh and pre-builds Chromium AX trees.
+    @ObservationIgnored private(set) var frontmostObserver: FrontmostObserver!
 
     // Windows.
     @ObservationIgnored private var chipPanel: ChipPanelWindow?
@@ -79,10 +82,21 @@ final class MagicPressCoordinator {
         coreStore = CoreFileStore()
         roleStore = EngineRoleStore()
         configStore = EngineConfigStore()
+        frontmostObserver = FrontmostObserver(
+            snapshotService: snapshotService,
+            configProvider: { [configStore] in configStore.config }
+        )
         Task { [traceLogger, debugLogger] in
             await traceLogger.pruneOldLogs()
             await debugLogger.pruneOldLogs()
         }
+    }
+
+    /// Called from `AppState.setup()` once the app is fully wired. Safe to
+    /// call before Accessibility is granted — the observer attaches lazily
+    /// on the next app activation after the grant.
+    func startWarmObserver() {
+        frontmostObserver.start()
     }
 
     /// True when the press targets ClipSlop's own windows (the onboarding
@@ -121,12 +135,15 @@ final class MagicPressCoordinator {
         let locale = Locale.preferredLanguages.first ?? "en"
         configStore.reloadIfChanged()
         let config = configStore.config
+        let warm = frontmostObserver.warm
 
         Task { [weak self] in
             guard let self else { return }
             let clock = ContinuousClock()
             let snapshotStart = clock.now
-            var snapshot = await self.snapshotService.capture(appInfo: appInfo, locale: locale, config: config)
+            var snapshot = await self.snapshotService.capture(
+                appInfo: appInfo, locale: locale, config: config, warm: warm
+            )
             if MagicSelectionCapture.isNeeded(for: snapshot) {
                 snapshot = await MagicSelectionCapture.refine(snapshot)
             }
@@ -613,11 +630,12 @@ final class MagicPressCoordinator {
         configStore.reloadIfChanged()
         let config = configStore.config
 
+        let warm = frontmostObserver.warm
         Task { [weak self] in
             guard let self else { return }
             try? await Task.sleep(for: .milliseconds(600))
             let snapshot = await self.snapshotService.capture(
-                appInfo: self.frontmostAppInfo(), locale: locale, config: config
+                appInfo: self.frontmostAppInfo(), locale: locale, config: config, warm: warm
             )
 
             let report: DryRunReport?

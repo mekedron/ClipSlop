@@ -229,17 +229,47 @@ anyway requires press-and-hold and is recorded in the trace.
 
 ## The collector (`AXSnapshotService`)
 
-V0 is **collect-on-press** — no background observers. Guard rails: a
-process-wide AX messaging timeout (0.35 s), a per-capture call budget, and
-an overall deadline; exhaustion degrades to a partial snapshot, never a
-hang.
+The deep walk is **collect-on-press**; a warm observer (below) keeps only
+*cheap* context between presses. Guard rails: a process-wide AX messaging
+timeout (0.35 s), a per-capture call budget, and an overall deadline;
+exhaustion degrades to a partial snapshot, never a hang. Every capture also
+counts `kAXErrorCannotComplete` occurrences into the trace (`axErrors`) —
+the R4 frequency measurement.
 
 Chromium and Electron build their accessibility tree **lazily and only for
 announced clients**: the collector writes `AXManualAccessibility` (Electron)
 and `AXEnhancedUserInterface` (Chromium) to the app once per pid, waits
 briefly on first enablement, and retries the walk once. The flags stay on
 (toggling them is what causes Chrome window-relayout bugs; the browser CPU
-cost is the accepted R11 tradeoff).
+cost is the accepted R11 tradeoff). With the warm observer running,
+enablement happens at **app activation**, so the tree is usually built long
+before the first press; the press-time path remains as fallback.
+
+### The warm observer (`FrontmostObserver`, M1 §5.1)
+
+macOS has no global AX subscription — observers are per-process — so this
+is deliberately **one** `AXObserver`, scoped to the frontmost app, created
+and torn down by `NSWorkspace` activation events. No background fleet.
+
+- Subscribes to focused-element / focused-window / title-changed
+  notifications; events are debounced (`observer_debounce_ms`, default
+  200 ms) into a **cheap read** on the snapshot actor's executor: focused
+  element identity, role, window title, URL. Never the field value,
+  selection, or surroundings — those are stale the moment the user types
+  and are always read fresh at press time (the §5.1 cache split).
+- At press time the warm context serves as **backfill only**: if the
+  press's own walk found no URL/title (budget, deadline, Chromium hiccup)
+  and the warm context is fresh (`warm_context_ttl_seconds`, default 30 s)
+  *and* its focused element still `CFEqual`s the current one, the cached
+  values fill in. Misses are tolerated by design — AXUIElements have no
+  stable identity.
+- ClipSlop's own activation (a chip panel taking key) does **not** tear
+  down the observer on the target app — the press returns there in a
+  moment (`FrontmostObserver.shouldAttach` is the pure, tested decision).
+- Kill switch: `warm_observer_enabled: 0` in `config.yaml` reverts presses
+  to pure V0 collect-on-press behavior.
+- `warmHit` in each trace records whether fresh warm context existed —
+  the observer's hit-rate health metric.
 
 Three walk strategies, chosen by what the focused element is:
 
@@ -260,7 +290,8 @@ Three walk strategies, chosen by what the focused element is:
 Known app notes:
 
 - **Google Chat / Gmail / LinkedIn (Chromium)** — work after enablement;
-  first press in a fresh browser may be sparse while the tree builds.
+  the warm observer enables at app activation, so a sparse first press only
+  happens when a press beats the observer to a freshly launched browser.
 - **Apple Mail** — compose works via strategy 3. The message *viewer* is a
   separate window, so replying from an empty compose without the quote has
   no thread context.
@@ -322,9 +353,11 @@ default → first. The picker lives in Settings → Magic.
 
 ## Engine tuning (`config.yaml`)
 
-All collector budgets/depths/caps and the toast dismiss time, hot-reloaded,
-clamped to safe ranges, with warnings surfaced in Settings → Magic. See the
-seeded file's comments for each key. Per-workflow prompt budgets live in the
+All collector budgets/depths/caps, the warm-observer knobs
+(`warm_observer_enabled`, `warm_context_ttl_seconds`,
+`observer_debounce_ms`), and the toast dismiss time, hot-reloaded, clamped
+to safe ranges, with warnings surfaced in Settings → Magic. See the seeded
+file's comments for each key. Per-workflow prompt budgets live in the
 workflow frontmatter, not here.
 
 ## Invariants worth knowing before changing anything
@@ -342,9 +375,10 @@ workflow frontmatter, not here.
 
 ## V0 boundaries (deferred by design)
 
-No warm AX observers (collect-on-press only) · no AppleScript URL fallback ·
-few-shot slot empty · surface gate parsed but not enforced · chips rule is
-fixed (no measured-accuracy self-tuning) · no retrieval/research modes, no
-data sources, no memos/index · no streaming · no Screenpipe OCR rung ·
-prompt library and workflows coexist without unification. See §19 of the
-design doc for the milestone map these belong to.
+No AppleScript URL fallback · few-shot slot empty · surface gate parsed but
+not enforced · chips rule is fixed (no measured-accuracy self-tuning) · no
+retrieval/research modes, no data sources, no memos/index · no streaming ·
+no Screenpipe OCR rung · prompt library and workflows coexist without
+unification. See §19 of the design doc for the milestone map these belong
+to. The warm frontmost-app observer (M1) is implemented — see the collector
+section above.

@@ -14,13 +14,18 @@ struct EngineConfigTests {
         ---
         web_call_budget: 1500
         toast_dismiss_seconds: 20
+        warm_observer_enabled: 0
+        warm_context_ttl_seconds: 60
         ---
         """)
         #expect(warnings.isEmpty)
         #expect(config.webCallBudget == 1500)
         #expect(config.toastDismissSeconds == 20)
+        #expect(config.warmObserverEnabled == 0)
+        #expect(config.warmContextTtlSeconds == 60)
         // Untouched keys keep defaults.
         #expect(config.axCallBudget == MagicEngineConfig.default.axCallBudget)
+        #expect(config.observerDebounceMs == MagicEngineConfig.default.observerDebounceMs)
     }
 
     @Test func outOfRangeValuesClampWithWarning() {

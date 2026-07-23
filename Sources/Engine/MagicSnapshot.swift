@@ -41,8 +41,9 @@ enum GrammarRow: Sendable, Equatable {
 }
 
 /// Point-in-time capture of the focused field and its surroundings, taken on
-/// press (V0 has no warm collector). This is the single contract between the
-/// press band (which produces it) and the engine pipeline (which consumes it).
+/// press; the warm observer (§5.1) contributes only cached URL/title
+/// backfill. This is the single contract between the press band (which
+/// produces it) and the engine pipeline (which consumes it).
 struct MagicSnapshot: Sendable {
     struct AppInfo: Sendable {
         let name: String?
@@ -102,6 +103,11 @@ struct MagicSnapshot: Sendable {
     /// AX roles from the focused element upward — diagnostic only (dry-run),
     /// contentless by nature.
     var ancestorRoles: [String] = []
+    /// A fresh warm context existed for this press (observer hit rate — the
+    /// M1 health metric).
+    var warmHit: Bool = false
+    /// `kAXErrorCannotComplete` occurrences during capture (R4 frequency).
+    var axCannotComplete: Int = 0
 
     /// Field state for router `when` predicates. Selection wins; otherwise
     /// whitespace-only content counts as empty.

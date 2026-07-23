@@ -31,6 +31,10 @@ struct PressTrace: Codable, Sendable {
     var verifierPassed: Bool?
     /// Failed check identifiers only, never the warning text.
     var verifierChecks: [String]
+    /// The warm observer had fresh cheap context for this press (§5.1).
+    var warmHit: Bool
+    /// `kAXErrorCannotComplete` count during capture — the R4 metric.
+    var axErrors: Int
     var latencyMs: Latency
     /// "inserted" | "insertedAnyway" | "panelOnly" | "focusMismatch" |
     /// "regenerated" | "cancelled" | "copied" | "dismissed" | "dead:<reason>"
@@ -68,6 +72,8 @@ struct PressTrace: Codable, Sendable {
         modelID = nil
         verifierPassed = nil
         verifierChecks = []
+        warmHit = snapshot.warmHit
+        axErrors = snapshot.axCannotComplete
         latencyMs = Latency()
         outcome = "unknown"
     }

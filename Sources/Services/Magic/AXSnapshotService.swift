@@ -10,6 +10,10 @@ actor AXSnapshotService {
     /// config (`~/.clipslop/config.yaml`).
     struct Budget {
         var remainingCalls: Int
+        /// R4 health metric: how often the AX server timed out
+        /// (`kAXErrorCannotComplete`) during this capture. Surfaces in the
+        /// contentless trace so real-world frequency is measurable.
+        var cannotCompleteCount = 0
         let maxSiblingsPerLevel: Int
         let maxGatherDepth: Int
         let maxContentChars: Int
@@ -57,10 +61,14 @@ actor AXSnapshotService {
     /// snapshot — on budget/deadline exhaustion it is partial, never absent.
     /// `appInfo` is read by the caller on the main actor before the hop
     /// (NSWorkspace state should not be sampled from a background executor).
+    /// `warm` is the observer's cheap context (§5.1); it backfills URL and
+    /// window title when the press-time walk comes up empty, gated on the
+    /// focused element still being the one the observer saw.
     func capture(
         appInfo: MagicSnapshot.AppInfo,
         locale: String,
-        config: MagicEngineConfig = .default
+        config: MagicEngineConfig = .default,
+        warm: WarmContext? = nil
     ) async -> MagicSnapshot {
         configureTimeoutOnce()
 
@@ -68,15 +76,25 @@ actor AXSnapshotService {
         let deadlineInstant = clock.now + .milliseconds(config.captureDeadlineMs)
         var budget = Budget(config: config)
 
+        let warmUsable = warm.map {
+            $0.isUsable(forPid: appInfo.pid, ttlSeconds: config.warmContextTtlSeconds)
+        } ?? false
+
         func expired() -> Bool { clock.now >= deadlineInstant }
+        func finish(_ snapshot: MagicSnapshot, _ budget: Budget) -> MagicSnapshot {
+            var stamped = snapshot
+            stamped.warmHit = warmUsable
+            stamped.axCannotComplete = budget.cannotCompleteCount
+            return stamped
+        }
 
         let systemWide = AXUIElementCreateSystemWide()
         guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget)
         else {
-            return MagicSnapshot(
+            return finish(MagicSnapshot(
                 app: appInfo, windowTitle: nil, url: nil, field: nil,
                 surrounding: nil, locale: locale, ts: Date(), focusedElement: nil
-            )
+            ), budget)
         }
 
         // Chromium and Electron build their AX tree lazily and only for
@@ -89,10 +107,10 @@ actor AXSnapshotService {
 
         guard let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
         else {
-            return MagicSnapshot(
+            return finish(MagicSnapshot(
                 app: appInfo, windowTitle: nil, url: nil, field: nil,
                 surrounding: nil, locale: locale, ts: Date(), focusedElement: nil
-            )
+            ), budget)
         }
 
         let role = copyString(focused, kAXRoleAttribute, &budget) ?? "AXUnknown"
@@ -106,11 +124,11 @@ actor AXSnapshotService {
                 role: role, subrole: subrole, editable: false, secure: true,
                 value: "", selection: nil, placeholder: nil
             )
-            return MagicSnapshot(
+            return finish(MagicSnapshot(
                 app: appInfo, windowTitle: nil, url: nil, field: field,
                 surrounding: nil, locale: locale, ts: Date(),
                 focusedElement: AXElementRef(element: focused)
-            )
+            ), budget)
         }
 
         // Editability: the role list is the fast path; "is the value
@@ -186,6 +204,15 @@ actor AXSnapshotService {
             }
         }
 
+        // Warm backfill (§5.1 cache split): only when the observer's cheap
+        // read saw this exact focused element — a tab switch or focus move
+        // since then makes the cached URL/title wrong, and a miss is fine.
+        if let warm, warmUsable, let warmElement = warm.focusedElement,
+           CFEqual(warmElement.element, focused) {
+            if url == nil { url = warm.url }
+            if windowTitle == nil { windowTitle = warm.windowTitle }
+        }
+
         // Budgeted surrounding walk (§5.2 rung 1: the AX tree). Web content
         // uses a document-order sweep of the whole web area — the
         // ancestor-sibling walk is structurally too shallow for Chromium's
@@ -219,15 +246,18 @@ actor AXSnapshotService {
 
         var surroundingText = walk(&budget)
         // First press in a freshly-enabled Chromium/Electron process often
-        // races the tree build — one retry with a fresh budget.
+        // races the tree build — one retry with a fresh budget. With the
+        // warm observer running, enablement happens at app activation, so
+        // this path is the fallback for presses that beat the observer.
         if surroundingText.isEmpty, freshlyEnabled, !expired() {
             try? await Task.sleep(for: .milliseconds(300))
             var retryBudget = Budget(config: config)
             retryBudget.remainingCalls = retryBudget.webSweepCalls
             surroundingText = walk(&retryBudget)
+            budget.cannotCompleteCount += retryBudget.cannotCompleteCount
         }
 
-        return MagicSnapshot(
+        return finish(MagicSnapshot(
             app: appInfo,
             windowTitle: windowTitle,
             url: url,
@@ -239,7 +269,74 @@ actor AXSnapshotService {
             // ancestors[0] is the focused element itself, so this reads
             // focused-upward.
             ancestorRoles: ancestorRoles
-        )
+        ), budget)
+    }
+
+    // MARK: - Warm collector support (§5.1)
+
+    /// Called by the frontmost observer at app activation: request the AX
+    /// tree from Chromium/Electron processes *before* any press, so the
+    /// lazy build races the user's reading time instead of the capture
+    /// deadline.
+    func warmUp(pid: pid_t) {
+        guard pid > 0 else { return }
+        configureTimeoutOnce()
+        let app = AXUIElementCreateApplication(pid)
+        _ = enableAccessibilityIfNeeded(app: app, pid: pid)
+    }
+
+    /// The observer's cheap read (§5.1): focused element identity, role,
+    /// window title, URL — single-attribute reads plus one ancestor climb
+    /// for the web area. Never reads the field value, selection, or
+    /// surroundings; those are always fresh at press time. Touching the
+    /// focused element here is also what keeps Chromium's lazily-built tree
+    /// materialized.
+    func cheapCapture(appInfo: MagicSnapshot.AppInfo, config: MagicEngineConfig) -> WarmContext {
+        configureTimeoutOnce()
+        var budget = Budget(config: config)
+        budget.remainingCalls = min(budget.remainingCalls, 120)
+
+        func context(
+            windowTitle: String? = nil, url: String? = nil,
+            focused: AXUIElement? = nil, role: String? = nil
+        ) -> WarmContext {
+            WarmContext(
+                pid: appInfo.pid, bundleId: appInfo.bundleId,
+                windowTitle: windowTitle, url: url,
+                focusedElement: focused.map { AXElementRef(element: $0) },
+                fieldRole: role, capturedAt: Date()
+            )
+        }
+
+        let systemWide = AXUIElementCreateSystemWide()
+        guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget),
+              let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
+        else { return context() }
+
+        let role = copyString(focused, kAXRoleAttribute, &budget)
+
+        var url: String?
+        var cursor: AXUIElement? = focused
+        var hops = 0
+        while let current = cursor, hops < 25, budget.remainingCalls > 0 {
+            if copyString(current, kAXRoleAttribute, &budget) == "AXWebArea" {
+                url = copyURLString(current, "AXURL", &budget)
+                    ?? copyString(current, "AXDocument", &budget)
+                break
+            }
+            cursor = copyElement(current, kAXParentAttribute, &budget)
+            hops += 1
+        }
+
+        var windowTitle: String?
+        if let window: AXUIElement = copyElement(focused, kAXWindowAttribute, &budget) {
+            windowTitle = copyString(window, kAXTitleAttribute, &budget)
+            if url == nil {
+                url = copyURLString(window, "AXURL", &budget) ?? copyString(window, "AXDocument", &budget)
+            }
+        }
+
+        return context(windowTitle: windowTitle, url: url, focused: focused, role: role)
     }
 
     // MARK: - Surrounding walk (web content)
@@ -530,8 +627,12 @@ actor AXSnapshotService {
         budget.remainingCalls -= 1
         var result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
         if result == .cannotComplete, budget.remainingCalls > 0 {
+            budget.cannotCompleteCount += 1
             budget.remainingCalls -= 1
             result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
+        }
+        if result == .cannotComplete {
+            budget.cannotCompleteCount += 1
         }
         return result == .success ? value : nil
     }

@@ -42,6 +42,8 @@ struct DryRunReport: Codable, Sendable {
     let url: String?
     let windowTitle: String?
     let ancestorRoles: [String]
+    let warmHit: Bool
+    let axErrors: Int
 }
 
 enum MagicPressPipelineError: LocalizedError {
@@ -199,7 +201,9 @@ enum MagicPressPipeline {
             fieldSelectionChars: snapshot.field?.selection?.text.count,
             url: snapshot.url,
             windowTitle: snapshot.windowTitle,
-            ancestorRoles: snapshot.ancestorRoles
+            ancestorRoles: snapshot.ancestorRoles,
+            warmHit: snapshot.warmHit,
+            axErrors: snapshot.axCannotComplete
         )
     }
 

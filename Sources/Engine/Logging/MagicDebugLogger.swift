@@ -89,6 +89,7 @@ actor MagicDebugLogger {
             - grammar row: \(snapshot.grammarRow)
             - field: role=\(field?.role ?? "—") subrole=\(field?.subrole ?? "—") editable=\(field.map { String($0.editable) } ?? "—") secure=\(field.map { String($0.secure) } ?? "—")
             - ancestor roles: \(snapshot.ancestorRoles.joined(separator: " > "))
+            - warm hit: \(snapshot.warmHit) · ax cannotComplete: \(snapshot.axCannotComplete)
 
             ### Field value (\(field?.value.count ?? 0) chars)
             ```

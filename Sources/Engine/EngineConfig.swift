@@ -30,6 +30,14 @@ struct MagicEngineConfig: Sendable, Equatable {
     var fieldValueMaxChars = 50_000
     /// Post-insert toast auto-dismiss.
     var toastDismissSeconds = 8
+    /// Warm frontmost-app observer (§5.1). 0 disables the whole subsystem —
+    /// presses then behave exactly like V0 collect-on-press.
+    var warmObserverEnabled = 1
+    /// How long the observer's cheap context stays usable as press-time
+    /// backfill.
+    var warmContextTtlSeconds = 30
+    /// Debounce between a focus-change notification and the cheap read.
+    var observerDebounceMs = 200
 
     static let `default` = MagicEngineConfig()
 
@@ -51,6 +59,9 @@ struct MagicEngineConfig: Sendable, Equatable {
         ("web_after_keep_chars", 0...20_000, \.webAfterKeepChars),
         ("field_value_max_chars", 1_000...500_000, \.fieldValueMaxChars),
         ("toast_dismiss_seconds", 2...120, \.toastDismissSeconds),
+        ("warm_observer_enabled", 0...1, \.warmObserverEnabled),
+        ("warm_context_ttl_seconds", 5...300, \.warmContextTtlSeconds),
+        ("observer_debounce_ms", 50...2_000, \.observerDebounceMs),
         ]
     }
 

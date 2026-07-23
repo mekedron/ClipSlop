@@ -296,8 +296,9 @@ final class AppState {
         // Wire the prompt-library assistant
         promptAssistant.appState = self
 
-        // Wire the Magic Button press band
+        // Wire the Magic Button press band + the warm frontmost-app observer
         magicCoordinator.appState = self
+        magicCoordinator.startWarmObserver()
 
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore

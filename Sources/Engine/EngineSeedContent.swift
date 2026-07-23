@@ -71,6 +71,14 @@ enum EngineSeedContent {
 
     # Post-insert toast auto-dismiss, in seconds.
     toast_dismiss_seconds: 8
+
+    # Warm frontmost-app observer: keeps cheap context (URL, window title,
+    # focused field) fresh between presses and pre-builds Chromium's
+    # accessibility tree on app switch. Set warm_observer_enabled: 0 to turn
+    # the subsystem off entirely.
+    warm_observer_enabled: 1
+    warm_context_ttl_seconds: 30
+    observer_debounce_ms: 200
     ---
     """
 
