@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Gyors hozzáférés megnyitása";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.prompt_shortcuts.open_run" = "Futtatás a szerkesztőben";
 "menu.prompt_shortcuts.quick_paste" = "Beágyazott futtatás";
 

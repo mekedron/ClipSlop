@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Otevřít Rychlý přístup";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.prompt_shortcuts.open_run" = "Spustit v editoru";
 "menu.prompt_shortcuts.quick_paste" = "Spustit na místě";
 

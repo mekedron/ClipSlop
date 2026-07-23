@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Åbn Hurtig adgang";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.prompt_shortcuts.open_run" = "Kør i editor";
 "menu.prompt_shortcuts.quick_paste" = "Inline kørsel";
 

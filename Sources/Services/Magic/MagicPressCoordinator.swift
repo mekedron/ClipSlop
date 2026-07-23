@@ -734,6 +734,17 @@ final class MagicPressCoordinator {
         }
     }
 
+    /// Menu-bar entry point. Clicking the status-item menu steals key focus
+    /// from the target field; the press must wait for the menu to close and
+    /// focus to return before the snapshot — same settle as the dry-run and
+    /// insert-test menu items.
+    func pressFromMenu(forceChips: Bool) {
+        Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(600))
+            self?.handlePress(forceChips: forceChips)
+        }
+    }
+
     /// R1 spike surface: run the real inserter against the focused field
     /// with a canned multi-word string — no LLM call — so undo atomicity
     /// can be probed (insert → ⌘Z → re-read) deterministically and free.

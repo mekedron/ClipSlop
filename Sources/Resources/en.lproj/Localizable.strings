@@ -400,6 +400,8 @@
 "menu.ocr" = "Edit Screen Text";
 "menu.ocr_clipboard" = "Copy Screen Text";
 "menu.quick_access" = "Open Quick Access";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.provider" = "Provider: %@";
 "menu.model" = "Model: %@";
 "menu.settings" = "Settings...";

@@ -31,6 +31,14 @@ struct MenuBarView: View {
             appState.showQuickAccess()
         }
 
+        menuButton(loc.t("menu.magic"), shortcut: .triggerMagic) {
+            appState.magicCoordinator.pressFromMenu(forceChips: false)
+        }
+
+        menuButton(loc.t("menu.magic_ask"), shortcut: .triggerMagicChips) {
+            appState.magicCoordinator.pressFromMenu(forceChips: true)
+        }
+
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
 
         #if DEBUG

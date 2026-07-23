@@ -24,10 +24,13 @@ enum CaretLocator {
         visibleFrame: NSRect,
         gap: CGFloat = 8
     ) -> NSPoint {
+        // Above the anchor by default: composers overwhelmingly sit at the
+        // bottom of chats and pages, so below-first panels kept flipping
+        // anyway — above is the stable placement. Below is the fallback.
         var x = anchor.minX
-        var y = anchor.minY - gap - panelSize.height  // below the anchor
-        if y < visibleFrame.minY {
-            y = anchor.maxY + gap  // no room below → above
+        var y = anchor.maxY + gap  // above the anchor
+        if y + panelSize.height > visibleFrame.maxY {
+            y = anchor.minY - gap - panelSize.height  // no room above → below
         }
         x = max(visibleFrame.minX, min(x, visibleFrame.maxX - panelSize.width))
         y = max(visibleFrame.minY, min(y, visibleFrame.maxY - panelSize.height))

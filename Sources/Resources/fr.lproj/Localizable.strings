@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Ouvrir l’Accès rapide";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.prompt_shortcuts.open_run" = "Exécuter dans l’éditeur";
 "menu.prompt_shortcuts.quick_paste" = "Exécution sur place";
 

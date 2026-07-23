@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Открыть быстрый доступ";
+"menu.magic" = "Волшебная кнопка";
+"menu.magic_ask" = "Волшебная кнопка (всегда спрашивать)";
 "menu.prompt_shortcuts.open_run" = "Выполнить в редакторе";
 "menu.prompt_shortcuts.quick_paste" = "Выполнить на месте";
 

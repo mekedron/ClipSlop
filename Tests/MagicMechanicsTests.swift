@@ -15,22 +15,22 @@ struct CaretLocatorMathTests {
         #expect(flipped == NSRect(x: 50, y: 880, width: 200, height: 20))
     }
 
-    @Test func panelGoesBelowTheAnchorWhenRoomExists() {
+    @Test func panelGoesAboveTheAnchorWhenRoomExists() {
         let origin = CaretLocator.panelOrigin(
             anchor: NSRect(x: 100, y: 500, width: 10, height: 20),
             panelSize: NSSize(width: 300, height: 100),
             visibleFrame: NSRect(x: 0, y: 0, width: 1600, height: 900)
         )
-        #expect(origin == NSPoint(x: 100, y: 392))  // 500 - 8 - 100
+        #expect(origin == NSPoint(x: 100, y: 528))  // anchor.maxY (520) + gap
     }
 
-    @Test func panelFlipsAboveWhenNoRoomBelow() {
+    @Test func panelFallsBelowWhenNoRoomAbove() {
         let origin = CaretLocator.panelOrigin(
-            anchor: NSRect(x: 100, y: 40, width: 10, height: 20),
+            anchor: NSRect(x: 100, y: 840, width: 10, height: 20),
             panelSize: NSSize(width: 300, height: 100),
             visibleFrame: NSRect(x: 0, y: 0, width: 1600, height: 900)
         )
-        #expect(origin.y == 68)  // anchor.maxY (60) + gap
+        #expect(origin.y == 732)  // 840 - 8 - 100
     }
 
     @Test func panelClampsToScreenEdges() {

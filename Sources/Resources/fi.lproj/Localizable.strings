@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Avaa Pikakäyttö";
+"menu.magic" = "Taikanappi";
+"menu.magic_ask" = "Taikanappi (kysy aina)";
 "menu.prompt_shortcuts.open_run" = "Suorita editorissa";
 "menu.prompt_shortcuts.quick_paste" = "Suorita paikalla";
 

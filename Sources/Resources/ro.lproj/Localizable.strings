@@ -432,6 +432,8 @@
 
 /* Menu Bar - Quick Access */
 "menu.quick_access" = "Deschide Acces rapid";
+"menu.magic" = "Magic Button";
+"menu.magic_ask" = "Magic Button (always ask)";
 "menu.prompt_shortcuts.open_run" = "Rulează în editor";
 "menu.prompt_shortcuts.quick_paste" = "Rulează pe loc";
 
