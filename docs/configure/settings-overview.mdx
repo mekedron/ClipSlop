@@ -1,14 +1,14 @@
 ---
 sidebar_position: 1
 title: Settings overview
-description: A tour of ClipSlop's Settings — General, Prompts, Providers, Keyboard, and iCloud Sync.
+description: A tour of ClipSlop's Settings — General, Providers, Prompts, Quick Access, Magic, and About.
 ---
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Settings overview
 
-Open Settings from the menu-bar icon or press <kbd>⌘,</kbd>. Five tabs:
+Open Settings from the menu-bar icon or press <kbd>⌘,</kbd>. Six tabs: **General**, **Providers**, **Prompts**, **Quick Access**, **Magic**, and **About**. Keyboard shortcuts and iCloud sync are configured inside General:
 
 <img
   src={useBaseUrl('/demos/screenshots/general-settings.png')}
@@ -32,6 +32,12 @@ The prompt library — every built-in prompt and your custom ones, with mnemonic
 ## Providers
 
 Configure ChatGPT (OAuth), OpenAI, Anthropic, Ollama, OpenAI-compatible endpoints, and CLI tools. Pick a default and set per-provider temperature / reasoning effort — each provider type offers the effort values its API accepts (ChatGPT up to `xhigh`, Ollama from `none` to `max`). See [ChatGPT](./providers/chatgpt.mdx) for the easiest starting point, or [Pick a provider](../pick-a-provider.mdx) for the full menu.
+
+With no provider selected, the tab shows **Model routing**: which provider serves each engine role (Magic Button generation, Prompt Assistant chat), an optional minimum cost class and request timeout per role, token spend for today / this month, and configuration warnings. Provider configs live in `~/.clipslop/providers.yaml` (API keys stay in the Keychain); role bindings and fallback chains in `~/.clipslop/roles.yaml` — both hand-editable, both hot-reloaded.
+
+## Magic
+
+The Magic Button (<kbd>⌘⌃M</kbd>) engine: the generation system prompt, core files (identity, writing style, constraints, aliases), workflow cards, and `config.yaml` tuning — all as editable files with reset-to-default and validation badges. The opt-in full-content debug log toggle lives here too.
 
 ## Keyboard
 

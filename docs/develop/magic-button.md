@@ -55,7 +55,8 @@ state machine with phases `idle → collecting → (chips) → generating → to
 4. **Plan** — `MagicPressPipeline.plan(...)` reloads the file stores if their
    mtimes changed (this is the whole hot-reload story: edit a file, press,
    it's live) and resolves the `generation.magic` provider through
-   `EngineRoleStore` → `ProviderStore`.
+   `EngineRoleStore` → `ProviderStore` (fallback chain, capability filter,
+   `min_cost_class` refusal — see *Providers and roles*).
 5. **Classify** — if there is a selection, `SelectionClassifier` ranks it
    `instruction | material | mixed` from RU/EN/FI imperative and deixis
    dictionaries plus length/sentence signals. A non-decisive result is a
@@ -68,12 +69,16 @@ state machine with phases `idle → collecting → (chips) → generating → to
    intent chips + a free-text hint field at the caret. It must take key
    status (number keys, typing), so it activates the app — and every exit
    runs the focus-return dance and re-asserts the captured selection.
-8. **Generate** — `MagicPressPipeline.execute(...)`:
-   `PromptAssembler.assemble` builds the slot-budgeted prompt, then the
+8. **Generate** — `MagicPressPipeline.execute(...)`: first the privacy
+   binding (P7) — a surface matching the `no_cloud` list swaps to a local
+   provider from the chain or refuses before anything is assembled — then
+   `PromptAssembler.assemble` builds the slot-budgeted prompt, the
    **single** model call goes through the existing `AIServiceFactory`
-   (non-streaming), then `DeterministicVerifier.verify` checks the output —
-   all off the main actor. A toast with a spinner and ✕ is visible
-   throughout.
+   (non-streaming, `processWithUsage` for spend accounting), the trimmed
+   output gets its deterministic continuation seam (`ContinuationSeam` —
+   a joining space when pasting at a caret after word material), and
+   `DeterministicVerifier.verify` checks the result — all off the main
+   actor. A toast with a spinner and ✕ is visible throughout.
 9. **Verify** — deterministic code only (< 50 ms, no second model call):
    language, length, `constraints.md` rules, and concreteness-by-matching.
    A failure shows the output in the toast with the specific warning and a
@@ -92,8 +97,9 @@ state machine with phases `idle → collecting → (chips) → generating → to
     guaranteed fallback: the pre-paste text is always copyable. Regenerate
     and refine undo first, then re-run with the same snapshot (+ the
     refine instruction as a hint).
-12. **Trace** — every press appends one contentless JSON line to
-    `~/.clipslop/logs/traces-YYYY-MM-DD.jsonl` (see *Observability*).
+12. **Trace + spend** — every press appends one contentless JSON line to
+    `~/.clipslop/logs/traces-YYYY-MM-DD.jsonl`, and every generation one
+    spend line to `logs/spend-YYYY-MM.jsonl` (see *Observability*).
 
 ## The file tree: `~/.clipslop/`
 
@@ -103,8 +109,10 @@ are never overwritten):
 
 ```
 ~/.clipslop/
-├── config.yaml          # engine tuning (budgets, depths, caps) — clamped, hot-reloaded
+├── config.yaml          # engine tuning (budgets, depths, caps, no_cloud list) — clamped, hot-reloaded
 ├── system-prompt.md     # optional override of the built-in generation system prompt
+├── providers.yaml       # provider configs (M3, §14) — API keys stay in Keychain
+├── roles.yaml           # role → provider bindings, fallback chains, timeouts, cost floors
 ├── core/                # pinned memory: enters EVERY generation prompt
 │   ├── identity.md      # who the user is (onboarding interview writes this)
 │   ├── writing-style.md # voice rules + "Examples of how I actually write"
@@ -114,8 +122,13 @@ are never overwritten):
 │   └── base/            # the generic layer — guarantees the button works everywhere
 └── logs/
     ├── traces-*.jsonl   # contentless per-press traces (always on)
+    ├── spend-*.jsonl    # per-generation token spend (role/provider/model, monthly files)
     └── debug/           # full-content per-press markdown (opt-in, 7-day retention)
 ```
+
+`providers.yaml` and `roles.yaml` are **not seeded** — they are migrated
+from the pre-M3 Application Support JSON files on first launch (originals
+kept as `.bak`) and re-written by the Settings UI.
 
 All of it is editable in **Settings → Magic** (a file editor with
 reset-to-default, validation badges, and the `generation.magic` model
@@ -323,12 +336,66 @@ Known app notes:
   changeCount/marker mechanics; its behavior (AX fallback, 30 s `lastPaste`
   follow-up, rich-text modes) is unchanged.
 
-## Providers and roles
+### Spike results (M1)
 
-Workflows never name models. The `generation.magic` role maps to a provider
-config in `roles.json` (next to `providers.json` in Application Support),
-resolved through the existing `ProviderStore` chain: configured → app
-default → first. The picker lives in Settings → Magic.
+- **R1 — ⌘Z atomicity.** Probed with the DEBUG menu item “Magic Insert
+  Test String” (real inserter, canned multi-word string, no LLM call):
+  insert → one ⌘Z → AX re-read. Native AppKit text views (TextEdit,
+  2026-07-23): **atomic** — a paste is a single undo group; one ⌘Z reverts
+  the whole insertion, prior text intact. Web/contenteditable surfaces
+  (Gmail, Notion) are probed as part of the QA matrix (see
+  `qa-matrix-m1.md`); regardless of the per-surface result, Restore
+  (`PreInsertRecord` → “Copy previous text”) stays the guaranteed recovery
+  path — ⌘Z is best-effort by design.
+- **R11 — Chromium AX CPU cost.** Measured 2026-07-23 on a fresh Chrome
+  (dedicated profile, no ClipSlop) frontmost on a deliberately hostile
+  page (300 text nodes, 600 mutations/sec): whole-process-tree CPU
+  averaged over 20×2 s samples was **16.2 %** before and **19.1 %** after
+  setting `AXEnhancedUserInterface` (~+3 pp, ~18 % relative, distributions
+  overlap). On static pages the delta is negligible — AX cost tracks DOM
+  churn. Verdict: bounded and acceptable; the bound is the existing
+  `warm_observer_enabled` kill switch. Enable-then-disable cycling stays
+  forbidden (it is the relayout-bug trigger), so no
+  “enable only while collecting” complexity.
+
+## Providers and roles (M3, §14)
+
+Workflows never name models. Since M3 the provider layer is files-first:
+
+- **`~/.clipslop/providers.yaml`** — the provider list (`ProvidersFile`
+  codec). API keys stay in Keychain (referenced by the provider id); OAuth
+  state stays app-internal. Migrated automatically from the old
+  Application Support `providers.json` (kept as `.bak`). Two new
+  per-provider fields, both derived when omitted: `locality: local|cloud`
+  (the *data path* — a CLI tool runs locally but calls a cloud API, so it
+  derives `cloud`; only provably-local endpoints derive `local`) and
+  `cost_class: local|mid|premium`.
+- **`~/.clipslop/roles.yaml`** — role → binding (`RolesFile` codec,
+  migrated from `roles.json`): `provider`, `fallbacks: [ids]` tried in
+  order, `timeout_seconds` (stamped onto the request), and
+  `min_cost_class`, which **refuses generation instead of silently
+  downgrading** (P9) when nothing qualified is in the chain. Roles:
+  `generation.magic` and `chat.assistant` (the Prompt Assistant's old
+  private resolve chain now goes through this store).
+- **Resolution order** (`EngineRoleStore.resolve`, pure): bound provider →
+  explicit fallbacks → app default → first (→ first *capable* for
+  tool-calling roles). Capability-unfit candidates are skipped.
+- **Privacy binding** (`PrivacyBinding`, P7): `no_cloud: [entries]` in
+  config.yaml (bundle-id substring, or domain exact/suffix). A press on a
+  matching surface swaps to a local provider from the chain or refuses
+  honestly (trace `error:generation:noCloud`); the cost floor still holds
+  during the swap.
+- **Spend accounting** (`SpendLedger`): one JSONL line per generation in
+  `~/.clipslop/logs/spend-YYYY-MM.jsonl` — tokens only, no dollar tables.
+  Real usage from Anthropic/OpenAI-compatible responses; chars/4 estimates
+  flagged `estimated` elsewhere (ChatGPT's SSE path, CLI tools).
+- **Routing UI** (§15.1): Settings → Providers with nothing selected shows
+  the role table — provider picker, min-cost, timeout, inline token spend
+  (≈ marks estimates), resolution/keychain badges, and file-load warnings.
+  Both stores reload on mtime (press-time and on Settings open); broken
+  hand edits surface as warnings, and a providers.yaml that parses to an
+  empty list is preserved as `providers.yaml.broken` before any save can
+  overwrite it. Startup logs the same validation via os.Logger.
 
 ## Observability
 
@@ -350,12 +417,27 @@ default → first. The picker lives in Settings → Magic.
   executing anything, and puts the JSON report (including slot texts and
   collector diagnostics) on the clipboard. Scriptable via System Events —
   this is how the Mail/Chat/Telegram AX structures were diagnosed.
+- **Spend ledger** (always on, contentless): one JSON line per generation
+  in `~/.clipslop/logs/spend-YYYY-MM.jsonl` — role, provider type, model,
+  input/output tokens, `estimated` flag. Aggregated per role (today /
+  this month) in the Settings → Providers routing table.
+- **Trace stats** (DEBUG builds: “Magic Trace Stats to Clipboard”):
+  aggregates every trace file into the gate report (`TraceStats`) — SLO
+  percentiles (direct: p50 ≤ 3 s / p95 ≤ 6 s), chip top-1 rate (target
+  ≥ 70 %), silent/undo/insert-anyway rates, warm-hit rate, and the R4
+  `axErrors` count — as a markdown table. Pre-M1 trace lines that miss the
+  newer keys are counted as skipped, never silently dropped.
+- **Insert test** (DEBUG builds: “Magic Insert Test String”): runs the
+  real inserter with a canned string against the focused field — no LLM
+  call. Built for the R1 undo-atomicity probes; also handy for exercising
+  insert/undo/restore mechanics on a new surface without burning tokens.
 
 ## Engine tuning (`config.yaml`)
 
 All collector budgets/depths/caps, the warm-observer knobs
 (`warm_observer_enabled`, `warm_context_ttl_seconds`,
-`observer_debounce_ms`), and the toast dismiss time, hot-reloaded, clamped
+`observer_debounce_ms`), the toast dismiss time, and the `no_cloud`
+app/domain list (see Providers and roles above) — hot-reloaded, clamped
 to safe ranges, with warnings surfaced in Settings → Magic. See the seeded
 file's comments for each key. Per-workflow prompt budgets live in the
 workflow frontmatter, not here.
@@ -379,6 +461,15 @@ No AppleScript URL fallback · few-shot slot empty · surface gate parsed but
 not enforced · chips rule is fixed (no measured-accuracy self-tuning) · no
 retrieval/research modes, no data sources, no memos/index · no streaming ·
 no Screenpipe OCR rung · prompt library and workflows coexist without
-unification. See §19 of the design doc for the milestone map these belong
-to. The warm frontmost-app observer (M1) is implemented — see the collector
-section above.
+unification (§7.3 unification is the next milestone in flight). See §19 of
+the design doc for the milestone map these belong to.
+
+Shipped since V0: the warm frontmost-app observer (M1, collector section
+above) and the M3 provider layer (providers.yaml / roles.yaml / privacy
+binding / spend accounting / routing UI — see Providers and roles).
+
+M3 cuts, recorded: dollar pricing (tokens only) · assistant spend not yet
+in the ledger (`ToolChatService` reports no usage) · ChatGPT usage
+estimated (SSE accumulation path) · fallback chains hand-edited in
+roles.yaml (no drag-to-reorder UI) · per-workflow model overrides (§15.1)
+not implemented.

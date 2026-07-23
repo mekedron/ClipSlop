@@ -13,6 +13,7 @@ ClipSlop is a local app that talks directly to the AI provider you choose. There
 - **The text you select** when you press a hotkey. Read via macOS Accessibility (simulated <kbd>⌘C</kbd> / <kbd>⌘V</kbd>).
 - **The clipboard contents** when you press <kbd>⌃⌘V</kbd> to process from clipboard.
 - **A captured screen region** when you press <kbd>⇧⌘2</kbd> for OCR. Recognition happens on-device with Apple's Vision framework — pixels never leave your Mac.
+- **The focused text field and the visible conversation around it** when you press the Magic Button (<kbd>⌘⌃M</kbd>). Said plainly: a Magic press sends your identity/style rules, the field's content, and the visible surrounding messages — **including text written by other people** — to the provider serving the `generation.magic` role. Secure/password fields are never read. To keep specific apps or sites away from cloud models, list them under `no_cloud` in `~/.clipslop/config.yaml` — presses there use a local provider or refuse with a clear message.
 
 ## What ClipSlop sends to providers
 
@@ -29,6 +30,7 @@ It sends to **whichever provider you configured** — OpenAI, Anthropic, your lo
 - **Prompt library** — your prompts, mnemonics, shortcuts, provider overrides. Stored in `~/Library/Application Support/ClipSlop/`. Mirrored via iCloud only if you've enabled [iCloud sync](../configure/icloud-sync.mdx).
 - **Provider credentials** — API keys go in the macOS Keychain. ChatGPT OAuth tokens also live in the Keychain. Never written to plain files.
 - **App settings** — appearance, opacity, window size. Same `Application Support` folder.
+- **The Magic Button engine tree** — `~/.clipslop/` (hand-editable by design): provider configuration (`providers.yaml`, **without** keys — those stay in Keychain), role routing (`roles.yaml`), engine tuning (`config.yaml`), your core/workflow files, **contentless** per-press traces (decision metadata only — no field text, no window titles, URL host at most), and token-spend counts. The opt-in debug log (Settings → Magic) is the one exception: it records full press content for troubleshooting and prunes itself after 7 days.
 
 ## What ClipSlop does *not* store
 
@@ -46,7 +48,7 @@ Configure **Ollama** as your provider and disable iCloud sync. With those two se
 To wipe everything ClipSlop has on disk:
 
 ```bash
-rm -rf ~/Library/Application\ Support/ClipSlop
+rm -rf ~/Library/Application\ Support/ClipSlop ~/.clipslop
 ```
 
 Then revoke API keys from your providers' dashboards if you want belt-and-braces. ChatGPT OAuth tokens get cleared automatically when you sign out from **Settings → Providers → ChatGPT**.
