@@ -1,5 +1,6 @@
 import AppKit
 @preconcurrency import ApplicationServices
+import os
 
 enum MagicToastPanelReason: Sendable, Equatable {
     case nonEditable
@@ -68,6 +69,7 @@ final class MagicPressCoordinator {
     @ObservationIgnored private var generationTask: Task<Void, Never>?
     @ObservationIgnored private var toastDismissTask: Task<Void, Never>?
     @ObservationIgnored private var pressStart: ContinuousClock.Instant?
+    private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.magic")
 
     init() {
         EngineSeedContent.seedIfNeeded()
@@ -257,6 +259,9 @@ final class MagicPressCoordinator {
         guard var press = activePress else { return }
         press.workflow = workflow
         press.hint = hint
+        // Stamp on the coordinator-side draft too, so a run that dies before
+        // `execute` returns its trace still records what was chosen.
+        press.trace.chosenID = workflow.id
         activePress = press
 
         phase = .generating
@@ -316,7 +321,15 @@ final class MagicPressCoordinator {
         switch outcome {
         case .inserted(let record):
             press.record = record
-            press.trace.outcome = "inserted"
+            // Don't overwrite an insert-anyway stamp — its rate is the
+            // §10.2 guard-health metric — and mark pastes the AX read could
+            // not confirm.
+            if press.trace.outcome != "insertedAnyway" {
+                press.trace.outcome = "inserted"
+            }
+            if !record.pasteConfirmed {
+                press.trace.outcome += ":unconfirmed"
+            }
             activePress = press
             phase = .toast
             toastState = .inserted(record)
@@ -336,14 +349,39 @@ final class MagicPressCoordinator {
     }
 
     private func handleGenerationError(_ error: Error) async {
+        Self.logger.error("magic generation failed: \(error.localizedDescription, privacy: .public)")
         if var press = activePress {
-            press.trace.outcome = "error:generation"
+            press.trace.outcome = "error:generation:\(Self.errorKind(error))"
             submitTrace(press.trace)
             activePress = nil
         }
         closeToast()
         phase = .idle
         showHint(error.localizedDescription)
+    }
+
+    /// Short, contentless error class for traces ("http429", "url-1009",
+    /// "emptyResponse") — enough to see failure patterns without logging
+    /// message text.
+    private static func errorKind(_ error: Error) -> String {
+        if let aiError = error as? AIServiceError {
+            switch aiError {
+            case .httpError(let statusCode, _): return "http\(statusCode)"
+            case .invalidURL: return "invalidURL"
+            case .missingAPIKey: return "missingAPIKey"
+            case .decodingError: return "decodingError"
+            case .networkError: return "networkError"
+            case .emptyResponse: return "emptyResponse"
+            case .cancelled: return "cancelled"
+            case .cliToolNotFound: return "cliToolNotFound"
+            case .cliToolFailed(let exitCode, _): return "cliToolFailed\(exitCode)"
+            case .cliToolTimeout: return "cliToolTimeout"
+            case .oauthLoginRequired: return "oauthLoginRequired"
+            case .oauthTokenExpired: return "oauthTokenExpired"
+            }
+        }
+        if let urlError = error as? URLError { return "url\(urlError.code.rawValue)" }
+        return String(describing: type(of: error))
     }
 
     func cancelGeneration() {
@@ -434,7 +472,14 @@ final class MagicPressCoordinator {
         guard var press = activePress else { return }
         press.trace.outcome = "insertedAnyway"
         activePress = press
-        returnFocusToTarget(excluding: toastWindow)
+        // Yield focus only when we actually hold it (the user clicked into
+        // the toast). Holding the button on a non-activating panel leaves
+        // the target app frontmost — hiding our windows then would make
+        // macOS promote some *other* app, and on Sonoma+ the re-activation
+        // of the target can be refused, killing the paste.
+        if NSApp.isActive {
+            returnFocusToTarget(excluding: toastWindow)
+        }
         Task { [weak self] in
             await self?.performInsert(text)
         }

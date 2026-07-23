@@ -99,6 +99,9 @@ struct MagicSnapshot: Sendable {
     let locale: String
     let ts: Date
     let focusedElement: AXElementRef?
+    /// AX roles from the focused element upward — diagnostic only (dry-run),
+    /// contentless by nature.
+    var ancestorRoles: [String] = []
 
     /// Field state for router `when` predicates. Selection wins; otherwise
     /// whitespace-only content counts as empty.

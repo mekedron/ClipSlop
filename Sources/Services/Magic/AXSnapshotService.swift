@@ -13,6 +13,18 @@ actor AXSnapshotService {
         let maxGatherDepth = 6
         let maxContentChars = 6000
         let maxFieldValueChars = 50_000
+
+        /// The web-area document-order sweep visits far more nodes than the
+        /// native sibling walk (every div is an AXGroup); in-process AX IPC
+        /// is cheap once the tree is built, and the overall capture deadline
+        /// still bounds the worst case.
+        static let webSweepCalls = 900
+        let maxWebDepth = 30
+        let maxWebChildrenPerNode = 60
+        /// The sweep over-collects, then keeps what's nearest the field.
+        let maxWebCollectChars = 24_000
+        let webBeforeKeepChars = 4500
+        let webAfterKeepChars = 1000
     }
 
     private var didConfigureTimeout = false
@@ -131,18 +143,25 @@ actor AXSnapshotService {
             value: value, selection: selection, placeholder: placeholder
         )
 
-        // Window title + URL, walking ancestors once.
+        // Window title + URL, walking ancestors once. Web content gets a
+        // deeper ancestor allowance — Chromium wraps every div in an
+        // AXGroup, so the focused field can sit 15+ levels below the web
+        // area.
         var windowTitle: String?
         var url: String?
+        var webArea: AXUIElement?
         var ancestors: [AXUIElement] = []
         var cursor: AXUIElement? = focused
-        while let current = cursor, ancestors.count < budget.maxAncestorDepth, !expired() {
+        while let current = cursor, ancestors.count < 25, !expired() {
             ancestors.append(current)
             cursor = copyElement(current, kAXParentAttribute, &budget)
         }
-        for ancestor in ancestors where url == nil && !expired() {
+        var ancestorRoles: [String] = []
+        for ancestor in ancestors where !expired() {
             let ancestorRole = copyString(ancestor, kAXRoleAttribute, &budget)
-            if ancestorRole == "AXWebArea" {
+            ancestorRoles.append(ancestorRole ?? "?")
+            if webArea == nil, ancestorRole == "AXWebArea" {
+                webArea = ancestor
                 url = copyURLString(ancestor, "AXURL", &budget)
                     ?? copyString(ancestor, "AXDocument", &budget)
             }
@@ -154,20 +173,47 @@ actor AXSnapshotService {
             }
         }
 
-        // Budgeted surrounding walk (§5.2 rung 1: the AX tree).
-        var surroundingText = collectSurroundings(
-            focused: focused, ancestors: ancestors,
-            budget: &budget, expired: expired
-        )
+        // Budgeted surrounding walk (§5.2 rung 1: the AX tree). Web content
+        // uses a document-order sweep of the whole web area — the
+        // ancestor-sibling walk is structurally too shallow for Chromium's
+        // deeply nested trees (a chat's message list lives many AXGroup
+        // levels away from the composer).
+        func walk(_ budget: inout Budget) -> String {
+            if let webArea {
+                // Locality ladder (§5.2 "walk up from focus"): sweep a near
+                // ancestor's subtree first and widen only while context is
+                // thin. Sweeping the page root directly drags in sidebars —
+                // on chat surfaces that means *other conversations'*
+                // previews polluting the thread.
+                budget.remainingCalls = max(budget.remainingCalls, Budget.webSweepCalls)
+                let webAreaIndex = ancestors.firstIndex { CFEqual($0, webArea) } ?? 0
+                var rootIndices: [Int] = []
+                for candidate in [min(5, webAreaIndex), min(10, webAreaIndex), webAreaIndex]
+                where !rootIndices.contains(candidate) {
+                    rootIndices.append(candidate)
+                }
+                var result = ""
+                for index in rootIndices {
+                    result = collectWebAreaSurroundings(
+                        root: ancestors[index], focused: focused, budget: &budget, expired: expired
+                    )
+                    if result.count >= 300 || budget.remainingCalls <= 0 || expired() { break }
+                }
+                return result
+            }
+            return collectSurroundings(
+                focused: focused, ancestors: ancestors, budget: &budget, expired: expired
+            )
+        }
+
+        var surroundingText = walk(&budget)
         // First press in a freshly-enabled Chromium/Electron process often
         // races the tree build — one retry with a fresh budget.
         if surroundingText.isEmpty, freshlyEnabled, !expired() {
             try? await Task.sleep(for: .milliseconds(300))
             var retryBudget = Budget()
-            surroundingText = collectSurroundings(
-                focused: focused, ancestors: ancestors,
-                budget: &retryBudget, expired: expired
-            )
+            retryBudget.remainingCalls = Budget.webSweepCalls
+            surroundingText = walk(&retryBudget)
         }
 
         return MagicSnapshot(
@@ -178,11 +224,103 @@ actor AXSnapshotService {
             surrounding: surroundingText.isEmpty ? nil : .axTree(content: surroundingText),
             locale: locale,
             ts: Date(),
-            focusedElement: AXElementRef(element: focused)
+            focusedElement: AXElementRef(element: focused),
+            // ancestors[0] is the focused element itself, so this reads
+            // focused-upward.
+            ancestorRoles: ancestorRoles
         )
     }
 
-    // MARK: - Surrounding walk
+    // MARK: - Surrounding walk (web content)
+
+    /// Document-order text sweep of a web subtree, split around the focused
+    /// element. For a chat this keeps the messages immediately above the
+    /// composer — the conversation being replied to — and a little of what
+    /// follows. The focused element's own subtree (the draft) is skipped —
+    /// **unless the focused element IS the root**: Mail's compose reports
+    /// focus on the AXWebArea itself, and its content (draft + quoted
+    /// thread) is exactly what we're here to read.
+    private func collectWebAreaSurroundings(
+        root: AXUIElement,
+        focused: AXUIElement,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> String {
+        let skipFocusedSubtree = !CFEqual(root, focused)
+
+        var before: [String] = []
+        var after: [String] = []
+        var seenFocused = false
+        var collectedChars = 0
+
+        func sweep(_ element: AXUIElement, depth: Int) {
+            guard depth < budget.maxWebDepth, budget.remainingCalls > 0, !expired(),
+                  collectedChars < budget.maxWebCollectChars
+            else { return }
+            if skipFocusedSubtree, CFEqual(element, focused) {
+                seenFocused = true
+                return
+            }
+
+            guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
+            if Self.textRoles.contains(role) {
+                let text = copyString(element, kAXValueAttribute, &budget)
+                    ?? copyString(element, kAXTitleAttribute, &budget)
+                if let text {
+                    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    if cleaned.count > 1 {
+                        if seenFocused { after.append(cleaned) } else { before.append(cleaned) }
+                        collectedChars += cleaned.count
+                    }
+                }
+                return
+            }
+
+            guard let children: [AXUIElement] = copyElementArray(element, kAXChildrenAttribute, &budget) else { return }
+            for child in children.prefix(budget.maxWebChildrenPerNode) {
+                sweep(child, depth: depth + 1)
+            }
+        }
+        sweep(root, depth: 0)
+
+        return Self.assembleWebContent(
+            before: before, after: after,
+            beforeKeepChars: budget.webBeforeKeepChars,
+            afterKeepChars: budget.webAfterKeepChars,
+            maxChars: budget.maxContentChars
+        )
+    }
+
+    /// Keeps the tail of the text preceding the field (nearest context —
+    /// for a chat, the latest messages) plus the head of what follows.
+    /// Pure, extracted for tests.
+    nonisolated static func assembleWebContent(
+        before: [String],
+        after: [String],
+        beforeKeepChars: Int,
+        afterKeepChars: Int,
+        maxChars: Int
+    ) -> String {
+        var keptBefore: [String] = []
+        var count = 0
+        for piece in before.reversed() {
+            keptBefore.append(piece)
+            count += piece.count
+            if count >= beforeKeepChars { break }
+        }
+
+        var keptAfter: [String] = []
+        count = 0
+        for piece in after {
+            keptAfter.append(piece)
+            count += piece.count
+            if count >= afterKeepChars { break }
+        }
+
+        return assembleContent(pieces: keptBefore.reversed() + keptAfter, maxChars: maxChars)
+    }
+
+    // MARK: - Surrounding walk (native)
 
     /// Walks up from the focused element; at each ancestor level, gathers
     /// text from the focused-path element's siblings in document order.
@@ -276,17 +414,25 @@ actor AXSnapshotService {
     // MARK: - AX plumbing
 
     /// Asks a Chromium/Electron process to build its accessibility tree.
-    /// `AXManualAccessibility` is the documented Electron switch and is
-    /// honored by Chromium browsers; other apps simply report the attribute
-    /// unsupported. Returns true on the first request to a process (the
-    /// caller then waits for the tree).
+    /// `AXManualAccessibility` is the Electron switch; **stock Chromium/
+    /// Chrome ignores it** and instead honors `AXEnhancedUserInterface`
+    /// (the flag VoiceOver sets). We set both, once per process — other
+    /// apps report the attributes unsupported and nothing happens. The
+    /// flag stays on for the process lifetime: toggling it is what caused
+    /// the notorious Chrome window-relayout bugs, and the browser-CPU cost
+    /// of leaving it on is the R11 tradeoff the design accepts for V0.
+    /// Returns true on the first request to a process (the caller then
+    /// waits for the tree to build).
     private func enableAccessibilityIfNeeded(app: AXUIElement, pid: pid_t) -> Bool {
         guard pid > 0, !enabledPIDs.contains(pid) else { return false }
         enabledPIDs.insert(pid)
-        let result = AXUIElementSetAttributeValue(
+        let manual = AXUIElementSetAttributeValue(
             app, "AXManualAccessibility" as CFString, kCFBooleanTrue
         )
-        return result == .success
+        let enhanced = AXUIElementSetAttributeValue(
+            app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue
+        )
+        return manual == .success || enhanced == .success
     }
 
     /// One process-global messaging timeout (R4): a hung AX server answers

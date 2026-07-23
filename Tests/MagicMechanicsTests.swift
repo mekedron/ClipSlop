@@ -69,4 +69,24 @@ struct SurroundingAssemblyTests {
         )
         #expect(result.count == 50)
     }
+
+    @Test func webContentKeepsTailBeforeFieldAndHeadAfter() {
+        // A chat: many old messages, the composer, a little footer. The
+        // kept window is the newest messages right above the field.
+        let before = (1...50).map { "message \($0) with some padding text here" }
+        let after = ["footer line one", "footer line two", "footer line three"]
+        let result = AXSnapshotService.assembleWebContent(
+            before: before, after: after,
+            beforeKeepChars: 200, afterKeepChars: 20, maxChars: 6000
+        )
+        #expect(result.contains("message 50"))
+        #expect(result.contains("message 46"))
+        #expect(!result.contains("message 1 "))
+        #expect(result.contains("footer line one"))
+        #expect(!result.contains("footer line three"))
+        // Document order is preserved: newest-kept message still precedes the footer.
+        let posMessage = result.range(of: "message 50")!.lowerBound
+        let posFooter = result.range(of: "footer line one")!.lowerBound
+        #expect(posMessage < posFooter)
+    }
 }

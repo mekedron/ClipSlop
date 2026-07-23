@@ -143,6 +143,28 @@ struct EngineRouterTests {
 
     // MARK: - Chip candidates and determinism
 
+    @Test func chipsNeverShowTwoWorkflowsWithTheSameIntent() throws {
+        // Live-test regression (2026-07-23): a tie on a short selection
+        // showed "Do what my selection says" twice — instruct.selection and
+        // its base.instruct parent share intent and summary.
+        let tieText = "Я вернулся из отпуска и уже два дня в работе. Со следующей недели можно возобновить встречи."
+        let classification = SelectionClassifier.classify(tieText)
+        #expect(classification.isTie)
+        let decision = try MagicTestSupport.seedRoute(
+            MagicTestSupport.makeSnapshot(
+                bundleId: "com.google.Chrome",
+                value: tieText,
+                selection: .init(range: nil, text: tieText)
+            ),
+            classification: classification
+        )
+        let chips = decision.chipCandidates
+        let intents = chips.map { $0.card.intents.first ?? $0.id }
+        #expect(Set(intents).count == chips.count, "duplicate intents in chips: \(chips.map(\.id))")
+        let summaries = chips.compactMap(\.card.summary)
+        #expect(Set(summaries).count == summaries.count, "identical chip labels: \(summaries)")
+    }
+
     @Test func chipCandidatesAreCappedAtFourAndDistinct() throws {
         let decision = try MagicTestSupport.seedRoute(MagicTestSupport.makeSnapshot(
             bundleId: "com.unknown.app",

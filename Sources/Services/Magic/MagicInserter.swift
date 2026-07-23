@@ -15,6 +15,10 @@ final class MagicInserter {
         let selection: MagicSnapshot.SelectionInfo?
         let insertedText: String
         let clipboardRestored: Bool
+        /// The inserted text was observed in the field's AXValue after the
+        /// paste. False means the ⌘V may not have landed (some web fields
+        /// also just don't expose a readable value).
+        let pasteConfirmed: Bool
 
         /// The text Restore guarantees to make copyable: the replaced
         /// selection when there was one, else the whole prior field.
@@ -59,14 +63,33 @@ final class MagicInserter {
         let ourCount = PasteboardTransaction.writeGenerated(text)
         PasteboardTransaction.postPaste()
 
-        try? await Task.sleep(for: Self.clipboardRestoreGrace)
+        // Best-effort paste confirmation: watch the field's value for the
+        // inserted text. Confirmation also gates the clipboard restore — we
+        // never take the pasteboard back before the target has visibly
+        // consumed it (with the fixed grace as the floor for late readers,
+        // R3).
+        let clock = ContinuousClock()
+        let start = clock.now
+        var confirmed = false
+        let probe = String(text.prefix(64))
+        while clock.now - start < .milliseconds(700) {
+            try? await Task.sleep(for: .milliseconds(60))
+            if let (value, _) = currentFieldState(snapshot), value.contains(probe) {
+                confirmed = true
+                break
+            }
+        }
+        if clock.now - start < Self.clipboardRestoreGrace {
+            try? await Task.sleep(for: Self.clipboardRestoreGrace - (clock.now - start))
+        }
         let restored = PasteboardTransaction.restore(saved, ifChangeCountStill: ourCount)
 
         return .inserted(PreInsertRecord(
             fieldValue: freshValue,
             selection: freshSelection,
             insertedText: text,
-            clipboardRestored: restored
+            clipboardRestored: restored,
+            pasteConfirmed: confirmed
         ))
     }
 

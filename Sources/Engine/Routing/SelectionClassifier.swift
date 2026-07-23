@@ -85,6 +85,11 @@ enum SelectionClassifier {
         if containsDeixis { instructionScore += 2 }
         if charCount < 200 && lineCount == 1 { instructionScore += 1 }
         if charCount > 300 { materialScore += 2 }
+        // Multiple sentences read as content (§3.4) — a short declarative
+        // message («Я вернулся из отпуска. Со следующей недели…») must not
+        // silently classify as an instruction just for being short; the
+        // resulting tie shows chips and lets the user decide.
+        if sentenceCount >= 2 { materialScore += 1 }
         if sentenceCount >= 3 { materialScore += 1 }
         if !leadingImperative && charCount > 300 { materialScore += 1 }
 

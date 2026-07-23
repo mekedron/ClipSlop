@@ -48,6 +48,16 @@ struct SelectionClassifierTests {
         #expect(result.top == .mixed)
     }
 
+    @Test func shortDeclarativeMultiSentenceMessageIsATie() {
+        // The 2026-07-23 live-test case: a plain status message selected for
+        // rewriting must not silently classify as an instruction — the tie
+        // forces chips and the user decides.
+        let result = SelectionClassifier.classify(
+            "Я вернулся из отпуска и уже два дня в работе. Со следующей недели можно возобновить наши встречи и вернуться к обычному рабочему ритму."
+        )
+        #expect(result.isTie)
+    }
+
     @Test func indeterminateMidLengthTextIsTie() {
         // ~250 chars, one line, no imperative, no deixis: no signal fires.
         let text = String(repeating: "word ", count: 50)

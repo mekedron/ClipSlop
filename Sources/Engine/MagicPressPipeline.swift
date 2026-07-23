@@ -33,6 +33,15 @@ struct DryRunReport: Codable, Sendable {
     let totalTokens: Int
     let providerName: String
     let modelID: String
+    // Snapshot diagnostics — what the collector actually saw.
+    let fieldRole: String?
+    let fieldSubrole: String?
+    let fieldEditable: Bool?
+    let fieldValueChars: Int?
+    let fieldSelectionChars: Int?
+    let url: String?
+    let windowTitle: String?
+    let ancestorRoles: [String]
 }
 
 enum MagicPressPipelineError: LocalizedError {
@@ -182,7 +191,15 @@ enum MagicPressPipeline {
             slots: assembled.slots,
             totalTokens: assembled.totalTokensEstimated,
             providerName: plan.provider.name,
-            modelID: plan.provider.modelID
+            modelID: plan.provider.modelID,
+            fieldRole: snapshot.field?.role,
+            fieldSubrole: snapshot.field?.subrole,
+            fieldEditable: snapshot.field?.editable,
+            fieldValueChars: snapshot.field?.value.count,
+            fieldSelectionChars: snapshot.field?.selection?.text.count,
+            url: snapshot.url,
+            windowTitle: snapshot.windowTitle,
+            ancestorRoles: snapshot.ancestorRoles
         )
     }
 

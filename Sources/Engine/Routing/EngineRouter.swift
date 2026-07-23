@@ -20,12 +20,17 @@ struct RoutingDecision: Sendable {
         case chips(ranked: [ResolvedWorkflow])
     }
 
-    /// Ranked list for a chip panel (also used by the forced-chips override):
-    /// counted first, then alternatives, capped at 4 distinct workflows.
+    /// Ranked list for a chip panel (also used by the forced-chips
+    /// override): counted first, then alternatives, capped at 4 — and
+    /// deduplicated by *primary intent*, not id: `instruct.selection` and
+    /// its `base.instruct` parent mean the same thing and carry the same
+    /// summary, so showing both reads as two identical buttons.
     var chipCandidates: [ResolvedWorkflow] {
-        var seen = Set<String>()
+        var seenIntents = Set<String>()
         var result: [ResolvedWorkflow] = []
-        for workflow in counted + alternatives where seen.insert(workflow.id).inserted {
+        for workflow in counted + alternatives {
+            let intent = workflow.card.intents.first ?? workflow.id
+            guard seenIntents.insert(intent).inserted else { continue }
             result.append(workflow)
             if result.count == 4 { break }
         }
@@ -71,31 +76,29 @@ enum EngineRouter {
 
         // Fixed structural rule: silent iff exactly one counted candidate and
         // the selection classification (when there is one) was decisive.
-        let presentation: RoutingDecision.Presentation
-        if counted.count == 1, classification?.isTie != true {
-            presentation = .silent(chosen: counted[0])
-        } else {
-            let chips = {
-                var seen = Set<String>()
-                var result: [ResolvedWorkflow] = []
-                for workflow in counted + alternatives where seen.insert(workflow.id).inserted {
-                    result.append(workflow)
-                    if result.count == 4 { break }
-                }
-                return result
-            }()
-            presentation = .chips(ranked: chips)
-        }
-
-        return RoutingDecision(
+        var decision = RoutingDecision(
             counted: counted,
             alternatives: alternatives,
             tier: topTier,
-            presentation: presentation,
+            presentation: .chips(ranked: []),
             situationClass: situationClass(
                 tier: topTier, snapshot: snapshot, classification: classification
             )
         )
+        if counted.count == 1, classification?.isTie != true {
+            decision = RoutingDecision(
+                counted: counted, alternatives: alternatives, tier: topTier,
+                presentation: .silent(chosen: counted[0]),
+                situationClass: decision.situationClass
+            )
+        } else {
+            decision = RoutingDecision(
+                counted: counted, alternatives: alternatives, tier: topTier,
+                presentation: .chips(ranked: decision.chipCandidates),
+                situationClass: decision.situationClass
+            )
+        }
+        return decision
     }
 
     // MARK: - Predicate matching

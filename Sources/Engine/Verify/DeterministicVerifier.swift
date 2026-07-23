@@ -56,32 +56,51 @@ enum DeterministicVerifier {
 
     // MARK: - Language
 
-    /// Warns only on a confident mismatch: both sides ≥ 20 characters and the
-    /// recognizer ≥ 60% sure of each. `output.lang: match_context` compares
-    /// against the surroundings (falling back to the field's own draft);
-    /// a fixed lang compares against that language.
+    /// Warns only on a confident mismatch: both sides ≥ 20 characters and
+    /// the recognizer ≥ 60% sure of each. For `match_context` the output is
+    /// acceptable in the language of the surroundings **or** of the user's
+    /// own field draft — continuing a Russian draft on an English page is a
+    /// legitimate outcome (base.continue does exactly that), so only an
+    /// output matching *neither* is a defect. A fixed lang compares against
+    /// that language alone.
     static func languageWarnings(
         output: String, workflow: ResolvedWorkflow, snapshot: MagicSnapshot
     ) -> [VerifierWarning] {
         guard let outputLang = confidentLanguage(of: output) else { return [] }
 
-        let expected: String?
+        let accepted: [String]
         switch workflow.card.output.lang {
         case .fixed(let code):
-            expected = code
+            accepted = [code]
         case .matchContext:
-            let reference = [snapshot.surrounding?.content, snapshot.field?.value]
+            // Every plausible hypothesis of every reference counts: a mail
+            // quote like "Hei Nikita, the tool works nicely…" reads as
+            // Finnish-and-English at once, and an English reply to it is
+            // not a defect. Only an output matching no hypothesis warns.
+            accepted = [snapshot.surrounding?.content, snapshot.field?.value]
                 .compactMap { $0 }
-                .first { $0.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 }
-            expected = reference.flatMap(confidentLanguage(of:))
+                .filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 }
+                .flatMap(plausibleLanguages(of:))
         }
 
-        guard let expected, expected != outputLang else { return [] }
+        guard !accepted.isEmpty, !accepted.contains(outputLang) else { return [] }
         return [VerifierWarning(
             check: .language,
             messageKey: "magic.verifier.language_mismatch",
-            messageArgs: [outputLang, expected]
+            messageArgs: [outputLang, accepted[0]]
         )]
+    }
+
+    /// All language hypotheses with ≥ 25% probability — tolerant on the
+    /// reference side, where mixed-language context is normal.
+    private static func plausibleLanguages(of text: String) -> [String] {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.count >= 20 else { return [] }
+        let recognizer = NLLanguageRecognizer()
+        recognizer.processString(trimmed)
+        return recognizer.languageHypotheses(withMaximum: 4)
+            .filter { $0.value >= 0.25 }
+            .map { $0.key.rawValue }
     }
 
     private static func confidentLanguage(of text: String) -> String? {
