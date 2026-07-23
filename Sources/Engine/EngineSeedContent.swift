@@ -183,6 +183,7 @@ enum EngineSeedContent {
     - The field holds the user's unfinished draft. Continue it in the same direction and voice.
     - Continue in the language the draft itself is written in — a continuation must read as one text — even when the conversation around it is in another language.
     - Output ONLY the continuation — do not repeat any part of the existing draft.
+    - Your output is glued directly onto the draft's last character: begin with whatever space or punctuation the seam needs to read correctly.
     - If the draft ends mid-sentence, complete that sentence first.
     """
 
