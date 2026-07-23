@@ -52,10 +52,11 @@ final class MagicToastWindow: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 
-/// The toast belongs to an app that is usually *inactive* — without
-/// first-mouse acceptance the initial click on any control is swallowed by
-/// AppKit as "the activating click" and buttons need a second attempt.
-private final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
+/// The toast and chip panel belong to an app that is usually *inactive* —
+/// without first-mouse acceptance the initial click on any control is
+/// swallowed by AppKit as "the activating click" (activating us and losing
+/// the target app's focus) and buttons need a second attempt.
+final class FirstMouseHostingView<Content: View>: NSHostingView<Content> {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
 }
 

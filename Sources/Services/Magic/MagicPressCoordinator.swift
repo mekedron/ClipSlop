@@ -555,13 +555,9 @@ final class MagicPressCoordinator {
         press.trace.outcome = "insertedAnyway"
         activePress = press
         // Yield focus only when we actually hold it (the user clicked into
-        // the toast). Holding the button on a non-activating panel leaves
-        // the target app frontmost — hiding our windows then would make
-        // macOS promote some *other* app, and on Sonoma+ the re-activation
-        // of the target can be refused, killing the paste.
-        if NSApp.isActive {
-            returnFocusToTarget(excluding: toastWindow)
-        }
+        // the toast) — returnFocusToTarget skips the dance when the app
+        // never became active.
+        returnFocusToTarget(excluding: toastWindow)
         Task { [weak self] in
             // Let the mouse-up's event-tracking session fully close before
             // the synthetic ⌘V — a keystroke posted mid-session routes to
@@ -629,9 +625,14 @@ final class MagicPressCoordinator {
 
     /// The AppState focus dance (see `dismissPopup` for the full rationale):
     /// hide or deactivate, then explicitly re-activate the app the press
-    /// came from. Skipped entirely for self-targeted presses.
+    /// came from. Skipped entirely for self-targeted presses — and whenever
+    /// we never actually became active (a non-activating panel can be key
+    /// while the target app stays frontmost): the target still has focus,
+    /// hiding our windows from the background would make macOS promote some
+    /// *other* app, and on Sonoma+ the re-activation of the target can be
+    /// refused — killing the paste.
     private func returnFocusToTarget(excluding excluded: NSWindow?) {
-        guard !isSelfTargeted else { return }
+        guard !isSelfTargeted, NSApp.isActive else { return }
         let target = appState?.lastExternalApp
         let hasOtherWindow = NSApp.windows.contains { window in
             window.isVisible

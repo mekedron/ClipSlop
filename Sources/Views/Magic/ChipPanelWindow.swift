@@ -17,7 +17,9 @@ struct MagicChip: Identifiable, Sendable {
 /// R2, resolved for V0: number keys and the hint field need key status and
 /// R10 forbids a global event tap, so the panel **takes key on show** — the
 /// QuickAccess precedent — and every dismissal path runs the focus-return
-/// dance. The coordinator re-asserts the captured selection after focus
+/// dance (skipped when we never actually became active, e.g. after a chip
+/// was clicked on the non-activating panel while the target app stayed
+/// frontmost). The coordinator re-asserts the captured selection after focus
 /// returns, and the pre-paste focus re-verification (not timing) is what
 /// keeps a mid-dance mistake non-destructive.
 final class ChipPanelWindow: NSPanel {
@@ -47,8 +49,14 @@ final class ChipPanelWindow: NSPanel {
         isMovableByWindowBackground = false
         collectionBehavior = [.canJoinAllSpaces, .transient]
 
-        let hosting = NSHostingView(rootView: ChipPanelView(
-            chips: chips, onSelect: onSelect, onHint: onHint
+        // FirstMouseHostingView (the MagicToastWindow fix): when activation
+        // was refused on show, a plain hosting view lets AppKit eat the
+        // first chip click as "the activating click" — activating us,
+        // dropping the target app's focus, and turning the eventual insert
+        // into a focus-mismatch copy-only outcome. First-mouse acceptance
+        // makes the click land on the chip without activating anything.
+        let hosting = FirstMouseHostingView(rootView: ChipPanelView(
+            chips: chips, onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
         ))
         contentView = hosting
         setContentSize(hosting.fittingSize)
@@ -84,6 +92,7 @@ private struct ChipPanelView: View {
     let chips: [MagicChip]
     let onSelect: (Int) -> Void
     let onHint: (String) -> Void
+    let onDismiss: () -> Void
 
     @State private var hintText = ""
     @State private var hintHeight: CGFloat = 22
@@ -146,7 +155,8 @@ private struct ChipPanelView: View {
             hintIsEmpty: { hintText.isEmpty },
             hintText: { hintText },
             onSelect: onSelect,
-            onHint: onHint
+            onHint: onHint,
+            onDismiss: onDismiss
         ))
     }
 }
@@ -163,14 +173,17 @@ private struct ChipButtonStyle: ButtonStyle {
 
 /// Window-scoped key monitor (the PopupContentView `KeyEventHandler`
 /// pattern): digits 1–4 select a chip while the hint is empty; Enter submits
-/// the hint (or accepts the top chip when empty). Esc reaches the panel's
-/// `cancelOperation` untouched.
+/// the hint (or accepts the top chip when empty); Esc dismisses. Esc must be
+/// intercepted here — the hint's NSTextView is first responder, and its text
+/// system consumes Escape as `complete:` (the autocompletion popup), so the
+/// panel's `cancelOperation` is never reached.
 private struct ChipKeyHandler: NSViewRepresentable {
     let chipCount: Int
     let hintIsEmpty: () -> Bool
     let hintText: () -> String
     let onSelect: (Int) -> Void
     let onHint: (String) -> Void
+    let onDismiss: () -> Void
 
     func makeNSView(context: Context) -> KeyView {
         let view = KeyView()
@@ -195,6 +208,13 @@ private struct ChipKeyHandler: NSViewRepresentable {
             guard window != nil, monitor == nil else { return }
             monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
                 guard let self, let handler = self.handler else { return event }
+
+                // Escape cancels the press — checked before the window guard
+                // so it works no matter which of our windows is key.
+                if event.keyCode == 53 {
+                    handler.onDismiss()
+                    return nil
+                }
                 guard event.window === self.window else { return event }
 
                 // Physical digit-row key codes 1–4 (layout-independent).
