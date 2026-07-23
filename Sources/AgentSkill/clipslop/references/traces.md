@@ -20,6 +20,7 @@ those fields absent — count them, never assume every line has every key.
 | `fieldState` | string | `empty` \| `draft` \| `selection`. |
 | `selectionClass` | string? | Classifier's top class: `instruction` \| `material` \| `mixed`. |
 | `selectionWasTie` | bool? | Classifier could not decide — forces chips. |
+| `contextBlind` | bool? | Press had no readable context at all (no surroundings, empty field — a blind app) — forces chips; present only when true. |
 | `tier` | string | `exact` \| `domain` \| `base` \| `none`. |
 | `candidateIDs` | [string] | Workflow ids counted at the winning tier (after intent dedup). |
 | `chosenID` | string? | The workflow that ran. |

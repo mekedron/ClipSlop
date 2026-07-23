@@ -1,5 +1,6 @@
 import AppKit
 @preconcurrency import ApplicationServices
+import KeyboardShortcuts
 import os
 
 enum MagicToastPanelReason: Sendable, Equatable {
@@ -29,7 +30,17 @@ final class MagicPressCoordinator {
     }
 
     private(set) var phase: Phase = .idle
-    var toastState: MagicToastState?
+    var toastState: MagicToastState? {
+        didSet {
+            // ⌘↩ is the keyboard twin of hold-to-insert: armed exactly while
+            // the verifier-warning affordance is on screen, never otherwise.
+            if case .panelResult(_, .verifierFailed, _) = toastState {
+                KeyboardShortcuts.enable(.confirmMagicInsert)
+            } else {
+                KeyboardShortcuts.disable(.confirmMagicInsert)
+            }
+        }
+    }
     var toastHovered = false {
         didSet { if !toastHovered { scheduleToastDismissIfSettled() } }
     }
@@ -152,6 +163,13 @@ final class MagicPressCoordinator {
             if !forceChips { selectChip(0) }
             return
         case .toast:
+            // With verifier warnings pending, the press hotkey means "yes,
+            // insert it" — the keyboard twin of hold-to-insert, like the
+            // double-press accept on chips.
+            if case .panelResult(_, .verifierFailed, _) = toastState {
+                insertAnyway()
+                return
+            }
             dismissToast(outcome: nil)
         case .idle:
             break
@@ -266,12 +284,29 @@ final class MagicPressCoordinator {
 
         let panel = ChipPanelWindow(
             chips: Array(chips),
+            note: activePress?.snapshot.contextBlind == true
+                ? Loc.shared.t("magic.chips.context_blind") : nil,
             onSelect: { [weak self] index in Task { @MainActor in self?.selectChip(index) } },
             onHint: { [weak self] hint in Task { @MainActor in self?.submitHint(hint) } },
             onDismiss: { [weak self] in Task { @MainActor in self?.dismissChips() } }
         )
         chipPanel = panel
         panel.show(anchoredAt: anchor)
+        KeyboardShortcuts.enable(.dismissMagicOverlay)
+    }
+
+    /// The global Escape hotkey (armed only while an overlay is visible):
+    /// dismiss whichever Magic surface is up. The Carbon hotkey consumes
+    /// the event, so the target app never sees this Escape — the fix for
+    /// web pages blurring their composer instead of closing our toast.
+    func dismissFloatingOverlay() {
+        if chipPanel != nil {
+            dismissChips()
+        } else if phase == .generating {
+            cancelGeneration()
+        } else if toastWindow != nil {
+            dismissToast(outcome: nil)
+        }
     }
 
     func selectChip(_ index: Int) {
@@ -308,8 +343,10 @@ final class MagicPressCoordinator {
     private func closeChipPanel(returnFocus: Bool) {
         guard let panel = chipPanel else { return }
         chipPanel = nil
+        KeyboardShortcuts.disable(.dismissMagicOverlay)
+        let wasKey = panel.isKeyWindow
         panel.orderOut(nil)
-        if returnFocus { returnFocusToTarget(excluding: nil) }
+        if returnFocus { returnFocusToTarget(excluding: nil, force: wasKey) }
     }
 
     // MARK: - Generation
@@ -593,15 +630,17 @@ final class MagicPressCoordinator {
         }
         let anchor = activePress.map { CaretLocator.anchorRect(for: $0.snapshot) } ?? .zero
         toastWindow?.show(anchoredAt: anchor)
+        KeyboardShortcuts.enable(.dismissMagicOverlay)
     }
 
     private func closeToast() {
         cancelToastDismiss()
+        KeyboardShortcuts.disable(.dismissMagicOverlay)
         toastState = nil
         let wasKey = toastWindow?.isKeyWindow ?? false
         toastWindow?.orderOut(nil)
         toastWindow = nil
-        if wasKey { returnFocusToTarget(excluding: nil) }
+        if wasKey { returnFocusToTarget(excluding: nil, force: true) }
     }
 
     private func scheduleToastDismissIfSettled() {
@@ -631,22 +670,30 @@ final class MagicPressCoordinator {
     /// hiding our windows from the background would make macOS promote some
     /// *other* app, and on Sonoma+ the re-activation of the target can be
     /// refused — killing the paste.
-    private func returnFocusToTarget(excluding excluded: NSWindow?) {
-        guard !isSelfTargeted, NSApp.isActive else { return }
+    /// `force` covers the key-but-inactive case: a non-activating panel that
+    /// held key focus (chip hint field) stole it from the target's window
+    /// without activating us — ordering the panel out does not reliably
+    /// re-focus the web page's composer, so the target must be re-activated
+    /// explicitly. The hide/deactivate half stays gated on `NSApp.isActive`:
+    /// running it while inactive is what promoted random third apps.
+    private func returnFocusToTarget(excluding excluded: NSWindow?, force: Bool = false) {
+        guard !isSelfTargeted, NSApp.isActive || force else { return }
         let target = appState?.lastExternalApp
-        let hasOtherWindow = NSApp.windows.contains { window in
-            window.isVisible
-                && window !== chipPanel
-                && window !== toastWindow
-                && window !== excluded
-                && !(window is ProcessingHUDWindow)
-                && !(window is ErrorHUDWindow)
-                && window.className != "NSStatusBarWindow"
-        }
-        if hasOtherWindow {
-            NSApp.deactivate()
-        } else {
-            NSApp.hide(nil)
+        if NSApp.isActive {
+            let hasOtherWindow = NSApp.windows.contains { window in
+                window.isVisible
+                    && window !== chipPanel
+                    && window !== toastWindow
+                    && window !== excluded
+                    && !(window is ProcessingHUDWindow)
+                    && !(window is ErrorHUDWindow)
+                    && window.className != "NSStatusBarWindow"
+            }
+            if hasOtherWindow {
+                NSApp.deactivate()
+            } else {
+                NSApp.hide(nil)
+            }
         }
         DispatchQueue.main.async {
             target?.activate(options: [.activateAllWindows])

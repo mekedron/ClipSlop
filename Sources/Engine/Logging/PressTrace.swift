@@ -15,6 +15,9 @@ struct PressTrace: Codable, Sendable {
     var fieldState: String
     var selectionClass: String?
     var selectionWasTie: Bool?
+    /// True when the press had no readable context at all (blind app —
+    /// §15.3 forced chips). Written only when true, absent otherwise.
+    var contextBlind: Bool?
     var tier: String
     var candidateIDs: [String]
     var chosenID: String?
@@ -65,6 +68,7 @@ struct PressTrace: Codable, Sendable {
         fieldState = snapshot.fieldState.rawValue
         selectionClass = classification?.top.rawValue
         selectionWasTie = classification?.isTie
+        contextBlind = snapshot.contextBlind ? true : nil
         tier = decision.map { String(describing: $0.tier) } ?? "none"
         candidateIDs = decision?.counted.map(\.id) ?? []
         chosenID = nil

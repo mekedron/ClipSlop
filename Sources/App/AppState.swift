@@ -286,6 +286,12 @@ final class AppState {
         hotkeyService.onTriggerMagicChips = { [weak self] in
             self?.magicCoordinator.handlePress(forceChips: true)
         }
+        hotkeyService.onDismissMagicOverlay = { [weak self] in
+            self?.magicCoordinator.dismissFloatingOverlay()
+        }
+        hotkeyService.onConfirmMagicInsert = { [weak self] in
+            self?.magicCoordinator.insertAnyway()
+        }
         hotkeyService.register()
 
         // Wire prompt shortcut service

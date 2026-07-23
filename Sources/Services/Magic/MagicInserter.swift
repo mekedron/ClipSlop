@@ -110,10 +110,30 @@ final class MagicInserter {
         within timeout: Duration = .milliseconds(600)
     ) async -> Bool {
         let clock = ContinuousClock()
-        let deadline = clock.now + timeout
+        let start = clock.now
+        let deadline = start + timeout
+        var didAttemptRefocus = false
 
         while true {
             if focusMatches(snapshot) { return true }
+            // One active repair before giving up: when our chip panel held
+            // key focus (hint field), macOS does not reliably hand key back
+            // to the target's composer on dismissal — regardless of which
+            // gesture accepted the chip. Re-activating the target app and
+            // re-focusing the remembered AX element is deterministic where
+            // app-level activation dances are not.
+            if !didAttemptRefocus, clock.now - start > .milliseconds(200) {
+                didAttemptRefocus = true
+                if NSWorkspace.shared.frontmostApplication?.processIdentifier != snapshot.app.pid {
+                    NSRunningApplication(processIdentifier: snapshot.app.pid)?
+                        .activate(options: [])
+                }
+                if let expected = snapshot.focusedElement?.element {
+                    AXUIElementSetAttributeValue(
+                        expected, kAXFocusedAttribute as CFString, kCFBooleanTrue
+                    )
+                }
+            }
             guard clock.now < deadline else { return false }
             try? await Task.sleep(for: .milliseconds(50))
         }

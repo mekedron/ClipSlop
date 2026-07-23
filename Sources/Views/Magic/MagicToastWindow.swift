@@ -172,6 +172,10 @@ struct MagicToastView: View {
                 if reason == .verifierFailed {
                     holdToInsertButton
                         .accessibilityIdentifier("magic.toast.insert_anyway")
+                    // Keyboard twin of the hold — symbols, no locale needed.
+                    Text("⌘↩")
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
                 }
                 Spacer()
             }

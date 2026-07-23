@@ -44,6 +44,24 @@ extension KeyboardShortcuts.Name {
         default: .init(.m, modifiers: [.command, .control])
     )
 
+    /// Bare Escape, armed ONLY while a Magic overlay (chip panel or toast)
+    /// is on screen — the coordinator enables/disables it around their
+    /// lifetime. A Carbon hotkey consumes the event, so the page under the
+    /// overlay never loses focus or closes its own dialogs on the Escape
+    /// that dismissed ours. Never shown in Settings, not user-recordable.
+    static let dismissMagicOverlay = Self(
+        "dismissMagicOverlay",
+        default: .init(.escape)
+    )
+
+    /// ⌘↩, armed ONLY while the toast shows the hold-to-insert affordance
+    /// (verifier warnings pending) — the keyboard equivalent of the hold.
+    /// Never shown in Settings, not user-recordable.
+    static let confirmMagicInsert = Self(
+        "confirmMagicInsert",
+        default: .init(.return, modifiers: [.command])
+    )
+
     /// Modifier variant that always shows the chip panel (§3.3 override).
     static let triggerMagicChips = Self(
         "triggerMagicChips",

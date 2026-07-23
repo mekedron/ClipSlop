@@ -109,6 +109,16 @@ struct MagicSnapshot: Sendable {
     /// `kAXErrorCannotComplete` occurrences during capture (R4 frequency).
     var axCannotComplete: Int = 0
 
+    /// True when the press carries ZERO content signal: no surrounding text
+    /// was collected and the field's own value and selection are empty.
+    /// Typical for apps that do not publish content via Accessibility
+    /// (Telegram-class composers) — the model would be flying blind, so the
+    /// router always asks and the chip panel says why (§15.3, never silent).
+    var contextBlind: Bool {
+        let surroundingEmpty = surrounding?.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true
+        return surroundingEmpty && fieldState == .empty
+    }
+
     /// Field state for router `when` predicates. Selection wins; otherwise
     /// whitespace-only content counts as empty.
     var fieldState: FieldState {

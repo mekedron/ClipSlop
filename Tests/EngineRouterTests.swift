@@ -23,6 +23,21 @@ struct EngineRouterTests {
         #expect(decision.situationClass == "exact/linkedin.com/empty")
     }
 
+    @Test func contextBlindPressAlwaysAsks() throws {
+        // Same press as the silent LinkedIn case above, but with NOTHING
+        // readable (a blind app or an unreadable page): even a confident
+        // single candidate must ask — the model has no grounding (§15.3).
+        let decision = try MagicTestSupport.seedRoute(MagicTestSupport.makeSnapshot(
+            bundleId: "com.google.Chrome",
+            url: "https://www.linkedin.com/feed/update/urn:li:activity:123/"
+        ))
+        #expect(decision.counted.map(\.id) == ["comment.social"])
+        guard case .chips = decision.presentation else {
+            Issue.record("blind press must show chips, not insert silently")
+            return
+        }
+    }
+
     @Test func gmailEmptyFieldRoutesToReplyThreadWeb() throws {
         let decision = try MagicTestSupport.seedRoute(MagicTestSupport.makeSnapshot(
             bundleId: "com.apple.Safari",
@@ -122,7 +137,7 @@ struct EngineRouterTests {
         }
     }
 
-    @Test func materialSelectionRoutesToRewrite() throws {
+    @Test func materialSelectionAsksAdaptVersusRewrite() throws {
         let paragraph = """
         The quarterly numbers came in above plan again. Renewals held at 96 \
         percent and the enterprise pipeline doubled. The board asked for churn \
@@ -138,7 +153,15 @@ struct EngineRouterTests {
             ),
             classification: classification
         )
-        #expect(decision.counted.map(\.id) == ["rewrite.selection"])
+        // Since adapt.selection (§ user request 2026-07-24): a material
+        // selection is a genuine two-way choice — fit the message to the
+        // page's language/register, or restructure it — so both count and
+        // chips ask, adapt first (priority 65 vs 60).
+        #expect(decision.counted.map(\.id) == ["adapt.selection", "rewrite.selection"])
+        guard case .chips = decision.presentation else {
+            Issue.record("material selection should ask adapt-vs-rewrite")
+            return
+        }
     }
 
     // MARK: - Chip candidates and determinism

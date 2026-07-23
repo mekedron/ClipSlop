@@ -292,8 +292,8 @@ struct SeedContentTests {
     @Test func allSeedWorkflowsParseAndResolve() throws {
         let (workflows, errors) = try MagicTestSupport.seedCatalog()
         #expect(errors.filter { !$0.isWarning }.isEmpty, "seed errors: \(errors.map(\.message))")
-        // 12 files minus 1 abstract base.generation.
-        #expect(workflows.count == 11)
+        // 13 files minus 1 abstract base.generation.
+        #expect(workflows.count == 12)
         #expect(workflows.allSatisfy { !$0.card.intents.isEmpty })
         #expect(workflows.allSatisfy { $0.card.summary?.isEmpty == false })
         // Every non-base seed chains back to base.generation's conduct rules.

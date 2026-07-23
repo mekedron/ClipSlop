@@ -90,7 +90,10 @@ enum EngineRouter {
                 tier: topTier, snapshot: snapshot, classification: classification
             )
         )
-        if counted.count == 1, classification?.isTie != true {
+        // A context-blind press (no surroundings, empty field — the app gave
+        // us nothing to read) never proceeds silently: the model has no
+        // grounding, so the user must steer with a chip or a hint.
+        if counted.count == 1, classification?.isTie != true, !snapshot.contextBlind {
             decision = RoutingDecision(
                 counted: counted, alternatives: alternatives, tier: topTier,
                 presentation: .silent(chosen: counted[0]),

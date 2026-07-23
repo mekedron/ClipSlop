@@ -35,6 +35,7 @@ enum EngineSeedContent {
         ("workflows/continue.draft.md", continueDraft),
         ("workflows/instruct.selection.md", instructSelection),
         ("workflows/rewrite.selection.md", rewriteSelection),
+        ("workflows/adapt.selection.md", adaptSelection),
     ]
 
     // MARK: - Engine config
@@ -421,5 +422,32 @@ enum EngineSeedContent {
     ## Rules
     - When the selection is the entire field, this is a full rewrite: restructure freely, keep every fact.
     - When it is a fragment, splice cleanly: the rewritten text must read naturally against what surrounds it.
+    """
+
+    static let adaptSelection = """
+    ---
+    \(workflowHeader)
+    id: adapt.selection
+    kind: workflow
+    mode: direct
+    version: 1
+    extends: base.generation
+    priority: 65
+    summary: "Fit my selection to this page"
+    intents: [adapt, rewrite]
+    when:
+      field.state: [selection]
+      selection: [material, mixed]
+    ---
+    ## Rules
+    - The selection is the user's finished message — it already says what they want to say. Deliver the SAME message, fitted to where it is about to be sent. Never an answer to it, never a reaction.
+    - Fit the language: when the conversation or page around the field is in another language, translate so the reader never suspects the message was drafted in a different one.
+    - Fit the register and format: chat stays compact and casual, email keeps its greeting and sign-off conventions, a comment matches the thread's tone.
+    - Keep every fact, name, number, and link, and the message's order and intent. No additions, no summarizing, no new arguments.
+    - With no readable context around the field, stay in the selection's own language and just make it clean and natural.
+
+    ## Anti-examples
+    - Replying to the selected message instead of adapting it — never.
+    - "Improving" the argument, or adding politeness the user did not write — never.
     """
 }

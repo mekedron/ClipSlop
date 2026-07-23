@@ -28,6 +28,7 @@ final class ChipPanelWindow: NSPanel {
     @MainActor
     init(
         chips: [MagicChip],
+        note: String? = nil,
         onSelect: @escaping (Int) -> Void,
         onHint: @escaping (String) -> Void,
         onDismiss: @escaping () -> Void
@@ -56,7 +57,7 @@ final class ChipPanelWindow: NSPanel {
         // into a focus-mismatch copy-only outcome. First-mouse acceptance
         // makes the click land on the chip without activating anything.
         let hosting = FirstMouseHostingView(rootView: ChipPanelView(
-            chips: chips, onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
+            chips: chips, note: note, onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
         ))
         contentView = hosting
         setContentSize(hosting.fittingSize)
@@ -90,6 +91,7 @@ final class ChipPanelWindow: NSPanel {
 
 private struct ChipPanelView: View {
     let chips: [MagicChip]
+    let note: String?
     let onSelect: (Int) -> Void
     let onHint: (String) -> Void
     let onDismiss: () -> Void
@@ -99,6 +101,15 @@ private struct ChipPanelView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            if let note {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Image(systemName: "eye.slash")
+                        .font(.caption)
+                    Text(note)
+                        .font(.caption)
+                }
+                .foregroundStyle(.secondary)
+            }
             ForEach(chips) { chip in
                 Button {
                     onSelect(chip.index)
