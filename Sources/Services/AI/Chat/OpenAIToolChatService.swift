@@ -34,7 +34,7 @@ struct OpenAIToolChatService: ToolChatService {
             "temperature": .number(config.temperature),
             "tools": .array(tools.map(Self.toolJSON)),
         ]
-        if let reasoningEffort = config.ollamaOpenAICompatibleReasoningEffort {
+        if let reasoningEffort = config.effectiveReasoningEffort {
             bodyObject["reasoning_effort"] = .string(reasoningEffort)
         }
         request.httpBody = try JSONEncoder().encode(JSONValue.object(bodyObject))

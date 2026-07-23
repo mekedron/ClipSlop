@@ -97,7 +97,7 @@ struct OpenAICompatibleService: AIService {
             maxTokens: config.maxTokens,
             temperature: config.temperature,
             stream: stream,
-            reasoningEffort: config.ollamaOpenAICompatibleReasoningEffort
+            reasoningEffort: config.effectiveReasoningEffort
         )
 
         request.httpBody = try JSONEncoder().encode(body)

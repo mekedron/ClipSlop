@@ -22,7 +22,7 @@ ClipSlop will list every model Ollama has pulled.
 
 ## Settings
 
-- **Reasoning Effort** — controls Ollama's OpenAI-compatible `reasoning_effort` field for this provider entry. Choose **Unset** to omit the field, or send one of Ollama's supported values: `none`, `low`, `medium`, `high`, or `max`.
+- **Reasoning Effort** — sets the OpenAI-compatible `reasoning_effort` request field for this provider entry. Choose **Unset** to omit the field and keep Ollama's default behavior, or pick one of the values Ollama accepts: `none`, `low`, `medium`, `high`, or `max`. The same setting appears on other reasoning-capable providers with the values their API supports.
 
 ## Recommended models for this workload
 
