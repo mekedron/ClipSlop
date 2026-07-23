@@ -1,0 +1,193 @@
+import Foundation
+
+/// Everything a press needs, extracted on the main actor so the rest of the
+/// pipeline can run off it (the `PromptRunner` plan/run pattern).
+struct MagicPressPlan: Sendable {
+    let catalog: WorkflowCatalog
+    let core: CoreFileSet
+    let provider: AIProviderConfig
+    let workflowLoadErrors: [WorkflowLoadError]
+}
+
+struct MagicPressResult: Sendable {
+    /// Trimmed output, ready for the Inserter.
+    let output: String
+    let verdict: VerifierVerdict
+    let assembled: AssembledPrompt
+    /// Outcome unstamped — the press band records what actually happened
+    /// (inserted / cancelled / insert-anyway…) and submits the trace once.
+    let traceDraft: PressTrace
+}
+
+/// Dry-run (§17): the full decision and assembly without executing anything.
+struct DryRunReport: Codable, Sendable {
+    let situationClass: String
+    let tier: String
+    let grammarRow: String
+    let candidateIDs: [String]
+    let alternativeIDs: [String]
+    let presentation: String
+    let chosenID: String?
+    let workflowChain: [String]
+    let slots: [AssembledSlot]
+    let totalTokens: Int
+    let providerName: String
+    let modelID: String
+}
+
+enum MagicPressPipelineError: LocalizedError {
+    case noProvider
+    case noWorkflows
+
+    var errorDescription: String? {
+        switch self {
+        case .noProvider:
+            String(localized: "No AI provider is configured for the Magic Button.")
+        case .noWorkflows:
+            String(localized: "No workflows could be loaded from the workflows folder.")
+        }
+    }
+}
+
+/// The engine seam the press band calls: `plan` on the main actor, then
+/// `route` (pure) and `execute` (async, one model call — P1) off it.
+enum MagicPressPipeline {
+    @MainActor
+    static func plan(
+        workflowStore: WorkflowStore,
+        coreStore: CoreFileStore,
+        roleStore: EngineRoleStore,
+        providerStore: ProviderStore
+    ) throws -> MagicPressPlan {
+        workflowStore.reloadIfChanged()
+        coreStore.reloadIfChanged()
+
+        guard let provider = roleStore.provider(for: .generationMagic, in: providerStore) else {
+            throw MagicPressPipelineError.noProvider
+        }
+        guard !workflowStore.catalog.workflows.isEmpty else {
+            throw MagicPressPipelineError.noWorkflows
+        }
+
+        return MagicPressPlan(
+            catalog: workflowStore.catalog,
+            core: coreStore.files,
+            provider: provider,
+            workflowLoadErrors: workflowStore.loadErrors
+        )
+    }
+
+    /// Classification runs only when there is a selection to classify.
+    static func classify(_ snapshot: MagicSnapshot) -> SelectionClassification? {
+        guard let selection = snapshot.field?.selection, !selection.text.isEmpty else { return nil }
+        return SelectionClassifier.classify(selection.text)
+    }
+
+    static func route(
+        plan: MagicPressPlan,
+        snapshot: MagicSnapshot
+    ) -> (decision: RoutingDecision, classification: SelectionClassification?) {
+        let classification = classify(snapshot)
+        let decision = EngineRouter.route(
+            catalog: plan.catalog, snapshot: snapshot, classification: classification
+        )
+        return (decision, classification)
+    }
+
+    /// The only model call on the press path (P1). Off-main; non-streaming
+    /// in V0 (R7). Never touches the field — insertion is the press band's
+    /// job, after it sees the verdict (P8).
+    static func execute(
+        plan: MagicPressPlan,
+        snapshot: MagicSnapshot,
+        workflow: ResolvedWorkflow,
+        decision: RoutingDecision,
+        classification: SelectionClassification?,
+        hint: String?
+    ) async throws -> MagicPressResult {
+        let clock = ContinuousClock()
+        var trace = PressTrace(snapshot: snapshot, decision: decision, classification: classification)
+        trace.chosenID = workflow.id
+        trace.hintUsed = (hint?.isEmpty == false)
+        trace.providerType = plan.provider.providerType.rawValue
+        trace.modelID = plan.provider.modelID
+
+        let assembleStart = clock.now
+        let assembled = PromptAssembler.assemble(
+            workflow: workflow,
+            snapshot: snapshot,
+            core: plan.core,
+            classification: classification,
+            hint: hint
+        )
+        trace.latencyMs.assemble = Self.ms(clock.now - assembleStart)
+        trace.slotTokens = Dictionary(uniqueKeysWithValues: assembled.slots.map { ($0.id.rawValue, $0.tokensEstimated) })
+        trace.totalTokens = assembled.totalTokensEstimated
+
+        let generateStart = clock.now
+        let service = AIServiceFactory.service(for: plan.provider.providerType)
+        let raw = try await service.process(
+            text: assembled.userMessage,
+            systemPrompt: assembled.systemPrompt,
+            config: plan.provider
+        )
+        trace.latencyMs.generate = Self.ms(clock.now - generateStart)
+
+        let output = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !output.isEmpty else { throw AIServiceError.emptyResponse }
+
+        let verifyStart = clock.now
+        let verdict = DeterministicVerifier.verify(
+            output: output,
+            workflow: workflow,
+            prompt: assembled,
+            snapshot: snapshot,
+            constraints: plan.core.constraints
+        )
+        trace.latencyMs.verify = Self.ms(clock.now - verifyStart)
+        trace.verifierPassed = verdict.passed
+        trace.verifierChecks = verdict.warnings.map(\.check.rawValue)
+
+        return MagicPressResult(output: output, verdict: verdict, assembled: assembled, traceDraft: trace)
+    }
+
+    /// Plan → route → assemble, and stop. Nothing executes, nothing is sent.
+    static func dryRun(plan: MagicPressPlan, snapshot: MagicSnapshot) -> DryRunReport? {
+        let (decision, classification) = route(plan: plan, snapshot: snapshot)
+        guard let workflow = decision.top else { return nil }
+
+        let assembled = PromptAssembler.assemble(
+            workflow: workflow,
+            snapshot: snapshot,
+            core: plan.core,
+            classification: classification,
+            hint: nil
+        )
+
+        let presentation: String
+        switch decision.presentation {
+        case .silent: presentation = "silent"
+        case .chips: presentation = "chips"
+        }
+
+        return DryRunReport(
+            situationClass: decision.situationClass,
+            tier: String(describing: decision.tier),
+            grammarRow: String(describing: snapshot.grammarRow),
+            candidateIDs: decision.counted.map(\.id),
+            alternativeIDs: decision.alternatives.map(\.id),
+            presentation: presentation,
+            chosenID: workflow.id,
+            workflowChain: workflow.chain,
+            slots: assembled.slots,
+            totalTokens: assembled.totalTokensEstimated,
+            providerName: plan.provider.name,
+            modelID: plan.provider.modelID
+        )
+    }
+
+    private static func ms(_ duration: Duration) -> Int {
+        Int(duration.components.seconds * 1000)
+            + Int(duration.components.attoseconds / 1_000_000_000_000_000)
+    }
+}
