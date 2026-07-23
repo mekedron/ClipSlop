@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Bejelentkezési URL másolása";
 "settings.providers.temperature" = "Hőmérséklet";
 "settings.providers.reasoning_effort" = "Érvelési mélység";
+"settings.providers.reasoning_effort.unset" = "Nincs beállítva";
+"settings.providers.reasoning_effort.none" = "Nincs";
+"settings.providers.reasoning_effort.low" = "Alacsony";
+"settings.providers.reasoning_effort.medium" = "Közepes";
+"settings.providers.reasoning_effort.high" = "Magas";
+"settings.providers.reasoning_effort.xhigh" = "Extra magas";
+"settings.providers.reasoning_effort.max" = "Maximális";
 "settings.providers.test" = "Tesztelés";
 "settings.providers.test_ok" = "Kapcsolat OK";
 "settings.providers.delete" = "Törlés";

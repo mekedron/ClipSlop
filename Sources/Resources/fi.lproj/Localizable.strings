@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Kopioi kirjautumis-URL";
 "settings.providers.temperature" = "Lämpötila";
 "settings.providers.reasoning_effort" = "Päättelyn taso";
+"settings.providers.reasoning_effort.unset" = "Ei asetettu";
+"settings.providers.reasoning_effort.none" = "Ei lainkaan";
+"settings.providers.reasoning_effort.low" = "Matala";
+"settings.providers.reasoning_effort.medium" = "Keskitaso";
+"settings.providers.reasoning_effort.high" = "Korkea";
+"settings.providers.reasoning_effort.xhigh" = "Erittäin korkea";
+"settings.providers.reasoning_effort.max" = "Maksimi";
 "settings.providers.test" = "Testaa";
 "settings.providers.test_ok" = "Yhteys OK";
 "settings.providers.delete" = "Poista";

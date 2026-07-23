@@ -34,8 +34,8 @@ struct ChatGPTToolChatService: ToolChatService {
             "stream": .bool(true),
             "store": .bool(false),
         ]
-        if let effort = config.reasoningEffort {
-            bodyObject["reasoning"] = .object(["effort": .string(effort.rawValue)])
+        if let effort = config.effectiveReasoningEffort {
+            bodyObject["reasoning"] = .object(["effort": .string(effort)])
         }
         request.httpBody = try JSONEncoder().encode(JSONValue.object(bodyObject))
 

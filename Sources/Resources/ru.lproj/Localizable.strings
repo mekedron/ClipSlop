@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Скопировать URL для входа";
 "settings.providers.temperature" = "Температура";
 "settings.providers.reasoning_effort" = "Глубина рассуждения";
+"settings.providers.reasoning_effort.unset" = "Не задано";
+"settings.providers.reasoning_effort.none" = "Нет";
+"settings.providers.reasoning_effort.low" = "Низкий";
+"settings.providers.reasoning_effort.medium" = "Средний";
+"settings.providers.reasoning_effort.high" = "Высокий";
+"settings.providers.reasoning_effort.xhigh" = "Сверхвысокий";
+"settings.providers.reasoning_effort.max" = "Максимальный";
 "settings.providers.test" = "Проверить";
 "settings.providers.test_ok" = "Подключение OK";
 "settings.providers.delete" = "Удалить";

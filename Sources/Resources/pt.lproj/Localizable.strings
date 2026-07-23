@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Copiar URL de início de sessão";
 "settings.providers.temperature" = "Temperatura";
 "settings.providers.reasoning_effort" = "Esforço de raciocínio";
+"settings.providers.reasoning_effort.unset" = "Não definido";
+"settings.providers.reasoning_effort.none" = "Nenhum";
+"settings.providers.reasoning_effort.low" = "Baixo";
+"settings.providers.reasoning_effort.medium" = "Médio";
+"settings.providers.reasoning_effort.high" = "Alto";
+"settings.providers.reasoning_effort.xhigh" = "Extra alto";
+"settings.providers.reasoning_effort.max" = "Máximo";
 "settings.providers.test" = "Testar";
 "settings.providers.test_ok" = "Ligação OK";
 "settings.providers.delete" = "Eliminar";

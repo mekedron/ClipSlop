@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Zkopírovat přihlašovací URL";
 "settings.providers.temperature" = "Teplota";
 "settings.providers.reasoning_effort" = "Úsilí uvažování";
+"settings.providers.reasoning_effort.unset" = "Nenastaveno";
+"settings.providers.reasoning_effort.none" = "Žádné";
+"settings.providers.reasoning_effort.low" = "Nízká";
+"settings.providers.reasoning_effort.medium" = "Střední";
+"settings.providers.reasoning_effort.high" = "Vysoká";
+"settings.providers.reasoning_effort.xhigh" = "Velmi vysoká";
+"settings.providers.reasoning_effort.max" = "Maximální";
 "settings.providers.test" = "Otestovat";
 "settings.providers.test_ok" = "Připojení OK";
 "settings.providers.delete" = "Smazat";

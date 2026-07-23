@@ -238,6 +238,13 @@
 "settings.providers.chatgpt.copy_url" = "Copy sign-in URL";
 "settings.providers.temperature" = "Temperature";
 "settings.providers.reasoning_effort" = "Reasoning Effort";
+"settings.providers.reasoning_effort.unset" = "Unset";
+"settings.providers.reasoning_effort.none" = "None";
+"settings.providers.reasoning_effort.low" = "Low";
+"settings.providers.reasoning_effort.medium" = "Medium";
+"settings.providers.reasoning_effort.high" = "High";
+"settings.providers.reasoning_effort.xhigh" = "Extra High";
+"settings.providers.reasoning_effort.max" = "Max";
 "settings.providers.test" = "Test";
 "settings.providers.test_ok" = "Connection OK";
 "settings.providers.delete" = "Delete";

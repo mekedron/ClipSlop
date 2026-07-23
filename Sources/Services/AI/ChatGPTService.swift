@@ -93,8 +93,8 @@ struct ChatGPTService: AIService {
             request.setValue(accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
         }
 
-        let reasoning: ResponsesAPIRequest.Reasoning? = config.reasoningEffort.map {
-            ResponsesAPIRequest.Reasoning(effort: $0.rawValue)
+        let reasoning: ResponsesAPIRequest.Reasoning? = config.effectiveReasoningEffort.map {
+            ResponsesAPIRequest.Reasoning(effort: $0)
         }
 
         let body = ResponsesAPIRequest(

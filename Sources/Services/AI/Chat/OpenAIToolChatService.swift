@@ -27,14 +27,17 @@ struct OpenAIToolChatService: ToolChatService {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        let body: JSONValue = .object([
+        var bodyObject: [String: JSONValue] = [
             "model": .string(config.modelID),
             "messages": .array(Self.messagesJSON(system: systemPrompt, turns: messages)),
             "max_tokens": .int(config.maxTokens),
             "temperature": .number(config.temperature),
             "tools": .array(tools.map(Self.toolJSON)),
-        ])
-        request.httpBody = try JSONEncoder().encode(body)
+        ]
+        if let reasoningEffort = config.effectiveReasoningEffort {
+            bodyObject["reasoning_effort"] = .string(reasoningEffort)
+        }
+        request.httpBody = try JSONEncoder().encode(JSONValue.object(bodyObject))
 
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {

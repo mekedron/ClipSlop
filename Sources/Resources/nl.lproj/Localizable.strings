@@ -196,6 +196,13 @@
 "settings.providers.chatgpt.copy_url" = "Inlog-URL kopiëren";
 "settings.providers.temperature" = "Temperatuur";
 "settings.providers.reasoning_effort" = "Redeneerinspanning";
+"settings.providers.reasoning_effort.unset" = "Niet ingesteld";
+"settings.providers.reasoning_effort.none" = "Geen";
+"settings.providers.reasoning_effort.low" = "Laag";
+"settings.providers.reasoning_effort.medium" = "Gemiddeld";
+"settings.providers.reasoning_effort.high" = "Hoog";
+"settings.providers.reasoning_effort.xhigh" = "Extra hoog";
+"settings.providers.reasoning_effort.max" = "Maximaal";
 "settings.providers.test" = "Testen";
 "settings.providers.test_ok" = "Verbinding OK";
 "settings.providers.delete" = "Verwijderen";
