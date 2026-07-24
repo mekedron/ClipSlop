@@ -1,12 +1,26 @@
 import Foundation
 
-/// Drives the prompt-library assistant: owns the conversation, runs the agent
+/// The common shape of the assistant's tool executors: proposal for the
+/// confirmation card, execution, and the read-only activity label.
+@MainActor
+protocol AssistantToolExecutor: AnyObject {
+    func makeProposal(for call: ToolCallRequest) throws -> ToolProposal
+    func perform(_ call: ToolCallRequest) throws -> String
+    func activityLabel(for call: ToolCallRequest) -> String
+}
+
+extension PromptLibraryToolExecutor: AssistantToolExecutor {}
+extension EngineToolExecutor: AssistantToolExecutor {}
+
+/// Drives the Settings Assistant: owns the conversation, runs the agent
 /// loop (send → tool calls → confirm/execute → repeat until plain text), and
 /// exposes a UI transcript. Mutating tools pause the loop for a confirmation
-/// card via a `CheckedContinuation`.
+/// card via a `CheckedContinuation`. Tool calls dispatch to two executors:
+/// the prompt library (`PromptLibraryToolExecutor`) and the Magic Button
+/// engine (`EngineToolExecutor`), unioned into one registry per request.
 @MainActor
 @Observable
-final class PromptAssistantService {
+final class SettingsAssistantService {
 
     /// What the chat window renders, in order.
     enum ChatItem: Identifiable {
@@ -42,32 +56,30 @@ final class PromptAssistantService {
     /// Set by AppState after init (same pattern as PromptShortcutService).
     weak var appState: AppState?
 
+    /// The assistant dispatches through the `chat.assistant` engine role
+    /// (§14) — same store the Magic settings edit, persisted in roles.yaml.
+    private var roleStore: EngineRoleStore? { appState?.magicCoordinator.roleStore }
+
     /// Provider chosen for this chat (nil = follow the app default). Only
     /// tool-calling-capable providers are offered.
-    var selectedProviderID: UUID?
+    var selectedProviderID: UUID? { roleStore?.mapping[.chatAssistant] }
 
     /// All configured providers that can drive the assistant.
     var toolCallingProviders: [AIProviderConfig] {
         appState?.providerStore.providers.filter { $0.providerType.supportsToolCalling } ?? []
     }
 
-    /// The provider the assistant will actually use: the explicit selection if
-    /// it's still valid, otherwise the app default when it qualifies, otherwise
-    /// the first tool-calling provider. `nil` means none can do tool calling.
+    /// The provider the assistant will actually use, via role resolution:
+    /// the bound provider if still valid, else the app default when it
+    /// qualifies, else the first tool-calling provider. `nil` means none
+    /// can do tool calling.
     var activeProvider: AIProviderConfig? {
-        let candidates = toolCallingProviders
-        if let id = selectedProviderID, let match = candidates.first(where: { $0.id == id }) {
-            return match
-        }
-        if let defaultProvider = appState?.providerStore.defaultProvider,
-           candidates.contains(where: { $0.id == defaultProvider.id }) {
-            return defaultProvider
-        }
-        return candidates.first
+        guard let appState, let roleStore else { return nil }
+        return roleStore.provider(for: .chatAssistant, in: appState.providerStore)
     }
 
     func selectProvider(_ id: UUID) {
-        selectedProviderID = id
+        roleStore?.setProvider(id, for: .chatAssistant)
     }
 
     // MARK: - Loop internals (not observed)
@@ -141,9 +153,19 @@ final class PromptAssistantService {
             providerStore: appState.providerStore,
             shortcutService: appState.promptShortcutService
         )
+        let engineExecutor = EngineToolExecutor(
+            stores: .init(
+                workflowStore: appState.magicCoordinator.workflowStore,
+                coreStore: appState.magicCoordinator.coreStore,
+                configStore: appState.magicCoordinator.configStore,
+                roleStore: appState.magicCoordinator.roleStore,
+                providerStore: appState.providerStore
+            )
+        )
         let systemPrompt = AssistantSystemPrompt.build(
             providerNames: appState.providerStore.providers.map(\.name)
         )
+        let tools = PromptLibraryTools.all + EngineTools.all
 
         for _ in 0..<maxIterations {
             if Task.isCancelled { phase = .idle; return }
@@ -154,7 +176,7 @@ final class PromptAssistantService {
                 reply = try await service.send(
                     messages: history,
                     systemPrompt: systemPrompt,
-                    tools: PromptLibraryTools.all,
+                    tools: tools,
                     config: provider
                 )
             } catch {
@@ -187,7 +209,9 @@ final class PromptAssistantService {
             var results: [ToolResult] = []
             for call in reply.toolCalls {
                 if Task.isCancelled { break }
-                results.append(await execute(call, executor: executor))
+                let target: any AssistantToolExecutor =
+                    EngineTools.contains(call.name) ? engineExecutor : executor
+                results.append(await execute(call, executor: target))
             }
 
             if Task.isCancelled { phase = .idle; return }
@@ -204,9 +228,12 @@ final class PromptAssistantService {
         phase = .idle
     }
 
-    private func execute(_ call: ToolCallRequest, executor: PromptLibraryToolExecutor) async -> ToolResult {
+    private func execute(_ call: ToolCallRequest, executor: any AssistantToolExecutor) async -> ToolResult {
+        let isMutating = EngineTools.contains(call.name)
+            ? EngineTools.isMutating(call.name)
+            : PromptLibraryTools.isMutating(call.name)
         // Read-only tools run immediately with a small activity row.
-        guard PromptLibraryTools.isMutating(call.name) else {
+        guard isMutating else {
             do {
                 let output = try executor.perform(call)
                 items.append(.toolActivity(id: UUID(), text: executor.activityLabel(for: call)))

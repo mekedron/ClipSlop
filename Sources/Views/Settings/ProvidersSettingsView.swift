@@ -126,21 +126,21 @@ struct ProvidersSettingsView: View {
                         justAddedChatGPTProviderID = nil
                     }
                 }
-            } else {
+            } else if providerStore.providers.isEmpty {
                 VStack(spacing: 12) {
-                    if providerStore.providers.isEmpty {
-                        Image(systemName: "plus.circle")
-                            .font(.system(size: 32))
-                            .foregroundStyle(.secondary)
-                        Button(loc.t("settings.providers.add_first")) {
-                            showAddProvider = true
-                        }
-                        .buttonStyle(.borderedProminent)
-                    } else {
-                        Text(loc.t("settings.providers.select")).foregroundStyle(.secondary)
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.secondary)
+                    Button(loc.t("settings.providers.add_first")) {
+                        showAddProvider = true
                     }
+                    .buttonStyle(.borderedProminent)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // No selection → the tab's overview: model routing (§15.1).
+                RoutingSettingsView(appState: appState)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .sheet(isPresented: $showAddProvider) {

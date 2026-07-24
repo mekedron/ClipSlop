@@ -31,11 +31,31 @@ struct MenuBarView: View {
             appState.showQuickAccess()
         }
 
-        menuButton(loc.t("menu.assistant"), shortcut: .togglePromptAssistant) {
-            appState.showAssistant()
+        menuButton(loc.t("menu.magic"), shortcut: .triggerMagic) {
+            appState.magicCoordinator.pressFromMenu(forceChips: false)
+        }
+
+        menuButton(loc.t("menu.magic_ask"), shortcut: .triggerMagicChips) {
+            appState.magicCoordinator.pressFromMenu(forceChips: true)
         }
 
         PromptShortcutsMenu(appState: appState, version: appState.promptShortcutsVersion)
+
+        #if DEBUG
+        Divider()
+        // Dry-run (§17): capture + route + assemble for the focused field,
+        // report to the clipboard, execute nothing.
+        Button("Magic Dry-Run to Clipboard") {
+            appState.magicCoordinator.dryRunToClipboard()
+        }
+        Button("Magic Trace Stats to Clipboard") {
+            appState.magicCoordinator.traceStatsToClipboard()
+        }
+        // R1 spike: real inserter, canned string, no LLM call.
+        Button("Magic Insert Test String") {
+            appState.magicCoordinator.insertTestString()
+        }
+        #endif
 
         Divider()
 
@@ -47,6 +67,12 @@ struct MenuBarView: View {
         }
 
         Divider()
+
+        // The assistant sits next to Settings on purpose: it IS the
+        // conversational way to change settings.
+        menuButton(loc.t("menu.assistant"), shortcut: .toggleSettingsAssistant) {
+            appState.showAssistant()
+        }
 
         Button(loc.t("menu.settings")) {
             appState.openSettings()

@@ -18,7 +18,7 @@ Work everywhere on macOS — even when ClipSlop is in the background.
 | `⌃⌘V`    | Process clipboard                   |
 | `⌃⌘N`    | Blank editor                        |
 | `⇧⌘2`    | Screen capture (OCR)                |
-| `⌃⌘⌥P`   | Prompt Assistant                    |
+| `⌃⌘⌥P`   | Settings Assistant                  |
 
 Default per-prompt global shortcuts:
 

@@ -24,7 +24,7 @@ ClipSlop is a free, open-source AI writing tool for macOS that works in any app.
 - [Why ClipSlop?](#why-clipslop)
 - [Demos](#demos)
 - [How it works](#how-it-works)
-- [Prompt Assistant](#prompt-assistant)
+- [Settings Assistant](#settings-assistant)
 - [Built-in prompts](#built-in-prompts)
 - [Keyboard shortcuts](#keyboard-shortcuts)
 - [Features](#features)
@@ -123,18 +123,19 @@ Select text → ⌃⌘C → Navigate prompts with keys → Chain transformations
 4. **History** — Arrow keys navigate the full transformation chain. Jump to any step, branch off.
 5. **Use** — Copy (`⌘C`), edit (`⌘E`), save (`⌘S`), or keep chaining.
 
-## Prompt Assistant
+## Settings Assistant
 
-An always-on-top chat window where an AI assistant edits your **prompt library** for you — so you don't have to dig through Settings.
+An always-on-top chat window where an AI assistant manages ClipSlop for you — your **prompt library** and the whole **Magic Button engine** — so you don't have to dig through Settings.
 
 ```
 ⌃⌘⌥P → "the grammar prompt doesn't handle passive voice — fix it" → Approve
 ```
 
-Open it with **`⌃⌘⌥P`** (reconfigurable in Settings → General → Keyboard Shortcuts) or the **Prompt Assistant** item in the menu-bar menu. Ask in plain language — "make a Legal folder and move the contract prompts into it" — and the assistant finds the prompt, folder, or setting and proposes the edit.
+Open it with **`⌃⌘⌥P`** (reconfigurable in Settings → General → Keyboard Shortcuts) or the **Settings Assistant** item in the menu-bar menu. Ask in plain language — "make a Legal folder and move the contract prompts into it" — and the assistant finds the prompt, folder, or setting and proposes the edit.
 
 - **Nothing changes without your say-so.** Every proposed change is an Approve/Reject card, applied only after you confirm. Deletes show an extra warning (with a descendant count for non-empty folders).
 - **Full library control** — create / edit / delete prompts, create / rename / delete folders, move prompts between folders, assign or clear the two per-prompt global shortcut slots (Inline Run, Run in Editor), and set per-prompt display mode, the "select all before capture" option, and provider.
+- **Magic Button engine control** — read and edit the `~/.clipslop/` engine files (workflow cards, core files, config.yaml, model routing) with every write validated by the engine's own parser before saving, and debug presses from the contentless traces ("why did my press show chips?"). API keys stay out of reach.
 - **Works with tool-calling providers** — OpenAI (API key), OpenAI (Sign In / ChatGPT), Anthropic, Ollama, and OpenAI-compatible. The CLI Tool provider isn't supported; the window shows a notice to switch. A provider switcher in the header lets you pick one and jump to Provider Settings.
 - Frosted, always-on-top panel. The chat input reuses the `⌘K` quick-instruction field (Enter sends, Shift+Enter for a newline, Esc closes). Fully localized into all 17 supported languages.
 
@@ -142,7 +143,7 @@ Open it with **`⌃⌘⌥P`** (reconfigurable in Settings → General → Keyboa
 
 - **Inline Run** — Assign a global hotkey to any prompt. Captures selected text, runs the prompt, pastes the result inline — you never leave your app
 - **Run in Editor** — Like Inline Run, but opens ClipSlop and auto-runs the prompt so you can review, edit, or keep chaining
-- **Prompt Assistant** — A floating chat window (`⌃⌘⌥P`) where an AI assistant edits your prompt library for you via tool calling; ask in plain language, approve each change before it applies
+- **Settings Assistant** — A floating chat window (`⌃⌘⌥P`) where an AI assistant manages your prompt library and the Magic Button engine for you via tool calling; ask in plain language, approve each change before it applies
 - **Prompt shortcuts** — Configure per-prompt in Settings → Prompts; shortcuts appear in the menu bar organized by folder
 - **Keyboard-first** — Single-key mnemonics for prompt navigation, all actions have shortcuts
 - **Full pipeline** — Chain unlimited transformations, navigate history with arrow keys, branch from any step
@@ -195,7 +196,7 @@ Fully customizable — add your own prompts, folders, mnemonics, and global shor
 | `⌃⌘V` | Process from clipboard |
 | `⌃⌘N` | Blank editor |
 | `⇧⌘2` | Screen capture (OCR) |
-| `⌃⌘⌥P` | Prompt Assistant |
+| `⌃⌘⌥P` | Settings Assistant |
 | `⌘E` | Edit mode |
 | `⌘F` | Find in text |
 | `⌘S` | Save to file |

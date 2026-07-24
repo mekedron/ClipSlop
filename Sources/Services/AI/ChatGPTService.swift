@@ -86,6 +86,7 @@ struct ChatGPTService: AIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 

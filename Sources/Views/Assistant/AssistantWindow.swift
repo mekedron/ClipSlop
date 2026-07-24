@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Always-on-top floating chat window for the prompt-library assistant.
+/// Always-on-top floating chat window for the Settings Assistant.
 ///
 /// Modeled on `PopupWindow` (titled, resizable, floating). Two deliberate
 /// differences: `hidesOnDeactivate = false` so the window survives clicking

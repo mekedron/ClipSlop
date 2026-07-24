@@ -31,7 +31,12 @@ let package = Package(
             ],
             path: "Sources",
             resources: [
-                .process("Resources")
+                // `.process` flattens subdirectories (and SwiftPM rejects a
+                // nested override rule inside `Resources`), so the agent
+                // skill lives beside it and keeps its directory shape
+                // (SKILL.md + references/) via an explicit `.copy` rule.
+                .copy("AgentSkill/clipslop"),
+                .process("Resources"),
             ],
             swiftSettings: [
                 // App Intents metadata extraction. Xcode normally injects these

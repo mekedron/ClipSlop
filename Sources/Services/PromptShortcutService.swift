@@ -356,18 +356,12 @@ final class PromptShortcutService {
         isProcessingInline = true
         let shouldSelectAll = selectAllOverride ?? (prompt.selectAllBeforeCapture == true)
 
-        // Save original clipboard
-        let originalClipboard = ClipboardService.getText()
+        // Save the original clipboard (string + rich representations).
+        let saved = PasteboardTransaction.save()
 
         // Optionally simulate Cmd+A first to select all text
         if shouldSelectAll {
-            let source = CGEventSource(stateID: .combinedSessionState)
-            let aDown = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: true)
-            let aUp = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: false)
-            aDown?.flags = .maskCommand
-            aUp?.flags = .maskCommand
-            aDown?.post(tap: .cghidEventTap)
-            aUp?.post(tap: .cghidEventTap)
+            SyntheticKeystroke.post(SyntheticKeystroke.keyA)
         }
 
         inlineTask = Task { [weak self] in
@@ -377,30 +371,25 @@ final class PromptShortcutService {
                 try? await Task.sleep(for: .milliseconds(100))
             }
 
-            // Simulate Cmd+C to capture selection
-            let source = CGEventSource(stateID: .combinedSessionState)
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
-            keyDown?.flags = .maskCommand
-            keyUp?.flags = .maskCommand
-            keyDown?.post(tap: .cghidEventTap)
-            keyUp?.post(tap: .cghidEventTap)
-
-            // Wait for clipboard update
-            try? await Task.sleep(for: .milliseconds(200))
+            // ⌘C with changeCount polling — resolves in 40–80 ms on
+            // cooperative apps instead of the old fixed 200 ms sleep, and an
+            // unchanged count is a real "nothing selected" signal (the old
+            // string comparison misread re-copying identical text as
+            // failure).
+            let capturedText = await PasteboardTransaction.captureViaCommandC()
             guard !Task.isCancelled else {
                 self.finishInlineProcessing()
                 return
             }
 
-            let capturedText = ClipboardService.getText()
-
-            // Restore original clipboard
-            if let original = originalClipboard {
-                ClipboardService.setText(original)
+            // Restore the user's clipboard before the AI round-trip.
+            if capturedText != nil {
+                PasteboardTransaction.restore(
+                    saved, ifChangeCountStill: NSPasteboard.general.changeCount
+                )
             }
 
-            guard let text = capturedText, !text.isEmpty, text != originalClipboard else {
+            guard let text = capturedText, !text.isEmpty else {
                 if let accessibilityText = TextCaptureService.captureSelectedText(), !accessibilityText.isEmpty {
                     // Accessibility API found a selection — use it.
                     await self.processAndPaste(
@@ -411,7 +400,7 @@ final class PromptShortcutService {
                         displayMode: prompt.displayMode
                     )
                 } else if let lastPaste = self.lastPaste,
-                          originalClipboard == lastPaste.text,
+                          saved.string == lastPaste.text,
                           Date().timeIntervalSince(lastPaste.date) < Self.followUpWindow {
                     // No new selection was made and the clipboard still holds the result
                     // we pasted moments ago — treat this as a follow-up prompt on that
@@ -491,6 +480,10 @@ final class PromptShortcutService {
             case .plainText:
                 ClipboardService.setText(paddedResult)
             }
+            // Generated drafts are marked transient+concealed so well-behaved
+            // clipboard managers skip them (§3.5). The result itself stays on
+            // the clipboard — the 30 s follow-up re-paste depends on it.
+            PasteboardTransaction.markCurrentItemGenerated()
 
             dismissHUD()
 

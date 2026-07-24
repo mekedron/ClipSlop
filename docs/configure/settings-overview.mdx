@@ -1,14 +1,14 @@
 ---
 sidebar_position: 1
 title: Settings overview
-description: A tour of ClipSlop's Settings — General, Prompts, Providers, Keyboard, and iCloud Sync.
+description: A tour of ClipSlop's Settings — General, Providers, Prompts, Quick Access, Magic, and About.
 ---
 
 import useBaseUrl from '@docusaurus/useBaseUrl';
 
 # Settings overview
 
-Open Settings from the menu-bar icon or press <kbd>⌘,</kbd>. Five tabs:
+Open Settings from the menu-bar icon or press <kbd>⌘,</kbd>. Six tabs: **General**, **Providers**, **Prompts**, **Quick Access**, **Magic**, and **About**. Keyboard shortcuts and iCloud sync are configured inside General:
 
 <img
   src={useBaseUrl('/demos/screenshots/general-settings.png')}
@@ -23,15 +23,21 @@ The home tab. Covers:
 - **Appearance** — light, dark, or follow system. Opacity and panel size.
 - **Launch at login** — keep ClipSlop running automatically.
 - **Display mode default** — plain / Markdown / HTML for new prompts.
-- **Keyboard Shortcuts** — the global shortcut for the [Prompt Assistant](./prompt-assistant.mdx) (<kbd>⌃⌘⌥P</kbd> by default) lives here.
+- **Keyboard Shortcuts** — the global shortcut for the [Settings Assistant](./settings-assistant.mdx) (<kbd>⌃⌘⌥P</kbd> by default) lives here.
 
 ## Prompts
 
-The prompt library — every built-in prompt and your custom ones, with mnemonic, system prompt, provider override, display mode, and global shortcut bindings. See [Prompt library](./prompt-library.mdx). Prefer to edit it by talking? The [Prompt Assistant](./prompt-assistant.mdx) makes changes for you from a chat window.
+The prompt library — every built-in prompt and your custom ones, with mnemonic, system prompt, provider override, display mode, and global shortcut bindings. See [Prompt library](./prompt-library.mdx). Prefer to edit it by talking? The [Settings Assistant](./settings-assistant.mdx) makes changes for you from a chat window.
 
 ## Providers
 
 Configure ChatGPT (OAuth), OpenAI, Anthropic, Ollama, OpenAI-compatible endpoints, and CLI tools. Pick a default and set per-provider temperature / reasoning effort — each provider type offers the effort values its API accepts (ChatGPT up to `xhigh`, Ollama from `none` to `max`). See [ChatGPT](./providers/chatgpt.mdx) for the easiest starting point, or [Pick a provider](../pick-a-provider.mdx) for the full menu.
+
+With no provider selected, the tab shows **Model routing**: which provider serves each engine role (Magic Button generation, Settings Assistant chat), an optional minimum cost class and request timeout per role, token spend for today / this month, and configuration warnings. Provider configs live in `~/.clipslop/providers.yaml` (API keys stay in the Keychain); role bindings and fallback chains in `~/.clipslop/roles.yaml` — both hand-editable, both hot-reloaded.
+
+## Magic
+
+The Magic Button (<kbd>⌘⌃M</kbd>) engine: the generation system prompt, core files (identity, writing style, constraints, aliases), workflow cards, and `config.yaml` tuning — all as editable files with reset-to-default and validation badges. The opt-in full-content debug log toggle lives here too (it flips `debug_log_enabled` in `config.yaml`), as does **Install Agent Skill…** — export the built-in [Agent Skill](./agent-skill.mdx) that teaches external AI agents to manage ClipSlop.
 
 ## Keyboard
 

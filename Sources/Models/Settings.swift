@@ -228,6 +228,11 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(promptLibraryCollapsed, forKey: "promptLibraryCollapsed") }
     }
 
+    // Magic Button debug logging moved to `debug_log_enabled` in
+    // ~/.clipslop/config.yaml (files-first, reachable by external agents);
+    // `MagicPressCoordinator.init` migrates the old "magicDebugLogging"
+    // UserDefaults key once.
+
     /// System prompt template for the ⌘K one-off instruction bar. The typed
     /// instruction replaces `{instruction}`, or is appended when the
     /// placeholder is absent — see `AdHocPromptComposer`.

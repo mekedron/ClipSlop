@@ -1,8 +1,26 @@
 import Foundation
 
+/// One generation with the usage the provider reported. Token counts are
+/// nil when the API exposes none — callers fall back to estimates and mark
+/// the spend record `estimated` (§14 accounting is honest about precision).
+struct AIGenerationResult: Sendable {
+    let text: String
+    var inputTokens: Int?
+    var outputTokens: Int?
+}
+
 protocol AIService: Sendable {
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error>
+    /// Like `process`, plus reported usage. Services without usage data
+    /// inherit the default (text only, nil counts).
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult
+}
+
+extension AIService {
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
+        AIGenerationResult(text: try await process(text: text, systemPrompt: systemPrompt, config: config))
+    }
 }
 
 enum AIServiceError: LocalizedError {

@@ -1,0 +1,211 @@
+import Foundation
+
+/// User-tunable engine parameters, read from `~/.clipslop/config.yaml`
+/// (files-first, §15). Every value is clamped to a sane range — a typo in a
+/// hand-edited file degrades to the nearest safe bound, never to a hung
+/// press or an unbounded walk.
+struct MagicEngineConfig: Sendable, Equatable {
+    /// Overall snapshot deadline — the press never waits longer for capture.
+    var captureDeadlineMs = 1600
+    /// AX call budget for the native (non-web) surrounding walk.
+    var axCallBudget = 350
+    /// AX call budget for web-content walks (Chromium wraps everything in
+    /// AXGroups, so web needs far more calls).
+    var webCallBudget = 900
+    /// Depth of the text gather inside one native sibling subtree.
+    var maxGatherDepth = 6
+    /// Depth cap inside web subtrees.
+    var maxWebDepth = 30
+    /// Siblings visited per level in the native walk.
+    var maxSiblingsPerLevel = 16
+    /// Children visited per node in web subtrees.
+    var maxWebChildrenPerNode = 60
+    /// Cap on the assembled surrounding text.
+    var surroundingMaxChars = 6000
+    /// Web walk: how much text preceding the field to keep (a chat's newest
+    /// messages) and how much after it.
+    var webBeforeKeepChars = 4500
+    var webAfterKeepChars = 1000
+    /// Cap on the focused field's own value read.
+    var fieldValueMaxChars = 50_000
+    /// Post-insert toast auto-dismiss.
+    var toastDismissSeconds = 8
+    /// Character ceiling for generated output when the routed workflow card
+    /// sets no `output.max_chars` of its own. Told to the model at assembly
+    /// and checked by the verifier — a card's explicit value always wins.
+    var outputMaxCharsDefault = 1200
+    /// Warm frontmost-app observer (§5.1). 0 disables the whole subsystem —
+    /// presses then behave exactly like V0 collect-on-press.
+    var warmObserverEnabled = 1
+    /// How long the observer's cheap context stays usable as press-time
+    /// backfill.
+    var warmContextTtlSeconds = 30
+    /// Debounce between a focus-change notification and the cheap read.
+    var observerDebounceMs = 200
+    /// Fast-mode chip planner (`MagicPlanner`): hard time cap for the one
+    /// tiny model call that may auto-pick the obvious chip when routing was
+    /// ambiguous. On timeout / unsure / error the chip panel shows
+    /// unchanged. 0 disables the planner entirely (the kill switch);
+    /// forced-chips presses never use it regardless.
+    var plannerTimeoutMs = 900
+    /// Full-content per-press debug log (`logs/debug/`, 7-day prune).
+    /// Lives in config.yaml — not UserDefaults — so file-editing agents can
+    /// flip it; the Settings → Magic checkbox is a view over this key
+    /// (config.yaml is authoritative, see `EngineConfigStore.setInteger`).
+    /// Off by default: these files contain real screen content.
+    var debugLogEnabled = 0
+    /// Apps/domains whose field content must never reach a cloud provider
+    /// (P7). Entries are matched case-insensitively: substring of the app
+    /// bundle id, or exact/suffix match of the URL host. A matching press
+    /// switches to a local provider from the role's chain, or refuses
+    /// honestly (P9) when none exists.
+    var noCloud: [String] = []
+
+    static let `default` = MagicEngineConfig()
+
+    /// key → (range, keypath) table so parsing, clamping, and the seeded
+    /// file stay in one place. Built per call — WritableKeyPath tuples are
+    /// not Sendable, so this cannot be a static stored table under strict
+    /// concurrency.
+    private static func ranges() -> [(key: String, range: ClosedRange<Int>, path: WritableKeyPath<MagicEngineConfig, Int>)] {
+        [
+        ("capture_deadline_ms", 300...10_000, \.captureDeadlineMs),
+        ("ax_call_budget", 50...5_000, \.axCallBudget),
+        ("web_call_budget", 50...10_000, \.webCallBudget),
+        ("max_gather_depth", 1...50, \.maxGatherDepth),
+        ("max_web_depth", 5...100, \.maxWebDepth),
+        ("max_siblings_per_level", 2...200, \.maxSiblingsPerLevel),
+        ("max_web_children_per_node", 5...500, \.maxWebChildrenPerNode),
+        ("surrounding_max_chars", 500...50_000, \.surroundingMaxChars),
+        ("web_before_keep_chars", 200...40_000, \.webBeforeKeepChars),
+        ("web_after_keep_chars", 0...20_000, \.webAfterKeepChars),
+        ("field_value_max_chars", 1_000...500_000, \.fieldValueMaxChars),
+        ("toast_dismiss_seconds", 2...120, \.toastDismissSeconds),
+        ("output_max_chars_default", 100...100_000, \.outputMaxCharsDefault),
+        ("warm_observer_enabled", 0...1, \.warmObserverEnabled),
+        ("warm_context_ttl_seconds", 5...300, \.warmContextTtlSeconds),
+        ("observer_debounce_ms", 50...2_000, \.observerDebounceMs),
+        ("planner_timeout_ms", 0...5_000, \.plannerTimeoutMs),
+        ("debug_log_enabled", 0...1, \.debugLogEnabled),
+        ]
+    }
+
+    /// Every integer key with its range and default — the source the
+    /// Agent Skill's drift tests (`AgentSkillTests`) regenerate the
+    /// config-key table from. (`no_cloud` is the one non-integer key and is
+    /// asserted separately.) Key paths stay private; this exposes only data.
+    static func keyTable() -> [(key: String, range: ClosedRange<Int>, defaultValue: Int)] {
+        let defaults = MagicEngineConfig.default
+        return ranges().map { ($0.key, $0.range, defaults[keyPath: $0.path]) }
+    }
+
+    /// Parses the config file (same constrained YAML subset as workflow
+    /// frontmatter). Missing keys keep their defaults; out-of-range values
+    /// clamp with a warning; unknown keys warn and are ignored.
+    static func parse(_ text: String) -> (config: MagicEngineConfig, warnings: [String]) {
+        var config = MagicEngineConfig.default
+        var warnings: [String] = []
+
+        let document: FrontmatterDocument
+        do {
+            document = try FrontmatterParser.parse(text)
+        } catch let error as FrontmatterError {
+            return (config, ["line \(error.line): \(error.message) — using defaults"])
+        } catch {
+            return (config, ["could not parse config — using defaults"])
+        }
+
+        let known = Dictionary(uniqueKeysWithValues: ranges().map { ($0.key, $0) })
+        for (key, value) in document.fields {
+            if key == "no_cloud" {
+                switch value {
+                case .list(let items):
+                    config.noCloud = items.map { $0.lowercased() }.filter { !$0.isEmpty }
+                case .scalar(let scalar) where !scalar.isEmpty:
+                    config.noCloud = [scalar.lowercased()]
+                default:
+                    warnings.append("'no_cloud' must be a list like [com.tinyspeck.slackmacgap, gmail.com]")
+                }
+                continue
+            }
+            guard let entry = known[key] else {
+                warnings.append("unknown key '\(key)' (line \(document.fieldLines[key] ?? 0)) — ignored")
+                continue
+            }
+            guard case .scalar(let scalar) = value, let number = Int(scalar) else {
+                warnings.append("'\(key)' must be an integer — keeping \(config[keyPath: entry.path])")
+                continue
+            }
+            let clamped = min(max(number, entry.range.lowerBound), entry.range.upperBound)
+            if clamped != number {
+                warnings.append("'\(key)' \(number) is outside \(entry.range.lowerBound)–\(entry.range.upperBound), clamped to \(clamped)")
+            }
+            config[keyPath: entry.path] = clamped
+        }
+        return (config, warnings)
+    }
+}
+
+/// Disk-backed store for `config.yaml`, same reload-on-press mtime pattern
+/// as the other engine stores.
+@MainActor
+@Observable
+final class EngineConfigStore {
+    private(set) var config: MagicEngineConfig = .default
+    private(set) var warnings: [String] = []
+
+    @ObservationIgnored private var lastModified: Date = .distantPast
+    @ObservationIgnored private var hasLoaded = false
+
+    nonisolated static let fileURL = Constants.Engine.rootDirectory.appendingPathComponent("config.yaml")
+
+    init() {
+        reloadIfChanged()
+    }
+
+    func reloadIfChanged() {
+        let modified = (try? Self.fileURL.resourceValues(forKeys: [.contentModificationDateKey]))?
+            .contentModificationDate ?? .distantPast
+        guard modified != lastModified || !hasLoaded else { return }
+        lastModified = modified
+        hasLoaded = true
+
+        guard let text = try? String(contentsOf: Self.fileURL, encoding: .utf8) else {
+            config = .default
+            warnings = []
+            return
+        }
+        (config, warnings) = MagicEngineConfig.parse(text)
+    }
+
+    /// Sets one integer key in config.yaml, preserving comments and every
+    /// other line (the same line-wise edit discipline the Settings
+    /// Assistant's `set_config` tool uses). This is how UI toggles write
+    /// config-backed switches — config.yaml is the single authority; the
+    /// UI is a view over it.
+    func setInteger(_ value: Int, forKey key: String) {
+        let text = (try? String(contentsOf: Self.fileURL, encoding: .utf8))
+            ?? EngineSeedContent.engineConfig
+        try? Self.settingInteger(value, forKey: key, in: text)
+            .write(to: Self.fileURL, atomically: true, encoding: .utf8)
+        reloadIfChanged()
+    }
+
+    /// Pure edit: replace the key's line, or insert before the closing
+    /// `---` fence (end of file when there is none).
+    nonisolated static func settingInteger(_ value: Int, forKey key: String, in text: String) -> String {
+        var lines = text.components(separatedBy: "\n")
+        if let index = lines.firstIndex(where: {
+            $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
+        }) {
+            lines[index] = "\(key): \(value)"
+        } else if let closing = lines.lastIndex(where: {
+            $0.trimmingCharacters(in: .whitespaces) == "---"
+        }), closing > 0 {
+            lines.insert("\(key): \(value)", at: closing)
+        } else {
+            lines.append("\(key): \(value)")
+        }
+        return lines.joined(separator: "\n")
+    }
+}
