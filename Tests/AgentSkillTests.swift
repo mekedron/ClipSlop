@@ -241,10 +241,12 @@ struct AgentSkillTests {
         trace.selectionWasTie = false
         trace.chosenID = "base.reply"
         trace.chipIndexChosen = 0
+        trace.plannerIndexChosen = 0
         trace.providerType = "anthropic"
         trace.modelID = "test"
         trace.verifierPassed = true
         trace.latencyMs.paste = 5
+        trace.latencyMs.planner = 3
 
         let data = try JSONEncoder().encode(trace)
         let object = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])

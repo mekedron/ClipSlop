@@ -15,6 +15,11 @@ struct MagicPressPlan: Sendable {
     /// Output ceiling for cards without an explicit `output.max_chars`
     /// (config.yaml `output_max_chars_default`).
     var outputMaxCharsDefault: Int = MagicEngineConfig.default.outputMaxCharsDefault
+    /// Fast-mode chip planner inputs (`MagicPlanner`): the `planner.magic`
+    /// binding (empty = inherit the generation resolution) and the hard cap
+    /// (0 = planner disabled).
+    var plannerBinding: RoleBinding = RoleBinding()
+    var plannerTimeoutMs: Int = MagicEngineConfig.default.plannerTimeoutMs
 }
 
 struct MagicPressResult: Sendable {
@@ -119,7 +124,9 @@ enum MagicPressPipeline {
             roleBinding: roleStore.binding(for: .generationMagic),
             providers: providerStore.providers,
             noCloud: config.noCloud,
-            outputMaxCharsDefault: config.outputMaxCharsDefault
+            outputMaxCharsDefault: config.outputMaxCharsDefault,
+            plannerBinding: roleStore.binding(for: .plannerMagic),
+            plannerTimeoutMs: config.plannerTimeoutMs
         )
     }
 

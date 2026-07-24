@@ -14,8 +14,11 @@ struct TraceStats: Sendable {
     struct Bucket: Sendable {
         var presses = 0
         var silent = 0
-        /// Chip presentations (forced or not).
+        /// Chip presentations (forced, planner-resolved, or plain).
         var chips = 0
+        /// Chip presentations the fast-mode planner resolved without
+        /// showing the panel (presentation "chips_planner").
+        var plannerPicked = 0
         /// Chip presentations where the user picked a chip at all.
         var chipChosen = 0
         /// …where the picked chip was the top-ranked one (index 0).
@@ -45,6 +48,7 @@ struct TraceStats: Sendable {
                 silent += 1
             } else {
                 chips += 1
+                if trace.presentation == "chips_planner" { plannerPicked += 1 }
                 if let index = trace.chipIndexChosen {
                     chipChosen += 1
                     if index == 0 { chipTop1 += 1 }
@@ -78,6 +82,9 @@ struct TraceStats: Sendable {
 
         var top1Rate: Double? { rate(chipTop1, over: chipChosen) }
         var silentRate: Double? { rate(silent, over: presses) }
+        /// Of the presses that would have shown chips, how many the planner
+        /// resolved silently.
+        var plannerPickRate: Double? { rate(plannerPicked, over: chips) }
         var undoRate: Double? { rate(undone, over: insertions) }
         var insertAnywayRate: Double? { rate(insertedAnyway, over: insertions) }
         var warmHitRate: Double? { rate(warmHits, over: presses) }
@@ -165,6 +172,7 @@ struct TraceStats: Sendable {
             out += rate >= Self.top1Target ? " ✓" : " ✗ (target ≥ 70%)"
         }
         out += " |\n"
+        out += "| planner auto-pick | \(fraction(overall.plannerPicked, overall.chips, overall.plannerPickRate)) |\n"
         out += "| hint used | \(overall.hintUsed) |\n"
         out += "| undo | \(fraction(overall.undone, overall.insertions, overall.undoRate)) |\n"
         out += "| insert-anyway | \(fraction(overall.insertedAnyway, overall.insertions, overall.insertAnywayRate)) |\n"

@@ -69,7 +69,7 @@ Record keys:
 
 | Key | Required | Semantics |
 |---|---|---|
-| `role` | yes | `generation.magic` (the Magic Button) or `chat.assistant` (the in-app Settings Assistant). Duplicates: first record kept. |
+| `role` | yes | `generation.magic` (the Magic Button), `planner.magic` (the fast-mode chip planner — the tiny disambiguation call, see `planner_timeout_ms` in config-keys.md), or `chat.assistant` (the in-app Settings Assistant). Duplicates: first record kept. |
 | `provider` | no | Provider id (UUID) bound to the role. |
 | `fallbacks` | no | Provider ids tried in order after the bound provider. |
 | `timeout_seconds` | no | 1–600; stamped onto each request for this role. |
@@ -87,6 +87,13 @@ lacks a required capability (tool calling for `chat.assistant`):
 
 `min_cost_class` filters **last** — a qualified chain that only has
 too-cheap providers refuses rather than downgrading.
+
+One special case: an **unbound `planner.magic`** role (no record in
+roles.yaml) inherits whatever `generation.magic` resolved to, so the
+planner works out of the box. Bind it — typically to a small, fast or
+local model — to give the planner its own provider. A planner whose
+resolution fails only skips the planner (the chips show); it never
+refuses the press.
 
 ## Privacy binding (`no_cloud`)
 

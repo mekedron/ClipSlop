@@ -160,6 +160,7 @@
 "settings.providers.select" = "Выберите провайдера";
 "settings.routing.title" = "Маршрутизация моделей";
 "settings.routing.role.generation.magic" = "Генерация Magic Button";
+"settings.routing.role.planner.magic" = "Планировщик Волшебной кнопки";
 "settings.routing.role.chat.assistant" = "Чат ассистента настроек";
 "settings.routing.provider_default" = "По умолчанию";
 "settings.routing.min_cost" = "Мин. класс";
@@ -529,6 +530,7 @@
 "magic.hud.no_target" = "Поставьте курсор в текстовое поле или выделите текст, затем нажмите волшебную клавишу.";
 "magic.chips.hint_placeholder" = "Опишите, что нужно…";
 "magic.chips.context_blind" = "Контекст не прочитан — приложение не отдаёт содержимое. Результат зависит от вашей подсказки.";
+"magic.chips.planner_thinking" = "Выбираю очевидное действие — или выберите сами…";
 "magic.chips.footer" = "↩ отправить · 1–4 выбрать · esc отмена";
 "magic.toast.inserted" = "Вставлено";
 "magic.toast.undo" = "Отменить";

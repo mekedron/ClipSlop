@@ -37,7 +37,8 @@ always shows chips.
 
 Everything below is orchestrated by `MagicPressCoordinator`
 (`Sources/Services/Magic/MagicPressCoordinator.swift`), a `@MainActor`
-state machine with phases `idle → collecting → (chips) → generating → toast`.
+state machine with phases
+`idle → collecting → (planning) → (chips) → generating → toast`.
 
 1. **Hotkey** (`HotkeyService` + `KeyboardShortcutNames`) fires
    `handlePress(forceChips:)`. Single-flight: presses during collection or
@@ -65,11 +66,16 @@ state machine with phases `idle → collecting → (chips) → generating → to
    predicate, counts candidates at the **highest matching tier**
    (exact ≻ domain ≻ base), deduplicates them by primary intent, and decides
    **silent** (exactly one counted candidate, no tie) or **chips**.
-7. **Chips** (only when ambiguous) — `ChipPanelWindow` shows 2–4 ranked
+7. **Planner** (fast mode only, before any panel) — when routing said
+   chips, the planner (`MagicPlanner`, see *The planner* below) may make
+   one tiny, hard-capped model call that picks the obvious chip; a
+   confident answer proceeds exactly like a chip tap, anything else falls
+   through to the panel. ⌘⌃⇧M never plans.
+8. **Chips** (only when ambiguous) — `ChipPanelWindow` shows 2–4 ranked
    intent chips + a free-text hint field at the caret. It must take key
    status (number keys, typing), so it activates the app — and every exit
    runs the focus-return dance and re-asserts the captured selection.
-8. **Generate** — `MagicPressPipeline.execute(...)`: first the privacy
+9. **Generate** — `MagicPressPipeline.execute(...)`: first the privacy
    binding (P7) — a surface matching the `no_cloud` list swaps to a local
    provider from the chain or refuses before anything is assembled — then
    `PromptAssembler.assemble` builds the slot-budgeted prompt, the
@@ -79,25 +85,25 @@ state machine with phases `idle → collecting → (chips) → generating → to
    a joining space when pasting at a caret after word material), and
    `DeterministicVerifier.verify` checks the result — all off the main
    actor. A toast with a spinner and ✕ is visible throughout.
-9. **Verify** — deterministic code only (< 50 ms, no second model call):
+10. **Verify** — deterministic code only (< 50 ms, no second model call):
    language, length, `constraints.md` rules, and concreteness-by-matching.
    A failure shows the output in the toast with the specific warning and a
    **hold-to-release** “Insert anyway” (logged — its rate is a guard-health
    metric).
-10. **Insert** — `MagicInserter.insert(...)`: re-verify that the frontmost
+11. **Insert** — `MagicInserter.insert(...)`: re-verify that the frontmost
     app and focused element still match the snapshot (**never blind-paste**;
     mismatch → result to toast + clipboard), snapshot the fresh pre-paste
     field state for Restore, write the text to the pasteboard marked
     transient+concealed, synthetic ⌘V, confirm the paste landed by watching
     `AXValue`, then restore the previous clipboard **only if** nobody else
     wrote to it (`changeCount` check).
-11. **Toast** — `MagicToastWindow` (never steals focus; `orderFrontRegardless`
+12. **Toast** — `MagicToastWindow` (never steals focus; `orderFrontRegardless`
     + `becomesKeyOnlyIfNeeded`): Undo/Restore · ⌘R Regenerate ·
     type-to-refine · Copy. Undo is a focus-verified synthetic ⌘Z with a
     guaranteed fallback: the pre-paste text is always copyable. Regenerate
     and refine undo first, then re-run with the same snapshot (+ the
     refine instruction as a hint).
-12. **Trace + spend** — every press appends one contentless JSON line to
+13. **Trace + spend** — every press appends one contentless JSON line to
     `~/.clipslop/logs/traces-YYYY-MM-DD.jsonl`, and every generation one
     spend line to `logs/spend-YYYY-MM.jsonl` (see *Observability*).
 
@@ -190,7 +196,10 @@ surroundings favor `reply` over `write`, a blank context favors `write`.
 
 **Silent vs chips** (V0, fixed structural rule — the self-tuning gate of
 §3.3 is a later milestone): silent iff exactly one counted candidate and the
-selection classification (when there is one) was decisive.
+selection classification (when there is one) was decisive. An ambiguous
+fast-mode press may still avoid the panel via the planner (see *The
+planner* below) — that is an auto-picked chip, not a silent route, and
+traces record it as such.
 
 The seeded set: `base.generation` (abstract conduct rules),
 `base.reply/write/continue/instruct/rewrite` (the grammar rows, base tier),
@@ -408,8 +417,10 @@ Workflows never name models. Since M3 the provider layer is files-first:
   order, `timeout_seconds` (stamped onto the request), and
   `min_cost_class`, which **refuses generation instead of silently
   downgrading** (P9) when nothing qualified is in the chain. Roles:
-  `generation.magic` and `chat.assistant` (the Settings Assistant's old
-  private resolve chain now goes through this store).
+  `generation.magic`, `planner.magic` (the fast-mode chip planner —
+  unbound it inherits the generation resolution), and `chat.assistant`
+  (the Settings Assistant's old private resolve chain now goes through
+  this store).
 - **Resolution order** (`EngineRoleStore.resolve`, pure): bound provider →
   explicit fallbacks → app default → first (→ first *capable* for
   tool-calling roles). Capability-unfit candidates are skipped.
@@ -428,13 +439,113 @@ Workflows never name models. Since M3 the provider layer is files-first:
   Both stores reload on mtime (press-time and on Settings open); broken
   hand edits surface as warnings, and a providers.yaml that parses to an
   empty list is preserved as `providers.yaml.broken` before any save can
-  overwrite it. Startup logs the same validation via os.Logger.
+  overwrite it. Startup logs the same validation via os.Logger. The table
+  iterates `EngineRole.allCases`, so new roles (like `planner.magic`)
+  appear automatically.
+
+## The planner (fast-mode chip disambiguation)
+
+The §14 role table reserved a planner-class role with no consumer; this is
+its first consumer — scoped deliberately smaller than the design doc's
+§6.3 fallback planner. The problem it solves: on ⌘⌃M with an empty
+composer on, say, a LinkedIn *messages* page, routing counts both
+`reply` and `write` and asks — but the right choice is obvious from
+context (empty field on a conversation view ⇒ reply). Deterministic
+routing cannot see that; one tiny model call can.
+
+**When it runs** (`MagicPlanner.isEligible`, pure): fast mode only
+(`forceChips == false` — ⌘⌃⇧M stays purely manual, never
+planner-assisted), routing resolved to chips, the press is not
+context-blind (no grounding = nothing to reason from; the blind-press
+note in the panel stays), at least two chip candidates (a lone chip means
+the router wants a human confirmation), and `planner_timeout_ms > 0`.
+Selection-tie presses (instruction-vs-material) are in scope: the planner
+sees the selection text and the tie candidates like any other ambiguity.
+The candidate set is exactly `decision.chipCandidates` — what the human
+would have seen.
+
+**Race shape — planner-first with a hard cap.** The planner runs *before*
+the panel is shown (`Phase.planning`), racing a `Task.sleep` against the
+model call inside a task group; whichever finishes first wins and the
+loser is cancelled. Confident answer in time → proceed exactly as
+`selectChip(index)` would (minus the panel-close/focus dance — no panel
+ever existed); timeout / error / unsure / disabled → show the chip panel
+unchanged. The alternative — showing the panel immediately and
+withdrawing it when the planner answers — was rejected: a
+flash-then-vanish panel reads as UI glitch, and a panel the user has
+started aiming at must not evaporate under the cursor. The cost of
+planner-first is bounded by the cap: at worst the chips appear
+`planner_timeout_ms` later than they would have.
+
+**Provider/role**: new engine role `planner.magic`
+(`requiresToolCalling: false`) through the normal role system —
+resolution, fallbacks, `min_cost_class`, per-role timeout, and the P7
+privacy binding (the planner prompt carries screen content, so a
+`no_cloud` surface swaps to a local provider from the chain — or the
+planner is *skipped*; a planner problem never refuses the whole press,
+`MagicPlanner.resolveProvider` returns nil and the chips show). Unbound,
+the role inherits whatever `generation.magic` resolved to, so the feature
+works out of the box; users bind a small local model in the routing UI
+(the row appears automatically). Spend is appended to the ledger under
+`planner.magic`, only for calls that actually completed.
+
+**Prompt** (`MagicPlanner.buildUserMessage`, pure): tiny and strict — app
+name/bundle, URL *host* (never the full URL, same rule as traces), field
+state + placeholder, the selection or draft tail (capped 120 tokens), the
+chip candidates (id + summary + primary intent), and a hard-capped
+excerpt of the surroundings (300 tokens via the same
+`TokenEstimator`/trim machinery as the big prompt), fenced as untrusted.
+The model must answer with exactly one candidate id or `UNSURE`. Parsing
+is deterministic (`MagicPlanner.parse`): trim wrapping
+whitespace/quotes/backticks/period, then exact id match — anything else
+is unsure. No system-prompt override plumbing, no verifier: the planner
+never produces user-visible text.
+
+**Honesty (§15.3)**: a planner pick is distinguishable from both silent
+routing and a human chip choice. `presentation: "chips_planner"` marks
+the auto-pick, `plannerIndexChosen` records which chip (0-based);
+`chipIndexChosen` stays reserved for HUMAN picks — it is the top-1
+ground-truth metric and must not be polluted. `latencyMs.planner` records
+the call duration and is present whenever the planner ran, so
+`presentation: "chips"` *with* a `planner` latency means "ran and
+declined". Both planner fields ride along regenerate lineage like the
+presentation does. Trace stats gain a "planner auto-pick" rate (share of
+would-be chip presses resolved silently).
+
+**Config**: one knob, `planner_timeout_ms` (default **900**, range
+0–5000, clamped) — the hard cap and the kill switch in one (`0` = off).
+No separate `planner_enabled`. The default keeps the feature ON out of
+the box; existing config files simply lack the key and get the default.
+
+**UI**: the chip panel shows IMMEDIATELY, with its footer swapped for a
+linear progress bar animating across `planner_timeout_ms` ("Picking the
+obvious action — or pick yourself…"). The planner is just another finger
+racing for a chip: digits, a click, a hint, double-⌘⌃M, or Escape all
+cancel the in-flight call and win the race; a confident planner answer
+presses the top-relevance chip for the user (panel closes, the generating
+toast appears with the chosen workflow's summary). On timeout/unsure the
+progress row quietly becomes the normal footer — same panel, no resize,
+now fully manual. This replaced the initial panel-only-after-decline
+design: with a generous timeout the user stared at nothing, unable to
+tell whether anything was happening.
+
+**Invariant note — P1 relaxed, deliberately and boundedly.** The planner
+is a second model call on the press path. It runs only when the
+deterministic router could not decide, is time-boxed, and its response is
+parsed as an exact candidate id or discarded. P6 bends the same bounded
+way: screen content may steer the choice *between* router-approved
+candidates (that is the feature), but it can never inject a workflow the
+router did not offer — a hostile page gets, at worst, the power of a
+wrong human click on an already-offered chip. Generation itself still
+makes exactly one call, and the verifier remains deterministic code.
 
 ## Observability
 
 - **Traces** (always on, contentless *by construction* — the struct has no
   fields for content; a test feeds sentinel strings through and asserts
-  none survive): situation class, tier, candidates, chip choice, slot token
+  none survive): situation class, tier, candidates, chip choice (human
+  `chipIndexChosen` vs planner `plannerIndexChosen`; presentation
+  `silent | chips | chips_forced | chips_planner`), slot token
   counts, provider/model, verifier checks, latency breakdown, outcome
   (`inserted`, `insertedAnyway`, `panelOnly`, `focusMismatch`,
   `regenerated`, `cancelled`, `copied`, `dismissed`, `dead:*`,
@@ -474,10 +585,11 @@ Workflows never name models. Since M3 the provider layer is files-first:
 
 All collector budgets/depths/caps, the warm-observer knobs
 (`warm_observer_enabled`, `warm_context_ttl_seconds`,
-`observer_debounce_ms`), the toast dismiss time, the debug-log switch
-(`debug_log_enabled`), and the `no_cloud` app/domain list (see Providers
-and roles above) — hot-reloaded, clamped to safe ranges, with warnings
-surfaced in Settings → Magic. See the seeded file's comments for each key,
+`observer_debounce_ms`), the planner cap/kill switch
+(`planner_timeout_ms`, see The planner), the toast dismiss time, the
+debug-log switch (`debug_log_enabled`), and the `no_cloud` app/domain
+list (see Providers and roles above) — hot-reloaded, clamped to safe
+ranges, with warnings surfaced in Settings → Magic. See the seeded file's comments for each key,
 or the bundled skill's `references/config-keys.md` for the full
 key/default/range table (drift-tested against `MagicEngineConfig`).
 Per-workflow prompt budgets live in the workflow frontmatter, not here.
@@ -509,8 +621,11 @@ skill cannot rot silently.
 
 ## Invariants worth knowing before changing anything
 
-- **P1**: exactly one model call between press and paste. The verifier is
-  deterministic code; don't add model calls to the press path.
+- **P1**: exactly one *generation* call between press and paste. The
+  verifier is deterministic code; don't add model calls to the press path.
+  The single sanctioned exception is the fast-mode planner (see *The
+  planner*): a second, tiny, hard-capped call that runs only when routing
+  was ambiguous and can only pick among router-approved chips.
 - **P6**: screen content is untrusted data — it must only ever enter fenced
   data slots, never influence which workflow runs.
 - **P8**: no failure may lose field text. Restore's guarantee is *text
@@ -530,8 +645,9 @@ unification (§7.3 unification is the next milestone in flight). See §19 of
 the design doc for the milestone map these belong to.
 
 Shipped since V0: the warm frontmost-app observer (M1, collector section
-above) and the M3 provider layer (providers.yaml / roles.yaml / privacy
-binding / spend accounting / routing UI — see Providers and roles).
+above), the M3 provider layer (providers.yaml / roles.yaml / privacy
+binding / spend accounting / routing UI — see Providers and roles), and
+the fast-mode chip planner (`planner.magic`, see The planner).
 
 M3 cuts, recorded: dollar pricing (tokens only) · assistant spend not yet
 in the ledger (`ToolChatService` reports no usage) · ChatGPT usage

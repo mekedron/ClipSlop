@@ -24,8 +24,9 @@ those fields absent — count them, never assume every line has every key.
 | `tier` | string | `exact` \| `domain` \| `base` \| `none`. |
 | `candidateIDs` | [string] | Workflow ids counted at the winning tier (after intent dedup). |
 | `chosenID` | string? | The workflow that ran. |
-| `presentation` | string | `silent` \| `chips` \| `chips_forced`. |
-| `chipIndexChosen` | int? | 0-based index of the chip the user picked — the ground truth for chip top-1 accuracy. |
+| `presentation` | string | `silent` \| `chips` \| `chips_forced` \| `chips_planner` (routing was ambiguous and the fast-mode planner auto-picked a chip — distinct from both silent routing and a human chip choice). |
+| `chipIndexChosen` | int? | 0-based index of the chip the **user** picked — the ground truth for chip top-1 accuracy. Human picks only; the planner never writes it. |
+| `plannerIndexChosen` | int? | 0-based index of the chip the **planner** auto-picked (only with presentation `chips_planner`). Kept apart from `chipIndexChosen` so the top-1 metric stays human ground truth. Carried across regenerate, like the presentation. |
 | `hintUsed` | bool | Free-text hint typed in the chip panel. |
 | `slotTokens` | {string: int} | Estimated tokens per prompt slot (pinned, workflow, few_shot, surrounding, field_input). |
 | `totalTokens` | int | Estimated total prompt tokens. |
@@ -44,6 +45,7 @@ those fields absent — count them, never assume every line has every key.
 |---|---|
 | `snapshot` | Screen capture (collector). High → collector budgets/deadline in config.yaml, or a hostile surface (check `axErrors`). |
 | `route` | Routing decision (should be ~0). |
+| `planner` | Fast-mode planner call. Present whenever the planner ran: with presentation `chips_planner` it is the cost of the auto-pick; with `chips` it means the planner ran and declined (unsure/timeout/error) before the panel showed. Bounded by `planner_timeout_ms`. Absent = the planner never ran. |
 | `assemble` | Prompt assembly. |
 | `generate` | The single model call. Usually dominates — provider/model choice. |
 | `verify` | Deterministic verifier (< 50 ms by design). |
@@ -72,7 +74,11 @@ those fields absent — count them, never assume every line has every key.
 - Newest lines are at the end of the newest file; press = one line even
   when it ends in an error.
 - "Why chips?" → `presentation` + `candidateIDs` (N counted candidates)
-  + `selectionWasTie`.
+  + `selectionWasTie`. If `latencyMs.planner` is present alongside
+  presentation `chips`, the planner ran and declined to pick.
+- "Why did it act without asking?" → `silent` means routing was
+  unambiguous; `chips_planner` means the planner picked
+  (`plannerIndexChosen` says which chip; `chosenID` which workflow).
 - "Why this workflow?" → `tier` + `chosenID` + the cards' `when:`/
   `priority`. Remember: highest tier counted, primary-intent dedup.
 - "Why flagged?" → `verifierChecks`; `constraints` points at
@@ -90,7 +96,7 @@ One JSON line per generation, monthly files:
 | Field | Meaning |
 |---|---|
 | `ts` | ISO-8601 timestamp. |
-| `role` | Engine role (`generation.magic`, `chat.assistant`). |
+| `role` | Engine role (`generation.magic`, `planner.magic`, `chat.assistant`). |
 | `provider` | Provider type string. |
 | `model` | Model id. |
 | `inputTokens` / `outputTokens` | Token counts. |

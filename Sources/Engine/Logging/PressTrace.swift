@@ -21,11 +21,19 @@ struct PressTrace: Codable, Sendable {
     var tier: String
     var candidateIDs: [String]
     var chosenID: String?
-    /// "silent" | "chips" | "chips_forced"
+    /// "silent" | "chips" | "chips_forced" | "chips_planner"
+    /// (`chips_planner` = routing was ambiguous and the fast-mode planner
+    /// auto-picked a chip — distinguishable from both silent routing and a
+    /// human chip choice, §15.3).
     var presentation: String
     /// Index of the chip the user picked (0-based) — ground truth for top-1
-    /// intent accuracy before any Feedback Watcher exists.
+    /// intent accuracy before any Feedback Watcher exists. HUMAN picks
+    /// only, by design; planner picks go to `plannerIndexChosen`.
     var chipIndexChosen: Int?
+    /// Index of the chip the planner auto-picked (0-based, presentation
+    /// "chips_planner"). Never mixed into `chipIndexChosen` — the top-1
+    /// metric stays human ground truth.
+    var plannerIndexChosen: Int?
     var hintUsed: Bool
     var slotTokens: [String: Int]
     var totalTokens: Int
@@ -50,6 +58,10 @@ struct PressTrace: Codable, Sendable {
         var assemble: Int = 0
         var generate: Int = 0
         var verify: Int = 0
+        /// Fast-mode planner call duration. Present whenever the planner
+        /// ran — with presentation "chips" it means the planner declined
+        /// (unsure / timeout / error) and the panel showed anyway.
+        var planner: Int?
         /// Press → paste landed (the §3.6 SLO number). Optional: absent on
         /// presses that never inserted and on pre-M1 trace lines.
         var paste: Int?
@@ -74,6 +86,7 @@ struct PressTrace: Codable, Sendable {
         chosenID = nil
         presentation = "silent"
         chipIndexChosen = nil
+        plannerIndexChosen = nil
         hintUsed = false
         slotTokens = [:]
         totalTokens = 0

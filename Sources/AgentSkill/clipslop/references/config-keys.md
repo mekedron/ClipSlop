@@ -32,6 +32,7 @@ Behavior of the parser:
 | `warm_observer_enabled` | 1 | 0–1 | Warm frontmost-app observer: keeps cheap context (URL, window title, focused element) fresh between presses and pre-builds Chromium's accessibility tree on app switch. 0 = pure collect-on-press (also the Chromium-CPU kill switch). |
 | `warm_context_ttl_seconds` | 30 | 5–300 | How long the observer's cheap context stays usable as press-time backfill. |
 | `observer_debounce_ms` | 200 | 50–2000 | Debounce between a focus-change notification and the observer's cheap read. |
+| `planner_timeout_ms` | 900 | 0–5000 | Fast-mode chip planner: hard time cap for the one tiny model call that may auto-pick the obvious chip when routing was ambiguous (trace presentation `chips_planner`, role `planner.magic`). Confident answer in time → the press proceeds as if that chip was picked; timeout / unsure / error → the chip panel shows unchanged. **0 disables the planner** (always ask). Forced-chips presses (the always-ask hotkey) never use it. |
 | `debug_log_enabled` | 0 | 0–1 | Full-content per-press debug log (one markdown file per press under `logs/debug/`): complete snapshot with real screen content, the verbatim prompt, the raw model output, the verifier verdict. **Privacy tradeoff — enable only with the user's explicit consent.** Files are pruned after 7 days. This key is the same switch as the Settings → Magic checkbox (config.yaml is authoritative). |
 
 ## `no_cloud` (list)

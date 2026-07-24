@@ -29,6 +29,8 @@ final class ChipPanelWindow: NSPanel {
     init(
         chips: [MagicChip],
         note: String? = nil,
+        coordinator: MagicPressCoordinator? = nil,
+        plannerTimeoutMs: Int = 0,
         onSelect: @escaping (Int) -> Void,
         onHint: @escaping (String) -> Void,
         onDismiss: @escaping () -> Void
@@ -57,7 +59,9 @@ final class ChipPanelWindow: NSPanel {
         // into a focus-mismatch copy-only outcome. First-mouse acceptance
         // makes the click land on the chip without activating anything.
         let hosting = FirstMouseHostingView(rootView: ChipPanelView(
-            chips: chips, note: note, onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
+            chips: chips, note: note, coordinator: coordinator,
+            plannerTimeoutMs: plannerTimeoutMs,
+            onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
         ))
         contentView = hosting
         setContentSize(hosting.fittingSize)
@@ -92,12 +96,17 @@ final class ChipPanelWindow: NSPanel {
 private struct ChipPanelView: View {
     let chips: [MagicChip]
     let note: String?
+    /// Observed for the planning phase — the footer swaps to a progress
+    /// affordance while the planner races its cap.
+    let coordinator: MagicPressCoordinator?
+    let plannerTimeoutMs: Int
     let onSelect: (Int) -> Void
     let onHint: (String) -> Void
     let onDismiss: () -> Void
 
     @State private var hintText = ""
     @State private var hintHeight: CGFloat = 22
+    @State private var plannerProgress: Double = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -154,9 +163,30 @@ private struct ChipPanelView: View {
                 }
             }
 
-            Text(Loc.shared.t("magic.chips.footer"))
-                .font(.caption2)
-                .foregroundStyle(.tertiary)
+            // Fixed height so the planner→manual handover never resizes the
+            // panel under the cursor.
+            Group {
+                if coordinator?.phase == .planning {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ProgressView(value: plannerProgress)
+                            .progressViewStyle(.linear)
+                        Text(Loc.shared.t("magic.chips.planner_thinking"))
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
+                    .onAppear {
+                        plannerProgress = 0
+                        withAnimation(.linear(duration: Double(max(plannerTimeoutMs, 1)) / 1000)) {
+                            plannerProgress = 1
+                        }
+                    }
+                } else {
+                    Text(Loc.shared.t("magic.chips.footer"))
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .frame(height: 24, alignment: .leading)
         }
         .padding(12)
         .frame(width: 340)

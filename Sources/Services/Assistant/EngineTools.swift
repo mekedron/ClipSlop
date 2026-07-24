@@ -102,7 +102,7 @@ enum EngineTools {
             name: "set_role",
             description: "Change a role binding in roles.yaml: which provider serves an engine role, its fallback chain, request timeout, and minimum cost class. Providers are referenced by name (or id) from engine_status. Never touches API keys.",
             parametersSchemaJSON: #"""
-            {"type":"object","properties":{"role":{"type":"string","enum":["generation.magic","chat.assistant"]},"provider":{"type":"string","description":"Provider name or id; \"default\" clears the binding (follow the app default)."},"fallbacks":{"type":"array","items":{"type":"string"},"description":"Provider names or ids, tried in order; [] clears."},"timeout_seconds":{"type":"integer","description":"1–600; 0 clears the per-role timeout."},"min_cost_class":{"type":"string","enum":["local","mid","premium","none"],"description":"Cost floor — generation refuses instead of silently downgrading; \"none\" clears."}},"required":["role"],"additionalProperties":false}
+            {"type":"object","properties":{"role":{"type":"string","enum":["generation.magic","planner.magic","chat.assistant"]},"provider":{"type":"string","description":"Provider name or id; \"default\" clears the binding (follow the app default)."},"fallbacks":{"type":"array","items":{"type":"string"},"description":"Provider names or ids, tried in order; [] clears."},"timeout_seconds":{"type":"integer","description":"1–600; 0 clears the per-role timeout."},"min_cost_class":{"type":"string","enum":["local","mid","premium","none"],"description":"Cost floor — generation refuses instead of silently downgrading; \"none\" clears."}},"required":["role"],"additionalProperties":false}
             """#,
             isMutating: true
         ),

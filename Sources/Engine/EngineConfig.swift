@@ -42,6 +42,12 @@ struct MagicEngineConfig: Sendable, Equatable {
     var warmContextTtlSeconds = 30
     /// Debounce between a focus-change notification and the cheap read.
     var observerDebounceMs = 200
+    /// Fast-mode chip planner (`MagicPlanner`): hard time cap for the one
+    /// tiny model call that may auto-pick the obvious chip when routing was
+    /// ambiguous. On timeout / unsure / error the chip panel shows
+    /// unchanged. 0 disables the planner entirely (the kill switch);
+    /// forced-chips presses never use it regardless.
+    var plannerTimeoutMs = 900
     /// Full-content per-press debug log (`logs/debug/`, 7-day prune).
     /// Lives in config.yaml — not UserDefaults — so file-editing agents can
     /// flip it; the Settings → Magic checkbox is a view over this key
@@ -79,6 +85,7 @@ struct MagicEngineConfig: Sendable, Equatable {
         ("warm_observer_enabled", 0...1, \.warmObserverEnabled),
         ("warm_context_ttl_seconds", 5...300, \.warmContextTtlSeconds),
         ("observer_debounce_ms", 50...2_000, \.observerDebounceMs),
+        ("planner_timeout_ms", 0...5_000, \.plannerTimeoutMs),
         ("debug_log_enabled", 0...1, \.debugLogEnabled),
         ]
     }

@@ -1,10 +1,14 @@
 import Foundation
 
 /// Model roles the engine can bind providers to (§14). Additive by design;
-/// roles without a consumer yet (planner.fallback, verification, …) are not
+/// roles without a consumer yet (verification, background.*, …) are not
 /// listed until something dispatches through them.
 enum EngineRole: String, Codable, Sendable, CaseIterable {
     case generationMagic = "generation.magic"
+    /// The fast-mode chip planner (`MagicPlanner`): one tiny capped call
+    /// that may auto-pick the obvious chip when routing was ambiguous.
+    /// Unbound, it inherits whatever `generation.magic` resolved to.
+    case plannerMagic = "planner.magic"
     case chatAssistant = "chat.assistant"
 
     /// Capability the bound provider must have to serve this role at all.

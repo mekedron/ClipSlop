@@ -160,6 +160,7 @@
 "settings.providers.select" = "Valitse palvelu";
 "settings.routing.title" = "Mallien reititys";
 "settings.routing.role.generation.magic" = "Magic Button -generointi";
+"settings.routing.role.planner.magic" = "Taikanapin suunnittelija";
 "settings.routing.role.chat.assistant" = "Asetusavustajan keskustelu";
 "settings.routing.provider_default" = "Sovelluksen oletus";
 "settings.routing.min_cost" = "Vähimmäisluokka";
@@ -529,6 +530,7 @@
 "magic.hud.no_target" = "Siirry tekstikenttään tai valitse tekstiä ja paina sitten taikanäppäintä.";
 "magic.chips.hint_placeholder" = "Kuvaile mitä haluat…";
 "magic.chips.context_blind" = "Sisältöä ei voitu lukea — sovellus ei ehkä jaa sisältöään. Tulos perustuu vihjeeseesi.";
+"magic.chips.planner_thinking" = "Valitsen ilmeisen toiminnon — tai valitse itse…";
 "magic.chips.footer" = "↩ lähetä · 1–4 valitse · esc peru";
 "magic.toast.inserted" = "Lisätty";
 "magic.toast.undo" = "Kumoa";

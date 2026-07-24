@@ -24,6 +24,10 @@ final class MagicPressCoordinator {
     enum Phase {
         case idle
         case collecting
+        /// The fast-mode chip planner is racing its hard cap
+        /// (`planner_timeout_ms`) — nothing is on screen yet; Escape
+        /// cancels the press.
+        case planning
         case chips
         case generating
         case toast
@@ -84,6 +88,7 @@ final class MagicPressCoordinator {
 
     @ObservationIgnored private var activePress: ActivePress?
     @ObservationIgnored private var generationTask: Task<Void, Never>?
+    @ObservationIgnored private var plannerTask: Task<Void, Never>?
     @ObservationIgnored private var toastDismissTask: Task<Void, Never>?
     @ObservationIgnored private var pressStart: ContinuousClock.Instant?
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.magic")
@@ -157,9 +162,10 @@ final class MagicPressCoordinator {
         case .collecting, .generating:
             // Single-flight; ✕ on the toast is the cancel affordance (R10).
             return
-        case .chips:
+        case .chips, .planning:
             // Double-press: the open panel *is* the first-press state —
-            // accept the top intent (§3.3 override).
+            // accept the top intent (§3.3 override). During .planning the
+            // panel is visible too; the human pick cancels the planner.
             if !forceChips { selectChip(0) }
             return
         case .toast:
@@ -260,8 +266,116 @@ final class MagicPressCoordinator {
         case .chips(let ranked):
             press.trace.presentation = "chips"
             activePress = press
-            showChips(ranked)
+            startPlannerOrChips(ranked)
         }
+    }
+
+    // MARK: - Planner (fast-mode chip disambiguation)
+
+    /// Planner-first with a hard cap: the panel is shown only after the
+    /// planner declined (or was skipped), so it can never flash-then-vanish.
+    /// Any ineligibility — forced chips (handled upstream), context-blind
+    /// press, a lone chip, `planner_timeout_ms: 0`, no usable provider
+    /// (no_cloud with no local, resolution refused) — falls through to the
+    /// plain chip panel; the planner never fails a press.
+    private func startPlannerOrChips(_ candidates: [ResolvedWorkflow]) {
+        guard let press = activePress else {
+            showChips(candidates)
+            return
+        }
+        let plan = press.plan
+        let snapshot = press.snapshot
+        guard MagicPlanner.isEligible(
+            forceChips: press.forceChips,
+            contextBlind: snapshot.contextBlind,
+            candidateCount: candidates.count,
+            timeoutMs: plan.plannerTimeoutMs
+        ), let provider = MagicPlanner.resolveProvider(
+            binding: plan.plannerBinding,
+            generationProvider: plan.provider,
+            generationBinding: plan.roleBinding,
+            providers: plan.providers,
+            noCloud: plan.noCloud,
+            bundleId: snapshot.app.bundleId,
+            urlHost: EngineRouter.urlHost(of: snapshot.url)
+        ) else {
+            showChips(candidates)
+            return
+        }
+
+        // The panel shows IMMEDIATELY with a progress affordance — the
+        // planner is just another finger racing for a chip. The user can
+        // always outrace it (digits, click, hint, Esc all cancel the
+        // planner); a confident planner answer presses the chip for them.
+        showChips(candidates)
+        phase = .planning
+
+        let plannerCandidates = candidates.map(MagicPlanner.Candidate.init(workflow:))
+        let timeoutMs = plan.plannerTimeoutMs
+        plannerTask = Task { [weak self] in
+            let run = await MagicPlanner.run(
+                snapshot: snapshot,
+                candidates: plannerCandidates,
+                provider: provider,
+                timeoutMs: timeoutMs,
+                service: AIServiceFactory.service(for: provider.providerType)
+            )
+            guard !Task.isCancelled else { return }
+            self?.finishPlanner(run, provider: provider, candidates: candidates)
+        }
+    }
+
+    private func finishPlanner(
+        _ run: MagicPlanner.Run,
+        provider: AIProviderConfig,
+        candidates: [ResolvedWorkflow]
+    ) {
+        plannerTask = nil
+        guard phase == .planning, var press = activePress else { return }
+        press.trace.latencyMs.planner = run.ms
+
+        // Spend under the planner's own role — only for calls that actually
+        // completed (an abandoned call reports no usage to account).
+        if let inputTokens = run.inputTokens, let outputTokens = run.outputTokens {
+            let spend = SpendRecord(
+                ts: Date(),
+                role: EngineRole.plannerMagic.rawValue,
+                provider: provider.providerType.rawValue,
+                model: provider.modelID,
+                inputTokens: inputTokens,
+                outputTokens: outputTokens,
+                estimated: run.usageEstimated
+            )
+            Task { [spendLedger] in await spendLedger.append(spend) }
+        }
+
+        if case .chose(let index) = run.outcome, index < candidates.count {
+            press.trace.presentation = "chips_planner"
+            press.trace.plannerIndexChosen = index
+            activePress = press
+            // Proceed exactly as selectChip(index) would: the panel is on
+            // screen, close it and return focus before generating.
+            closeChipPanel(returnFocus: true)
+            startRun(workflow: candidates[index], hint: nil)
+        } else {
+            // Declined/unsure: the panel is already up — just hand it over
+            // to the user (the progress affordance hides with the phase).
+            activePress = press
+            if chipPanel == nil { showChips(candidates) } else { phase = .chips }
+        }
+    }
+
+    private func cancelPlanner() {
+        guard phase == .planning else { return }
+        plannerTask?.cancel()
+        plannerTask = nil
+        KeyboardShortcuts.disable(.dismissMagicOverlay)
+        if var press = activePress {
+            press.trace.outcome = "cancelled"
+            submitTrace(press.trace)
+            activePress = nil
+        }
+        phase = .idle
     }
 
     // MARK: - Chips
@@ -286,6 +400,8 @@ final class MagicPressCoordinator {
             chips: Array(chips),
             note: activePress?.snapshot.contextBlind == true
                 ? Loc.shared.t("magic.chips.context_blind") : nil,
+            coordinator: self,
+            plannerTimeoutMs: activePress?.plan.plannerTimeoutMs ?? 0,
             onSelect: { [weak self] index in Task { @MainActor in self?.selectChip(index) } },
             onHint: { [weak self] hint in Task { @MainActor in self?.submitHint(hint) } },
             onDismiss: { [weak self] in Task { @MainActor in self?.dismissChips() } }
@@ -302,6 +418,8 @@ final class MagicPressCoordinator {
     func dismissFloatingOverlay() {
         if chipPanel != nil {
             dismissChips()
+        } else if phase == .planning {
+            cancelPlanner()
         } else if phase == .generating {
             cancelGeneration()
         } else if toastWindow != nil {
@@ -310,7 +428,10 @@ final class MagicPressCoordinator {
     }
 
     func selectChip(_ index: Int) {
-        guard phase == .chips, var press = activePress else { return }
+        guard phase == .chips || phase == .planning, var press = activePress else { return }
+        // The human outraces the planner: their pick wins, the call dies.
+        plannerTask?.cancel()
+        plannerTask = nil
         let candidates = press.decision.chipCandidates
         guard index < candidates.count else { return }
 
@@ -321,7 +442,9 @@ final class MagicPressCoordinator {
     }
 
     func submitHint(_ hint: String) {
-        guard phase == .chips, var press = activePress else { return }
+        guard phase == .chips || phase == .planning, var press = activePress else { return }
+        plannerTask?.cancel()
+        plannerTask = nil
         guard let workflow = press.decision.chipCandidates.first else { return }
         press.trace.chipIndexChosen = 0
         activePress = press
@@ -330,7 +453,9 @@ final class MagicPressCoordinator {
     }
 
     func dismissChips() {
-        guard phase == .chips else { return }
+        guard phase == .chips || phase == .planning else { return }
+        plannerTask?.cancel()
+        plannerTask = nil
         phase = .idle
         closeChipPanel(returnFocus: true)
         if var press = activePress {
@@ -400,8 +525,10 @@ final class MagicPressCoordinator {
         Task { [spendLedger] in await spendLedger.append(spend) }
         var trace = result.traceDraft
         trace.latencyMs.snapshot = press.trace.latencyMs.snapshot
+        trace.latencyMs.planner = press.trace.latencyMs.planner
         trace.presentation = press.trace.presentation
         trace.chipIndexChosen = press.trace.chipIndexChosen
+        trace.plannerIndexChosen = press.trace.plannerIndexChosen
         press.trace = trace
         activePress = press
 
@@ -558,6 +685,8 @@ final class MagicPressCoordinator {
         )
         trace.presentation = press.trace.presentation
         trace.chipIndexChosen = press.trace.chipIndexChosen
+        trace.plannerIndexChosen = press.trace.plannerIndexChosen
+        trace.latencyMs.planner = press.trace.latencyMs.planner
         press.trace = trace
         activePress = press
 

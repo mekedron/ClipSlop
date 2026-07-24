@@ -160,6 +160,7 @@
 "settings.providers.select" = "Оберіть провайдера";
 "settings.routing.title" = "Model routing";
 "settings.routing.role.generation.magic" = "Magic Button generation";
+"settings.routing.role.planner.magic" = "Magic Button planner";
 "settings.routing.role.chat.assistant" = "Settings Assistant chat";
 "settings.routing.provider_default" = "App default";
 "settings.routing.min_cost" = "Min cost";
@@ -529,6 +530,7 @@
 "magic.hud.no_target" = "Click into a text field or select text, then press the Magic hotkey.";
 "magic.chips.hint_placeholder" = "Describe what you want…";
 "magic.chips.context_blind" = "Nothing readable here — this app may not share its content. The result relies on your hint.";
+"magic.chips.planner_thinking" = "Picking the obvious action — or pick yourself…";
 "magic.chips.footer" = "↩ send · 1–4 choose · esc cancel";
 "magic.toast.inserted" = "Inserted";
 "magic.toast.undo" = "Undo";

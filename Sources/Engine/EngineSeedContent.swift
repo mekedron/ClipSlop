@@ -87,6 +87,15 @@ enum EngineSeedContent {
     warm_context_ttl_seconds: 30
     observer_debounce_ms: 200
 
+    # Fast-mode chip planner: when routing is ambiguous (the press would
+    # show chips), one tiny capped model call may pick the obvious chip for
+    # you — an empty field on a conversation view means "reply", and the
+    # model can see that where the routing rules cannot. Hard time cap in
+    # milliseconds; on timeout / unsure / error the chip panel shows as
+    # usual. 0 disables the planner (always ask). The always-ask hotkey
+    # (forced chips) never uses the planner.
+    planner_timeout_ms: 900
+
     # Full-content debug log: one markdown file per press in logs/debug/
     # with the complete snapshot, the exact prompt, and the raw model
     # output. Unlike the always-on contentless traces these files contain
