@@ -31,9 +31,19 @@ actor AXSnapshotService {
         let maxWebCollectChars: Int
         let webBeforeKeepChars: Int
         let webAfterKeepChars: Int
+        /// Tree mode's only new AX cost: container label reads (AXTitle /
+        /// AXDescription / AXRoleDescription). Derived from the call budget
+        /// — no config key of its own — and spent from `remainingCalls`
+        /// too, so the overall press ceiling never moves.
+        var remainingLabelReads: Int
+
+        static func labelReadCap(forCalls calls: Int) -> Int {
+            max(60, calls / 10)
+        }
 
         init(config: MagicEngineConfig) {
             remainingCalls = config.axCallBudget
+            remainingLabelReads = Self.labelReadCap(forCalls: config.axCallBudget)
             maxSiblingsPerLevel = config.maxSiblingsPerLevel
             maxGatherDepth = config.maxGatherDepth
             maxContentChars = config.surroundingMaxChars
@@ -247,17 +257,66 @@ actor AXSnapshotService {
             )
         }
 
-        var surroundingText = walk(&budget)
+        /// Tree counterpart of `walk`: same routing, same budgets, same
+        /// deadline — only the accumulator differs (nodes, not strings).
+        func treeWalk(_ budget: inout Budget) -> SurroundingNode {
+            if let webArea {
+                budget.remainingCalls = max(budget.remainingCalls, budget.webSweepCalls)
+                budget.remainingLabelReads = Budget.labelReadCap(forCalls: budget.remainingCalls)
+                let webAreaIndex = ancestors.firstIndex { CFEqual($0, webArea) } ?? 0
+                if webAreaIndex == 0 {
+                    return collectWebAreaTree(
+                        root: webArea, focused: focused, fieldRole: role,
+                        budget: &budget, expired: expired
+                    )
+                }
+                return collectWebNearestFirstTree(
+                    ancestors: ancestors, ancestorRoles: ancestorRoles,
+                    webAreaIndex: webAreaIndex, fieldRole: role,
+                    budget: &budget, expired: expired
+                )
+            }
+            return collectNativeTree(
+                focused: focused, ancestors: ancestors, ancestorRoles: ancestorRoles,
+                fieldRole: role, budget: &budget, expired: expired
+            )
+        }
+
         // First press in a freshly-enabled Chromium/Electron process often
         // races the tree build — one retry with a fresh budget. With the
         // warm observer running, enablement happens at app activation, so
         // this path is the fallback for presses that beat the observer.
-        if surroundingText.isEmpty, freshlyEnabled, !expired() {
-            try? await Task.sleep(for: .milliseconds(300))
-            var retryBudget = Budget(config: config)
-            retryBudget.remainingCalls = retryBudget.webSweepCalls
-            surroundingText = walk(&retryBudget)
-            budget.cannotCompleteCount += retryBudget.cannotCompleteCount
+        var surrounding: MagicSnapshot.Surrounding?
+        if config.surroundingTreeEnabled != 0 {
+            var tree = treeWalk(&budget)
+            if !tree.hasText, freshlyEnabled, !expired() {
+                try? await Task.sleep(for: .milliseconds(300))
+                var retryBudget = Budget(config: config)
+                retryBudget.remainingCalls = retryBudget.webSweepCalls
+                retryBudget.remainingLabelReads = Budget.labelReadCap(forCalls: retryBudget.remainingCalls)
+                tree = treeWalk(&retryBudget)
+                budget.cannotCompleteCount += retryBudget.cannotCompleteCount
+            }
+            if tree.hasText {
+                // `content` carries a full (untrimmed) render so every
+                // string-only consumer keeps working; the real budgeting
+                // happens in the assembler on `tree`.
+                var content = SurroundingTreeRenderer.render(tree, maxTokens: 0).text
+                if content.count > budget.maxContentChars {
+                    content = String(content.prefix(budget.maxContentChars))
+                }
+                surrounding = .axTreeStructured(content: content, tree: tree)
+            }
+        } else {
+            var surroundingText = walk(&budget)
+            if surroundingText.isEmpty, freshlyEnabled, !expired() {
+                try? await Task.sleep(for: .milliseconds(300))
+                var retryBudget = Budget(config: config)
+                retryBudget.remainingCalls = retryBudget.webSweepCalls
+                surroundingText = walk(&retryBudget)
+                budget.cannotCompleteCount += retryBudget.cannotCompleteCount
+            }
+            surrounding = surroundingText.isEmpty ? nil : .axTree(content: surroundingText)
         }
 
         return finish(MagicSnapshot(
@@ -265,7 +324,7 @@ actor AXSnapshotService {
             windowTitle: windowTitle,
             url: url,
             field: field,
-            surrounding: surroundingText.isEmpty ? nil : .axTree(content: surroundingText),
+            surrounding: surrounding,
             locale: locale,
             ts: Date(),
             focusedElement: AXElementRef(element: focused),
@@ -588,6 +647,261 @@ actor AXSnapshotService {
             result = String(result.prefix(maxChars))
         }
         return result
+    }
+
+    // MARK: - Surrounding walk (tree mode)
+
+    /// Whitespace collapse for tree node text and labels — the outline
+    /// renders one line per node, so internal newlines fold at gather time
+    /// (the flat path does the same in `assembleContent`).
+    nonisolated static func collapseWhitespace(_ text: String) -> String {
+        text.components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    /// Container label: AXTitle → AXDescription → (spine only)
+    /// AXRoleDescription. Every read spends from BOTH the label cap and the
+    /// call budget. Callers skip elements with fewer than two children —
+    /// single-child wrappers get hoisted by normalization anyway, and
+    /// Chromium has 15-deep chains of them.
+    private func containerLabel(_ element: AXUIElement, isSpine: Bool, budget: inout Budget) -> String? {
+        func read(_ attribute: String) -> String? {
+            guard budget.remainingLabelReads > 0 else { return nil }
+            budget.remainingLabelReads -= 1
+            guard let raw = copyString(element, attribute, &budget) else { return nil }
+            let cleaned = Self.collapseWhitespace(raw)
+            return cleaned.isEmpty ? nil : cleaned
+        }
+        if let title = read(kAXTitleAttribute) { return title }
+        if let description = read(kAXDescriptionAttribute) { return description }
+        if isSpine, let roleDescription = read(kAXRoleDescriptionAttribute) { return roleDescription }
+        return nil
+    }
+
+    /// Deep gather mirroring `gather`/`gatherText` — same visit order, same
+    /// depth/width/char caps, same expiry checks — accumulating nodes
+    /// instead of strings. `reverse` spends the budget nearest-first (the
+    /// web before-walk); the resulting children are flipped back to
+    /// document order.
+    private func gatherNode(
+        _ element: AXUIElement,
+        depth: Int,
+        maxDepth: Int,
+        maxChildren: Int,
+        reverse: Bool,
+        descriptionFallback: Bool,
+        chars: inout Int,
+        cap: Int,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> SurroundingNode? {
+        guard depth < maxDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return nil }
+        guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
+        if Self.textRoles.contains(role) {
+            var text = copyString(element, kAXValueAttribute, &budget)
+                ?? copyString(element, kAXTitleAttribute, &budget)
+            if text == nil, descriptionFallback {
+                text = copyString(element, kAXDescriptionAttribute, &budget)
+            }
+            guard let text else { return nil }
+            let cleaned = Self.collapseWhitespace(text)
+            guard cleaned.count > 1 else { return nil }
+            chars += cleaned.count
+            return SurroundingNode(role: role, text: cleaned)
+        }
+        guard let children: [AXUIElement] = copyElementArray(element, kAXChildrenAttribute, &budget) else {
+            return nil
+        }
+        let ordered = reverse
+            ? Array(children.suffix(maxChildren).reversed())
+            : Array(children.prefix(maxChildren))
+        var collected: [SurroundingNode] = []
+        for child in ordered {
+            if let node = gatherNode(
+                child, depth: depth + 1, maxDepth: maxDepth, maxChildren: maxChildren,
+                reverse: reverse, descriptionFallback: descriptionFallback,
+                chars: &chars, cap: cap, budget: &budget, expired: expired
+            ) {
+                collected.append(node)
+            }
+        }
+        guard !collected.isEmpty else { return nil }
+        if reverse { collected.reverse() }
+        let label = children.count >= 2
+            ? containerLabel(element, isSpine: false, budget: &budget)
+            : nil
+        return SurroundingNode(role: role, label: label, children: collected)
+    }
+
+    /// Tree counterpart of `collectWebNearestFirst`: the ancestor spine
+    /// becomes nested container nodes, per-level sibling subtrees hang off
+    /// it in document order, and the field node sits at the spine's bottom.
+    private func collectWebNearestFirstTree(
+        ancestors: [AXUIElement],
+        ancestorRoles: [String],
+        webAreaIndex: Int,
+        fieldRole: String,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> SurroundingNode {
+        var current = SurroundingNode(role: fieldRole, isField: true)
+        var beforeChars = 0
+        var afterChars = 0
+
+        for level in 1...webAreaIndex {
+            guard beforeChars < budget.webBeforeKeepChars, budget.remainingCalls > 0, !expired() else { break }
+            let parent = ancestors[level]
+            let pathChild = ancestors[level - 1]
+            guard let children: [AXUIElement] = copyElementArray(parent, kAXChildrenAttribute, &budget),
+                  let pathIndex = children.firstIndex(where: { CFEqual($0, pathChild) })
+            else { continue }
+
+            var beforeReversed: [SurroundingNode] = []
+            for sibling in children[..<pathIndex].reversed() {
+                guard beforeChars < budget.webBeforeKeepChars else { break }
+                if let node = gatherNode(
+                    sibling, depth: 0, maxDepth: budget.maxWebDepth,
+                    maxChildren: budget.maxWebChildrenPerNode, reverse: true,
+                    descriptionFallback: false,
+                    chars: &beforeChars, cap: budget.webBeforeKeepChars,
+                    budget: &budget, expired: expired
+                ) {
+                    beforeReversed.append(node)
+                }
+            }
+            var after: [SurroundingNode] = []
+            for sibling in children[(pathIndex + 1)...] {
+                guard afterChars < budget.webAfterKeepChars else { break }
+                if let node = gatherNode(
+                    sibling, depth: 0, maxDepth: budget.maxWebDepth,
+                    maxChildren: budget.maxWebChildrenPerNode, reverse: false,
+                    descriptionFallback: false,
+                    chars: &afterChars, cap: budget.webAfterKeepChars,
+                    budget: &budget, expired: expired
+                ) {
+                    after.append(node)
+                }
+            }
+
+            var parentRole = level < ancestorRoles.count ? ancestorRoles[level] : "?"
+            if parentRole == "?" { parentRole = "AXGroup" }
+            let label = children.count >= 2
+                ? containerLabel(parent, isSpine: true, budget: &budget)
+                : nil
+            current = SurroundingNode(
+                role: parentRole, label: label,
+                children: beforeReversed.reversed() + [current] + after
+            )
+        }
+        return current
+    }
+
+    /// Tree counterpart of `collectWebAreaSurroundings`: document-order
+    /// sweep of the web area, the focused element becoming the field node.
+    /// Mail exception preserved: when focus IS the web area root, its own
+    /// content is the context and a synthetic field node is appended at the
+    /// end of the root's children (the caret effectively sits at the end).
+    private func collectWebAreaTree(
+        root: AXUIElement,
+        focused: AXUIElement,
+        fieldRole: String,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> SurroundingNode {
+        let skipFocusedSubtree = !CFEqual(root, focused)
+        var collectedChars = 0
+
+        func sweepNode(_ element: AXUIElement, depth: Int) -> SurroundingNode? {
+            guard depth < budget.maxWebDepth, budget.remainingCalls > 0, !expired(),
+                  collectedChars < budget.maxWebCollectChars
+            else { return nil }
+            if skipFocusedSubtree, CFEqual(element, focused) {
+                return SurroundingNode(role: fieldRole, isField: true)
+            }
+
+            guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
+            if Self.textRoles.contains(role) {
+                let text = copyString(element, kAXValueAttribute, &budget)
+                    ?? copyString(element, kAXTitleAttribute, &budget)
+                guard let text else { return nil }
+                let cleaned = Self.collapseWhitespace(text)
+                guard cleaned.count > 1 else { return nil }
+                collectedChars += cleaned.count
+                return SurroundingNode(role: role, text: cleaned)
+            }
+
+            guard let children: [AXUIElement] = copyElementArray(element, kAXChildrenAttribute, &budget) else {
+                return nil
+            }
+            var collected: [SurroundingNode] = []
+            for child in children.prefix(budget.maxWebChildrenPerNode) {
+                if let node = sweepNode(child, depth: depth + 1) { collected.append(node) }
+            }
+            guard !collected.isEmpty else { return nil }
+            let label = children.count >= 2
+                ? containerLabel(element, isSpine: false, budget: &budget)
+                : nil
+            return SurroundingNode(role: role, label: label, children: collected)
+        }
+
+        var rootNode = sweepNode(root, depth: 0) ?? SurroundingNode(role: "AXWebArea")
+        if !skipFocusedSubtree {
+            rootNode.children.append(SurroundingNode(role: fieldRole, isField: true))
+        }
+        return rootNode
+    }
+
+    /// Tree counterpart of `collectSurroundings`: the ancestor spine as
+    /// nested nodes, each level's siblings gathered in document order
+    /// around the field's path, the field node at the bottom.
+    private func collectNativeTree(
+        focused: AXUIElement,
+        ancestors: [AXUIElement],
+        ancestorRoles: [String],
+        fieldRole: String,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> SurroundingNode {
+        var current = SurroundingNode(role: fieldRole, isField: true)
+        var totalChars = 0
+
+        for (index, ancestor) in ancestors.enumerated().dropFirst() {
+            guard budget.remainingCalls > 0, !expired(), totalChars < budget.maxContentChars else { break }
+            let pathChild = ancestors[index - 1]
+            guard let children: [AXUIElement] = copyElementArray(ancestor, kAXChildrenAttribute, &budget) else {
+                continue
+            }
+            var before: [SurroundingNode] = []
+            var after: [SurroundingNode] = []
+            var seenPath = false
+            for sibling in children.prefix(budget.maxSiblingsPerLevel) {
+                if CFEqual(sibling, pathChild) || CFEqual(sibling, focused) {
+                    seenPath = true
+                    continue
+                }
+                guard budget.remainingCalls > 0, !expired(), totalChars < budget.maxContentChars else { break }
+                if let node = gatherNode(
+                    sibling, depth: 0, maxDepth: budget.maxGatherDepth,
+                    maxChildren: budget.maxSiblingsPerLevel, reverse: false,
+                    descriptionFallback: true,
+                    chars: &totalChars, cap: budget.maxContentChars,
+                    budget: &budget, expired: expired
+                ) {
+                    if seenPath { after.append(node) } else { before.append(node) }
+                }
+            }
+            var ancestorRole = index < ancestorRoles.count ? ancestorRoles[index] : "?"
+            if ancestorRole == "?" { ancestorRole = "AXGroup" }
+            let label = children.count >= 2
+                ? containerLabel(ancestor, isSpine: true, budget: &budget)
+                : nil
+            current = SurroundingNode(
+                role: ancestorRole, label: label,
+                children: before + [current] + after
+            )
+        }
+        return current
     }
 
     // MARK: - AX plumbing

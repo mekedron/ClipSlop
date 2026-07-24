@@ -214,6 +214,66 @@ struct PromptAssemblerTests {
         #expect(slot.text.contains(tail))
     }
 
+    /// A large structured capture for the tree-mode slot tests: a feed of
+    /// posts with the field inside the middle post's comment list.
+    private func bigTree(postCount: Int = 12) -> SurroundingNode {
+        let fieldPost = postCount / 2
+        let posts = (1...postCount).map { index -> SurroundingNode in
+            var comments: [SurroundingNode] = [
+                SurroundingNode(role: "AXStaticText", text: "COMMENT-\(index) some earlier remark on this post"),
+            ]
+            if index == fieldPost {
+                comments.append(SurroundingNode(role: "AXTextArea", isField: true))
+            }
+            return SurroundingNode(role: "AXGroup", label: "post \(index)", children: [
+                SurroundingNode(role: "AXStaticText", text: "POST-\(index) " + String(repeating: "body text ", count: 40)),
+                SurroundingNode(role: "AXList", label: "comments", children: comments),
+            ])
+        }
+        return SurroundingNode(role: "AXWebArea", label: "feed", children: posts)
+    }
+
+    @Test func treeModeSlotObeysBudgetAndKeepsFencesAndMarker() {
+        let prompt = assemble(
+            snapshot: MagicTestSupport.makeSnapshot(
+                placeholder: "Add a comment…", surroundingTree: bigTree()
+            ),
+            surroundingMaxTokens: 300
+        )
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(slot.truncated)
+        #expect(slot.untrusted)
+        // Budget + tolerance for the fences and estimate granularity.
+        #expect(slot.tokensEstimated <= 300 + 60, "slot over budget: \(slot.tokensEstimated)")
+        #expect(slot.text.hasPrefix(PromptAssembler.untrustedFenceOpen))
+        #expect(slot.text.hasSuffix(PromptAssembler.untrustedFenceClose))
+        #expect(slot.text.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
+        // The field note ties the marker to the empty box.
+        #expect(slot.text.contains("empty \"Add a comment…\" box"))
+        // The chain still says WHICH post the field belongs to.
+        #expect(slot.text.contains("YOU ARE WRITING IN: feed › post 6 › comments"))
+        // The nearest comment survives; the far posts went first.
+        #expect(slot.text.contains("COMMENT-6"))
+        #expect(!slot.text.contains("POST-1 "))
+    }
+
+    @Test func treeModeZeroLimitRendersEverythingUntrimmed() {
+        let prompt = assemble(
+            workflow: MagicTestSupport.makeWorkflow(
+                id: "capped",
+                budget: BudgetSpec(promptTokensTotal: 1000, ms: 6000)
+            ),
+            snapshot: MagicTestSupport.makeSnapshot(surroundingTree: bigTree()),
+            surroundingMaxTokens: 0
+        )
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(!slot.truncated)
+        #expect(slot.text.contains("POST-1 "))
+        #expect(slot.text.contains("POST-12 "))
+        #expect(slot.text.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
+        #expect(!slot.text.contains(SurroundingTreeRenderer.trimMarker))
+    }
+
     @Test func trustAndUntrustPoolsSeparateCorrectly() {
         let prompt = assemble(
             snapshot: MagicTestSupport.makeSnapshot(

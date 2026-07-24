@@ -239,6 +239,7 @@ struct AgentSkillTests {
         trace.urlHost = "example.com"
         trace.selectionClass = "instruction"
         trace.selectionWasTie = false
+        trace.surroundingTree = true
         trace.chosenID = "base.reply"
         trace.chipIndexChosen = 0
         trace.plannerIndexChosen = 0

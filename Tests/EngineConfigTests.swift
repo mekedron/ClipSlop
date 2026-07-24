@@ -43,6 +43,20 @@ struct EngineConfigTests {
         #expect(negativeWarnings.count == 1)
     }
 
+    @Test func surroundingTreeKeyParsesClampsAndDefaultsOn() {
+        #expect(MagicEngineConfig.default.surroundingTreeEnabled == 1, "tree mode must be ON out of the box")
+
+        let off = MagicEngineConfig.parse("---\nsurrounding_tree_enabled: 0\n---")
+        #expect(off.config.surroundingTreeEnabled == 0)
+        #expect(off.warnings.isEmpty)
+
+        let clamped = MagicEngineConfig.parse("---\nsurrounding_tree_enabled: 7\n---")
+        #expect(clamped.config.surroundingTreeEnabled == 1)
+        #expect(clamped.warnings.count == 1)
+
+        #expect(EngineSeedContent.engineConfig.contains("surrounding_tree_enabled: 1"))
+    }
+
     @Test func noCloudListParses() {
         let (config, warnings) = MagicEngineConfig.parse("""
         ---

@@ -80,15 +80,27 @@ struct MagicSnapshot: Sendable {
 
     struct Surrounding: Sendable {
         /// How the content was gathered. V0 only implements the AX tree rung
-        /// of the ladder (§5.2).
+        /// of the ladder (§5.2) — flat ("ax_tree") or structured
+        /// ("ax_tree_structured").
         let method: String
         let author: String?
         let content: String
         /// Always "untrusted" — screen content is data, never instructions (P6).
         let trust: String
+        /// The structured capture (method "ax_tree_structured"). `content`
+        /// always holds a rendered string alongside it, so consumers that
+        /// only read text keep working; tree-aware consumers branch on this.
+        var tree: SurroundingNode? = nil
 
         static func axTree(content: String, author: String? = nil) -> Surrounding {
             Surrounding(method: "ax_tree", author: author, content: content, trust: "untrusted")
+        }
+
+        static func axTreeStructured(content: String, tree: SurroundingNode) -> Surrounding {
+            Surrounding(
+                method: "ax_tree_structured", author: nil, content: content,
+                trust: "untrusted", tree: tree
+            )
         }
     }
 

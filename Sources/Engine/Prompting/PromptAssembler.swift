@@ -230,19 +230,30 @@ enum PromptAssembler {
         )
     }
 
-    /// SURROUNDING: untrusted, fenced, tail kept on overflow — the AX walk
-    /// reads the screen top-to-bottom, so the content nearest the field
-    /// (the newest messages in a thread, the post above a comment box) is
-    /// at the END; the head is chrome and sidebar noise. The budget comes
-    /// from config.yaml `surrounding_max_tokens`; 0 means unlimited.
+    /// SURROUNDING: untrusted, fenced, nearest-to-field kept on overflow.
+    /// Structured captures (`surrounding.tree`) render as an indented
+    /// outline with a ⟨YOUR FIELD⟩ marker and trim structure-aware — the
+    /// field's ancestor chain and the content nearest the field survive,
+    /// the farthest subtrees drop first. Flat captures keep the tail — that
+    /// walk reads the screen top-to-bottom, so the content nearest the
+    /// field (the newest messages in a thread, the post above a comment
+    /// box) is at the END; the head is chrome and sidebar noise. The budget
+    /// comes from config.yaml `surrounding_max_tokens`; 0 means unlimited.
     private static func surroundingSlot(snapshot: MagicSnapshot, budgetTokens: Int) -> AssembledSlot {
         guard let surrounding = snapshot.surrounding, !surrounding.content.isEmpty else {
             return AssembledSlot(id: .surrounding, text: "", tokensEstimated: 0, truncated: false, untrusted: true)
         }
-        var content = surrounding.content
+        var content: String
         var truncated = false
-        if budgetTokens > 0, TokenEstimator.estimate(content) > budgetTokens {
-            (content, truncated) = trimToTokens(content, tokens: budgetTokens, keepEnd: true)
+        if let tree = surrounding.tree {
+            (content, truncated) = SurroundingTreeRenderer.render(
+                tree, maxTokens: budgetTokens, fieldNote: fieldNote(for: snapshot)
+            )
+        } else {
+            content = surrounding.content
+            if budgetTokens > 0, TokenEstimator.estimate(content) > budgetTokens {
+                (content, truncated) = trimToTokens(content, tokens: budgetTokens, keepEnd: true)
+            }
         }
 
         var lines: [String] = [untrustedFenceOpen]
@@ -258,6 +269,23 @@ enum PromptAssembler {
             tokensEstimated: TokenEstimator.estimate(text),
             truncated: truncated, untrusted: true
         )
+    }
+
+    /// One short clause for the outline's ⟨YOUR FIELD⟩ marker line, tying
+    /// the field's spot on screen to the field/input slot that carries its
+    /// actual content.
+    static func fieldNote(for snapshot: MagicSnapshot) -> String? {
+        switch snapshot.fieldState {
+        case .empty:
+            if let placeholder = snapshot.field?.placeholder, !placeholder.isEmpty {
+                return "empty \"\(placeholder)\" box"
+            }
+            return "currently empty"
+        case .draft:
+            return "your draft is in the DRAFT section below"
+        case .selection:
+            return "the selected text it holds is in the SELECTED TEXT section below"
+        }
     }
 
     /// FIELD + INPUT: the user's own draft, selection, and hint. Overflow

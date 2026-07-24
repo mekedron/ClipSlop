@@ -31,6 +31,7 @@ struct PressTraceTests {
         let sentinels = [
             "SENTINEL-FIELD-VALUE", "SENTINEL-SELECTION", "SENTINEL-SURROUNDING",
             "SENTINEL-TITLE", "SENTINEL-AUTHOR", "SENTINEL-PLACEHOLDER", "SENTINEL-URL-PATH",
+            "SENTINEL-TREE-LABEL", "SENTINEL-TREE-TEXT",
         ]
         let snapshot = MagicTestSupport.makeSnapshot(
             windowTitle: "SENTINEL-TITLE",
@@ -39,7 +40,11 @@ struct PressTraceTests {
             selection: .init(range: nil, text: "SENTINEL-SELECTION"),
             placeholder: "SENTINEL-PLACEHOLDER",
             surroundingContent: "SENTINEL-SURROUNDING",
-            surroundingAuthor: "SENTINEL-AUTHOR"
+            surroundingAuthor: "SENTINEL-AUTHOR",
+            surroundingTree: SurroundingNode(role: "AXGroup", label: "SENTINEL-TREE-LABEL", children: [
+                SurroundingNode(role: "AXStaticText", text: "SENTINEL-TREE-TEXT"),
+                SurroundingNode(role: "AXTextArea", isField: true),
+            ])
         )
         let classification = SelectionClassifier.classify("SENTINEL-SELECTION")
         let decision = try MagicTestSupport.seedRoute(snapshot, classification: classification)
@@ -53,8 +58,10 @@ struct PressTraceTests {
         for sentinel in sentinels {
             #expect(!json.contains(sentinel), "trace leaked \(sentinel)")
         }
-        // The host survives; the bundle id is intentionally kept.
+        // The host survives; the bundle id is intentionally kept. The tree
+        // capture leaves only its contentless flag.
         #expect(json.contains("linkedin.com"))
+        #expect(json.contains("\"surroundingTree\":true"))
     }
 }
 

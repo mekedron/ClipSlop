@@ -58,6 +58,13 @@ enum EngineSeedContent {
     # and per-workflow budgets never cut it either.
     surrounding_max_tokens: 8000
 
+    # Hierarchical screen context (0 or 1): render the captured screen as an
+    # indented outline — posts, comments, message lists — with an explicit
+    # ⟨YOUR FIELD⟩ marker at the exact box you are writing in, so the model
+    # can tell WHICH post or message the field belongs to. On overflow the
+    # content nearest your field survives. Set 0 for the old flat text blob.
+    surrounding_tree_enabled: 1
+
     # Character ceiling for generated output when the routed workflow card
     # sets no output.max_chars of its own. The model is told this number and
     # the verifier warns when the output exceeds it. A card's explicit

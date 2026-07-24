@@ -80,7 +80,12 @@ enum DeterministicVerifier {
             // quote like "Hei Nikita, the tool works nicely…" reads as
             // Finnish-and-English at once, and an English reply to it is
             // not a defect. Only an output matching no hypothesis warns.
-            accepted = [snapshot.surrounding?.content, snapshot.field?.value]
+            // Tree captures contribute their raw text only — the renderer's
+            // English structural tags must never skew language ID.
+            accepted = [
+                snapshot.surrounding.map { $0.tree?.plainText ?? $0.content },
+                snapshot.field?.value,
+            ]
                 .compactMap { $0 }
                 .filter { $0.trimmingCharacters(in: .whitespacesAndNewlines).count >= 20 }
                 .flatMap(plausibleLanguages(of:))

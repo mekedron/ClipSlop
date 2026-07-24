@@ -88,6 +88,32 @@ struct MagicPlannerTests {
         #expect(message.contains(PromptAssembler.truncationMarker))
     }
 
+    @Test func promptRendersTreeSurroundingsWithChainAndMarker() {
+        // A structured capture renders as the budgeted outline: the chain
+        // line and the field marker survive the planner's 300-token cap
+        // even when the tree itself is far bigger.
+        let messages = (1...80).map {
+            SurroundingNode(role: "AXStaticText", text: "MESSAGE-\($0) a chat line with some words in it")
+        }
+        let tree = SurroundingNode(role: "AXWebArea", label: "feed", children: [
+            SurroundingNode(role: "AXGroup", label: "post by Priya Patel", children: [
+                SurroundingNode(role: "AXList", label: "comments", children: messages + [
+                    SurroundingNode(role: "AXTextArea", isField: true),
+                ]),
+            ]),
+        ])
+        let snapshot = MagicTestSupport.makeSnapshot(surroundingTree: tree)
+        let message = MagicPlanner.buildUserMessage(snapshot: snapshot, candidates: candidates())
+
+        #expect(message.contains("YOU ARE WRITING IN: feed › post by Priya Patel › comments"))
+        #expect(message.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
+        // Nearest message survives, the oldest do not.
+        #expect(message.contains("MESSAGE-80"))
+        #expect(!message.contains("MESSAGE-1 "))
+        // The whole planner prompt stays tiny (300 + 120 caps + scaffolding).
+        #expect(TokenEstimator.estimate(message) < 600)
+    }
+
     @Test func promptIncludesSelectionForTiePresses() {
         let selection = "перепиши это покороче please"
         let snapshot = MagicTestSupport.makeSnapshot(

@@ -36,6 +36,11 @@ struct MagicEngineConfig: Sendable, Equatable {
     /// 0 = unlimited: everything the collector gathered is passed
     /// untrimmed, and workflow-card budgets never cut it either.
     var surroundingMaxTokens = 8_000
+    /// Hierarchical screen context (0/1): capture the surroundings as a
+    /// structured tree and render them as an indented outline with an
+    /// explicit ⟨YOUR FIELD⟩ marker; overflow keeps the content nearest
+    /// the field. 0 = the old flat text blob (tail kept on overflow).
+    var surroundingTreeEnabled = 1
     /// Cap on the focused field's own value read.
     var fieldValueMaxChars = 50_000
     /// Post-insert toast auto-dismiss.
@@ -90,6 +95,7 @@ struct MagicEngineConfig: Sendable, Equatable {
         ("web_before_keep_chars", 200...150_000, \.webBeforeKeepChars),
         ("web_after_keep_chars", 0...50_000, \.webAfterKeepChars),
         ("surrounding_max_tokens", 0...200_000, \.surroundingMaxTokens),
+        ("surrounding_tree_enabled", 0...1, \.surroundingTreeEnabled),
         ("field_value_max_chars", 1_000...500_000, \.fieldValueMaxChars),
         ("toast_dismiss_seconds", 2...120, \.toastDismissSeconds),
         ("output_max_chars_default", 100...100_000, \.outputMaxCharsDefault),

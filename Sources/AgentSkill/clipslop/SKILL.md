@@ -117,8 +117,12 @@ max_web_children_per_node 5–500. surrounding_max_chars 500–200000: cap on
 gathered context. web_before_keep_chars 200–150000: text before the field
 kept (a chat's newest messages). web_after_keep_chars 0–50000.
 surrounding_max_tokens 0–200000: THE screen-context knob — token ceiling
-for the prompt's surroundings block; overflow keeps the tail (nearest the
-field), 0 = unlimited (send everything captured).
+for the prompt's surroundings block; overflow keeps what's nearest the
+field, 0 = unlimited (send everything captured).
+surrounding_tree_enabled 0|1: hierarchical screen context — surroundings
+render as an indented outline with a ⟨YOUR FIELD⟩ marker and overflow
+trimming keeps the content nearest the field (0 = old flat text blob
+with tail-keeping).
 field_value_max_chars 1000–500000: cap on reading the field's own value.
 toast_dismiss_seconds 2–120. output_max_chars_default 100–100000: output
 ceiling when the routed card sets no output.max_chars.

@@ -17,9 +17,20 @@ enum MagicTestSupport {
         placeholder: String? = nil,
         surroundingContent: String? = nil,
         surroundingAuthor: String? = nil,
+        surroundingTree: SurroundingNode? = nil,
         hasField: Bool = true
     ) -> MagicSnapshot {
-        MagicSnapshot(
+        let surrounding: MagicSnapshot.Surrounding? = {
+            if let surroundingTree {
+                return .axTreeStructured(
+                    content: surroundingContent
+                        ?? SurroundingTreeRenderer.render(surroundingTree, maxTokens: 0).text,
+                    tree: surroundingTree
+                )
+            }
+            return surroundingContent.map { .axTree(content: $0, author: surroundingAuthor) }
+        }()
+        return MagicSnapshot(
             app: .init(name: appName, bundleId: bundleId, pid: 1),
             windowTitle: windowTitle,
             url: url,
@@ -32,7 +43,7 @@ enum MagicTestSupport {
                 selection: selection,
                 placeholder: placeholder
             ) : nil,
-            surrounding: surroundingContent.map { .axTree(content: $0, author: surroundingAuthor) },
+            surrounding: surrounding,
             locale: "en",
             ts: Date(timeIntervalSince1970: 1_750_000_000),
             focusedElement: nil

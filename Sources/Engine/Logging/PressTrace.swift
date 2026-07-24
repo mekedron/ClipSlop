@@ -18,6 +18,10 @@ struct PressTrace: Codable, Sendable {
     /// True when the press had no readable context at all (blind app —
     /// §15.3 forced chips). Written only when true, absent otherwise.
     var contextBlind: Bool?
+    /// True when the surroundings were captured as a structured tree
+    /// (method "ax_tree_structured") and the prompt's context block was
+    /// rendered structure-aware. Contentless; written only when true.
+    var surroundingTree: Bool?
     var tier: String
     var candidateIDs: [String]
     var chosenID: String?
@@ -81,6 +85,7 @@ struct PressTrace: Codable, Sendable {
         selectionClass = classification?.top.rawValue
         selectionWasTie = classification?.isTie
         contextBlind = snapshot.contextBlind ? true : nil
+        surroundingTree = snapshot.surrounding?.tree != nil ? true : nil
         tier = decision.map { String(describing: $0.tier) } ?? "none"
         candidateIDs = decision?.counted.map(\.id) ?? []
         chosenID = nil
