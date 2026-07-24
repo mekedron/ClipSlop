@@ -113,9 +113,12 @@ capture_deadline_ms 300–10000: snapshot deadline per press.
 ax_call_budget 50–5000: AX calls, native walk. web_call_budget 50–10000:
 AX calls, web walk. max_gather_depth 1–50: native subtree depth.
 max_web_depth 5–100: web depth cap. max_siblings_per_level 2–200.
-max_web_children_per_node 5–500. surrounding_max_chars 500–50000: cap on
-gathered context. web_before_keep_chars 200–40000: text before the field
-kept (a chat's newest messages). web_after_keep_chars 0–20000.
+max_web_children_per_node 5–500. surrounding_max_chars 500–200000: cap on
+gathered context. web_before_keep_chars 200–150000: text before the field
+kept (a chat's newest messages). web_after_keep_chars 0–50000.
+surrounding_max_tokens 0–200000: THE screen-context knob — token ceiling
+for the prompt's surroundings block; overflow keeps the tail (nearest the
+field), 0 = unlimited (send everything captured).
 field_value_max_chars 1000–500000: cap on reading the field's own value.
 toast_dismiss_seconds 2–120. output_max_chars_default 100–100000: output
 ceiling when the routed card sets no output.max_chars.

@@ -25,8 +25,10 @@ actor AXSnapshotService {
         let maxWebDepth: Int
         let maxWebChildrenPerNode: Int
         /// The Mail-style inside-webarea sweep over-collects, then keeps
-        /// what's nearest the field.
-        let maxWebCollectChars = 24_000
+        /// what's nearest the field. Derived from the keep windows so
+        /// raising them in config.yaml never silently hits a lower
+        /// collection ceiling.
+        let maxWebCollectChars: Int
         let webBeforeKeepChars: Int
         let webAfterKeepChars: Int
 
@@ -41,6 +43,7 @@ actor AXSnapshotService {
             maxWebChildrenPerNode = config.maxWebChildrenPerNode
             webBeforeKeepChars = config.webBeforeKeepChars
             webAfterKeepChars = config.webAfterKeepChars
+            maxWebCollectChars = max(24_000, webBeforeKeepChars + webAfterKeepChars + 8_000)
         }
     }
 

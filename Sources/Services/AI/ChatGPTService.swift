@@ -31,29 +31,75 @@ struct ChatGPTService: AIService {
                         throw AIServiceError.httpError(statusCode: httpResponse.statusCode, body: body)
                     }
 
-                    // Responses API uses SSE with typed events
+                    // Responses API uses SSE with typed events. Terminal
+                    // states that carry no output text (a refusal, an
+                    // incomplete response, a failure) must surface as
+                    // descriptive errors — swallowing them turns every
+                    // such press into an opaque "empty response".
+                    var sawText = false
+                    var refusal = ""
+                    // Contentless per-type event counts — when a stream
+                    // yields no text, the error names exactly what the
+                    // backend DID send instead of a blind "empty response".
+                    var eventCounts: [String: Int] = [:]
                     for try await line in bytes.lines {
                         if Task.isCancelled { break }
                         guard line.hasPrefix("data: ") else { continue }
                         let json = String(line.dropFirst(6))
                         guard let data = json.data(using: .utf8),
                               let event = try? JSONDecoder().decode(ResponsesSSEEvent.self, from: data)
-                        else { continue }
+                        else {
+                            eventCounts["undecodable", default: 0] += 1
+                            continue
+                        }
+                        eventCounts[event.type, default: 0] += 1
 
                         switch event.type {
                         case "response.output_text.delta":
                             if let delta = event.delta {
+                                sawText = true
                                 continuation.yield(delta)
                             }
+                        case "response.output_text.done":
+                            // The backend sometimes streams NO deltas and
+                            // delivers the whole text only here. Yield it
+                            // once; when deltas did stream, this is a
+                            // duplicate and is skipped.
+                            if !sawText, let text = event.text, !text.isEmpty {
+                                sawText = true
+                                continuation.yield(text)
+                            }
+                        case "response.refusal.delta":
+                            if let delta = event.delta { refusal += delta }
                         case "response.completed":
                             break
                         case "response.failed":
-                            if let message = event.response?.error?.message {
-                                throw AIServiceError.httpError(statusCode: 0, body: message)
-                            }
+                            throw AIServiceError.generationStopped(
+                                reason: event.response?.error?.message ?? "the provider reported a failure"
+                            )
+                        case "response.incomplete":
+                            throw AIServiceError.generationStopped(
+                                reason: "incomplete response (\(event.response?.incompleteDetails?.reason ?? "unknown reason"))"
+                            )
+                        case "error":
+                            throw AIServiceError.generationStopped(
+                                reason: event.message ?? "the provider sent an error event"
+                            )
                         default:
                             continue
                         }
+                    }
+                    if !sawText {
+                        if !refusal.isEmpty {
+                            throw AIServiceError.generationStopped(reason: "the model refused — \(refusal)")
+                        }
+                        let histogram = eventCounts
+                            .sorted { $0.key < $1.key }
+                            .map { "\($0.key)×\($0.value)" }
+                            .joined(separator: ", ")
+                        throw AIServiceError.generationStopped(
+                            reason: "the stream ended without any output text (events: \(histogram.isEmpty ? "none" : histogram))"
+                        )
                     }
                     continuation.finish()
                 } catch {
@@ -170,13 +216,27 @@ private struct ResponsesAPIResponse: Decodable {
 private struct ResponsesSSEEvent: Decodable {
     let type: String
     let delta: String?
+    /// `response.output_text.done` carries the complete text here.
+    let text: String?
+    /// Top-level `error` events carry their message here.
+    let message: String?
     let response: ResponseInfo?
 
     struct ResponseInfo: Decodable {
         let error: ErrorInfo?
+        let incompleteDetails: IncompleteDetails?
+
+        enum CodingKeys: String, CodingKey {
+            case error
+            case incompleteDetails = "incomplete_details"
+        }
     }
 
     struct ErrorInfo: Decodable {
         let message: String?
+    }
+
+    struct IncompleteDetails: Decodable {
+        let reason: String?
     }
 }

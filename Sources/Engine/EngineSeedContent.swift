@@ -47,31 +47,16 @@ enum EngineSeedContent {
     # Delete a line to fall back to its default. "Reset to Default" restores
     # this whole file.
 
-    # Snapshot capture: total deadline for reading the screen on a press.
-    capture_deadline_ms: 1600
+    # ══════════════════════════════════════════════════════════════════
+    # The big knobs — the settings you will actually want to change.
+    # ══════════════════════════════════════════════════════════════════
 
-    # Accessibility call budgets. Native apps need few calls; web pages
-    # (Chromium wraps everything in groups) need many.
-    ax_call_budget: 350
-    web_call_budget: 900
-
-    # Tree traversal depths and widths.
-    max_gather_depth: 6
-    max_web_depth: 30
-    max_siblings_per_level: 16
-    max_web_children_per_node: 60
-
-    # How much surrounding text reaches the prompt, and how the web walk
-    # splits it: text before the field (a chat's newest messages) vs after.
-    surrounding_max_chars: 6000
-    web_before_keep_chars: 4500
-    web_after_keep_chars: 1000
-
-    # Cap on reading the focused field's own content.
-    field_value_max_chars: 50000
-
-    # Post-insert toast auto-dismiss, in seconds.
-    toast_dismiss_seconds: 8
+    # THE screen-context knob: token ceiling for the SURROUNDING CONTEXT
+    # block of the prompt. When the captured text overflows it, the tail
+    # (nearest the field — a thread's newest messages) is kept and the head
+    # is dropped. 0 = unlimited: everything captured is sent, untrimmed,
+    # and per-workflow budgets never cut it either.
+    surrounding_max_tokens: 8000
 
     # Character ceiling for generated output when the routed workflow card
     # sets no output.max_chars of its own. The model is told this number and
@@ -79,21 +64,14 @@ enum EngineSeedContent {
     # output.max_chars always wins over this default.
     output_max_chars_default: 1200
 
-    # Warm frontmost-app observer: keeps cheap context (URL, window title,
-    # focused field) fresh between presses and pre-builds Chromium's
-    # accessibility tree on app switch. Set warm_observer_enabled: 0 to turn
-    # the subsystem off entirely.
-    warm_observer_enabled: 1
-    warm_context_ttl_seconds: 30
-    observer_debounce_ms: 200
-
-    # Fast-mode chip planner: when routing is ambiguous (the press would
-    # show chips), one tiny capped model call may pick the obvious chip for
-    # you — an empty field on a conversation view means "reply", and the
-    # model can see that where the routing rules cannot. Hard time cap in
-    # milliseconds; on timeout / unsure / error the chip panel shows as
-    # usual. 0 disables the planner (always ask). The always-ask hotkey
-    # (forced chips) never uses the planner.
+    # Fast-mode chip planner ("Picking the obvious action…" in the chip
+    # panel): when routing is ambiguous, one tiny capped model call may
+    # pick the obvious chip for you — an empty field on a conversation
+    # view means "reply", and the model can see that where the routing
+    # rules cannot. The number is the planner's time cap in milliseconds;
+    # on timeout / unsure / error the chip panel just stays for you to
+    # pick. SET 0 TO TURN THE AUTO-PICK OFF entirely (every ambiguous
+    # press then asks you). The always-ask hotkey never uses the planner.
     planner_timeout_ms: 900
 
     # Full-content debug log: one markdown file per press in logs/debug/
@@ -110,6 +88,60 @@ enum EngineSeedContent {
     # role's chain, or refuses with a clear message when none exists.
     # Example: [telegram, com.tinyspeck.slackmacgap, gmail.com]
     no_cloud: []
+
+    # ══════════════════════════════════════════════════════════════════
+    # Capture tuning — rarely needs touching. Reading the screen works by
+    # asking the frontmost app about its elements through the macOS
+    # Accessibility API, one small question at a time: "what is this
+    # element's role?", "what text is in it?", "what are its children?".
+    # Every such question is one REQUEST below. The limits exist so a
+    # press can never hang on a slow or broken app — when a budget or the
+    # deadline runs out, the press continues with what was gathered.
+    # ══════════════════════════════════════════════════════════════════
+
+    # Milliseconds: total wall-clock deadline for reading the screen on a
+    # press. A cap, not a target — fast pages finish far earlier.
+    capture_deadline_ms: 2500
+
+    # Requests (see above) allowed per press. Native apps pack lots of
+    # text into few elements — a few hundred requests cover a window.
+    # Web pages (Chromium) wrap every div in an empty group, so reaching
+    # the same text costs many more requests; a long LinkedIn or Gmail
+    # thread wants thousands.
+    ax_call_budget: 600
+    web_call_budget: 3000
+
+    # Elements, not characters: how deep and how wide the tree walk goes.
+    # max_gather_depth — levels descended inside one native subtree;
+    # max_web_depth — levels inside web subtrees (deep nesting is normal);
+    # max_siblings_per_level / max_web_children_per_node — how many
+    # neighboring elements are visited at each level.
+    max_gather_depth: 6
+    max_web_depth: 30
+    max_siblings_per_level: 16
+    max_web_children_per_node: 60
+
+    # Characters of gathered screen text. surrounding_max_chars caps the
+    # total; on web the text nearest the field wins — up to
+    # web_before_keep_chars from before the field (a chat's newest
+    # messages live there) and web_after_keep_chars from after it.
+    surrounding_max_chars: 32000
+    web_before_keep_chars: 20000
+    web_after_keep_chars: 6000
+
+    # Characters: cap on reading the focused field's own content.
+    field_value_max_chars: 50000
+
+    # Post-insert toast auto-dismiss, in seconds.
+    toast_dismiss_seconds: 8
+
+    # Warm frontmost-app observer: keeps cheap context (URL, window title,
+    # focused field) fresh between presses and pre-builds Chromium's
+    # accessibility tree on app switch. Set warm_observer_enabled: 0 to turn
+    # the subsystem off entirely.
+    warm_observer_enabled: 1
+    warm_context_ttl_seconds: 30
+    observer_debounce_ms: 200
     ---
     """
 

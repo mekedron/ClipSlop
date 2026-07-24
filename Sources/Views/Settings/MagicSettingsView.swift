@@ -291,6 +291,7 @@ struct MagicSettingsView: View {
         )
     }
 
+
     // MARK: - Agent Skill install / export
 
     /// Installs the bundled skill into `parent/clipslop/`, asking before

@@ -30,6 +30,11 @@ enum AIServiceError: LocalizedError {
     case decodingError(String)
     case networkError(Error)
     case emptyResponse
+    /// The stream ended in a terminal state without usable text — the
+    /// reason is the provider's own words (refusal text, incomplete
+    /// reason, failure message), so the user sees WHY instead of a
+    /// generic "empty response".
+    case generationStopped(reason: String)
     case cancelled
     case cliToolNotFound(String)
     case cliToolFailed(exitCode: Int32, stderr: String)
@@ -56,6 +61,8 @@ enum AIServiceError: LocalizedError {
             "Network error: \(error.localizedDescription)"
         case .emptyResponse:
             "The AI returned an empty response. Try rephrasing your text."
+        case .generationStopped(let reason):
+            "The AI stopped without returning text: \(reason)"
         case .cancelled:
             "Request was cancelled"
         case .cliToolNotFound(let name):

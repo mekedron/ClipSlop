@@ -15,6 +15,9 @@ enum SlotID: String, CaseIterable, Sendable, Codable {
         case .pinned: 1200
         case .workflowBody: 600
         case .fewShot: 500
+        // Superseded: the surrounding slot's real budget is config.yaml
+        // `surrounding_max_tokens` (0 = unlimited), threaded into
+        // `assemble`. This table value is never consulted for it.
         case .surrounding: 800
         case .fieldInput: 400
         }
@@ -71,7 +74,8 @@ enum PromptAssembler {
         core: CoreFileSet,
         classification: SelectionClassification?,
         hint: String?,
-        outputMaxChars: Int
+        outputMaxChars: Int,
+        surroundingMaxTokens: Int = MagicEngineConfig.default.surroundingMaxTokens
     ) -> AssembledPrompt {
         var slots: [AssembledSlot] = []
 
@@ -81,21 +85,28 @@ enum PromptAssembler {
         // example store yet. Kept so dry-run shows the slot at 0 and the
         // upgrade is additive.
         slots.append(AssembledSlot(id: .fewShot, text: "", tokensEstimated: 0, truncated: false, untrusted: false))
-        slots.append(surroundingSlot(snapshot: snapshot))
+        slots.append(surroundingSlot(snapshot: snapshot, budgetTokens: surroundingMaxTokens))
         slots.append(fieldInputSlot(snapshot: snapshot, classification: classification, hint: hint))
 
-        // A workflow may cap the total below the table's 3500. Cross-slot
-        // trim order when it does: surrounding first, then workflow body,
-        // then pinned — the field/input slot (the user's own words) last,
-        // and in V0 never (its own 400 cap is the floor).
-        let cap = min(workflow.card.budget.promptTokensTotal, SlotID.allCases.reduce(0) { $0 + $1.budgetTokens })
+        // A workflow may cap the total below the slot-table sum. Cross-slot
+        // trim order when it does: workflow body, then pinned — the
+        // field/input slot (the user's own words) last, and in V0 never
+        // (its own 400 cap is the floor). SURROUNDING is exempt: how much
+        // screen context the model sees is the user's global
+        // `surrounding_max_tokens` decision (0 = everything), already
+        // applied above — a card's cost budget never silently shrinks it.
+        let surroundingTokens = slots.first(where: { $0.id == .surrounding })?.tokensEstimated ?? 0
+        let cap = min(
+            workflow.card.budget.promptTokensTotal,
+            SlotID.allCases.filter { $0 != .surrounding }.reduce(0) { $0 + $1.budgetTokens }
+        )
         var total = slots.reduce(0) { $0 + $1.tokensEstimated }
-        if total > cap {
-            for slotID in [SlotID.surrounding, .workflowBody, .pinned] {
-                guard total > cap else { break }
+        if total - surroundingTokens > cap {
+            for slotID in [SlotID.workflowBody, .pinned] {
+                guard total - surroundingTokens > cap else { break }
                 guard let index = slots.firstIndex(where: { $0.id == slotID }) else { continue }
                 let slot = slots[index]
-                let excess = total - cap
+                let excess = total - surroundingTokens - cap
                 let target = max(0, slot.tokensEstimated - excess)
                 let (trimmed, didTrim) = trimToTokens(slot.text, tokens: target)
                 let newEstimate = TokenEstimator.estimate(trimmed)
@@ -219,17 +230,19 @@ enum PromptAssembler {
         )
     }
 
-    /// SURROUNDING: untrusted, fenced, head kept on overflow (the target
-    /// message sits at the top of the collector's walk).
-    private static func surroundingSlot(snapshot: MagicSnapshot) -> AssembledSlot {
+    /// SURROUNDING: untrusted, fenced, tail kept on overflow — the AX walk
+    /// reads the screen top-to-bottom, so the content nearest the field
+    /// (the newest messages in a thread, the post above a comment box) is
+    /// at the END; the head is chrome and sidebar noise. The budget comes
+    /// from config.yaml `surrounding_max_tokens`; 0 means unlimited.
+    private static func surroundingSlot(snapshot: MagicSnapshot, budgetTokens: Int) -> AssembledSlot {
         guard let surrounding = snapshot.surrounding, !surrounding.content.isEmpty else {
             return AssembledSlot(id: .surrounding, text: "", tokensEstimated: 0, truncated: false, untrusted: true)
         }
-        let budget = SlotID.surrounding.budgetTokens
         var content = surrounding.content
         var truncated = false
-        if TokenEstimator.estimate(content) > budget {
-            (content, truncated) = trimToTokens(content, tokens: budget)
+        if budgetTokens > 0, TokenEstimator.estimate(content) > budgetTokens {
+            (content, truncated) = trimToTokens(content, tokens: budgetTokens, keepEnd: true)
         }
 
         var lines: [String] = [untrustedFenceOpen]

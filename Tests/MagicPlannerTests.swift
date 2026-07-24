@@ -76,6 +76,18 @@ struct MagicPlannerTests {
         #expect(TokenEstimator.estimate(message) < 600)
     }
 
+    @Test func promptSurroundingsExcerptKeepsTheTail() {
+        // Top-to-bottom AX walk: the pending message is at the tail, the
+        // head is sidebar noise. The planner must see the tail or it can
+        // only ever answer UNSURE.
+        let sidebar = String(repeating: "sidebar preview noise ", count: 500)
+        let pending = "Derk: do you know when you can expect news?"
+        let snapshot = MagicTestSupport.makeSnapshot(surroundingContent: sidebar + pending)
+        let message = MagicPlanner.buildUserMessage(snapshot: snapshot, candidates: candidates())
+        #expect(message.contains(pending))
+        #expect(message.contains(PromptAssembler.truncationMarker))
+    }
+
     @Test func promptIncludesSelectionForTiePresses() {
         let selection = "перепиши это покороче please"
         let snapshot = MagicTestSupport.makeSnapshot(

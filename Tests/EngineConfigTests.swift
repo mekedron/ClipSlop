@@ -30,6 +30,19 @@ struct EngineConfigTests {
         #expect(config.observerDebounceMs == MagicEngineConfig.default.observerDebounceMs)
     }
 
+    @Test func zeroSurroundingTokensMeansUnlimitedAndParsesClean() {
+        let (config, warnings) = MagicEngineConfig.parse("""
+        ---
+        surrounding_max_tokens: 0
+        ---
+        """)
+        #expect(warnings.isEmpty)
+        #expect(config.surroundingMaxTokens == 0)
+        let (negative, negativeWarnings) = MagicEngineConfig.parse("---\nsurrounding_max_tokens: -5\n---")
+        #expect(negative.surroundingMaxTokens == 0)
+        #expect(negativeWarnings.count == 1)
+    }
+
     @Test func noCloudListParses() {
         let (config, warnings) = MagicEngineConfig.parse("""
         ---

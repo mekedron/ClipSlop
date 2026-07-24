@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// Everything a press needs, extracted on the main actor so the rest of the
 /// pipeline can run off it (the `PromptRunner` plan/run pattern).
@@ -15,6 +16,9 @@ struct MagicPressPlan: Sendable {
     /// Output ceiling for cards without an explicit `output.max_chars`
     /// (config.yaml `output_max_chars_default`).
     var outputMaxCharsDefault: Int = MagicEngineConfig.default.outputMaxCharsDefault
+    /// Token ceiling for the prompt's screen-context block
+    /// (config.yaml `surrounding_max_tokens`, 0 = unlimited).
+    var surroundingMaxTokens: Int = MagicEngineConfig.default.surroundingMaxTokens
     /// Fast-mode chip planner inputs (`MagicPlanner`): the `planner.magic`
     /// binding (empty = inherit the generation resolution) and the hard cap
     /// (0 = planner disabled).
@@ -90,6 +94,17 @@ enum MagicPressPipelineError: LocalizedError {
 /// The engine seam the press band calls: `plan` on the main actor, then
 /// `route` (pure) and `execute` (async, one model call — P1) off it.
 enum MagicPressPipeline {
+    private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.pipeline")
+
+    /// "The model gave us nothing" in both shapes — the service-level
+    /// terminal state and the trimmed-to-whitespace output.
+    private static func isEmptyGeneration(_ error: Error) -> Bool {
+        switch error as? AIServiceError {
+        case .emptyResponse, .generationStopped: true
+        default: false
+        }
+    }
+
     @MainActor
     static func plan(
         workflowStore: WorkflowStore,
@@ -125,6 +140,7 @@ enum MagicPressPipeline {
             providers: providerStore.providers,
             noCloud: config.noCloud,
             outputMaxCharsDefault: config.outputMaxCharsDefault,
+            surroundingMaxTokens: config.surroundingMaxTokens,
             plannerBinding: roleStore.binding(for: .plannerMagic),
             plannerTimeoutMs: config.plannerTimeoutMs
         )
@@ -188,7 +204,8 @@ enum MagicPressPipeline {
             core: plan.core,
             classification: classification,
             hint: hint,
-            outputMaxChars: outputMaxChars
+            outputMaxChars: outputMaxChars,
+            surroundingMaxTokens: plan.surroundingMaxTokens
         )
         trace.latencyMs.assemble = Self.ms(clock.now - assembleStart)
         trace.slotTokens = Dictionary(uniqueKeysWithValues: assembled.slots.map { ($0.id.rawValue, $0.tokensEstimated) })
@@ -196,16 +213,30 @@ enum MagicPressPipeline {
 
         let generateStart = clock.now
         let service = AIServiceFactory.service(for: provider.providerType)
-        let generation = try await service.processWithUsage(
-            text: assembled.userMessage,
-            systemPrompt: assembled.systemPrompt,
-            config: provider
-        )
-        let raw = generation.text
-        trace.latencyMs.generate = Self.ms(clock.now - generateStart)
 
-        var output = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !output.isEmpty else { throw AIServiceError.emptyResponse }
+        func attemptGeneration() async throws -> (AIGenerationResult, String) {
+            let generation = try await service.processWithUsage(
+                text: assembled.userMessage,
+                systemPrompt: assembled.systemPrompt,
+                config: provider
+            )
+            let output = generation.text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !output.isEmpty else { throw AIServiceError.emptyResponse }
+            return (generation, output)
+        }
+
+        // Reasoning backends intermittently complete a stream with no
+        // output text at all. One silent retry absorbs that; a second
+        // empty stream surfaces the (now descriptive) error.
+        let generation: AIGenerationResult
+        var output: String
+        do {
+            (generation, output) = try await attemptGeneration()
+        } catch let error where Self.isEmptyGeneration(error) {
+            Self.logger.warning("first generation attempt returned nothing (\(error.localizedDescription, privacy: .public)) — retrying once")
+            (generation, output) = try await attemptGeneration()
+        }
+        trace.latencyMs.generate = Self.ms(clock.now - generateStart)
         output = ContinuationSeam.adjust(output: output, for: snapshot)
 
         let verifyStart = clock.now
@@ -240,7 +271,8 @@ enum MagicPressPipeline {
             core: plan.core,
             classification: classification,
             hint: nil,
-            outputMaxChars: workflow.card.output.maxChars ?? plan.outputMaxCharsDefault
+            outputMaxChars: workflow.card.output.maxChars ?? plan.outputMaxCharsDefault,
+            surroundingMaxTokens: plan.surroundingMaxTokens
         )
 
         let presentation: String

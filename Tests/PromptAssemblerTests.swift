@@ -18,12 +18,14 @@ struct PromptAssemblerTests {
         core: CoreFileSet? = nil,
         classification: SelectionClassification? = nil,
         hint: String? = nil,
-        outputMaxChars: Int = 1200
+        outputMaxChars: Int = 1200,
+        surroundingMaxTokens: Int = MagicEngineConfig.default.surroundingMaxTokens
     ) -> AssembledPrompt {
         PromptAssembler.assemble(
             workflow: workflow, snapshot: snapshot,
             core: core ?? self.core, classification: classification, hint: hint,
-            outputMaxChars: outputMaxChars
+            outputMaxChars: outputMaxChars,
+            surroundingMaxTokens: surroundingMaxTokens
         )
     }
 
@@ -60,11 +62,14 @@ struct PromptAssemblerTests {
             core: CoreFileSet(
                 identity: huge, writingStyle: huge, constraintsText: "- Never invent facts.",
                 aliases: huge, constraints: [], systemPromptOverride: nil
-            )
+            ),
+            surroundingMaxTokens: 800
         )
         for slot in prompt.slots {
-            // Small tolerance for section headers added after trimming.
-            #expect(slot.tokensEstimated <= slot.id.budgetTokens + 30, "\(slot.id) over budget: \(slot.tokensEstimated)")
+            // Small tolerance for section headers added after trimming. The
+            // surrounding slot's budget is the threaded config value.
+            let budget = slot.id == .surrounding ? 800 : slot.id.budgetTokens
+            #expect(slot.tokensEstimated <= budget + 30, "\(slot.id) over budget: \(slot.tokensEstimated)")
         }
     }
 
@@ -148,21 +153,65 @@ struct PromptAssemblerTests {
         #expect(slot.text.contains("Add a comment…"))
     }
 
-    @Test func workflowCapBelowTableTrimsSurroundingFirst() {
+    @Test func workflowCapSqueezesInstructionsButNeverSurrounding() {
+        // A card's `budget.prompt_tokens_total` bounds the instruction
+        // slots; the surroundings are governed solely by the user's global
+        // `surrounding_max_tokens` — a card can never silently shrink the
+        // screen context.
         let surrounding = String(repeating: "thread message content ", count: 200)
+        let hugeBody = String(repeating: "workflow rule text ", count: 500)
+        let prompt = assemble(
+            workflow: MagicTestSupport.makeWorkflow(
+                id: "capped",
+                budget: BudgetSpec(promptTokensTotal: 700, ms: 6000),
+                body: hugeBody
+            ),
+            snapshot: MagicTestSupport.makeSnapshot(value: "My draft.", surroundingContent: surrounding)
+        )
+        let surroundingSlot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(!surroundingSlot.truncated)
+        let instructionTokens = prompt.slots
+            .filter { $0.id != .surrounding }
+            .reduce(0) { $0 + $1.tokensEstimated }
+        #expect(instructionTokens <= 700 + 30)
+        // The user's own field content survives the cross-slot trim.
+        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
+        #expect(fieldSlot.text.contains("My draft."))
+    }
+
+    @Test func surroundingOverflowKeepsTheTail() {
+        // The AX walk reads top-to-bottom: sidebar noise first, the thread's
+        // newest message (the one being answered) last. Overflow must drop
+        // the head, never the pending message at the tail.
+        let sidebar = String(repeating: "sidebar preview noise ", count: 300)
+        let pending = "PENDING-QUESTION do you know when"
+        let prompt = assemble(
+            snapshot: MagicTestSupport.makeSnapshot(surroundingContent: sidebar + pending),
+            surroundingMaxTokens: 800
+        )
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(slot.truncated)
+        #expect(slot.text.contains(pending))
+    }
+
+    @Test func zeroContextLimitPassesEverythingUntrimmed() {
+        // `surrounding_max_tokens: 0` — the whole captured screen goes in,
+        // head to tail, and even a card's own budget cannot cut it.
+        let head = "HEAD-MARKER the very first thing on screen"
+        let tail = "TAIL-MARKER the pending message by the field"
+        let filler = String(repeating: "long conversation line ", count: 3000)
         let prompt = assemble(
             workflow: MagicTestSupport.makeWorkflow(
                 id: "capped",
                 budget: BudgetSpec(promptTokensTotal: 1000, ms: 6000)
             ),
-            snapshot: MagicTestSupport.makeSnapshot(value: "My draft.", surroundingContent: surrounding)
+            snapshot: MagicTestSupport.makeSnapshot(surroundingContent: head + filler + tail),
+            surroundingMaxTokens: 0
         )
-        #expect(prompt.totalTokensEstimated <= 1000 + 30)
-        let surroundingSlot = prompt.slots.first { $0.id == .surrounding }!
-        #expect(surroundingSlot.truncated)
-        // The user's own field content survives the cross-slot trim.
-        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
-        #expect(fieldSlot.text.contains("My draft."))
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(!slot.truncated)
+        #expect(slot.text.contains(head))
+        #expect(slot.text.contains(tail))
     }
 
     @Test func trustAndUntrustPoolsSeparateCorrectly() {

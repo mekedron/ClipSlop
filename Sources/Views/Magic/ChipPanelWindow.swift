@@ -30,7 +30,6 @@ final class ChipPanelWindow: NSPanel {
         chips: [MagicChip],
         note: String? = nil,
         coordinator: MagicPressCoordinator? = nil,
-        plannerTimeoutMs: Int = 0,
         onSelect: @escaping (Int) -> Void,
         onHint: @escaping (String) -> Void,
         onDismiss: @escaping () -> Void
@@ -60,7 +59,6 @@ final class ChipPanelWindow: NSPanel {
         // makes the click land on the chip without activating anything.
         let hosting = FirstMouseHostingView(rootView: ChipPanelView(
             chips: chips, note: note, coordinator: coordinator,
-            plannerTimeoutMs: plannerTimeoutMs,
             onSelect: onSelect, onHint: onHint, onDismiss: onDismiss
         ))
         contentView = hosting
@@ -99,14 +97,12 @@ private struct ChipPanelView: View {
     /// Observed for the planning phase — the footer swaps to a progress
     /// affordance while the planner races its cap.
     let coordinator: MagicPressCoordinator?
-    let plannerTimeoutMs: Int
     let onSelect: (Int) -> Void
     let onHint: (String) -> Void
     let onDismiss: () -> Void
 
     @State private var hintText = ""
     @State private var hintHeight: CGFloat = 22
-    @State private var plannerProgress: Double = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -164,21 +160,17 @@ private struct ChipPanelView: View {
             }
 
             // Fixed height so the planner→manual handover never resizes the
-            // panel under the cursor.
+            // panel under the cursor. Spinner styled like the generating
+            // toast's (ProgressView().controlSize(.small)).
             Group {
                 if coordinator?.phase == .planning {
-                    VStack(alignment: .leading, spacing: 3) {
-                        ProgressView(value: plannerProgress)
-                            .progressViewStyle(.linear)
+                    HStack(spacing: 6) {
+                        ProgressView()
+                            .controlSize(.small)
+                            .scaleEffect(0.7)
                         Text(Loc.shared.t("magic.chips.planner_thinking"))
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
-                    }
-                    .onAppear {
-                        plannerProgress = 0
-                        withAnimation(.linear(duration: Double(max(plannerTimeoutMs, 1)) / 1000)) {
-                            plannerProgress = 1
-                        }
                     }
                 } else {
                     Text(Loc.shared.t("magic.chips.footer"))

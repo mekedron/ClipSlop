@@ -16,16 +16,17 @@ Behavior of the parser:
 
 | Key | Default | Range | Meaning |
 |---|---|---|---|
-| `capture_deadline_ms` | 1600 | 300–10000 | Total snapshot deadline per press — the press never waits longer for screen capture. |
-| `ax_call_budget` | 350 | 50–5000 | Accessibility call budget for the native (non-web) surrounding walk. |
-| `web_call_budget` | 900 | 50–10000 | Accessibility call budget for web-content walks (Chromium wraps everything in groups, so web needs far more calls). |
-| `max_gather_depth` | 6 | 1–50 | Depth of the text gather inside one native sibling subtree. |
-| `max_web_depth` | 30 | 5–100 | Depth cap inside web subtrees. |
-| `max_siblings_per_level` | 16 | 2–200 | Siblings visited per level in the native walk. |
-| `max_web_children_per_node` | 60 | 5–500 | Children visited per node in web subtrees. |
-| `surrounding_max_chars` | 6000 | 500–50000 | Cap on the assembled surrounding text. |
-| `web_before_keep_chars` | 4500 | 200–40000 | Web walk: text *before* the field kept (a chat's newest messages live here). |
-| `web_after_keep_chars` | 1000 | 0–20000 | Web walk: text *after* the field kept. |
+| `capture_deadline_ms` | 2500 | 300–10000 | **Milliseconds**: total wall-clock deadline for reading the screen on a press — a cap, not a target; on expiry the press continues with what was gathered. |
+| `ax_call_budget` | 600 | 50–5000 | **Requests**: Accessibility API reads (one = one attribute of one element — role, text, or children) allowed per press in native apps. Native trees are text-dense, few requests suffice. |
+| `web_call_budget` | 3000 | 50–10000 | **Requests**, same unit, for web pages — Chromium wraps every div in an empty AXGroup, so reaching the text costs many more; long threads want thousands. |
+| `max_gather_depth` | 6 | 1–50 | **Tree levels** descended inside one native sibling subtree. |
+| `max_web_depth` | 30 | 5–100 | **Tree levels** cap inside web subtrees (deep nesting is normal on web). |
+| `max_siblings_per_level` | 16 | 2–200 | **Elements**: neighbors visited per level in the native walk. |
+| `max_web_children_per_node` | 60 | 5–500 | **Elements**: children visited per node in web subtrees. |
+| `surrounding_max_chars` | 32000 | 500–200000 | Cap on the surrounding text the collector gathers. |
+| `web_before_keep_chars` | 20000 | 200–150000 | Web walk: text *before* the field kept (a chat's newest messages live here). |
+| `web_after_keep_chars` | 6000 | 0–50000 | Web walk: text *after* the field kept. |
+| `surrounding_max_tokens` | 8000 | 0–200000 | **THE screen-context knob**: token ceiling for the prompt's SURROUNDING CONTEXT block. On overflow the tail (nearest the field — a thread's newest messages) is kept and the head (sidebar/chrome noise) is dropped. **0 = unlimited** — everything captured is sent untrimmed, and per-workflow `budget.prompt_tokens_total` never cuts the surroundings either. config.yaml is the only switch — there is no UI control. |
 | `field_value_max_chars` | 50000 | 1000–500000 | Cap on reading the focused field's own value. |
 | `toast_dismiss_seconds` | 8 | 2–120 | Post-insert toast auto-dismiss. |
 | `output_max_chars_default` | 1200 | 100–100000 | Character ceiling for generated output when the routed workflow card sets no `output.max_chars` of its own. The model is told this number and the verifier warns beyond it; a card's explicit value always wins. |

@@ -237,7 +237,7 @@ final class MagicPressCoordinator {
             )
         } catch {
             logBareTrace(snapshot: snapshot, outcome: "error:plan")
-            showHint(error.localizedDescription)
+            showHint(error.localizedDescription, near: snapshot)
             phase = .idle
             return
         }
@@ -401,7 +401,6 @@ final class MagicPressCoordinator {
             note: activePress?.snapshot.contextBlind == true
                 ? Loc.shared.t("magic.chips.context_blind") : nil,
             coordinator: self,
-            plannerTimeoutMs: activePress?.plan.plannerTimeoutMs ?? 0,
             onSelect: { [weak self] index in Task { @MainActor in self?.selectChip(index) } },
             onHint: { [weak self] hint in Task { @MainActor in self?.submitHint(hint) } },
             onDismiss: { [weak self] in Task { @MainActor in self?.dismissChips() } }
@@ -424,6 +423,8 @@ final class MagicPressCoordinator {
             cancelGeneration()
         } else if toastWindow != nil {
             dismissToast(outcome: nil)
+        } else if hintHUD != nil {
+            closeHint()
         }
     }
 
@@ -586,6 +587,7 @@ final class MagicPressCoordinator {
 
     private func handleGenerationError(_ error: Error) async {
         Self.logger.error("magic generation failed: \(error.localizedDescription, privacy: .public)")
+        let pressSnapshot = activePress?.snapshot
         if var press = activePress {
             press.trace.outcome = "error:generation:\(Self.errorKind(error))"
             lastErrorDescription = error.localizedDescription
@@ -595,7 +597,7 @@ final class MagicPressCoordinator {
         }
         closeToast()
         phase = .idle
-        showHint(error.localizedDescription)
+        showHint(error.localizedDescription, near: pressSnapshot)
     }
 
     /// Short, contentless error class for traces ("http429", "url-1009",
@@ -618,6 +620,7 @@ final class MagicPressCoordinator {
             case .decodingError: return "decodingError"
             case .networkError: return "networkError"
             case .emptyResponse: return "emptyResponse"
+            case .generationStopped: return "generationStopped"
             case .cancelled: return "cancelled"
             case .cliToolNotFound: return "cliToolNotFound"
             case .cliToolFailed(let exitCode, _): return "cliToolFailed\(exitCode)"
@@ -739,12 +742,14 @@ final class MagicPressCoordinator {
     }
 
     func dismissToast(outcome: String?) {
+        // Close first: the focus return inside needs the press's snapshot
+        // (target app pid + focused element), which dies with activePress.
+        closeToast()
         if var press = activePress {
             if let outcome { press.trace.outcome = outcome }
             submitTrace(press.trace)
             activePress = nil
         }
-        closeToast()
         phase = .idle
     }
 
@@ -807,7 +812,15 @@ final class MagicPressCoordinator {
     /// running it while inactive is what promoted random third apps.
     private func returnFocusToTarget(excluding excluded: NSWindow?, force: Bool = false) {
         guard !isSelfTargeted, NSApp.isActive || force else { return }
-        let target = appState?.lastExternalApp
+        // The press's own snapshot knows the target app — `lastExternalApp`
+        // is popup-flow state and can be stale or nil for Magic presses
+        // (live bug: Escape on the LinkedIn chip panel returned focus
+        // nowhere). The remembered AX element gets focus back explicitly:
+        // app activation alone does not reliably re-focus a web composer.
+        let target: NSRunningApplication? = activePress
+            .flatMap { NSRunningApplication(processIdentifier: $0.snapshot.app.pid) }
+            ?? appState?.lastExternalApp
+        let element = activePress?.snapshot.focusedElement?.element
         if NSApp.isActive {
             let hasOtherWindow = NSApp.windows.contains { window in
                 window.isVisible
@@ -826,6 +839,13 @@ final class MagicPressCoordinator {
         }
         DispatchQueue.main.async {
             target?.activate(options: [.activateAllWindows])
+            if let element {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                    AXUIElementSetAttributeValue(
+                        element, kAXFocusedAttribute as CFString, kCFBooleanTrue
+                    )
+                }
+            }
         }
     }
 
@@ -1041,19 +1061,35 @@ final class MagicPressCoordinator {
         submitTrace(trace)
     }
 
-    private func showHint(_ message: String) {
-        hintHUD?.close()
+    /// Transient message HUD. With a snapshot it anchors above the focused
+    /// field like every other Magic panel — a press error appearing in the
+    /// screen center reads as unrelated to what the user just did.
+    private func showHint(_ message: String, near snapshot: MagicSnapshot? = nil) {
+        closeHint()
         let hud = ErrorHUDWindow(promptName: Loc.shared.t("magic.name"), message: message) { [weak self] in
-            self?.hintHUD?.close()
-            self?.hintHUD = nil
+            self?.closeHint()
         }
         hintHUD = hud
-        hud.showAtCenter()
+        if let snapshot {
+            hud.show(anchoredAt: CaretLocator.anchorRect(for: snapshot))
+        } else {
+            hud.showAtCenter()
+        }
+        KeyboardShortcuts.enable(.dismissMagicOverlay)
         Task { [weak self, weak hud] in
             try? await Task.sleep(for: .seconds(4))
             guard let self, let hud, self.hintHUD === hud else { return }
-            hud.close()
-            self.hintHUD = nil
+            self.closeHint()
+        }
+    }
+
+    private func closeHint() {
+        guard let hud = hintHUD else { return }
+        hud.close()
+        hintHUD = nil
+        // Only release Escape when no other overlay still owns it.
+        if chipPanel == nil, toastWindow == nil, phase != .generating {
+            KeyboardShortcuts.disable(.dismissMagicOverlay)
         }
     }
 

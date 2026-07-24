@@ -6,12 +6,17 @@ import Foundation
 /// press or an unbounded walk.
 struct MagicEngineConfig: Sendable, Equatable {
     /// Overall snapshot deadline — the press never waits longer for capture.
-    var captureDeadlineMs = 1600
-    /// AX call budget for the native (non-web) surrounding walk.
-    var axCallBudget = 350
-    /// AX call budget for web-content walks (Chromium wraps everything in
-    /// AXGroups, so web needs far more calls).
-    var webCallBudget = 900
+    var captureDeadlineMs = 2500
+    /// Accessibility *requests* allowed per press in native apps. One
+    /// request = reading one attribute of one on-screen element (its role,
+    /// its text, or its list of children) — an IPC round-trip into the
+    /// target app. Native trees are dense (much text per element), so few
+    /// requests suffice.
+    var axCallBudget = 600
+    /// The same request budget for web pages. Chromium wraps every div in
+    /// an empty AXGroup, so reaching the text costs many more requests —
+    /// a long LinkedIn/Gmail thread wants thousands.
+    var webCallBudget = 3000
     /// Depth of the text gather inside one native sibling subtree.
     var maxGatherDepth = 6
     /// Depth cap inside web subtrees.
@@ -21,11 +26,16 @@ struct MagicEngineConfig: Sendable, Equatable {
     /// Children visited per node in web subtrees.
     var maxWebChildrenPerNode = 60
     /// Cap on the assembled surrounding text.
-    var surroundingMaxChars = 6000
+    var surroundingMaxChars = 32_000
     /// Web walk: how much text preceding the field to keep (a chat's newest
     /// messages) and how much after it.
-    var webBeforeKeepChars = 4500
-    var webAfterKeepChars = 1000
+    var webBeforeKeepChars = 20_000
+    var webAfterKeepChars = 6_000
+    /// Token ceiling for the prompt's SURROUNDING CONTEXT block — the one
+    /// knob that decides how much captured screen text the model sees.
+    /// 0 = unlimited: everything the collector gathered is passed
+    /// untrimmed, and workflow-card budgets never cut it either.
+    var surroundingMaxTokens = 8_000
     /// Cap on the focused field's own value read.
     var fieldValueMaxChars = 50_000
     /// Post-insert toast auto-dismiss.
@@ -76,9 +86,10 @@ struct MagicEngineConfig: Sendable, Equatable {
         ("max_web_depth", 5...100, \.maxWebDepth),
         ("max_siblings_per_level", 2...200, \.maxSiblingsPerLevel),
         ("max_web_children_per_node", 5...500, \.maxWebChildrenPerNode),
-        ("surrounding_max_chars", 500...50_000, \.surroundingMaxChars),
-        ("web_before_keep_chars", 200...40_000, \.webBeforeKeepChars),
-        ("web_after_keep_chars", 0...20_000, \.webAfterKeepChars),
+        ("surrounding_max_chars", 500...200_000, \.surroundingMaxChars),
+        ("web_before_keep_chars", 200...150_000, \.webBeforeKeepChars),
+        ("web_after_keep_chars", 0...50_000, \.webAfterKeepChars),
+        ("surrounding_max_tokens", 0...200_000, \.surroundingMaxTokens),
         ("field_value_max_chars", 1_000...500_000, \.fieldValueMaxChars),
         ("toast_dismiss_seconds", 2...120, \.toastDismissSeconds),
         ("output_max_chars_default", 100...100_000, \.outputMaxCharsDefault),
