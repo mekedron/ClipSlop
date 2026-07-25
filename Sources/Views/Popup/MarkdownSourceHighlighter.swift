@@ -18,26 +18,40 @@ enum MarkdownSourceHighlighter {
     static let linkTooltipHint = "⌘-Click to open link"
 
     static func highlight(_ textStorage: NSTextStorage) {
-        let string = textStorage.string
-        let fullRange = NSRange(location: 0, length: (string as NSString).length)
+        let fullRange = NSRange(location: 0, length: (textStorage.string as NSString).length)
         guard fullRange.length > 0 else { return }
 
-        let baseFont = NSFont.monospacedSystemFont(ofSize: baseFontSize, weight: .regular)
         textStorage.beginEditing()
         defer { textStorage.endEditing() }
 
-        textStorage.setAttributes([
-            .font: baseFont,
-            .foregroundColor: NSColor.labelColor,
-        ], range: fullRange)
-
+        applyBaseAttributes(to: textStorage, in: fullRange)
         guard fullRange.length <= maxHighlightLength else { return }
+        highlightMarkdown(textStorage, in: fullRange)
+    }
 
-        let converter = SourceRangeConverter(string: string)
-        let visitor = StyleVisitor(textStorage: textStorage, converter: converter, baseFont: baseFont)
-        visitor.visit(Document(parsing: string))
+    /// Base look shared by every source syntax: 13 pt mono, label colour.
+    static func applyBaseAttributes(to textStorage: NSTextStorage, in range: NSRange) {
+        textStorage.setAttributes([
+            .font: NSFont.monospacedSystemFont(ofSize: baseFontSize, weight: .regular),
+            .foregroundColor: NSColor.labelColor,
+        ], range: range)
+    }
 
-        detectBareLinks(in: textStorage, string: string, fullRange: fullRange)
+    /// Markdown-styles `range` alone (it must start at a line boundary) —
+    /// lets the frontmatter mode style the body under a YAML head. Base
+    /// attributes are the caller's job.
+    static func highlightMarkdown(_ textStorage: NSTextStorage, in range: NSRange) {
+        let source = (textStorage.string as NSString).substring(with: range)
+        let converter = SourceRangeConverter(string: source)
+        let visitor = StyleVisitor(
+            textStorage: textStorage,
+            converter: converter,
+            baseFont: NSFont.monospacedSystemFont(ofSize: baseFontSize, weight: .regular),
+            offset: range.location
+        )
+        visitor.visit(Document(parsing: source))
+
+        detectBareLinks(in: textStorage, source: source, offset: range.location)
     }
 
     static func tooltip(for url: URL) -> String {
@@ -64,28 +78,31 @@ enum MarkdownSourceHighlighter {
     }
 
     /// Linkifies bare URLs and email addresses that the Markdown parser left
-    /// as plain text (`https://…`, `www.…`, `mail@example.com`).
+    /// as plain text (`https://…`, `www.…`, `mail@example.com`). `source` is
+    /// the substring being styled; `offset` is where it starts in the storage.
     private static func detectBareLinks(
         in textStorage: NSTextStorage,
-        string: String,
-        fullRange: NSRange
+        source: String,
+        offset: Int
     ) {
         guard let detector = try? NSDataDetector(
             types: NSTextCheckingResult.CheckingType.link.rawValue
         ) else { return }
 
-        detector.enumerateMatches(in: string, range: fullRange) { result, _, _ in
+        let sourceRange = NSRange(location: 0, length: (source as NSString).length)
+        detector.enumerateMatches(in: source, range: sourceRange) { result, _, _ in
             guard let result, let url = result.url else { return }
+            let target = NSRange(location: result.range.location + offset, length: result.range.length)
             // Skip anything already covered by a Markdown link.
             var covered = false
-            textStorage.enumerateAttribute(.link, in: result.range) { value, _, stop in
+            textStorage.enumerateAttribute(.link, in: target) { value, _, stop in
                 if value != nil {
                     covered = true
                     stop.pointee = true
                 }
             }
             guard !covered else { return }
-            addLinkAttributes(to: textStorage, range: result.range, url: url, styleAsLink: true)
+            addLinkAttributes(to: textStorage, range: target, url: url, styleAsLink: true)
         }
     }
 }
@@ -97,13 +114,16 @@ private struct StyleVisitor {
     let textStorage: NSTextStorage
     let converter: SourceRangeConverter
     let baseFont: NSFont
+    /// UTF-16 offset of the parsed source within the text storage — non-zero
+    /// when styling the Markdown body below a frontmatter head.
+    let offset: Int
 
     /// Recursive tree walk; child styling composes on top of the parent's
     /// (e.g. bold inside a heading, emphasis inside a link label).
     func visit(_ markup: Markup) {
         switch markup {
         case let heading as Heading:
-            if let range = converter.nsRange(heading.range) {
+            if let range = nsRange(heading.range) {
                 let scale: CGFloat = switch heading.level {
                 case 1: 1.5
                 case 2: 1.3
@@ -115,17 +135,17 @@ private struct StyleVisitor {
             }
 
         case let strong as Strong:
-            if let range = converter.nsRange(strong.range) {
+            if let range = nsRange(strong.range) {
                 applyTraits(.bold, in: range)
             }
 
         case let emphasis as Emphasis:
-            if let range = converter.nsRange(emphasis.range) {
+            if let range = nsRange(emphasis.range) {
                 applyTraits(.italic, in: range)
             }
 
         case let strikethrough as Strikethrough:
-            if let range = converter.nsRange(strikethrough.range) {
+            if let range = nsRange(strikethrough.range) {
                 textStorage.addAttribute(
                     .strikethroughStyle,
                     value: NSUnderlineStyle.single.rawValue,
@@ -134,17 +154,17 @@ private struct StyleVisitor {
             }
 
         case is InlineCode, is CodeBlock:
-            if let range = converter.nsRange(markup.range) {
+            if let range = nsRange(markup.range) {
                 textStorage.addAttribute(.backgroundColor, value: NSColor.quaternarySystemFill, range: range)
             }
 
         case let blockQuote as BlockQuote:
-            if let range = converter.nsRange(blockQuote.range) {
+            if let range = nsRange(blockQuote.range) {
                 textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: range)
             }
 
         case let link as Link:
-            if let nodeRange = converter.nsRange(link.range),
+            if let nodeRange = nsRange(link.range),
                let destination = link.destination,
                let url = URL(string: destination) {
                 // Dim the `[…](…)` syntax and the destination…
@@ -153,7 +173,7 @@ private struct StyleVisitor {
                 // (`<https://…>`) have the URL itself as their label.
                 var styledLabel = false
                 for child in link.children {
-                    if let childRange = converter.nsRange(child.range) {
+                    if let childRange = nsRange(child.range) {
                         textStorage.addAttributes([
                             .foregroundColor: NSColor.linkColor,
                             .underlineStyle: NSUnderlineStyle.single.rawValue,
@@ -170,7 +190,7 @@ private struct StyleVisitor {
             }
 
         case is Image, is ThematicBreak:
-            if let range = converter.nsRange(markup.range) {
+            if let range = nsRange(markup.range) {
                 textStorage.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: range)
             }
 
@@ -181,6 +201,13 @@ private struct StyleVisitor {
         for child in markup.children {
             visit(child)
         }
+    }
+
+    /// Converter positions are relative to the parsed source; shift them to
+    /// where that source lives in the storage.
+    private func nsRange(_ range: SourceRange?) -> NSRange? {
+        guard let converted = converter.nsRange(range) else { return nil }
+        return NSRange(location: converted.location + offset, length: converted.length)
     }
 
     private func applyTraits(_ trait: NSFontDescriptor.SymbolicTraits, in range: NSRange) {

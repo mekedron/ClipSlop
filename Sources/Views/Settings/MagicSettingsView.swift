@@ -12,6 +12,7 @@ struct MagicSettingsView: View {
     @State private var editorText = ""
     @State private var loadedID: String?
     @State private var saveTask: Task<Void, Never>?
+    @State private var editorContext = MarkdownEditorContext()
 
     private let loc = Loc.shared
 
@@ -202,11 +203,13 @@ struct MagicSettingsView: View {
 
                     Divider()
 
-                    TextEditor(text: $editorText)
-                        .font(.system(.body, design: .monospaced))
-                        .scrollContentBackground(.hidden)
-                        .padding(8)
-                        .onChange(of: editorText) { scheduleSave(for: item) }
+                    MarkdownTextView(
+                        text: $editorText,
+                        editorContext: editorContext,
+                        findBarState: nil,
+                        highlighting: syntax(for: item)
+                    )
+                    .onChange(of: editorText) { scheduleSave(for: item) }
 
                     ForEach(problems(for: item), id: \.self) { message in
                         HStack(alignment: .top, spacing: 6) {
@@ -225,6 +228,16 @@ struct MagicSettingsView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
+        }
+    }
+
+    /// Everything here is Markdown that may open with a `---` frontmatter
+    /// head (workflows do, core files just don't have one) — except the
+    /// `.yaml` engine files, which are YAML through and through.
+    private func syntax(for item: FileItem) -> SourceSyntax {
+        switch item.url.pathExtension.lowercased() {
+        case "yaml", "yml": .yaml
+        default: .markdownWithFrontmatter
         }
     }
 
