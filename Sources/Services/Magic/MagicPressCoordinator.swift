@@ -432,7 +432,7 @@ final class MagicPressCoordinator {
         case .silent(let chosen):
             press.trace.presentation = "silent"
             activePress = press
-            startRun(workflow: chosen, hint: nil)
+            startRun(workflow: chosen, hint: nil, for: snapshot.ts)
         case .chips(let ranked):
             press.trace.presentation = "chips"
             activePress = press
@@ -547,7 +547,7 @@ final class MagicPressCoordinator {
             // Proceed exactly as selectChip(index) would: the panel is on
             // screen, so leave the chip phases, close it and return focus
             // before generating.
-            acceptChipSelection(candidates[index], hint: nil)
+            acceptChipSelection(candidates[index], hint: nil, for: press.snapshot.ts)
         } else {
             // Declined/unsure: the panel is already up — just hand it over
             // to the user (the progress affordance hides with the phase).
@@ -650,7 +650,9 @@ final class MagicPressCoordinator {
             guard var press = activePress else { return }
             press.trace.chipIndexChosen = index
             activePress = press
-            acceptChipSelection(press.decision.chipCandidates[index], hint: nil)
+            acceptChipSelection(
+                press.decision.chipCandidates[index], hint: nil, for: press.snapshot.ts
+            )
         default:
             return
         }
@@ -666,7 +668,7 @@ final class MagicPressCoordinator {
                   let workflow = press.decision.chipCandidates.first else { return }
             press.trace.chipIndexChosen = 0
             activePress = press
-            acceptChipSelection(workflow, hint: hint)
+            acceptChipSelection(workflow, hint: hint, for: press.snapshot.ts)
         default:
             return
         }
@@ -696,10 +698,10 @@ final class MagicPressCoordinator {
     /// phases up front makes `dismissChips`'s own guard the invariant: however
     /// the callback arrives, sync or enqueued, it finds a phase it refuses to
     /// act on.
-    private func acceptChipSelection(_ workflow: ResolvedWorkflow, hint: String?) {
+    private func acceptChipSelection(_ workflow: ResolvedWorkflow, hint: String?, for pressTs: Date) {
         phase = .generating
         closeChipPanel(returnFocus: true)
-        startRun(workflow: workflow, hint: hint)
+        startRun(workflow: workflow, hint: hint, for: pressTs)
     }
 
     func dismissChips() {
@@ -729,8 +731,17 @@ final class MagicPressCoordinator {
 
     // MARK: - Generation
 
-    private func startRun(workflow: ResolvedWorkflow, hint: String?) {
-        guard var press = activePress else { return }
+    /// Takes the press identity the run belongs to and refuses to act on
+    /// anything else, the same rule `handleResult` and `performInsert` apply
+    /// further down the band. Every synchronous caller passes the press it just
+    /// read, so the guard costs them nothing; `rerun` is the one that needs it,
+    /// because it reaches here after an async undo across which the band
+    /// mutates freely — Escape ends the press, and a hotkey right after starts a
+    /// different one. A bare `activePress != nil` test cannot tell those apart,
+    /// so the regenerate would adopt the new press, overwrite its workflow with
+    /// the old one and generate against a plan nobody asked for.
+    private func startRun(workflow: ResolvedWorkflow, hint: String?, for pressTs: Date) {
+        guard var press = activePress, press.snapshot.ts == pressTs else { return }
         press.workflow = workflow
         press.hint = hint
         // Stamp on the coordinator-side draft too, so a run that dies before
@@ -986,6 +997,16 @@ final class MagicPressCoordinator {
         Task { [weak self] in
             guard let self else { return }
             let undone = await self.inserter.attemptUndo(for: press.snapshot)
+            // `attemptUndo` polls focus for up to 600 ms and then waits out the
+            // value change, and the band mutates freely across that: a hotkey in
+            // the gap is routed to `dismissToastThenStartPress`, which tears this
+            // toast down and starts a DIFFERENT press. Neither branch below may
+            // then run — `dismissToast` would stamp "undone" on the new press's
+            // trace, submit it, and clear it out from under its own capture task,
+            // and the restore note would hang on a toast that belongs to someone
+            // else. Same rule as `handleResult` and `performInsert`: same press,
+            // or nothing happened.
+            guard self.activePress?.snapshot.ts == press.snapshot.ts else { return }
             if undone {
                 self.dismissToast(outcome: "undone")
             } else {
@@ -1054,7 +1075,7 @@ final class MagicPressCoordinator {
                 // replacement paste arrives.
                 try? await Task.sleep(for: .milliseconds(150))
             }
-            self.startRun(workflow: workflow, hint: hint)
+            self.startRun(workflow: workflow, hint: hint, for: press.snapshot.ts)
         }
     }
 
