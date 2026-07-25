@@ -50,6 +50,12 @@ final class ChipPanelWindow: NSPanel {
         level = .floating
         isMovableByWindowBackground = false
         collectionBehavior = [.canJoinAllSpaces, .transient]
+        // Never auto-promoted to key when another window resigns — the
+        // panel takes key only via the explicit makeKeyAndOrderFront in
+        // show(anchoredAt:). Matters for self-targeted presses (onboarding
+        // sandbox): AppKit picking a floating overlay as the new key window
+        // strands the sandbox field without focus.
+        becomesKeyOnlyIfNeeded = true
 
         // FirstMouseHostingView (the MagicToastWindow fix): when activation
         // was refused on show, a plain hosting view lets AppKit eat the

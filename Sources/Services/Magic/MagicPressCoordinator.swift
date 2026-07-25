@@ -159,6 +159,12 @@ final class MagicPressCoordinator {
         activePress?.snapshot.app.bundleId == Bundle.main.bundleIdentifier
     }
 
+    /// The window that held key before a self-targeted press's chip panel
+    /// took it (the onboarding sandbox). Restored explicitly on overlay
+    /// close — AppKit's automatic pick after a key panel orders out is not
+    /// guaranteed to land on the sandbox window.
+    @ObservationIgnored private weak var selfTargetKeyWindow: NSWindow?
+
     // MARK: - Press entry
 
     func handlePress(forceChips: Bool) {
@@ -409,6 +415,7 @@ final class MagicPressCoordinator {
             onHint: { [weak self] hint in Task { @MainActor in self?.submitHint(hint) } },
             onDismiss: { [weak self] in Task { @MainActor in self?.dismissChips() } }
         )
+        if isSelfTargeted { selfTargetKeyWindow = NSApp.keyWindow }
         chipPanel = panel
         panel.show(anchoredAt: anchor)
         KeyboardShortcuts.enable(.dismissMagicOverlay)
@@ -476,6 +483,9 @@ final class MagicPressCoordinator {
         KeyboardShortcuts.disable(.dismissMagicOverlay)
         let wasKey = panel.isKeyWindow
         panel.orderOut(nil)
+        if isSelfTargeted, wasKey {
+            selfTargetKeyWindow?.makeKeyAndOrderFront(nil)
+        }
         if returnFocus { returnFocusToTarget(excluding: nil, force: wasKey) }
     }
 
@@ -812,6 +822,9 @@ final class MagicPressCoordinator {
         let wasKey = toastWindow?.isKeyWindow ?? false
         toastWindow?.orderOut(nil)
         toastWindow = nil
+        if isSelfTargeted, wasKey {
+            selfTargetKeyWindow?.makeKeyAndOrderFront(nil)
+        }
         if wasKey { returnFocusToTarget(excluding: nil, force: true) }
     }
 

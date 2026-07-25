@@ -32,7 +32,13 @@ struct OnboardingMagicWalkthroughView: View {
                 Text(loc.t("onboarding.magic.walkthrough.subtitle"))
                     .foregroundStyle(.secondary)
                 KeyboardShortcuts.Recorder(for: .triggerMagic)
-                    .disabled(true)
+            }
+
+            HStack(spacing: 8) {
+                Text(loc.t("settings.general.shortcuts.magic_chips"))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                KeyboardShortcuts.Recorder(for: .triggerMagicChips)
             }
 
             VStack(alignment: .leading, spacing: 8) {

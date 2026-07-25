@@ -130,14 +130,25 @@ final class MagicInserter {
             // app-level activation dances are not.
             if !didAttemptRefocus, clock.now - start > .milliseconds(200) {
                 didAttemptRefocus = true
-                if NSWorkspace.shared.frontmostApplication?.processIdentifier != snapshot.app.pid {
-                    NSRunningApplication(processIdentifier: snapshot.app.pid)?
-                        .activate(options: [])
-                }
-                if let expected = snapshot.focusedElement?.element {
-                    AXUIElementSetAttributeValue(
-                        expected, kAXFocusedAttribute as CFString, kCFBooleanTrue
-                    )
+                if Self.isSelfTargeted(snapshot) {
+                    // In-process repair: hand key back to a regular window —
+                    // an overlay panel may have been auto-promoted to key
+                    // when the chip panel closed.
+                    if let window = NSApp.windows.first(where: {
+                        $0.isVisible && $0.canBecomeKey && !($0 is NSPanel)
+                    }) {
+                        window.makeKeyAndOrderFront(nil)
+                    }
+                } else {
+                    if NSWorkspace.shared.frontmostApplication?.processIdentifier != snapshot.app.pid {
+                        NSRunningApplication(processIdentifier: snapshot.app.pid)?
+                            .activate(options: [])
+                    }
+                    if let expected = snapshot.focusedElement?.element {
+                        AXUIElementSetAttributeValue(
+                            expected, kAXFocusedAttribute as CFString, kCFBooleanTrue
+                        )
+                    }
                 }
             }
             guard clock.now < deadline else { return false }
@@ -147,7 +158,24 @@ final class MagicInserter {
 
     // MARK: - Private
 
+    /// True when the press targeted one of ClipSlop's own windows (the
+    /// onboarding sandbox, a Settings field).
+    private static func isSelfTargeted(_ snapshot: MagicSnapshot) -> Bool {
+        snapshot.app.pid == ProcessInfo.processInfo.processIdentifier
+    }
+
     private func focusMatches(_ snapshot: MagicSnapshot) -> Bool {
+        // Self-targeted presses verify in-process: ClipSlop is an accessory
+        // (menu bar) app, so NSWorkspace.frontmostApplication and the
+        // system-wide AX focus routinely still report the previous regular
+        // app even while our own window is key — the external checks below
+        // would fail every time.
+        if Self.isSelfTargeted(snapshot) {
+            guard let key = NSApp.keyWindow,
+                  !(key is ChipPanelWindow), !(key is MagicToastWindow)
+            else { return false }
+            return key.firstResponder is NSTextView
+        }
         guard let expectedBundleId = snapshot.app.bundleId,
               NSWorkspace.shared.frontmostApplication?.bundleIdentifier == expectedBundleId
         else { return false }

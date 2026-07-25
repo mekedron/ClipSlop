@@ -242,6 +242,10 @@ struct OnboardingView: View {
                     label: loc.t("onboarding.shortcuts.magic"),
                     name: .triggerMagic
                 )
+                ShortcutRow(
+                    label: loc.t("settings.general.shortcuts.magic_chips"),
+                    name: .triggerMagicChips
+                )
             }
             .frame(maxWidth: 420)
 
@@ -294,7 +298,9 @@ struct OnboardingView: View {
             .padding(.top, 4)
 
             Button {
-                appState.completeOnboarding()
+                // The onboarding stays open — the user finishes it with
+                // "Get Started"; this button only opens the assistant chat
+                // next to it.
                 appState.showAssistant(initialMessage: loc.t("assistant.intro_message"))
             } label: {
                 Label(loc.t("onboarding.assistant.try"), systemImage: "wand.and.stars")
