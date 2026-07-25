@@ -55,6 +55,14 @@ struct MenuBarView: View {
         Button("Magic Insert Test String") {
             appState.magicCoordinator.insertTestString()
         }
+        // Layout check for the tallest toast states, which no ordinary press
+        // reaches on demand.
+        Button("Magic Toast: Verifier Panel") {
+            appState.magicCoordinator.showToastPanelTest(reason: .verifierFailed)
+        }
+        Button("Magic Toast: Focus Mismatch") {
+            appState.magicCoordinator.showToastPanelTest(reason: .focusMismatch)
+        }
         #endif
 
         Divider()

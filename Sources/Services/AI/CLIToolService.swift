@@ -1,4 +1,66 @@
 import Foundation
+import os
+
+/// Idle-timeout watchdog for a streamed CLI run.
+///
+/// `process(text:…)` races the whole subprocess against `timeout(for:)`, but a
+/// stream cannot be capped the same way: a healthy long generation legitimately
+/// outlives any total-duration limit. What has to be caught is a tool that
+/// produces nothing and never exits — before this, `stream` had no timeout at
+/// all and a hung CLI hung the caller forever.
+///
+/// So this measures *silence*, and every chunk resets it. That is also exactly
+/// what `URLRequest.timeoutInterval` means for the three HTTP streaming
+/// services, which consume the same `requestTimeout` value — so one role
+/// timeout now means the same thing on both transports.
+///
+/// One task for the whole run rather than one per chunk: it sleeps the
+/// remaining slice, wakes, and re-reads the stamp, so a fast stream costs a
+/// lock acquisition per chunk and nothing else. `ContinuousClock` so that a
+/// wall-clock adjustment cannot make a live stream look stalled.
+final class StreamWatchdog: Sendable {
+    private struct State {
+        var lastActivity: ContinuousClock.Instant
+        var finished = false
+    }
+
+    private let state = OSAllocatedUnfairLock(initialState: State(lastActivity: .now))
+
+    /// Called from the readability handler's queue on every chunk.
+    func noteActivity() {
+        state.withLock { $0.lastActivity = .now }
+    }
+
+    /// Idempotent, and safe to call from the termination handler, from
+    /// `onTermination`, and from the timeout path itself.
+    func stop() {
+        state.withLock { $0.finished = true }
+    }
+
+    func start(timeout: Duration, onTimeout: @escaping @Sendable () -> Void) {
+        let state = self.state
+        Task.detached {
+            while true {
+                let (last, finished) = state.withLock { ($0.lastActivity, $0.finished) }
+                if finished { return }
+                let idle = last.duration(to: .now)
+                guard idle < timeout else {
+                    // Claim the timeout under the lock: the process can exit
+                    // between the read above and here, and a stream that
+                    // already finished must not be handed a timeout error.
+                    let won = state.withLock { s -> Bool in
+                        guard !s.finished else { return false }
+                        s.finished = true
+                        return true
+                    }
+                    if won { onTimeout() }
+                    return
+                }
+                do { try await Task.sleep(for: timeout - idle) } catch { return }
+            }
+        }
+    }
+}
 
 struct CLIToolService: AIService {
     /// Used only when the resolved provider carries no timeout of its own.
@@ -42,7 +104,9 @@ struct CLIToolService: AIService {
     }
 
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
-        AsyncThrowingStream { continuation in
+        let timeout = Self.timeout(for: config)
+        return AsyncThrowingStream { continuation in
+            let watchdog = StreamWatchdog()
             let task = Task {
                 do {
                     let (binaryPath, definition) = try resolveToolInfo(config: config)
@@ -68,6 +132,7 @@ struct CLIToolService: AIService {
                             stdoutHandle.readabilityHandler = nil
                             return
                         }
+                        watchdog.noteActivity()
                         if let chunk = String(data: data, encoding: .utf8) {
                             continuation.yield(chunk)
                         }
@@ -75,6 +140,7 @@ struct CLIToolService: AIService {
 
                     process.terminationHandler = { proc in
                         stdoutHandle.readabilityHandler = nil
+                        watchdog.stop()
 
                         if proc.terminationStatus != 0 {
                             let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
@@ -93,9 +159,20 @@ struct CLIToolService: AIService {
                     try process.run()
 
                     continuation.onTermination = { @Sendable _ in
+                        watchdog.stop()
+                        if process.isRunning { process.terminate() }
+                    }
+
+                    // Finish before terminating: killing the process fires
+                    // `terminationHandler` with a non-zero status, and the
+                    // first `finish` wins — the caller must see the timeout,
+                    // not a spurious `cliToolFailed(SIGTERM)`.
+                    watchdog.start(timeout: timeout) { @Sendable in
+                        continuation.finish(throwing: AIServiceError.cliToolTimeout)
                         if process.isRunning { process.terminate() }
                     }
                 } catch {
+                    watchdog.stop()
                     continuation.finish(throwing: error)
                 }
             }

@@ -820,6 +820,14 @@ final class MagicPressCoordinator {
     }
 
     func dismissToast(outcome: String?) {
+        // Nothing may outlive the surface it would have filled. Escape cannot
+        // reach here while generating — `dismissFloatingOverlay` routes that to
+        // `cancelGeneration` first — but `rerun` sits in `.generating` across an
+        // async undo, and `handleResult` only no-ops on the dropped press
+        // *after* the provider call has been paid for. Cancelling here makes the
+        // invariant hold by construction instead of by routing order.
+        generationTask?.cancel()
+        generationTask = nil
         // Close first: the focus return inside needs the press's snapshot
         // (target app pid + focused element), which dies with activePress.
         closeToast()
@@ -1064,6 +1072,48 @@ final class MagicPressCoordinator {
                 self.showHint("Test insert: non-editable, clipboard only")
             }
         }
+    }
+
+    /// Shows the tallest toast state with canned content and no LLM call, so
+    /// the panel's layout can be checked without waiting for a real press to
+    /// trip the verifier.
+    ///
+    /// This exists because the clipping bug it exercises was invisible for a
+    /// whole milestone: `MagicToastWindow` is created at a nominal 80 pt, only
+    /// the verifier-failure and focus-mismatch states exceed that, and neither
+    /// is reachable on demand. The warning list, the output scroll view, and
+    /// the action row must all be visible and clickable here.
+    func showToastPanelTest(reason: MagicToastPanelReason = .verifierFailed) {
+        guard phase == .idle else { return }
+        phase = .toast
+        toastState = .panelResult(
+            text: """
+            Hi Dana — thanks for the nudge. I can get the revised deck over by \
+            Thursday, and the invoice total comes to €4,820. Let me know if the \
+            Friday slot suits you better and I'll move things around.
+            """,
+            reason: reason,
+            warnings: reason == .verifierFailed
+                ? [
+                    VerifierWarning(
+                        check: .actionableUngrounded,
+                        messageKey: "magic.verifier.ungrounded",
+                        messageArgs: ["€4,820"]
+                    ),
+                    VerifierWarning(
+                        check: .concreteness,
+                        messageKey: "magic.verifier.actionable_untrusted",
+                        messageArgs: ["Thursday"]
+                    ),
+                    VerifierWarning(
+                        check: .length,
+                        messageKey: "magic.verifier.too_long",
+                        messageArgs: ["44", "30"]
+                    ),
+                ]
+                : []
+        )
+        showToast()
     }
 
     // MARK: - Onboarding
