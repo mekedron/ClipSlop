@@ -140,3 +140,87 @@ struct MagicInserterGuardTests {
         ))
     }
 }
+
+/// The other half of the pre-paste guard: the selection re-assert a press runs
+/// immediately before handing text to the inserter. The AX reads behind it now
+/// happen inside `MagicInserter`'s reader actor (they used to block the main
+/// actor for up to three 0.35 s round-trips while the user waited for the
+/// paste), which leaves the decision itself pure — and worth pinning down,
+/// because both of its refusals look identical from outside: the text quietly
+/// goes to the toast instead of into the field.
+@Suite("Magic pre-paste selection re-assert")
+struct MagicSelectionReassertTests {
+    private func verdict(
+        captured: Range<Int>,
+        value: String,
+        hasLiveSelection: Bool = false,
+        liveRange: Range<Int>? = nil
+    ) -> MagicSelectionVerdict {
+        MagicPressCoordinator.selectionVerdict(
+            captured: captured,
+            probe: MagicSelectionProbe(
+                value: value, hasLiveSelection: hasLiveSelection, liveRange: liveRange
+            )
+        )
+    }
+
+    // MARK: - A selection that survived
+
+    @Test func ourOwnSelectionStillLiveProceeds() {
+        #expect(verdict(
+            captured: 8..<16, value: "rewrite this bit",
+            hasLiveSelection: true, liveRange: 8..<16
+        ) == .proceed)
+    }
+
+    @Test func aDifferentLiveSelectionIsRefused() {
+        // The user re-selected while chips or generation were up. The plan was
+        // written for the OLD span, so pasting would replace text nobody
+        // addressed — clipboard + toast instead.
+        #expect(verdict(
+            captured: 8..<16, value: "rewrite this bit",
+            hasLiveSelection: true, liveRange: 0..<7
+        ) == .refuse)
+    }
+
+    @Test func aLiveSelectionOutsideTheCurrentValueIsRefused() {
+        // The probe could not map the live UTF-16 range into the value it read
+        // in the same breath: the field moved underneath the reading, so the
+        // range describes a field state nobody planned against.
+        #expect(verdict(
+            captured: 8..<16, value: "rewrite this bit",
+            hasLiveSelection: true, liveRange: nil
+        ) == .refuse)
+    }
+
+    // MARK: - A selection the target dropped
+
+    @Test func aDroppedSelectionIsReassertedInUTF16() {
+        // The whole point of routing this through `utf16Range`: the captured
+        // offsets are characters, AX wants UTF-16, and handing over the
+        // character numbers verbatim reselects a span shifted by every astral
+        // character before it — the paste then overwrites text the user never
+        // selected.
+        #expect(verdict(captured: 1..<3, value: "🙂ab") == .reassert(location: 2, length: 2))
+        #expect(verdict(captured: 0..<4, value: "Some draft") == .reassert(location: 0, length: 4))
+    }
+
+    @Test func aDroppedSelectionThatNoLongerFitsIsRefused() {
+        // Deleted text while the model ran: our offsets now point past the end
+        // of the field. Re-asserting a range that points nowhere would paste at
+        // whatever AX clamps it to, so this refuses like a re-selection does.
+        #expect(verdict(captured: 5..<7, value: "🙂ab") == .refuse)
+        #expect(verdict(captured: 0..<4, value: "abc") == .refuse)
+    }
+
+    @Test func anUnreadableFieldFallsBackToTheCapturedValue() {
+        // `value` is the probe's already-resolved reading: live when AX
+        // published one, the captured (truncated) snapshot value when it did
+        // not. The decision must still be taken — refusing every press in a
+        // field with an opaque AXValue would remove the feature from most web
+        // composers — so an empty fallback simply refuses the ranges that do
+        // not fit it, and accepts the degenerate one that does.
+        #expect(verdict(captured: 0..<4, value: "") == .refuse)
+        #expect(verdict(captured: 0..<0, value: "") == .reassert(location: 0, length: 0))
+    }
+}

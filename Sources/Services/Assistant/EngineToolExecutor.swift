@@ -690,20 +690,14 @@ final class EngineToolExecutor {
 
         for (key, value) in sets {
             let newScalar = try configValueString(key: key, value: value)
-            let existingIndex = lines.firstIndex {
-                $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
-            }
-            let oldScalar = existingIndex.map {
-                lines[$0].trimmingCharacters(in: .whitespaces)
-                    .dropFirst("\(key):".count)
-                    .trimmingCharacters(in: .whitespaces)
-            }
+            let existing = configKeyBlock(key, in: lines)
+            let oldScalar = existing.map { configOldValueDisplay(lines[$0], key: key) }
 
-            switch (existingIndex, newScalar) {
-            case (let index?, let scalar?):
-                lines[index] = "\(key): \(scalar)"
-            case (let index?, nil):
-                lines.remove(at: index)
+            switch (existing, newScalar) {
+            case (let range?, let scalar?):
+                lines.replaceSubrange(range, with: ["\(key): \(scalar)"])
+            case (let range?, nil):
+                lines.removeSubrange(range)
             case (nil, let scalar?):
                 // Insert before the closing fence when the file has one.
                 let closing = lines.lastIndex { $0.trimmingCharacters(in: .whitespaces) == "---" }
@@ -736,6 +730,82 @@ final class EngineToolExecutor {
             throw ToolError(message: "Config validation failed — nothing written:\n" + fatal.joined(separator: "\n"))
         }
         return ConfigEdit(text: newText, display: display, unrelatedWarnings: unrelated)
+    }
+
+    /// The lines a top-level `key:` owns in config.yaml: its own line plus any
+    /// indented continuation under it (block-list items, indented comments).
+    /// Nil when the key is absent.
+    ///
+    /// The edit used to rewrite the `key:` line alone, which held only for the
+    /// seeded file — `EngineSeedContent` writes `no_cloud: []` inline. The
+    /// moment a user wrote the block form by hand, which is the whole point of
+    /// a files-first config (§15),
+    ///
+    ///     no_cloud:
+    ///       - gmail.com
+    ///       - com.tinyspeck.slackmacgap
+    ///
+    /// a `set_config` on that key replaced line one with `no_cloud: [...]` and
+    /// left the two item lines dangling under it. `FrontmatterParser` then
+    /// rejected the whole file with "unexpected indented line", the post-edit
+    /// validation below saw a "line …" warning, and every edit to that key was
+    /// refused with a message about someone else's syntax error. Nothing was
+    /// corrupted — the guard held — but the tool was simply unusable on
+    /// perfectly legal YAML, and the user had no way to tell why.
+    ///
+    /// Block bounds are decided by exactly the rule
+    /// `MagicEngineConfig.salvagedNoCloud` uses: the key line must start at
+    /// column 0 (an indented `no_cloud:` belongs to some other key's block and
+    /// is none of our business), and the block ends at the first line that is
+    /// not itself indented — a blank line included. That last part is stricter
+    /// than `FrontmatterParser.parseBlock`, which reads on across blank lines;
+    /// the deliberate choice is to stay bug-for-bug identical with the salvage
+    /// path rather than to hand-roll a second, slightly different reading of
+    /// the same grammar. This file already carries the scars of two such
+    /// readings drifting apart (see `noCloudFlowList` on `stripFlowComment` vs
+    /// `splitFlowItems`), and the failure mode of an over-long block here is a
+    /// refused edit, while the failure mode of divergence is a mangled privacy
+    /// list (P7).
+    private nonisolated static func configKeyBlock(_ key: String, in lines: [String]) -> Range<Int>? {
+        guard let start = lines.firstIndex(where: {
+            $0.first != " " && $0.first != "\t"
+                && $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
+        }) else { return nil }
+
+        var end = start + 1
+        while end < lines.count, let first = lines[end].first, first == " " || first == "\t" {
+            end += 1
+        }
+        return start..<end
+    }
+
+    /// The "before" side of the proposal card for a key that already exists.
+    ///
+    /// For the inline form this is just whatever follows the colon. For the
+    /// block form there is nothing after the colon, and showing an empty
+    /// before-value next to a brand-new `no_cloud` list would tell the user
+    /// they are adding privacy rules when they are in fact REPLACING the ones
+    /// the block held — the one confirmation that must not understate what it
+    /// is about to drop (P7). The items are therefore folded into the same
+    /// inline shape the writer produces. Display only: this text is never
+    /// parsed back, so it deliberately does not try to re-quote anything.
+    private nonisolated static func configOldValueDisplay(
+        _ block: ArraySlice<String>, key: String
+    ) -> String {
+        let head = block.first.map {
+            $0.trimmingCharacters(in: .whitespaces)
+                .dropFirst("\(key):".count)
+                .trimmingCharacters(in: .whitespaces)
+        } ?? ""
+        let items = block.dropFirst()
+            .map { line -> String in
+                let trimmed = line.trimmingCharacters(in: .whitespaces)
+                guard trimmed.hasPrefix("-") else { return trimmed }
+                return String(trimmed.dropFirst()).trimmingCharacters(in: .whitespaces)
+            }
+            .filter { !$0.isEmpty && !$0.hasPrefix("#") }
+        guard !items.isEmpty else { return head }
+        return "[\(items.joined(separator: ", "))]"
     }
 
     private nonisolated static func configValueString(key: String, value: JSONValue) throws -> String? {

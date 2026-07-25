@@ -9,6 +9,22 @@ enum MagicToastPanelReason: Sendable, Equatable {
     case verifierFailed
 }
 
+/// What a press should do about the field it is about to paste into, decided
+/// from one `MagicSelectionProbe`. File scope rather than nested in
+/// `MagicPressCoordinator` so the `nonisolated` decision function that returns
+/// it — and the tests that call it — never have to reason about the
+/// coordinator's main-actor isolation.
+enum MagicSelectionVerdict: Sendable, Equatable {
+    /// The captured selection is still the live one: paste over it.
+    case proceed
+    /// Someone else's selection is live, or one that cannot be placed in the
+    /// field's current value: clipboard + toast, field untouched.
+    case refuse
+    /// The target dropped the selection: re-assert these UTF-16 offsets first,
+    /// then paste.
+    case reassert(location: Int, length: Int)
+}
+
 enum MagicToastState {
     case generating(label: String)
     case inserted(MagicInserter.PreInsertRecord)
@@ -147,20 +163,38 @@ final class MagicPressCoordinator {
     /// (§15.3).
     func logProviderLayerHealth() {
         guard let providerStore = appState?.providerStore else { return }
-        for warning in providerStore.loadWarnings + roleStore.loadWarnings {
-            Self.logger.warning("provider layer: \(warning, privacy: .public)")
+        // Reading the stores is main-actor work and stays here; resolution
+        // itself is pure bookkeeping over already-loaded config.
+        let warnings = providerStore.loadWarnings + roleStore.loadWarnings
+        let resolutions = EngineRole.allCases.map { role in
+            (role, roleStore.resolution(for: role, in: providerStore))
         }
-        for role in EngineRole.allCases {
-            switch roleStore.resolution(for: role, in: providerStore) {
-            case .resolved(let provider):
-                if provider.providerType.requiresAPIKey,
-                   KeychainService.load(key: provider.apiKeyRef)?.isEmpty != false {
-                    Self.logger.warning("role \(role.rawValue, privacy: .public): provider \(provider.name, privacy: .public) has no API key")
+
+        // The `KeychainService.load` below is one synchronous
+        // `SecItemCopyMatching` per API-key-bearing role, and this runs from
+        // `AppState.setup()` — while the first window is going up. A cold
+        // Security daemon, a locked keychain or an item still syncing turns each
+        // of those into a launch-time stall of the main thread for a check whose
+        // only output is a log line. Nothing here touches UI or mutable state
+        // (the verdicts were resolved above and travel as values), so the probe
+        // and the logging move off, in exactly the order they were built: load
+        // warnings first, then one line per role in `allCases` order.
+        Task.detached(priority: .utility) { [logger = Self.logger] in
+            for warning in warnings {
+                logger.warning("provider layer: \(warning, privacy: .public)")
+            }
+            for (role, resolution) in resolutions {
+                switch resolution {
+                case .resolved(let provider):
+                    if provider.providerType.requiresAPIKey,
+                       KeychainService.load(key: provider.apiKeyRef)?.isEmpty != false {
+                        logger.warning("role \(role.rawValue, privacy: .public): provider \(provider.name, privacy: .public) has no API key")
+                    }
+                case .refusedBelowMinCost(let min):
+                    logger.error("role \(role.rawValue, privacy: .public): no provider meets min_cost_class \(min.rawValue, privacy: .public) — will refuse")
+                case .noneAvailable:
+                    logger.error("role \(role.rawValue, privacy: .public): no provider available")
                 }
-            case .refusedBelowMinCost(let min):
-                Self.logger.error("role \(role.rawValue, privacy: .public): no provider meets min_cost_class \(min.rawValue, privacy: .public) — will refuse")
-            case .noneAvailable:
-                Self.logger.error("role \(role.rawValue, privacy: .public): no provider available")
             }
         }
     }
@@ -760,11 +794,23 @@ final class MagicPressCoordinator {
     }
 
     private func performInsert(_ text: String) async {
-        guard var press = activePress else { return }
+        guard let snapshot = activePress?.snapshot else { return }
 
         // After a chip round-trip some apps drop the selection on
         // deactivate — re-assert the captured range before pasting over it.
-        guard reassertSelectionIfLost(press.snapshot) else {
+        //
+        // The AX work behind this now happens off the main actor, so this is a
+        // suspension point where the press band used to run straight through.
+        // The band mutates freely across it — Escape while `.generating` runs
+        // `cancelGeneration`, which submits the trace and clears `activePress` —
+        // and resuming into a capture taken before the hop would resurrect a
+        // press the user had just cancelled (toast shown, outcome overwritten).
+        // So the press is re-read afterwards and matched by `ts`: same press or
+        // nothing happened.
+        let selectionHeld = await reassertSelectionIfLost(snapshot)
+        guard var press = activePress, press.snapshot.ts == snapshot.ts else { return }
+
+        guard selectionHeld else {
             // The user selected something else inside the field while chips or
             // generation were up. The plan addressed the OLD selection, so
             // pasting would replace text nobody asked about — the same class
@@ -1186,8 +1232,28 @@ final class MagicPressCoordinator {
     /// re-selected during chips or generation, and the plan — written for the
     /// old selection — would paste over text nobody addressed. Accepting any
     /// non-empty selection, as this used to, silently did exactly that.
-    private func reassertSelectionIfLost(_ snapshot: MagicSnapshot) -> Bool {
-        guard let element = snapshot.focusedElement?.element,
+    ///
+    /// Every AX read and write this needs happens inside `MagicInserter`'s
+    /// reader actor, in one hop, and everything below decides on the value it
+    /// hands back. It used to call `AXUIElementCopyAttributeValue` and
+    /// `AXUIElementSetAttributeValue` straight from here, on the main actor —
+    /// up to three synchronous IPC round-trips at the 0.35 s process-wide AX
+    /// messaging timeout each, i.e. up to a second of frozen UI at the one
+    /// moment the user is actively waiting for text to appear. That is the same
+    /// stall `AXFieldReader` was created for on the insert path (R4); this call
+    /// site simply predated it.
+    ///
+    /// The suspension point that introduces is safe *here* for a reason worth
+    /// stating, because it is not safe everywhere (see `focusMatches` and
+    /// `lastWrite` in `MagicInserter`): the whole decision is taken from one
+    /// probe read in a single hop, with no second piece of state consulted
+    /// after the await, so there is no way for the two halves of the judgement
+    /// to come from different versions of the world. The re-assert write that
+    /// may follow is best-effort by design and is immediately re-checked by
+    /// `MagicInserter.verifyFocusStillMatches`, which re-reads focus and field
+    /// state from scratch before anything is pasted.
+    private func reassertSelectionIfLost(_ snapshot: MagicSnapshot) async -> Bool {
+        guard let element = snapshot.focusedElement,
               let range = snapshot.field?.selection?.range
         else { return true }
 
@@ -1197,30 +1263,51 @@ final class MagicPressCoordinator {
         // `kAXSelectedTextRangeAttribute` speaks UTF-16 in both directions.
         // Both halves below therefore have to translate, and the translation
         // is only meaningful against the value the field holds *now* (it may
-        // have been edited while chips or the toast were up), so read it fresh
-        // rather than trusting the captured one, which is also truncated at
-        // `maxFieldValueChars`.
-        let value = Self.currentFieldValue(of: element) ?? snapshot.field?.value ?? ""
+        // have been edited while chips or the toast were up), so the probe
+        // reads it fresh and unclipped rather than trusting the captured one,
+        // which is truncated at `maxFieldValueChars`. The captured value is
+        // handed over only as the fallback for a field that publishes no
+        // readable value at all.
+        let probe = await inserter.selectionProbe(
+            of: element, fallbackValue: snapshot.field?.value ?? ""
+        )
 
-        var currentRef: CFTypeRef?
-        if AXUIElementCopyAttributeValue(
-            element, kAXSelectedTextRangeAttribute as CFString, &currentRef
-        ) == .success, let currentRef, CFGetTypeID(currentRef) == AXValueGetTypeID() {
-            var current = CFRange()
-            if AXValueGetValue((currentRef as! AXValue), .cfRange, &current), current.length > 0 {
-                // Selection survived — but only ours may be pasted over, and
-                // the two ranges must be compared in one space: a single emoji
-                // earlier in the field makes the live UTF-16 range differ
-                // numerically from our character range over the very same span
-                // (a spurious clipboard fallback) and, worse, lets a
-                // *different* span compare equal (a paste over text nobody
-                // addressed). A range we cannot map into the current value is
-                // stale by definition — treat it as someone else's.
-                guard let live = AXSnapshotService.characterRange(current, in: value) else {
-                    return false
-                }
-                return live == range
-            }
+        switch Self.selectionVerdict(captured: range, probe: probe) {
+        case .proceed:
+            return true
+        case .refuse:
+            return false
+        case .reassert(let location, let length):
+            await inserter.reassertSelectedRange(
+                location: location, length: length, of: element
+            )
+            return true
+        }
+    }
+
+    /// The re-assert decision table, as a pure function of the captured range
+    /// and one probe of the live field.
+    ///
+    /// `nonisolated static` for the same reason `utf16Range` and
+    /// `AXSnapshotService.characterRange` are: every AX read it depends on has
+    /// already happened, so the whole judgement — including the two ways it can
+    /// refuse a paste — can be exercised directly by the tests. Against a real
+    /// app it is only observable as "the text went to the toast instead", which
+    /// is precisely the outcome nobody notices is wrong.
+    nonisolated static func selectionVerdict(
+        captured: Range<Int>, probe: MagicSelectionProbe
+    ) -> MagicSelectionVerdict {
+        if probe.hasLiveSelection {
+            // Selection survived — but only ours may be pasted over, and the
+            // two ranges must be compared in one space: a single emoji earlier
+            // in the field makes the live UTF-16 range differ numerically from
+            // our character range over the very same span (a spurious clipboard
+            // fallback) and, worse, lets a *different* span compare equal (a
+            // paste over text nobody addressed). The probe does that conversion
+            // against the value it read in the same breath; a range it could
+            // not map is stale by definition — treat it as someone else's.
+            guard let live = probe.liveRange, live == captured else { return .refuse }
+            return .proceed
         }
 
         // The target dropped the selection (some apps collapse it when a panel
@@ -1230,23 +1317,8 @@ final class MagicPressCoordinator {
         // selected. If the offsets no longer fit the current value the field
         // has changed underneath the press — same class of mismatch as a
         // re-selection, and reported the same way.
-        guard var cfRange = Self.utf16Range(range, in: value) else { return false }
-        if let axValue = AXValueCreate(.cfRange, &cfRange) {
-            AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, axValue)
-        }
-        return true
-    }
-
-    /// The focused field's value as the target holds it right now — no budget,
-    /// no truncation: this is the string the AX range arithmetic above must be
-    /// measured against, and a value clipped at `maxFieldValueChars` would put
-    /// late selections out of bounds.
-    private static func currentFieldValue(of element: AXUIElement) -> String? {
-        var ref: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(
-            element, kAXValueAttribute as CFString, &ref
-        ) == .success, let ref else { return nil }
-        return ref as? String
+        guard let cfRange = utf16Range(captured, in: probe.value) else { return .refuse }
+        return .reassert(location: cfRange.location, length: cfRange.length)
     }
 
     /// Character offsets → the UTF-16 `CFRange` AX expects — the inverse of

@@ -16,11 +16,26 @@ enum PrivacyBinding {
     /// list. Entries match a substring of the bundle id ("telegram" hits
     /// "ru.keepcoder.Telegram") or the URL host exactly / by suffix
     /// ("google.com" hits "mail.google.com").
+    ///
+    /// All three sides are folded here, entries included. Today every entry
+    /// arrives already folded — `MagicEngineConfig.normalized` lower-cases the
+    /// list as it parses config.yaml — so folding again looks like duplication.
+    /// It is not: this method is the only place that decides whether a surface
+    /// is protected, it is public, and it already has two callers
+    /// (`enforce` below and `MagicPlanner.resolveProvider`). A third one that
+    /// hands over a list from somewhere the parser never touched — a tool
+    /// argument, a test fixture, a future settings path — would not fail
+    /// loudly: a "Telegram" entry simply stops matching "ru.keepcoder.Telegram"
+    /// and privacy switches itself off in silence for that surface. The cost of
+    /// the invariant living here is one `lowercased()` per entry per press; the
+    /// cost of it living in the caller is protected screen content sent to a
+    /// cloud provider with nothing to notice it (§14, P7).
     static func matchesNoCloud(entries: [String], bundleId: String?, urlHost: String?) -> Bool {
         guard !entries.isEmpty else { return false }
         let bundle = bundleId?.lowercased()
         let host = urlHost?.lowercased()
-        return entries.contains { entry in
+        return entries.contains { rawEntry in
+            let entry = rawEntry.lowercased()
             if let bundle, bundle.contains(entry) { return true }
             if let host, host == entry || host.hasSuffix("." + entry) { return true }
             return false

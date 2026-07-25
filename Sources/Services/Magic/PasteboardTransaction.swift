@@ -1,4 +1,5 @@
 import AppKit
+import os
 
 /// Synthetic keystrokes, factored out of the three call sites that used to
 /// inline the CGEvent dance. Same primitives as the legacy paths: session
@@ -30,42 +31,157 @@ enum PasteboardTransaction {
     static let transientType = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
     static let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
 
+    private static let logger = Logger(
+        subsystem: Constants.bundleIdentifier, category: "engine.pasteboard"
+    )
+
+    /// A fuse against a pasteboard that should not exist — NOT a memory policy
+    /// for everyday content. Read the trade-off before touching the number.
+    ///
+    /// The eager whole-pasteboard read below (see `Saved.items`) had no upper
+    /// bound at all, and it runs on every Magic hotkey whether or not the press
+    /// ends up touching the clipboard: a screenshot lives on the clipboard as
+    /// TIFF *and* PNG *and* PDF at once, so a retina capture is tens of
+    /// megabytes copied into our address space and held for the length of the
+    /// insert — the paste confirmation loop runs up to 700 ms, plus the 400 ms
+    /// restore grace, so roughly 1.1 s. That is a transient spike, and it ends.
+    ///
+    /// Crossing this budget does NOT end: `save()` abandons the capture, the
+    /// press still calls `writeGenerated`, and `restore()` then refuses — so
+    /// the user's clipboard is overwritten with our generated text and there is
+    /// nowhere left to get it back from. **Exceeding the budget destroys user
+    /// data.** That is strictly worse than a spike that frees itself a second
+    /// later, which is why the threshold sits deliberately far above anything
+    /// real content produces rather than anywhere near the memory we would
+    /// prefer to use.
+    ///
+    /// 256 MB accordingly: a full-screen 5K bitmap is ~59 MB per representation
+    /// (5120 × 2880 × 4), so a screenshot carried as TIFF + PNG + PDF, an image
+    /// copied out of a browser, a multi-page PDF, a large rich-text document —
+    /// all of it must fit, be captured, and be restored intact. What the fuse
+    /// is for is the clipboard nobody meant to make: some tool's several-hundred-
+    /// megabyte output, a runaway export, a generated bitmap with no sane size.
+    ///
+    /// Lowering this number trades the user's data for our memory, one clipboard
+    /// at a time, and does it silently — the loss surfaces only as "my image
+    /// vanished when I pressed the hotkey", long after the press. If a future
+    /// press path can restore an over-budget clipboard some other way (never
+    /// writing over it, or refusing the pasteboard route entirely when
+    /// `Saved.isRestorable` is false), shrink the budget then — not before.
+    ///
+    /// It bounds retention, not peak: a representation is read before its size
+    /// is known — the pasteboard exposes no length ahead of the read — so the
+    /// true high-water mark is the budget plus the single largest
+    /// representation, after which the whole capture is dropped at once.
+    ///
+    /// `nonisolated` so `fitsInBudget` can default to it: a default argument of
+    /// a non-isolated function is evaluated in the caller's (non-isolated)
+    /// context, which cannot reach a main-actor-isolated constant.
+    nonisolated static let saveBudgetBytes = 256 * 1024 * 1024
+
+    /// The budget arithmetic, extracted so the all-or-nothing decision is
+    /// testable without a live `NSPasteboard`. Deliberately inclusive at the
+    /// boundary: a capture that lands exactly on the budget is still a capture
+    /// we are willing to hold.
+    nonisolated static func fitsInBudget(
+        runningTotal: Int, nextRepresentation: Int,
+        budget: Int = PasteboardTransaction.saveBudgetBytes
+    ) -> Bool {
+        runningTotal + nextRepresentation <= budget
+    }
+
     struct Saved: Sendable {
         /// Every representation of every item, keyed by raw type name. The
         /// whole pasteboard is captured — not just the text types — because
         /// `restore()` re-declares what it holds: recording only string/RTF/
         /// HTML would silently destroy an image, file URL, PDF, or color
         /// clipboard on every Magic paste.
-        let items: [[String: Data]]
+        ///
+        /// `nil` means the capture crossed `saveBudgetBytes` and was abandoned.
+        /// Abandoning is all-or-nothing on purpose: a partial capture would
+        /// restore as a *lossy* clipboard — the representations that fit,
+        /// written back over the ones that did not — which is the very failure
+        /// mode the whole-pasteboard rule above exists to prevent, except
+        /// harder to notice, because the clipboard would still look populated.
+        /// Nothing is the honest answer, and `restore()` enforces it.
+        let items: [[String: Data]]?
         let changeCount: Int
 
         /// Plain-text view of what was saved, when it had one. The legacy
         /// inline path compares it against the text it last pasted to decide
         /// whether a hotkey without a fresh selection is a follow-up prompt.
-        var string: String? {
-            for representations in items {
-                if let data = representations[NSPasteboard.PasteboardType.string.rawValue] {
-                    return String(data: data, encoding: .utf8)
-                }
-            }
-            return nil
-        }
+        ///
+        /// Read up front and stored, rather than derived from `items`, so that
+        /// a capture abandoned by the `saveBudgetBytes` fuse still answers this
+        /// question: the follow-up check needs the text and nothing else, so
+        /// whatever else shared the clipboard has no business switching the
+        /// feature off on top of everything else that press already lost.
+        let string: String?
+
+        /// Whether `restore()` has anything faithful to put back. False only
+        /// for an over-budget capture — an *empty* clipboard is still fully
+        /// captured, and restores as empty.
+        var isRestorable: Bool { items != nil }
     }
 
     static func save() -> Saved {
         let pasteboard = NSPasteboard.general
-        let items = (pasteboard.pasteboardItems ?? []).map { item in
+        let changeCount = pasteboard.changeCount
+
+        // Read ahead of the walk below, so that the follow-up-prompt check
+        // still has its text when the fuse blows (see `Saved.string`) — and
+        // held to the same budget itself, or a clipboard carrying a
+        // quarter-gigabyte of plain text would sail past the ceiling through
+        // the one field that escapes the walk.
+        let plainText = pasteboard.string(forType: .string).flatMap {
+            fitsInBudget(runningTotal: 0, nextRepresentation: $0.utf8.count) ? $0 : nil
+        }
+
+        var items: [[String: Data]] = []
+        var totalBytes = 0
+        for item in pasteboard.pasteboardItems ?? [] {
             var representations: [String: Data] = [:]
             for type in item.types {
                 // Reads promised/lazy data eagerly — the item is gone by the
                 // time we restore, so there is nothing left to promise.
-                if let data = item.data(forType: type) {
-                    representations[type.rawValue] = data
+                // File-promise types are not an exception worth carving out:
+                // `data(forType:)` hands back the promise's own metadata (a
+                // content UTI, a destination URL), never the file's bytes —
+                // those only ever flow through `NSFilePromiseReceiver` — so
+                // they are small, and skipping them would strip an item of the
+                // only representation it has, which is precisely the silent
+                // destruction the whole-pasteboard rule forbids.
+                guard let data = item.data(forType: type) else { continue }
+                guard fitsInBudget(runningTotal: totalBytes, nextRepresentation: data.count) else {
+                    // Bail on the whole capture the moment the budget breaks,
+                    // instead of finishing the walk and discarding afterwards:
+                    // the remaining representations are then never read at all,
+                    // which caps both the memory we touch and the number of
+                    // synchronous cross-process reads this press performs.
+                    //
+                    // `error`, not `notice`: the press that follows overwrites
+                    // the clipboard and `restore()` will refuse to give it back,
+                    // so this line is the only record that the user's clipboard
+                    // was destroyed. Given how far above real content
+                    // `saveBudgetBytes` sits, it should also never be reached —
+                    // if it shows up in a log, that is the finding, not noise.
+                    // Sizes and type names only — never a byte of what the user
+                    // was carrying.
+                    let offendingType = type.rawValue
+                    let offendingBytes = data.count
+                    let capturedBytes = totalBytes
+                    let budget = saveBudgetBytes
+                    Self.logger.error(
+                        "pasteboard capture abandoned, clipboard contents lost for this press: \(capturedBytes, privacy: .public) B captured plus \(offendingBytes, privacy: .public) B for type \(offendingType, privacy: .public) exceeds the \(budget, privacy: .public) B budget"
+                    )
+                    return Saved(items: nil, changeCount: changeCount, string: plainText)
                 }
+                totalBytes += data.count
+                representations[type.rawValue] = data
             }
-            return representations
+            items.append(representations)
         }
-        return Saved(items: items, changeCount: pasteboard.changeCount)
+        return Saved(items: items, changeCount: changeCount, string: plainText)
     }
 
     /// Writes generated text marked transient + concealed. Returns the
@@ -87,6 +203,14 @@ enum PasteboardTransaction {
     /// the churn.
     @discardableResult
     static func restore(_ saved: Saved, ifChangeCountStill expected: Int) -> Bool {
+        // Checked before anything is read or cleared: an over-budget capture
+        // (`saveBudgetBytes`) holds no faithful copy, so the only correct move
+        // is to leave the pasteboard exactly as the press left it. Reported as
+        // "not restored" rather than "restored", which is what it is — callers
+        // already treat a false return as "the clipboard is not ours to hand
+        // back" and must not be told otherwise.
+        guard let savedItems = saved.items else { return false }
+
         let pasteboard = NSPasteboard.general
         guard shouldRestore(currentCount: pasteboard.changeCount, ourWriteCount: expected) else {
             return false
@@ -94,7 +218,7 @@ enum PasteboardTransaction {
         pasteboard.clearContents()
         // An empty clipboard restores as an empty clipboard: writeObjects
         // rejects a typeless item, so there is nothing to write.
-        let items: [NSPasteboardItem] = saved.items.compactMap { representations in
+        let items: [NSPasteboardItem] = savedItems.compactMap { representations in
             guard !representations.isEmpty else { return nil }
             let item = NSPasteboardItem()
             for (rawType, data) in representations {
@@ -104,8 +228,16 @@ enum PasteboardTransaction {
         }
         guard !items.isEmpty else { return true }
         // Transient marker so clipboard managers skip the restore churn —
-        // one item carries it, same as our own writes.
-        items[0].setString("", forType: transientType)
+        // one item carries it, same as our own writes. Guarded because the
+        // clipboard we saved may already have carried the marker itself (any
+        // other tool that follows the org.nspasteboard convention, including
+        // our own `writeGenerated`), in which case the loop above has already
+        // written the type and `setString` would quietly return false: the
+        // marker is present either way, but only one of the two paths says so.
+        let first = items[0]
+        if !first.types.contains(transientType) {
+            first.setString("", forType: transientType)
+        }
         pasteboard.writeObjects(items)
         return true
     }

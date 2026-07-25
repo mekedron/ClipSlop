@@ -33,6 +33,31 @@ struct PrivacyBindingTests {
         ))
     }
 
+    /// Matching folds the ENTRIES too, not just the surface. `MagicEngineConfig`
+    /// happens to hand over a lower-cased list today, so this passed by
+    /// accident; the point of pinning it is that the method is public and the
+    /// failure mode of an unfolded caller is silent — "Telegram" would stop
+    /// matching "ru.keepcoder.Telegram" and the surface would quietly lose its
+    /// no-cloud protection instead of erroring (P7).
+    @Test func entriesAreMatchedCaseInsensitivelyWhateverTheCallerPassed() {
+        #expect(PrivacyBinding.matchesNoCloud(
+            entries: ["Telegram"], bundleId: "ru.keepcoder.Telegram", urlHost: nil
+        ))
+        #expect(PrivacyBinding.matchesNoCloud(
+            entries: ["GMail.com"], bundleId: nil, urlHost: "mail.gmail.com"
+        ))
+        // And the refusal path sees the same match: an unfolded entry must not
+        // let a cloud provider serve a protected surface.
+        let outcome = PrivacyBinding.enforce(
+            resolved: cloud, binding: RoleBinding(), providers: [cloud],
+            noCloud: ["TextEdit"], bundleId: "com.apple.TextEdit", urlHost: nil
+        )
+        guard case .refused = outcome else {
+            Issue.record("expected refusal, got allowed")
+            return
+        }
+    }
+
     @Test func nonMatchingSurfacePassesThrough() {
         let outcome = PrivacyBinding.enforce(
             resolved: cloud, binding: RoleBinding(), providers: [cloud, local],

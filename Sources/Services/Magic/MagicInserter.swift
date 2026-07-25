@@ -15,6 +15,34 @@ fileprivate struct FieldProbe: Sendable {
     let range: Range<Int>?
 }
 
+/// Everything `MagicPressCoordinator.reassertSelectionIfLost` needs to know
+/// about the target field before it lets a press paste — read in a single hop
+/// into `AXFieldReader`.
+///
+/// One value rather than two calls on purpose: the guard compares the live
+/// selection against the captured one *as measured in the field's current
+/// value*, and then re-encodes its own range against that same string. Two
+/// round-trips could straddle a keystroke and have the two halves of that
+/// decision belong to different versions of the field — which is how a
+/// re-selection ends up landing on a shifted span.
+///
+/// Internal (not `fileprivate` like `FieldProbe`) because this one crosses into
+/// the coordinator; the `AXUIElement` itself never does.
+struct MagicSelectionProbe: Sendable {
+    /// The field's value as the target holds it right now, or the caller's
+    /// fallback when AX published nothing readable. Deliberately unclipped —
+    /// see `reassertSelectionIfLost`.
+    let value: String
+    /// The field published a selection with a non-zero length. Distinct from
+    /// `liveRange != nil`: a selection can exist and still be unmappable into
+    /// `value`, and those two cases must not be confused — the first refuses
+    /// the paste, the second re-asserts our own range.
+    let hasLiveSelection: Bool
+    /// That live selection in CHARACTER offsets (the space snapshots record
+    /// ranges in), or nil when it does not lie inside `value`.
+    let liveRange: Range<Int>?
+}
+
 /// Every Accessibility read the insert path makes, on its own executor.
 ///
 /// `AXUIElementCopyAttributeValue` is synchronous IPC into the target app and
@@ -88,6 +116,64 @@ fileprivate actor AXFieldReader {
             return FieldProbe(value: nil, range: nil)
         }
         return Self.fieldProbe(of: focused)
+    }
+
+    /// The pre-paste selection reading the press band takes immediately before
+    /// handing text to `insert`: the field's value and its live selection, in
+    /// one hop.
+    ///
+    /// This used to run inline on the main actor in
+    /// `MagicPressCoordinator.reassertSelectionIfLost`, which is exactly the
+    /// shape this actor exists to stop: up to three synchronous AX round-trips
+    /// (value, selected range, and the set that follows) at the process-wide
+    /// 0.35 s messaging timeout each, charged to the main thread at the precise
+    /// moment the user is watching for their paste — close to a second of frozen
+    /// UI against an unresponsive target.
+    ///
+    /// `fallbackValue` (the caller's captured field value) is passed IN rather
+    /// than substituted by the caller afterwards because the character-offset
+    /// conversion below has to be measured against the very string the caller
+    /// will later re-encode its own range against.
+    fileprivate func selectionProbe(
+        of element: AXElementRef, fallbackValue: String
+    ) -> MagicSelectionProbe {
+        let value = Self.copyString(element.element, kAXValueAttribute) ?? fallbackValue
+
+        var selectedRef: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element.element, kAXSelectedTextRangeAttribute as CFString, &selectedRef
+        ) == .success, let selectedRef, CFGetTypeID(selectedRef) == AXValueGetTypeID()
+        else { return MagicSelectionProbe(value: value, hasLiveSelection: false, liveRange: nil) }
+
+        var current = CFRange()
+        guard AXValueGetValue((selectedRef as! AXValue), .cfRange, &current), current.length > 0
+        else { return MagicSelectionProbe(value: value, hasLiveSelection: false, liveRange: nil) }
+
+        // Converted inside the same hop that read the value: AX speaks UTF-16
+        // in both directions while snapshots record character offsets, and a
+        // single emoji earlier in the field makes the two numbers disagree over
+        // the very same span. Nil here means the live selection does not map
+        // into the current value at all — stale by definition, and the caller
+        // treats it as someone else's.
+        return MagicSelectionProbe(
+            value: value,
+            hasLiveSelection: true,
+            liveRange: AXSnapshotService.characterRange(current, in: value)
+        )
+    }
+
+    /// The selection re-assert write. `AXValueCreate` is cheap; the
+    /// `AXUIElementSetAttributeValue` that follows blocks on the same 0.35 s
+    /// messaging timeout a read does, so it belongs here beside `forceFocus`
+    /// rather than on the main actor. Offsets arrive already converted to UTF-16
+    /// (`MagicPressCoordinator.utf16Range`) and travel as plain `Int`s because
+    /// `CFRange` is not `Sendable`.
+    fileprivate func setSelectedRange(location: Int, length: Int, of element: AXElementRef) {
+        var range = CFRange(location: location, length: length)
+        guard let axValue = AXValueCreate(.cfRange, &range) else { return }
+        AXUIElementSetAttributeValue(
+            element.element, kAXSelectedTextRangeAttribute as CFString, axValue
+        )
     }
 
     // MARK: - Private
@@ -339,6 +425,21 @@ final class MagicInserter {
         var confirmed = false
         let probe = String(text.prefix(64))
         while clock.now - start < .milliseconds(700) {
+            // Cancellation (Escape during the press, or a regenerate taking
+            // over) shortens this wait instead of ending the method: the ⌘V is
+            // already posted, so the only thing given up here is the
+            // best-effort `confirmed` flag, while the clipboard restore, the
+            // settled probe and `noteOurOwnWrite` below all still run — those
+            // are what keep the user's pasteboard and their ⌘Z intact, and
+            // skipping either would leave the generated text sitting in their
+            // clipboard and undo aimed at nothing.
+            //
+            // Without this the loop did not merely run long, it SPUN: a
+            // cancelled task makes `Task.sleep` return immediately, so the 60 ms
+            // pacing vanished and the remainder of the 700 ms went into
+            // back-to-back AX reads of an app the user had already walked away
+            // from.
+            if Task.isCancelled { break }
             try? await Task.sleep(for: .milliseconds(60))
             guard let (value, _) = await reader.currentFieldState(snapshot) else { continue }
             if value != freshValue, value.contains(probe) {
@@ -346,8 +447,14 @@ final class MagicInserter {
                 break
             }
         }
+        // Deliberately NOT cancellation-aware — see `sleepThroughCancellation`.
+        // A cancelled press reaches the restore sooner than a confirmed one
+        // (it skipped the loop above), which makes the R3 grace more load
+        // bearing here, not less.
         if clock.now - start < Self.clipboardRestoreGrace {
-            try? await Task.sleep(for: Self.clipboardRestoreGrace - (clock.now - start))
+            await Self.sleepThroughCancellation(
+                for: Self.clipboardRestoreGrace - (clock.now - start)
+            )
         }
         let restored = PasteboardTransaction.restore(saved, ifChangeCountStill: ourCount)
 
@@ -486,7 +593,47 @@ final class MagicInserter {
         }
     }
 
+    // MARK: - Selection re-assert (for the press band)
+
+    /// The press band's pre-paste selection reading, taken on the inserter's AX
+    /// executor instead of the main actor.
+    ///
+    /// `MagicPressCoordinator.reassertSelectionIfLost` keeps the decision and
+    /// the range arithmetic — both pure, both directly under test — and only the
+    /// AX I/O it needs comes here. Routing it through the inserter rather than
+    /// exposing `AXFieldReader` keeps that actor file-private, so every AX call
+    /// on the insert path still goes through exactly one door.
+    func selectionProbe(
+        of element: AXElementRef, fallbackValue: String
+    ) async -> MagicSelectionProbe {
+        await reader.selectionProbe(of: element, fallbackValue: fallbackValue)
+    }
+
+    /// Companion write for the reading above: re-select the span the target
+    /// dropped when a panel took key. UTF-16 offsets, already converted by the
+    /// caller.
+    func reassertSelectedRange(location: Int, length: Int, of element: AXElementRef) async {
+        await reader.setSelectedRange(location: location, length: length, of: element)
+    }
+
     // MARK: - Private
+
+    /// A delay a cancelled press still waits out.
+    ///
+    /// `Task.sleep` returns the instant its task is cancelled, and on this path
+    /// there is exactly one wait that must NOT collapse: the clipboard-restore
+    /// grace. The ⌘V has already been posted by then, and taking the pasteboard
+    /// back early hands a late reader (Electron, R3) the user's own restored
+    /// clipboard content to paste into their field — data loss caused by a
+    /// cancel, which is the one thing a cancel may never do. An unstructured
+    /// task does not inherit cancellation, so the grace holds while the rest of
+    /// the path exits early.
+    private static func sleepThroughCancellation(for duration: Duration) async {
+        let sleeper = Task.detached { () -> Void in
+            try? await Task.sleep(for: duration)
+        }
+        await sleeper.value
+    }
 
     /// True when the press targeted one of ClipSlop's own windows (the
     /// onboarding sandbox, a Settings field).

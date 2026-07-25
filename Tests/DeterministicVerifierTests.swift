@@ -218,6 +218,52 @@ struct DeterministicVerifierTests {
         #expect(verdict.warnings.contains { $0.check == .actionableUngrounded })
     }
 
+    /// Month-name dates were the one token class whose commitment flag was
+    /// computed over the whole output instead of the ±60-char window every
+    /// other class uses — the word-splitting pass had thrown the offsets away.
+    /// So a "pay" in an unrelated sentence upgraded the date to actionable, and
+    /// a date the thread already states raised `actionableUngrounded`: the
+    /// press went to the warning panel instead of the field, for a sentence
+    /// that promised nothing (§10.2).
+    @Test func commitmentFarFromAWordedDateDoesNotMakeItActionable() {
+        let verdict = verify(
+            output: """
+                The report will be ready on May 15, and the whole team has already \
+                confirmed that date with the client and put it in the shared plan. \
+                Separately, I will pay the annual invoice at the end of the month.
+                """,
+            untrusted: "Thread: the review is scheduled for May 15."
+        )
+        #expect(!verdict.warnings.contains {
+            $0.check == .actionableUngrounded && $0.messageArgs.contains("15 may")
+        })
+        // Grounded by the thread, so it must not warn as invented either —
+        // which is also what proves the token was extracted at all.
+        #expect(!verdict.warnings.contains {
+            $0.check == .concreteness && $0.messageArgs.contains("15 may")
+        })
+    }
+
+    @Test func commitmentNextToAWordedDateStillMakesItActionable() {
+        let verdict = verify(
+            output: "Confirmed — I'll pay the invoice on May 15.",
+            untrusted: "Stranger: pay the invoice on May 15 please."
+        )
+        #expect(verdict.warnings.contains {
+            $0.check == .actionableUngrounded && $0.messageArgs.contains("15 may")
+        })
+
+        // Day on the left of the month name, Russian month list — the other
+        // half of the pattern the ranged pass has to keep recognising.
+        let russian = verify(
+            output: "Договорились — переведу оплату 15 мая.",
+            untrusted: "Незнакомец: переведи оплату 15 мая."
+        )
+        #expect(russian.warnings.contains {
+            $0.check == .actionableUngrounded && $0.messageArgs.contains("15 мая")
+        })
+    }
+
     @Test func passedVerdictHasNoWarnings() {
         let verdict = verify(output: "Sounds good, thanks for the update!")
         #expect(verdict.passed)

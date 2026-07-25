@@ -50,6 +50,57 @@ struct PasteboardTransactionLogicTests {
         // A clipboard manager or the user wrote after us → leave it alone.
         #expect(!PasteboardTransaction.shouldRestore(currentCount: 9, ourWriteCount: 7))
     }
+
+    @Test func budgetAdmitsAnExactFitAndRefusesTheByteAfterIt() {
+        #expect(PasteboardTransaction.fitsInBudget(
+            runningTotal: 900, nextRepresentation: 100, budget: 1000
+        ))
+        #expect(!PasteboardTransaction.fitsInBudget(
+            runningTotal: 900, nextRepresentation: 101, budget: 1000
+        ))
+        // A single representation can blow the budget before anything has been
+        // captured — the walk has to refuse it there rather than assume the
+        // first read is always affordable.
+        #expect(!PasteboardTransaction.fitsInBudget(
+            runningTotal: 0, nextRepresentation: 2000, budget: 1000
+        ))
+    }
+
+    /// Crossing `saveBudgetBytes` costs the user their clipboard: the press
+    /// overwrites it and `restore` then refuses. So the budget is a fuse
+    /// against a clipboard that should not exist, and everything real has to
+    /// clear it — this test is the guard rail on shrinking the constant.
+    @Test func realClipboardsClearTheBudgetByDefault() {
+        // A full-screen 5K screenshot carried the way macOS carries it: TIFF
+        // (5120 × 2880 × 4 ≈ 59 MB) plus PNG plus PDF, on one item.
+        let tiff = 5120 * 2880 * 4
+        let png = 12 * 1024 * 1024
+        let pdf = 6 * 1024 * 1024
+        #expect(PasteboardTransaction.fitsInBudget(runningTotal: 0, nextRepresentation: tiff))
+        #expect(PasteboardTransaction.fitsInBudget(runningTotal: tiff, nextRepresentation: png))
+        #expect(PasteboardTransaction.fitsInBudget(runningTotal: tiff + png, nextRepresentation: pdf))
+        // What the fuse is actually for: output nobody meant to put on a
+        // clipboard.
+        #expect(!PasteboardTransaction.fitsInBudget(
+            runningTotal: 0, nextRepresentation: 512 * 1024 * 1024
+        ))
+    }
+
+    @MainActor
+    @Test func anOverBudgetCaptureNeverRestores() {
+        // `items == nil` is the "we abandoned the capture" marker. Restoring
+        // the fragment we happened to read before the budget broke would write
+        // a lossy clipboard back over the user's — the exact silent-destruction
+        // failure the whole-pasteboard capture exists to avoid — so the answer
+        // has to be "not restored" even though nobody else wrote since us.
+        let abandoned = PasteboardTransaction.Saved(items: nil, changeCount: 7, string: "kept text")
+        #expect(!abandoned.isRestorable)
+        #expect(!PasteboardTransaction.restore(abandoned, ifChangeCountStill: 7))
+        // The plain-text view survives the abandoned capture: the legacy
+        // inline path's follow-up-prompt check needs only the text, and a
+        // screenshot sharing the clipboard must not switch that feature off.
+        #expect(abandoned.string == "kept text")
+    }
 }
 
 @Suite("Surrounding-content assembly")

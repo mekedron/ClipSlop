@@ -128,16 +128,49 @@ struct CLIToolService: AIService {
         }
     }
 
+    /// One consumer, one subprocess — and exactly one `onTermination` handler.
+    ///
+    /// This assigned `continuation.onTermination` twice: once inside the `Task`
+    /// right after `process.run()` (stop the watchdog, kill the child) and once
+    /// at the end of the synchronous builder body (`task.cancel()`). It is a
+    /// single property, so the second write silently discarded the first, and
+    /// *which* write landed second was up to the scheduler. In practice the
+    /// inner one won — the builder returns long before the task is scheduled —
+    /// so `task.cancel()` was never called at all; when the ordering inverted,
+    /// nothing terminated the tool, and a CLI nobody was reading any more kept
+    /// running while its readability handler yielded into a dead continuation.
+    ///
+    /// Neither half is optional. `MagicPressPipeline`'s hard `budget.ms` cap
+    /// abandons the stream and relies on exactly this handler to take the CLI
+    /// down with it — an invariant nothing else enforces. So there is now one
+    /// handler, installed once, after the task exists and therefore
+    /// deterministically last, doing all three things. The process it has to
+    /// signal does not exist yet at that point (the task creates it), so it
+    /// arrives through `StreamRun` — the same "who owns the child" handoff
+    /// `runProcess` uses.
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
         let timeout = Self.timeout(for: config)
         return AsyncThrowingStream { continuation in
             let watchdog = StreamWatchdog()
+            let run = StreamRun()
             let task = Task {
                 do {
                     let (binaryPath, definition) = try resolveToolInfo(config: config)
 
                     // Streaming always reads stdout directly (no output file).
                     let arguments = definition.buildArguments(text, systemPrompt, nil)
+
+                    // Nothing in this task suspends before `process.run()`, so
+                    // `task.cancel()` alone cannot stop the launch: a consumer
+                    // that walks away while the task is still queued would get
+                    // its CLI spawned anyway. The holder is where that early
+                    // cancellation is recorded. Ask before building a single
+                    // pipe, so this path has nothing to unwind.
+                    guard run.canLaunch() else {
+                        watchdog.stop()
+                        continuation.finish(throwing: CancellationError())
+                        return
+                    }
 
                     let process = Process()
                     process.executableURL = URL(fileURLWithPath: binaryPath)
@@ -167,6 +200,25 @@ struct CLIToolService: AIService {
                         stdoutHandle.readabilityHandler = nil
                         watchdog.stop()
 
+                        // Never read a pipe belonging to a process we killed
+                        // ourselves. A non-zero status after cancellation is
+                        // our own SIGTERM rather than a tool diagnostic, and
+                        // the stream is already terminal, so the `stderr` below
+                        // would be assembled for nobody — while the read itself
+                        // is the trap `runProcess` documents: a grandchild that
+                        // inherited the write end (claude and codex both spawn
+                        // helpers) holds it open after we killed its parent,
+                        // and this Foundation thread then blocks on it
+                        // indefinitely. That was hard to hit while the
+                        // duplicate `onTermination` assignment meant nothing
+                        // ever terminated the child on cancellation; now that
+                        // one handler reliably does, every cancelled generation
+                        // would strand a thread here.
+                        guard !run.isCancelled else {
+                            continuation.finish()
+                            return
+                        }
+
                         if proc.terminationStatus != 0 {
                             let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
                             let stderr = String(data: stderrData, encoding: .utf8) ?? ""
@@ -183,17 +235,45 @@ struct CLIToolService: AIService {
 
                     try process.run()
 
-                    continuation.onTermination = { @Sendable _ in
-                        watchdog.stop()
+                    // Publish the live child so the termination handler below
+                    // has something to signal — and pick up a cancellation that
+                    // landed while we were launching, which went looking for a
+                    // process and found none. Whichever side loses this race is
+                    // the side that owns the killing, so it happens exactly
+                    // once and never not at all.
+                    guard run.attach(process) else {
                         Self.terminate(process)
+                        watchdog.stop()
+                        continuation.finish(throwing: CancellationError())
+                        return
                     }
 
                     // Finish before terminating: killing the process fires
                     // `terminationHandler` with a non-zero status, and the
                     // first `finish` wins — the caller must see the timeout,
-                    // not a spurious `cliToolFailed(SIGTERM)`.
+                    // not a spurious `cliToolFailed(SIGTERM)`. That ordering
+                    // survives the handler below running re-entrantly from
+                    // inside this `finish`: the stream is already terminal by
+                    // then, so the kill it performs cannot beat the timeout
+                    // error to the caller either. The `terminate` here is kept
+                    // (idempotent, `isRunning`-guarded) so the deadline holds
+                    // even if the stream was somehow terminated beforehand and
+                    // this callback is the only thing still running.
+                    //
+                    // The timeout kill is ours exactly as much as the
+                    // cancellation kill is, so claim the run before signalling:
+                    // that is what tells `terminationHandler` not to block on a
+                    // stderr pipe for a `cliToolTimeout` the caller has already
+                    // been handed. Claiming explicitly rather than relying on
+                    // `finish` to re-enter `onTermination` first — the flag
+                    // must be set before the SIGTERM whatever the stream
+                    // implementation does with handler re-entrancy. `cancel`
+                    // hands the child over once and may well return nil here
+                    // because `onTermination` got it; `process` is captured, so
+                    // the kill does not depend on that.
                     watchdog.start(timeout: timeout) { @Sendable in
                         continuation.finish(throwing: AIServiceError.cliToolTimeout)
+                        _ = run.cancel()
                         Self.terminate(process)
                     }
                 } catch {
@@ -201,7 +281,23 @@ struct CLIToolService: AIService {
                     continuation.finish(throwing: error)
                 }
             }
-            continuation.onTermination = { @Sendable _ in task.cancel() }
+
+            // The one and only assignment, and the reason the task above is
+            // bound to a `let` first: this closure needs `task`, so it cannot
+            // be installed any earlier, and nothing may install one later.
+            //
+            // Runs on every exit — consumer cancellation *and* our own
+            // `finish` — so all three steps are idempotent by construction:
+            // `stop` latches a flag, `terminate` no-ops on a process that has
+            // already exited, and cancelling a finished task does nothing.
+            // Order is not load-bearing for correctness, only for latency:
+            // `cancel()` flips the holder's flag first, which is what a task
+            // still mid-launch reads in its `canLaunch` guard.
+            continuation.onTermination = { @Sendable _ in
+                watchdog.stop()
+                if let process = run.cancel() { Self.terminate(process) }
+                task.cancel()
+            }
         }
     }
 
@@ -388,6 +484,68 @@ struct CLIToolService: AIService {
         func cancel() -> Process? {
             lock.withLock { () -> Process? in
                 isCancelled = true
+                defer { process = nil }
+                return process
+            }
+        }
+    }
+
+    /// `stream`'s half of the same problem `ProcessRun` solves, and solved the
+    /// same way: the subprocess is created inside a `Task`, while
+    /// `continuation.onTermination` is installed synchronously and may fire the
+    /// instant the consumer walks away — quite possibly before that task has
+    /// reached `process.run()`. Both sides arrive on threads of their own
+    /// choosing and either may win, so "may this still launch" and "is there a
+    /// live child to signal, and who owns it" are single decisions taken under
+    /// one lock.
+    ///
+    /// Deliberately a sibling of `ProcessRun` rather than a reuse of it: a
+    /// stream continuation may be finished any number of times (later `finish`
+    /// calls are no-ops), so there is no resume-exactly-once arbitration to
+    /// share — only the process handoff. Folding the two together would mean
+    /// splitting `ProcessRun`'s single lock across a continuation half and a
+    /// process half, and its `begin`/`cancel` pair depends on those being one
+    /// atomic decision or a cancellation slipping between them strands the
+    /// caller on an unresumed continuation.
+    ///
+    /// Internal rather than private only so `StreamRunTests` can pin the
+    /// handoff without spawning a real subprocess: the invariant it protects —
+    /// exactly one side terminates the child — is the kind that fails silently
+    /// in production and is trivially checkable here.
+    final class StreamRun: @unchecked Sendable {
+        private let lock = NSLock()
+        private var process: Process?
+        private var cancelled = false
+
+        /// Was this run torn down from our side? A plain non-blocking read,
+        /// separate from `cancel()` because the two do different jobs: `cancel`
+        /// hands the child over exactly once, while this is asked repeatedly
+        /// and from places that must not consume anything — chiefly
+        /// `terminationHandler`, which uses it to tell "the tool failed" from
+        /// "we sent the SIGTERM ourselves" and so decide whether reading stderr
+        /// is diagnostics or a trap.
+        var isCancelled: Bool {
+            lock.withLock { () -> Bool in cancelled }
+        }
+
+        /// `false` when cancellation already landed: spawn nothing at all.
+        func canLaunch() -> Bool { !isCancelled }
+
+        /// Publishes the launched process. `false` means cancellation already
+        /// ran and found nothing, so the launching side owns terminating it.
+        func attach(_ process: Process) -> Bool {
+            lock.withLock { () -> Bool in
+                guard !cancelled else { return false }
+                self.process = process
+                return true
+            }
+        }
+
+        /// Marks the run cancelled and hands back a process to signal, if one
+        /// was launched. Hands it back once — the caller becomes its owner.
+        func cancel() -> Process? {
+            lock.withLock { () -> Process? in
+                cancelled = true
                 defer { process = nil }
                 return process
             }

@@ -562,6 +562,80 @@ struct EngineToolExecutorTests {
         #expect(MagicEngineConfig.parse(cleared.text).config.noCloud.isEmpty)
     }
 
+    /// The seeded file writes `no_cloud: []` on one line, so rewriting just the
+    /// `key:` line worked — right up until a user wrote the block form by hand,
+    /// which is what a files-first config invites. The old writer replaced the
+    /// header and left `  - gmail.com` dangling under `no_cloud: [...]`, the
+    /// parser rejected the file with "unexpected indented line", and the edit
+    /// was refused as a whole-file syntax error: nothing corrupted, but
+    /// `set_config` unusable on legal YAML with an unintelligible message.
+    @Test func blockFormListIsReplacedWholeAndSurroundingCommentsSurvive() throws {
+        let text = """
+            ---
+            # Privacy rules — surfaces that must never reach a cloud model.
+            no_cloud:
+              - gmail.com
+              # Work Slack.
+              - com.tinyspeck.slackmacgap
+            # Capture budget.
+            capture_deadline_ms: 900
+            ---
+
+            """
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: text, sets: [("no_cloud", .array([.string("telegram")]))]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        #expect(config.noCloud == ["telegram"])
+        // The block's items are gone — all of them, comment included — and the
+        // rest of the file is untouched, in order.
+        #expect(!edit.text.contains("gmail.com"))
+        #expect(!edit.text.contains("slackmacgap"))
+        #expect(!edit.text.contains("Work Slack"))
+        #expect(edit.text.contains("# Privacy rules"))
+        #expect(edit.text.contains("# Capture budget."))
+        #expect(config.captureDeadlineMs == 900)
+        #expect(edit.text.contains("no_cloud: [\"telegram\"]"))
+        // The card must show what is being replaced, not an empty "before".
+        #expect(edit.display.first?.old == "[gmail.com, com.tinyspeck.slackmacgap]")
+    }
+
+    @Test func removingABlockFormKeyRemovesItsContinuation() throws {
+        let text = """
+            ---
+            no_cloud:
+              - gmail.com
+
+            capture_deadline_ms: 900
+            ---
+
+            """
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: text, sets: [("no_cloud", .null)]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        #expect(!edit.text.contains("no_cloud"))
+        #expect(!edit.text.contains("gmail.com"))
+        #expect(config.noCloud.isEmpty)
+        #expect(config.captureDeadlineMs == 900)
+    }
+
+    /// Block form is not a `no_cloud` peculiarity — any key can be written that
+    /// way, and an integer key with a stray indented line under it must be
+    /// re-written as a single scalar line rather than left with an orphan.
+    @Test func blockFormIsHandledForNonPrivacyKeysToo() throws {
+        let text = "---\ncapture_deadline_ms:\n  900\ntoast_dismiss_seconds: 10\n---\n"
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: text, sets: [("capture_deadline_ms", .int(2000))]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        #expect(config.captureDeadlineMs == 2000)
+        #expect(config.toastDismissSeconds == 10)
+    }
+
     @Test func nullResetsAConfigKeyToDefault() throws {
         let root = try makeRoot()
         defer { try? FileManager.default.removeItem(at: root) }

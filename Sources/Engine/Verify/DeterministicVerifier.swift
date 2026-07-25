@@ -238,6 +238,10 @@ enum DeterministicVerifier {
         try! NSRegularExpression(pattern: #"\b\d{3,}(?:[.,]\d+)?\b"#)
     private static let properNameRegex =
         try! NSRegularExpression(pattern: #"\p{Lu}\p{Ll}+ \p{Lu}\p{Ll}+"#)
+    /// Whitespace-separated words WITH their ranges — month-name dates are
+    /// assembled from two adjacent words and still need a span in the output to
+    /// place the commitment window around (see `extractTokens`).
+    private static let wordRegex = try! NSRegularExpression(pattern: #"\S+"#)
 
     private static let monthNames: Set<String> = [
         "january", "february", "march", "april", "may", "june", "july",
@@ -285,20 +289,48 @@ enum DeterministicVerifier {
         collect(numericDateRegex, as: .date)
         collect(bigNumberRegex, as: .number)
 
-        // Month-name dates ("May 15", "15 мая").
-        let words = output.components(separatedBy: CharacterSet.whitespacesAndNewlines)
-        for (index, word) in words.enumerated() {
-            let cleaned = word.trimmingCharacters(in: .punctuationCharacters).lowercased()
+        // Month-name dates ("May 15", "15 мая"). The only class assembled from
+        // two words rather than matched whole, which is why it ran over
+        // `components(separatedBy:)` — and why it was the only class whose
+        // `nearCommitment` was computed over the ENTIRE output: splitting into
+        // words throws away the offsets, so there was no range to put a window
+        // around. The consequence was a verifier that fired on the wrong
+        // paragraph. One "pay", "by ", "отправлю" or "mennessä" anywhere in the
+        // draft — a sign-off, an unrelated sentence, a quoted line — promoted
+        // every worded date in it to actionable (§10.2), so a date grounded
+        // only by screen content raised `actionableUngrounded` and the press
+        // landed in the warning panel instead of the field. False refusals are
+        // the expensive direction for a feature whose value is the press just
+        // working, and dates are the class most likely to appear next to
+        // harmless verbs.
+        //
+        // Walking word RANGES instead keeps every rule the split version had
+        // (day on either side, punctuation stripped, `"<day> <month>"` as the
+        // token text so dedup by `token.text` still collapses repeats) while
+        // giving the date a real span in `output` — the day word and the month
+        // word together — to hand to the same ±60-char window every other class
+        // uses.
+        let wordRanges = wordRegex.matches(in: output, range: fullRange)
+            .compactMap { Range($0.range, in: output) }
+        for (index, monthRange) in wordRanges.enumerated() {
+            let cleaned = String(output[monthRange])
+                .trimmingCharacters(in: .punctuationCharacters).lowercased()
             guard monthNames.contains(cleaned) else { continue }
-            let neighbors = [words.indices.contains(index - 1) ? words[index - 1] : "",
-                             words.indices.contains(index + 1) ? words[index + 1] : ""]
-            if let day = neighbors.first(where: { Int($0.trimmingCharacters(in: .punctuationCharacters)) != nil }) {
-                let text = "\(day.trimmingCharacters(in: .punctuationCharacters)) \(cleaned)"
-                tokens.append(ConcreteToken(
-                    text: text, tokenClass: .date,
-                    nearCommitment: containsCommitmentMarker(output.lowercased())
-                ))
-            }
+            // Left neighbour first, exactly as before ("15 мая" over "мая 16").
+            let neighbors = [index - 1, index + 1]
+                .filter { wordRanges.indices.contains($0) }
+                .map { wordRanges[$0] }
+            guard let dayRange = neighbors.first(where: {
+                Int(String(output[$0]).trimmingCharacters(in: .punctuationCharacters)) != nil
+            }) else { continue }
+
+            let day = String(output[dayRange]).trimmingCharacters(in: .punctuationCharacters)
+            let lower = min(monthRange.lowerBound, dayRange.lowerBound)
+            let upper = max(monthRange.upperBound, dayRange.upperBound)
+            tokens.append(ConcreteToken(
+                text: "\(day) \(cleaned)", tokenClass: .date,
+                nearCommitment: nearCommitment(in: output, around: lower..<upper)
+            ))
         }
 
         // Proper-name bigrams, skipping sentence-initial positions.
