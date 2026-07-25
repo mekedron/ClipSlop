@@ -283,7 +283,25 @@ final class MagicInserter {
     ///
     /// Keyed by `MagicSnapshot.ts`, which is the press identity: a probe left
     /// by an earlier press must never vouch for the current one.
+    ///
+    /// Written ONLY through `noteOurOwnWrite`, and read by the guards as a
+    /// value captured before they suspend — see `focusMatches`. Both halves
+    /// matter now that the AX reads live in `AXFieldReader`: the checks await
+    /// into that actor mid-decision, so main-actor isolation alone no longer
+    /// makes "read the field, then consult `lastWrite`" atomic.
     private var lastWrite: (press: Date, probe: FieldProbe)?
+
+    /// Bumped by every `lastWrite` mutation, so a guard that captured the value
+    /// before an `await` can prove it is still deciding on the state of the
+    /// world it captured — and bail conservatively if it is not.
+    private var lastWriteGeneration = 0
+
+    /// The only writer of `lastWrite`, so the generation can never drift out of
+    /// step with it.
+    private func noteOurOwnWrite(press: Date, probe: FieldProbe) {
+        lastWrite = (press: press, probe: probe)
+        lastWriteGeneration += 1
+    }
 
     func insert(_ text: String, against snapshot: MagicSnapshot) async -> Outcome {
         if snapshot.grammarRow == .nonEditableSelection {
@@ -338,7 +356,7 @@ final class MagicInserter {
         // later is the user's doing, and a ⌘Z would then be aimed at their
         // edit rather than at ours.
         let settledProbe = await reader.currentFieldProbe(snapshot)
-        lastWrite = (press: snapshot.ts, probe: settledProbe)
+        noteOurOwnWrite(press: snapshot.ts, probe: settledProbe)
 
         return .inserted(PreInsertRecord(
             fieldValue: freshValue,
@@ -379,7 +397,7 @@ final class MagicInserter {
                 settled = await reader.currentFieldProbe(snapshot)
             }
         }
-        lastWrite = (press: snapshot.ts, probe: settled)
+        noteOurOwnWrite(press: snapshot.ts, probe: settled)
         return true
     }
 
@@ -397,6 +415,11 @@ final class MagicInserter {
     /// keystroke; the guaranteed copy-previous-text path remains one click
     /// away either way.
     private func undoStillTargetsOurPaste(_ snapshot: MagicSnapshot) async -> Bool {
+        // Same discipline as `focusMatches`: `written` is bound from
+        // `lastWrite` *before* the await into the reader, so the value being
+        // compared cannot change while the comparison's other half is being
+        // read. Guard conditions are evaluated left to right, which is what
+        // makes that free here — do not reorder them.
         guard let lastWrite, lastWrite.press == snapshot.ts,
               let written = lastWrite.probe.value,
               let current = await reader.currentFieldProbe(snapshot).value
@@ -523,8 +546,27 @@ final class MagicInserter {
         guard requireUnchangedField else {
             return await reader.isSnapshotFieldFocused(snapshot)
         }
+        // `lastWrite` is captured HERE, before the hop into the reader actor,
+        // and the captured value is what decides below — the comparison is a
+        // `nonisolated static` that cannot reach back for a fresher one. Moving
+        // the AX reads into `AXFieldReader` (right fix for the main-thread
+        // stalls) put a suspension point between reading the field and
+        // consulting our own last write, where none existed while the whole
+        // check was synchronous on the main actor; deciding half from before
+        // that gap and half from after it is how a guard starts answering
+        // questions nobody asked.
+        //
+        // The generation re-check closes the other half: if a write did land
+        // during the await, this reading is judged against nothing and the
+        // answer is the conservative one. False here is not a refusal — the
+        // caller's poll loop simply looks again, now with both halves fresh.
+        let ourLastWrite = lastWrite
+        let generation = lastWriteGeneration
         guard let current = await reader.snapshotFieldProbe(snapshot) else { return false }
-        return fieldStateUnchanged(snapshot, current: current, trustCaret: trustCaret)
+        guard generation == lastWriteGeneration else { return false }
+        return Self.fieldStateUnchanged(
+            snapshot, current: current, ourLastWrite: ourLastWrite, trustCaret: trustCaret
+        )
     }
 
     /// Whether the field is still in the state the result was assembled from
@@ -532,23 +574,28 @@ final class MagicInserter {
     /// behind (a regenerate undoes its previous paste before re-running, and
     /// that difference is ours, not the user's).
     ///
-    /// Takes the probe rather than the element: the reading happened in the
-    /// reader actor, and `lastWrite` — the other half of the decision — is
-    /// main-actor state, so the comparison itself stays here.
-    private func fieldStateUnchanged(
-        _ snapshot: MagicSnapshot, current: FieldProbe, trustCaret: Bool
+    /// Takes both readings as values: the probe was read in the reader actor,
+    /// and `ourLastWrite` is the caller's capture of `lastWrite` from before
+    /// that hop. `nonisolated static` on purpose — the decision then *cannot*
+    /// consult the live `lastWrite`, so no future edit can quietly reintroduce
+    /// a mid-decision re-read across the suspension point in `focusMatches`.
+    private nonisolated static func fieldStateUnchanged(
+        _ snapshot: MagicSnapshot,
+        current: FieldProbe,
+        ourLastWrite: (press: Date, probe: FieldProbe)?,
+        trustCaret: Bool
     ) -> Bool {
         let currentRange = trustCaret ? current.range : nil
-        if Self.fieldStateAgrees(
+        if fieldStateAgrees(
             expectedValue: snapshot.field?.value, expectedRange: snapshot.field?.selectedRange,
             currentValue: current.value, currentRange: currentRange
         ) { return true }
 
-        guard let lastWrite, lastWrite.press == snapshot.ts, lastWrite.probe.value != nil else {
-            return false
-        }
-        return Self.fieldStateAgrees(
-            expectedValue: lastWrite.probe.value, expectedRange: lastWrite.probe.range,
+        guard let ourLastWrite, ourLastWrite.press == snapshot.ts,
+              ourLastWrite.probe.value != nil
+        else { return false }
+        return fieldStateAgrees(
+            expectedValue: ourLastWrite.probe.value, expectedRange: ourLastWrite.probe.range,
             currentValue: current.value, currentRange: currentRange
         )
     }

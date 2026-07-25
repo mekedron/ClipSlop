@@ -100,6 +100,10 @@ final class MagicPressCoordinator {
     /// construction) and `awaitFocusSettle`. Nil means nothing is in flight and
     /// the next press captures immediately.
     @ObservationIgnored private var focusSettlesAt: ContinuousClock.Instant?
+    /// Which app that restoration is aimed at — published with the deadline so
+    /// the press waiting it out has an explicit target instead of a re-derived
+    /// one. See the check in `startPress`.
+    @ObservationIgnored private var focusSettleTargetPid: pid_t?
     /// How long `returnFocusToTarget` needs: one main-loop hop to re-activate
     /// the target plus the 120 ms AX-focus delay, rounded up to the same 600 ms
     /// the menu-driven entry points already wait for a stolen focus to return.
@@ -174,42 +178,84 @@ final class MagicPressCoordinator {
     /// guaranteed to land on the sandbox window.
     @ObservationIgnored private weak var selfTargetKeyWindow: NSWindow?
 
+    // MARK: - Transitions
+
+    /// The pure view of the press band that `MagicPressReducer` decides from.
+    /// Rebuilt per event on purpose: it is a *reading* of the live state, never
+    /// a second copy of it that could drift. Windows and AppKit stop here —
+    /// everything below the reducer boundary is `Bool` and `Int`.
+    ///
+    /// Every field here is a cheap property read except one:
+    /// `PermissionService.isAccessibilityGranted` is `AXIsProcessTrusted()`, a
+    /// TCC query rather than a cached flag. Only `.press` gates on it, and this
+    /// state is built for every event — including `.toastSettleCheck`, which the
+    /// toast's `.onHover` fires on each mouse pass across its edge. Reading it
+    /// unconditionally therefore put a TCC round-trip on hover, where the press
+    /// path used to pay for it once. So it is read for the events that consult
+    /// it and left at the non-gating `true` for the rest; an event that starts
+    /// gating on permission has to add itself to `gatesOnPermission`.
+    private func reducerState(for event: MagicPressReducer.Event) -> MagicPressReducer.State {
+        let gatesOnPermission: Bool
+        if case .press = event { gatesOnPermission = true } else { gatesOnPermission = false }
+
+        var verifierWarningPending = false
+        if case .panelResult(_, .verifierFailed, _) = toastState { verifierWarningPending = true }
+        return MagicPressReducer.State(
+            phase: phase,
+            verifierWarningPending: verifierWarningPending,
+            insertAnywayInFlight: insertAnywayInFlight,
+            chipPanelOpen: chipPanel != nil,
+            chipCandidateCount: activePress?.decision.chipCandidates.count ?? 0,
+            toastOpen: toastWindow != nil,
+            toastIsKey: toastWindow?.isKeyWindow == true,
+            toastHovered: toastHovered,
+            hintOpen: hintHUD != nil,
+            hasActivePress: activePress != nil,
+            hasWorkflow: activePress?.workflow != nil,
+            accessibilityGranted: gatesOnPermission ? PermissionService.isAccessibilityGranted : true
+        )
+    }
+
     // MARK: - Press entry
 
+    /// Every branch this used to make in line is a value `MagicPressReducer`
+    /// returns now — the single-flight bounce, the double-press accept, and the
+    /// "a plain press means insert it, a forced press means ask me again" split
+    /// over a verifier warning. What is left here is the doing, in the order it
+    /// was always done in.
     func handlePress(forceChips: Bool) {
-        switch phase {
-        case .collecting, .generating:
-            // Single-flight; ✕ on the toast is the cancel affordance (R10).
+        let event = MagicPressReducer.Event.press(forceChips: forceChips)
+        switch MagicPressReducer.reduce(state: reducerState(for: event), event: event) {
+        case .ignore:
             return
-        case .chips, .planning:
-            // Double-press: the open panel *is* the first-press state —
-            // accept the top intent (§3.3 override). During .planning the
-            // panel is visible too; the human pick cancels the planner.
-            if !forceChips { selectChip(0) }
-            return
-        case .toast:
-            // With verifier warnings pending, a PLAIN press means "yes, insert
-            // it" — the keyboard twin of hold-to-insert, like the double-press
-            // accept on chips. A forced-chips press means the opposite ("always
-            // ask me"), so it must not be swallowed as an accept: it tears the
-            // warning panel down and starts a fresh forced press, exactly like
-            // it does from every other toast state. Without the `!forceChips`
-            // half, ⌘⌃⇧M pasted the flagged output instead of re-asking — the
-            // same distinction the .chips/.planning case above makes.
-            if !forceChips, case .panelResult(_, .verifierFailed, _) = toastState {
-                insertAnyway()
-                return
-            }
-            dismissToast(outcome: nil)
-        case .idle:
-            break
-        }
-
-        guard PermissionService.isAccessibilityGranted else {
+        case .acceptTopChip:
+            selectChip(0)
+        case .insertAnyway:
+            // The reducer only says "a plain press over a verifier warning is
+            // an accept"; whether that accept is still available is
+            // `insertAnyway`'s own question (it may already be in flight).
+            insertAnyway()
+        case .showPermissionAlert:
             appState?.showPermissionAlert()
+        case .dismissToastThenShowPermissionAlert:
+            // The toast belongs to a press that is over either way, so it comes
+            // down before the gate refuses this one — same order as when the
+            // permission check sat inline after `dismissToast`.
+            dismissToast(outcome: nil)
+            appState?.showPermissionAlert()
+        case .dismissToastThenStartPress(let force):
+            dismissToast(outcome: nil)
+            startPress(forceChips: force)
+        case .startPress(let force):
+            startPress(forceChips: force)
+        default:
+            // Unreachable for `.press` — the remaining actions belong to the
+            // overlay and toast events.
             return
         }
+    }
 
+    private func startPress(forceChips: Bool) {
         phase = .collecting
         pressStart = ContinuousClock().now
         let locale = Locale.preferredLanguages.first ?? "en"
@@ -238,13 +284,31 @@ final class MagicPressCoordinator {
             // is waiting from the hotkey, and a press-to-paste sample that
             // hides the settle would flatter the §3.6 SLO instead of measuring
             // it.
-            await self.awaitFocusSettle()
+            let pinnedTarget = await self.awaitFocusSettle()
             let clock = ContinuousClock()
             let snapshotStart = clock.now
             // Read the frontmost app and the warm cache *after* the settle:
             // right after an overlay teardown ClipSlop can still be frontmost,
-            // and an appInfo taken then names the wrong app for the whole press.
+            // and an appInfo taken then names the wrong app for the whole press
+            // (wrong `no_cloud` identity, wrong routing, wrong paste target).
             let appInfo = self.frontmostAppInfo()
+            // …but the target is the app the restoration was aimed at, not
+            // whoever happens to be frontmost when the sleep ends. Moving the
+            // read after the settle also handed the press to an app the user
+            // ⌘-tabbed to *during* those 600 ms, where the pid guard in
+            // `AXSnapshotService.capture` used to produce a contentless
+            // snapshot and the press died. A deliberate switch away is not a
+            // target: end it exactly the way a lost target ends today — trace,
+            // hint, back to `.idle` — instead of following the user into a
+            // field they never pressed the hotkey in.
+            if let pinnedTarget, appInfo.pid != pinnedTarget {
+                self.continuePress(
+                    snapshot: Self.lostTargetSnapshot(pid: pinnedTarget, locale: locale),
+                    snapshotMs: Self.ms(clock.now - snapshotStart),
+                    forceChips: forceChips
+                )
+                return
+            }
             let warm = self.frontmostObserver.warm
             var snapshot = await self.snapshotService.capture(
                 appInfo: appInfo, locale: locale, config: config, warm: warm
@@ -255,6 +319,20 @@ final class MagicPressCoordinator {
             let snapshotMs = Self.ms(clock.now - snapshotStart)
             self.continuePress(snapshot: snapshot, snapshotMs: snapshotMs, forceChips: forceChips)
         }
+    }
+
+    /// A capture that found nothing, built without going near AX: a nil `field`
+    /// makes `grammarRow` read `.noTarget`, which is the dead end
+    /// `continuePress` already knows how to end. The app is named from the
+    /// pinned pid rather than left blank so the trace records which target the
+    /// press was addressed to before it was abandoned.
+    private static func lostTargetSnapshot(pid: pid_t, locale: String) -> MagicSnapshot {
+        let app = NSRunningApplication(processIdentifier: pid)
+        return MagicSnapshot(
+            app: .init(name: app?.localizedName, bundleId: app?.bundleIdentifier, pid: pid),
+            windowTitle: nil, url: nil, field: nil, surrounding: nil,
+            locale: locale, ts: Date(), focusedElement: nil
+        )
     }
 
     private func continuePress(snapshot: MagicSnapshot, snapshotMs: Int, forceChips: Bool) {
@@ -494,46 +572,69 @@ final class MagicPressCoordinator {
     /// dismiss whichever Magic surface is up. The Carbon hotkey consumes
     /// the event, so the target app never sees this Escape — the fix for
     /// web pages blurring their composer instead of closing our toast.
+    ///
+    /// The precedence between the five surfaces is the behaviour, so it lives
+    /// in `MagicPressReducer` where it is one ordered chain with tests on it,
+    /// not an if/else-if ladder nobody can see rot.
     func dismissFloatingOverlay() {
-        if chipPanel != nil {
+        switch MagicPressReducer.reduce(state: reducerState(for: .dismissOverlay), event: .dismissOverlay) {
+        case .dismissChips:
             dismissChips()
-        } else if phase == .planning {
+        case .cancelPlanner:
             cancelPlanner()
-        } else if phase == .generating {
+        case .cancelGeneration:
             cancelGeneration()
-        } else if toastWindow != nil {
+        case .dismissToast:
             dismissToast(outcome: nil)
-        } else if hintHUD != nil {
+        case .closeHint:
             closeHint()
+        default:
+            return
         }
     }
 
     func selectChip(_ index: Int) {
-        guard phase == .chips || phase == .planning, var press = activePress else { return }
-        // The human outraces the planner: their pick wins and the in-flight
-        // request really does die — `MagicPlanner.run` hangs a cancellation
-        // handler off this cancel, so it settles now instead of idling until
-        // the hard cap fires. A call that had already answered still bills;
-        // the ledger append in `startPlannerOrChips` runs ahead of the
-        // cancellation guard.
-        plannerTask?.cancel()
-        plannerTask = nil
-        let candidates = press.decision.chipCandidates
-        guard index < candidates.count else { return }
-
-        press.trace.chipIndexChosen = index
-        activePress = press
-        acceptChipSelection(candidates[index], hint: nil)
+        let event = MagicPressReducer.Event.selectChip(index)
+        switch MagicPressReducer.reduce(state: reducerState(for: event), event: event) {
+        case .cancelPlannerRace:
+            // The index named no candidate, but the panel was still touched by
+            // a human — the planner loses the race either way.
+            cancelPlannerRace()
+        case .acceptChip(let index):
+            cancelPlannerRace()
+            guard var press = activePress else { return }
+            press.trace.chipIndexChosen = index
+            activePress = press
+            acceptChipSelection(press.decision.chipCandidates[index], hint: nil)
+        default:
+            return
+        }
     }
 
     func submitHint(_ hint: String) {
-        guard phase == .chips || phase == .planning, var press = activePress else { return }
+        switch MagicPressReducer.reduce(state: reducerState(for: .submitHint), event: .submitHint) {
+        case .cancelPlannerRace:
+            cancelPlannerRace()
+        case .acceptChipWithHint:
+            cancelPlannerRace()
+            guard var press = activePress,
+                  let workflow = press.decision.chipCandidates.first else { return }
+            press.trace.chipIndexChosen = 0
+            activePress = press
+            acceptChipSelection(workflow, hint: hint)
+        default:
+            return
+        }
+    }
+
+    /// The human outraced the planner: their touch wins and the in-flight
+    /// request really does die — `MagicPlanner.run` hangs a cancellation
+    /// handler off this cancel, so it settles now instead of idling until the
+    /// hard cap fires. A call that had already answered still bills; the ledger
+    /// append in `startPlannerOrChips` runs ahead of the cancellation guard.
+    private func cancelPlannerRace() {
         plannerTask?.cancel()
         plannerTask = nil
-        guard let workflow = press.decision.chipCandidates.first else { return }
-        press.trace.chipIndexChosen = 0
-        activePress = press
-        acceptChipSelection(workflow, hint: hint)
     }
 
     /// The one way an accepted chip leaves the panel: leave `.chips`/`.planning`
@@ -809,7 +910,9 @@ final class MagicPressCoordinator {
     /// the pre-paste state, including a replaced selection), then a fresh
     /// run against the original snapshot.
     private func rerun(hint: String?) {
-        guard phase == .toast, var press = activePress, let workflow = press.workflow else { return }
+        guard MagicPressReducer.reduce(state: reducerState(for: .regenerateOrRefine), event: .regenerateOrRefine) == .rerun
+        else { return }
+        guard var press = activePress, let workflow = press.workflow else { return }
         // Leave `.toast` before the async undo, not after it: two fast clicks
         // on Regenerate/Refine both passed this guard while the first was
         // still inside its undo + 150 ms sleep, submitting two traces and
@@ -866,12 +969,17 @@ final class MagicPressCoordinator {
     /// Hold-to-confirm bypass of a verifier failure — logged, always (§10.2:
     /// its rate is a guard-health metric).
     func insertAnyway() {
-        guard case .panelResult(let text, .verifierFailed, _) = toastState else { return }
-        // Claim it before the focus delay: `toastState` and `phase` are both
-        // unchanged across the 150 ms sleep below, so a repeated ⌘↩ / Magic
-        // press (or a second hold) used to queue another `performInsert` and
-        // paste the flagged output twice.
-        guard var press = activePress, !insertAnywayInFlight else { return }
+        // The reducer owns the claim: a warning must be on screen, a press must
+        // still exist, and no earlier accept may be inside its 150 ms focus
+        // delay — `toastState` and `phase` are both unchanged across that
+        // sleep, so a repeated ⌘↩ / Magic press (or a second hold) used to
+        // queue another `performInsert` and paste the flagged output twice.
+        guard MagicPressReducer.reduce(state: reducerState(for: .insertAnyway), event: .insertAnyway) == .insertAnyway
+        else { return }
+        // Re-binds the payload the decision does not carry; both halves were
+        // proven above.
+        guard case .panelResult(let text, .verifierFailed, _) = toastState,
+              var press = activePress else { return }
         insertAnywayInFlight = true
         press.trace.outcome = "insertedAnyway"
         activePress = press
@@ -955,9 +1063,13 @@ final class MagicPressCoordinator {
     }
 
     private func scheduleToastDismissIfSettled() {
+        // The pending timer is dropped first whatever the answer is — this is
+        // also the "the user just started hovering" path, which must cancel and
+        // not re-arm.
         cancelToastDismiss()
-        guard phase == .toast, !toastHovered else { return }
-        guard toastWindow?.isKeyWindow != true else { return }
+        guard MagicPressReducer.reduce(
+            state: reducerState(for: .toastSettleCheck), event: .toastSettleCheck
+        ) == .scheduleToastDismiss else { return }
         let dismissAfter = configStore.config.toastDismissSeconds
         toastDismissTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(dismissAfter))
@@ -1020,6 +1132,11 @@ final class MagicPressCoordinator {
         // (`awaitFocusSettle`). A deadline rather than a flag — it expires on
         // its own, so a press a second later pays nothing.
         focusSettlesAt = ContinuousClock().now.advanced(by: .milliseconds(Self.focusSettleMs))
+        // `target` is the one place that knows, for certain, which app focus is
+        // going back to. Publishing it with the deadline is what lets the next
+        // press be addressed to *that* app rather than to whoever is frontmost
+        // when the sleep ends.
+        focusSettleTargetPid = target?.processIdentifier
         DispatchQueue.main.async {
             target?.activate(options: [.activateAllWindows])
             if let element {
@@ -1040,14 +1157,25 @@ final class MagicPressCoordinator {
     }
 
     /// Blocks a starting press until the focus restoration from a torn-down
-    /// overlay has had time to land. No-op when nothing is pending, so the
-    /// common `.idle` press pays nothing.
-    private func awaitFocusSettle() async {
-        guard let settlesAt = focusSettlesAt else { return }
+    /// overlay has had time to land, and returns the app that restoration was
+    /// aimed at — the press's pinned target.
+    ///
+    /// Nil means "no target was pinned, read the frontmost app as usual": either
+    /// nothing was pending (the common `.idle` press, which pays nothing) or the
+    /// deadline had already expired, which is the user closing a toast and
+    /// pressing again seconds later. Nothing was waited out in that case, so
+    /// there is no window during which they could have been dragged into an app
+    /// they did not mean to press in, and whatever is frontmost now *is* the
+    /// target — pinning a stale one would kill a perfectly deliberate press.
+    private func awaitFocusSettle() async -> pid_t? {
+        guard let settlesAt = focusSettlesAt else { return nil }
         focusSettlesAt = nil
+        let pinned = focusSettleTargetPid
+        focusSettleTargetPid = nil
         let remaining = settlesAt - ContinuousClock().now
-        guard remaining > .zero else { return }
+        guard remaining > .zero else { return nil }
         try? await Task.sleep(for: remaining)
+        return pinned
     }
 
     /// Restores the captured selection when the target dropped it (some apps

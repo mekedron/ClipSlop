@@ -103,6 +103,51 @@ struct FrontmatterParserTests {
         #expect(doc.fields["nested"] == .map(["url": .scalar("x#y")]))
     }
 
+    /// `stripFlowComment` runs on the same text as `splitFlowItems`, but only
+    /// the latter tracked backslash escapes — so the two disagreed about where
+    /// a quote ends. On the list below the comment stripper read the escaped
+    /// `"` as CLOSING the quote, the `]` inside that entry as ending the flow
+    /// list, and the ` #` in the next entry as starting a comment: a correctly
+    /// escaped file was cut down to `["quote\"a]", "hash` and rejected with
+    /// "missing its closing ']'", disabling the whole card.
+    @Test func flowCollectionsTrackEscapedQuotesWhenStrippingComments() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        no_cloud: ["quote\\"a]", "hash # b"]
+        pair: {a: "x\\"]", b: "y # z"}
+        ---
+        """)
+        #expect(doc.fields["no_cloud"] == .list(["quote\"a]", "hash # b"]))
+        #expect(doc.fields["pair"] == .map(["a": .scalar("x\"]"), "b": .scalar("y # z")]))
+    }
+
+    /// Escapes must not cost the flow collections their real trailing comment:
+    /// the `#` below still sits outside every quote and bracket.
+    @Test func escapedQuotesStillAllowATrailingComment() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        intents: ["say \\"hi\\"", other] # note
+        output: {greeting: "say \\"hi\\" #1", lang: en}   # another note
+        ---
+        """)
+        #expect(doc.fields["intents"] == .list(["say \"hi\"", "other"]))
+        #expect(doc.fields["output"] == .map([
+            "greeting": .scalar("say \"hi\" #1"), "lang": .scalar("en"),
+        ]))
+    }
+
+    /// Only DOUBLE quotes process escapes — `parseScalar` documents
+    /// single-quoted scalars as verbatim, so a `\\` inside them does not hide
+    /// the closing `'` from the comment stripper either.
+    @Test func singleQuotedFlowItemsAreVerbatimForCommentStripping() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        paths: ['a\\', b] # note
+        ---
+        """)
+        #expect(doc.fields["paths"] == .list(["a\\", "b"]))
+    }
+
     @Test func singleQuotedScalarIsVerbatim() throws {
         let doc = try FrontmatterParser.parse("""
         ---

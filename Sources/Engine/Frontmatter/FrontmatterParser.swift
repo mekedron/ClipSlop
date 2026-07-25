@@ -263,15 +263,39 @@ enum FrontmatterParser {
     /// bracket, so `[a#b]`, `["a # b"]`, and nested `{k: [1, 2]}` are left
     /// alone. Flow-only: `parseScalar` handles scalars, where a quoted '#'
     /// must survive.
+    ///
+    /// Escapes are tracked exactly as `splitFlowItems` tracks them — a `\`
+    /// inside a DOUBLE-quoted item escapes the next character, single quotes
+    /// are verbatim (`parseScalar` documents the same split). This runs on the
+    /// same text as `splitFlowItems` but used to ignore escapes entirely, so
+    /// the two disagreed about where a quote ends: in
+    /// `["quote\"a]", "hash # b"]` this read the escaped `"` as CLOSING the
+    /// quote, then the `]` as ending the list, then ` #` as starting a comment,
+    /// and handed `parseInlineValue` a list with no closing bracket.
+    ///
+    /// The damage was rejection, not corruption — the value threw
+    /// "flow list is missing its closing ']'" and the whole file went with it
+    /// (a card disabled with a visible error, a config.yaml left unapplied).
+    /// That is this parser's designed failure mode and it is why the bug
+    /// survived: a legitimately-quoted list simply could not be written. No
+    /// input has been found where the old code parsed such a list into
+    /// something *different* rather than refusing it outright.
     private static func stripFlowComment(_ text: String) -> String {
         var depth = 0
         var quote: Character?
+        var escaped = false
         var previousWasSpace = false
         var index = text.startIndex
         while index < text.endIndex {
             let character = text[index]
             if let open = quote {
-                if character == open { quote = nil }
+                if escaped {
+                    escaped = false
+                } else if open == "\"" && character == "\\" {
+                    escaped = true
+                } else if character == open {
+                    quote = nil
+                }
             } else {
                 switch character {
                 case "\"", "'":

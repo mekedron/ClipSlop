@@ -791,9 +791,15 @@ final class EngineToolExecutor {
     /// strings character for character. Anything that does not survive the
     /// round trip is refused rather than written, because an edit that visibly
     /// fails is far better than a privacy list that silently means something
-    /// else. (One shape this catches: `stripFlowComment` does not track
-    /// backslash-escaped quotes, so an entry combining a `"` with a `]` or a
-    /// ` #` can still confuse the parser even though it is correctly escaped.)
+    /// else. The guard is deliberately not tied to any one known hole: the
+    /// writer above and `FrontmatterParser` are two separate hand-rolled
+    /// implementations of the same small grammar, so their agreement has to be
+    /// PROVEN on every write rather than assumed to hold. (Historically this is
+    /// the class of bug that motivated it: `stripFlowComment` did not track
+    /// backslash-escaped quotes while `splitFlowItems` did, so the two
+    /// disagreed about where a quoted entry ended and a correctly escaped list
+    /// did not come back at all — the parser refused it. That asymmetry is
+    /// fixed; the guard stays for the next one.)
     private nonisolated static func noCloudFlowList(_ items: [String]) throws -> String {
         var quoted: [String] = []
         for item in items {
@@ -813,12 +819,15 @@ final class EngineToolExecutor {
         }
         let list = "[\(quoted.joined(separator: ", "))]"
         // The text actually written is what has to round-trip, not just its
-        // pieces — and this is NOT a theoretical second check: an entry can be
-        // faithful on its own and still change how the parser reads its
-        // neighbours. `["quote\"a]", "hash # b"]` is the live example: both
-        // entries pass individually, but `stripFlowComment` loses track of the
-        // escaped quote, reads the ']' as closing the list, and then treats
-        // ' #' as a comment that eats the second entry.
+        // pieces: an entry can be faithful on its own and still change how the
+        // parser reads its neighbours, and the per-piece check above cannot see
+        // that by construction. `["quote\"a]", "hash # b"]` was the standing
+        // example — both entries passed individually while the list did not,
+        // because `stripFlowComment` lost track of the escaped quote, read the
+        // ']' as closing the list and ' #' as a comment. That hole is closed
+        // (`FrontmatterParserTests.flowCollectionsTrackEscapedQuotesWhenStrippingComments`),
+        // which is exactly why the check is kept: it is what turns the next
+        // such disagreement into a refused edit instead of a wrong privacy rule.
         guard parsedFlowList(list) == items else {
             throw ToolError(message: "'no_cloud' could not be written back as exactly the list you asked for — nothing was written.")
         }

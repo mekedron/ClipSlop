@@ -348,6 +348,90 @@ struct MagicPlannerTests {
         #expect(clock.now - start < .seconds(1))
     }
 
+    /// Reports, from inside the in-flight provider call, whether that call was
+    /// cancelled — the cap task's only externally visible act once it wakes.
+    private actor CancellationWitness {
+        private(set) var sawCancellation = false
+        func record() { sawCancellation = true }
+    }
+
+    private struct WitnessedAIService: AIService {
+        let delayMs: Int
+        let witness: CancellationWitness
+
+        func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
+            try await processWithUsage(text: text, systemPrompt: systemPrompt, config: config).text
+        }
+
+        func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
+            AsyncThrowingStream { $0.finish() }
+        }
+
+        func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
+            do {
+                try await Task.sleep(for: .milliseconds(delayMs))
+            } catch {
+                await witness.record()
+                throw error
+            }
+            return AIGenerationResult(text: "base.reply")
+        }
+    }
+
+    @Test func theCapTaskDiesWithTheRaceItWasTiming() async {
+        // The cap task used to be the one racer nobody could stop: it slept out
+        // the whole `planner_timeout_ms` after the race had already been
+        // settled — by the provider, by itself, or by the press cancelling —
+        // and `run` returned leaving it behind, one per abandoned press, for up
+        // to five seconds. Both of its late acts are no-ops against the
+        // one-shot claim, so the leak has no behaviour of its own to assert on;
+        // what the fix must not break is the pair of properties below, and the
+        // second one is where handing the cap to the race can actually bite.
+
+        // 1. The race is decided by the answer, not by the cap. A five-second
+        //    cap over an instant answer must not show up in the wall clock, nor
+        //    in the run's own timing.
+        let clock = ContinuousClock()
+        let start = clock.now
+        let answered = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(surroundingContent: "thread"),
+            candidates: candidates(), provider: provider, timeoutMs: 5_000,
+            service: MockAIService(delayMs: 0) {
+                AIGenerationResult(text: "base.reply", inputTokens: 12, outputTokens: 1)
+            }
+        )
+        #expect(answered.outcome == .chose(0))
+        #expect(clock.now - start < .seconds(1))
+        #expect(answered.ms < 1_000)
+
+        // 2. The cap that DOES fire now cancels itself, from inside its own
+        //    body, by settling the race — and must still go on to kill the
+        //    provider call. That self-cancel is safe only because the cap is
+        //    already past its single suspension point when it happens; get the
+        //    ordering wrong and `planner_timeout_ms` silently stops ending the
+        //    request, which is the whole point of a hard cap.
+        let witness = CancellationWitness()
+        let timedOut = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 60,
+            service: WitnessedAIService(delayMs: 5_000, witness: witness)
+        )
+        #expect(timedOut.outcome == .timedOut)
+        // The cancel reaches the call just after `run` returns, so poll for it
+        // — but only for a second, far short of the mock's own 5 s answer, so
+        // the flag can only mean a real cancellation.
+        var sawCancellation = false
+        let pollStart = clock.now
+        while clock.now - pollStart < .seconds(1) {
+            if await witness.sawCancellation {
+                sawCancellation = true
+                break
+            }
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+        #expect(sawCancellation)
+    }
+
     @Test func serviceErrorFailsSoftly() async {
         let service = MockAIService(delayMs: 0) {
             throw AIServiceError.emptyResponse

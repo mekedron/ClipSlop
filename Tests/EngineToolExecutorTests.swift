@@ -512,17 +512,36 @@ struct EngineToolExecutorTests {
         #expect(error?.message.contains("blank") == true)
     }
 
-    /// The per-entry round-trip is not the whole guard, and the list-level one
-    /// is not decoration: these two entries are each written faithfully on
-    /// their own, but together `stripFlowComment` (which does not track
-    /// backslash-escaped quotes) reads the ']' as closing the list and then
-    /// treats the ' #' as a comment that eats the second rule. Refusing the
-    /// edit beats writing a privacy list that means something else.
-    @Test func noCloudRefusesEntriesThatCorruptEachOther() throws {
+    /// These two entries used to corrupt each other: each was written
+    /// faithfully on its own, but `stripFlowComment` did not track
+    /// backslash-escaped quotes, so on the finished list it read the ']' as
+    /// closing the list and the ' #' as starting a comment — the list-level
+    /// round-trip caught it and the whole edit was refused. The parser now
+    /// tracks escapes the same way `splitFlowItems` does, so the pair must
+    /// survive intact; this test ties the writer to that fix, since a
+    /// regression there would silently start refusing legitimate privacy
+    /// rules again.
+    @Test func noCloudEntriesThatOnceCorruptedEachOtherNowSurvive() throws {
+        let entries = ["quote\"a]", "hash # b"]
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: "---\nno_cloud: []\n---\n",
+            sets: [("no_cloud", .array(entries.map { JSONValue.string($0) }))]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        #expect(config.noCloud == entries)
+    }
+
+    /// The round-trip guard still has teeth. "\r\n" is a single Swift
+    /// `Character`, so `quotedScalar`'s `case "\n"` never matches it and the
+    /// raw newline would land in config.yaml, splitting the `no_cloud:` line in
+    /// two — the per-entry round-trip catches that and refuses the edit rather
+    /// than writing a mangled privacy list.
+    @Test func noCloudRefusesEntriesTheWriterCannotEscape() throws {
         let error = #expect(throws: ToolError.self) {
             try EngineToolExecutor.applyConfigEdits(
                 to: "---\nno_cloud: []\n---\n",
-                sets: [("no_cloud", .array([.string("quote\"a]"), .string("hash # b")]))]
+                sets: [("no_cloud", .array([.string("gmail.com"), .string("bad\r\nhost.example.com")]))]
             )
         }
         #expect(error?.message.contains("no_cloud") == true)

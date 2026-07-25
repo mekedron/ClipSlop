@@ -28,6 +28,14 @@ private final class PlannerRace: Sendable {
         var cancelled = false
         var continuation: CheckedContinuation<PlannerRaceResult, Never>?
         var call: Task<Void, Never>?
+        var cap: Task<Void, Never>?
+    }
+
+    /// What the one settle that wins takes out of the box: the continuation to
+    /// resume, and the cap task that has nothing left to time.
+    private struct Claim: Sendable {
+        let continuation: CheckedContinuation<PlannerRaceResult, Never>?
+        let cap: Task<Void, Never>?
     }
 
     private let lock = OSAllocatedUnfairLock(initialState: State())
@@ -63,13 +71,43 @@ private final class PlannerRace: Sendable {
         if alreadyCancelled { call.cancel() }
     }
 
+    /// Hands the cap task over so that settling by ANY route ends it, the way
+    /// `attach` does for the provider call.
+    ///
+    /// Without this the cap was the one racer nobody could stop: it slept out
+    /// the full `planner_timeout_ms` after the race was already decided — by
+    /// the provider answering, by itself, or by the press cancelling — and then
+    /// woke up to perform two no-ops. Bounded and harmless in effect, but `run`
+    /// returned leaving a live task behind it, one per abandoned press, for up
+    /// to five seconds. A cap handed over after the race already settled (the
+    /// provider answered in the gap since `begin`) is cancelled right here,
+    /// same shape as `attach`.
+    func attachCap(_ cap: Task<Void, Never>) {
+        let alreadySettled = lock.withLock { state -> Bool in
+            guard !state.settled else { return true }
+            state.cap = cap
+            return false
+        }
+        if alreadySettled { cap.cancel() }
+    }
+
     /// First caller wins; every later one is a no-op (its result belongs to a
     /// call the press has stopped waiting for). The resume happens outside the
     /// lock — the winner can be the provider task, the cap task or the cancel
     /// handler, and none of them should be holding a lock when the awaiting
     /// task is scheduled.
+    ///
+    /// The winner also ends the cap: the race it was timing is over. When the
+    /// winner IS the cap task that is a self-cancel, and it is harmless — the
+    /// cap is already past its only suspension point (`Task.sleep`), and
+    /// cancellation never interrupts synchronous code, so the `call.cancel()`
+    /// that follows this call in the cap's body still runs. The cap is
+    /// cancelled outside the lock too, and for the same reason as the resume:
+    /// nothing here should hold a lock while other tasks are being scheduled.
     func settle(_ result: PlannerRaceResult) {
-        takeContinuation()?.resume(returning: result)
+        let claim = claim()
+        claim.continuation?.resume(returning: result)
+        claim.cap?.cancel()
     }
 
     /// The press stopped waiting. Settle the race as failed and cancel the
@@ -85,13 +123,19 @@ private final class PlannerRace: Sendable {
         call?.cancel()
     }
 
-    private func takeContinuation() -> CheckedContinuation<PlannerRaceResult, Never>? {
-        lock.withLock { state in
-            guard !state.settled else { return nil }
+    /// The one-shot claim itself: exactly one caller ever sees a non-empty
+    /// `Claim`, so no path can resume the continuation twice or cancel the cap
+    /// out from under a race that is still running. `begin`'s early-cancel
+    /// latch sets `settled` before either racer exists, which is what makes
+    /// every claim after it empty.
+    private func claim() -> Claim {
+        lock.withLock { state -> Claim in
+            guard !state.settled else { return Claim(continuation: nil, cap: nil) }
             state.settled = true
-            let continuation = state.continuation
+            let claim = Claim(continuation: state.continuation, cap: state.cap)
             state.continuation = nil
-            return continuation
+            state.cap = nil
+            return claim
         }
     }
 }
@@ -383,7 +427,9 @@ enum MagicPlanner {
         // the cap, which made `planner_timeout_ms` advisory instead of the hard
         // bound config.yaml documents. Two detached tasks with a first-wins
         // continuation return exactly at the cap; the loser is cancelled and
-        // finishes unobserved (one bounded, non-streaming request).
+        // finishes unobserved (one bounded, non-streaming request). The race
+        // box owns BOTH tasks, so however it settles neither of them outlives
+        // it — detached is not the same as unowned.
         //
         // Detached tasks do not inherit cancellation, though, and
         // `withCheckedContinuation` is not a cancellation point — so the press
@@ -411,11 +457,28 @@ enum MagicPlanner {
                     race.settle(result)
                 }
                 race.attach(call)
-                Task {
-                    try? await Task.sleep(for: .milliseconds(timeoutMs))
+                let cap = Task {
+                    do {
+                        try await Task.sleep(for: .milliseconds(timeoutMs))
+                    } catch {
+                        // The race settled without us and cancelled this task;
+                        // there is nothing left to time. Returning here rather
+                        // than falling through to two claims the one-shot box
+                        // would reject anyway keeps "the cap fired" and "the
+                        // cap was called off" from looking alike in a trace.
+                        return
+                    }
+                    // `settle` cancels this very task on its way out — a
+                    // self-cancel, and a safe one: the only suspension point
+                    // above is already behind us, and cancellation does not
+                    // interrupt synchronous code, so the `call.cancel()` below
+                    // still runs and the cap stays a HARD cap.
                     race.settle(.timedOut)
                     call.cancel()
                 }
+                // Handing the cap over is what bounds its lifetime to the
+                // race's: settling by any route ends it. See `attachCap`.
+                race.attachCap(cap)
             }
         } onCancel: {
             race.cancel()
