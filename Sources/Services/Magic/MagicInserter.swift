@@ -645,7 +645,13 @@ final class MagicInserter {
                 }
             }
             guard clock.now < deadline else { return false }
-            try? await Task.sleep(for: .milliseconds(50))
+            // The deadline is what ends this loop, never cancellation — so the
+            // pacing may not be cancellable either. A plain `Task.sleep` returns
+            // instantly once cancelled and turns the remaining budget into
+            // back-to-back AX reads, each charged the 0.35 s messaging timeout
+            // against a target that is by then unresponsive or gone. Waiting is
+            // the cheap half of this loop; see `UninterruptibleSleep`.
+            await UninterruptibleSleep.sleep(for: .milliseconds(50))
         }
     }
 
@@ -674,21 +680,17 @@ final class MagicInserter {
 
     // MARK: - Private
 
-    /// A delay a cancelled press still waits out.
+    /// A delay a cancelled press still waits out — see `UninterruptibleSleep`
+    /// for why the press band's waits are bounded by deadlines and not by
+    /// cancellation.
     ///
-    /// `Task.sleep` returns the instant its task is cancelled, and on this path
-    /// there is exactly one wait that must NOT collapse: the clipboard-restore
+    /// On this path the wait that must not collapse is the clipboard-restore
     /// grace. The ⌘V has already been posted by then, and taking the pasteboard
     /// back early hands a late reader (Electron, R3) the user's own restored
     /// clipboard content to paste into their field — data loss caused by a
-    /// cancel, which is the one thing a cancel may never do. An unstructured
-    /// task does not inherit cancellation, so the grace holds while the rest of
-    /// the path exits early.
+    /// cancel, which is the one thing a cancel may never do.
     private static func sleepThroughCancellation(for duration: Duration) async {
-        let sleeper = Task.detached { () -> Void in
-            try? await Task.sleep(for: duration)
-        }
-        await sleeper.value
+        await UninterruptibleSleep.sleep(for: duration)
     }
 
     /// True when the press targeted one of ClipSlop's own windows (the

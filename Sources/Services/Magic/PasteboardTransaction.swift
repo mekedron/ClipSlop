@@ -314,7 +314,16 @@ enum PasteboardTransaction {
         let clock = ContinuousClock()
         let deadline = clock.now + timeout
         while clock.now < deadline {
-            try? await Task.sleep(for: .milliseconds(20))
+            // Not cancellable, and the reason is stronger here than the wasted
+            // `changeCount` round-trips a collapsed sleep would spin through
+            // (see `UninterruptibleSleep`): the ⌘C is already posted and cannot
+            // be recalled. Giving up on the poll early does not stop the target
+            // from writing — it only stops us from being there when it does, and
+            // `MagicSelectionCapture.refine` then reads a `changeCount` that has
+            // not moved yet, declines the restore, and leaves the probe's spoils
+            // sitting on the user's clipboard for good. The full deadline is what
+            // makes the write and the restore decision meet.
+            await UninterruptibleSleep.sleep(for: .milliseconds(20))
             if pasteboard.changeCount != countBefore {
                 return pasteboard.string(forType: .string)
             }
