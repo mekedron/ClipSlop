@@ -20,49 +20,57 @@ struct OpenAIToolChatService: ToolChatService {
             throw AIServiceError.invalidURL
         }
 
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
-            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        }
+        var shape = await OpenAIShapeMemo.shared.shape(for: config)
+        var reshapes = 0
 
-        var bodyObject: [String: JSONValue] = [
-            "model": .string(config.modelID),
-            "messages": .array(Self.messagesJSON(system: systemPrompt, turns: messages)),
-            "max_tokens": .int(config.maxTokens),
-            "temperature": .number(config.temperature),
-            "tools": .array(tools.map(Self.toolJSON)),
-        ]
-        if let reasoningEffort = config.effectiveReasoningEffort {
-            bodyObject["reasoning_effort"] = .string(reasoningEffort)
-        }
-        request.httpBody = try JSONEncoder().encode(JSONValue.object(bodyObject))
+        while true {
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
+                request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            }
 
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AIServiceError.networkError(URLError(.badServerResponse))
-        }
-        guard httpResponse.statusCode == 200 else {
-            throw AIServiceError.httpError(
-                statusCode: httpResponse.statusCode,
-                body: String(data: data, encoding: .utf8) ?? ""
-            )
-        }
+            var bodyObject: [String: JSONValue] = [
+                "model": .string(config.modelID),
+                "messages": .array(
+                    Self.messagesJSON(system: systemPrompt, turns: messages, shape: shape)
+                ),
+                "tools": .array(tools.map(Self.toolJSON)),
+            ]
+            bodyObject.merge(shape.tuningParameters(for: config)) { _, tuning in tuning }
+            request.httpBody = try JSONEncoder().encode(JSONValue.object(bodyObject))
 
-        let decoded = try JSONDecoder().decode(Response.self, from: data)
-        guard let message = decoded.choices.first?.message else {
-            throw AIServiceError.emptyResponse
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw AIServiceError.networkError(URLError(.badServerResponse))
+            }
+            guard httpResponse.statusCode == 200 else {
+                let body = String(data: data, encoding: .utf8) ?? ""
+                if httpResponse.statusCode == 400, reshapes < OpenAIRequestShape.maxReshapes,
+                   let next = shape.relaxed(afterRejection: body) {
+                    shape = next
+                    reshapes += 1
+                    continue
+                }
+                throw AIServiceError.httpError(statusCode: httpResponse.statusCode, body: body)
+            }
+            await OpenAIShapeMemo.shared.remember(shape, for: config)
+
+            let decoded = try JSONDecoder().decode(Response.self, from: data)
+            guard let message = decoded.choices.first?.message else {
+                throw AIServiceError.emptyResponse
+            }
+            let text = message.content?.isEmpty == false ? message.content : nil
+            let toolCalls = (message.toolCalls ?? []).map { call in
+                ToolCallRequest(
+                    id: call.id,
+                    name: call.function.name,
+                    argumentsJSON: call.function.arguments
+                )
+            }
+            return AssistantReply(text: text, toolCalls: toolCalls)
         }
-        let text = message.content?.isEmpty == false ? message.content : nil
-        let toolCalls = (message.toolCalls ?? []).map { call in
-            ToolCallRequest(
-                id: call.id,
-                name: call.function.name,
-                argumentsJSON: call.function.arguments
-            )
-        }
-        return AssistantReply(text: text, toolCalls: toolCalls)
     }
 
     // MARK: - Request encoding
@@ -78,17 +86,27 @@ struct OpenAIToolChatService: ToolChatService {
         ])
     }
 
-    private static func messagesJSON(system: String, turns: [ChatTurn]) -> [JSONValue] {
-        var messages: [JSONValue] = [
-            .object(["role": .string("system"), "content": .string(system)]),
-        ]
+    private static func messagesJSON(
+        system: String,
+        turns: [ChatTurn],
+        shape: OpenAIRequestShape
+    ) -> [JSONValue] {
+        var messages: [JSONValue] = []
+        if let systemMessage = shape.systemMessage(system) {
+            messages.append(systemMessage)
+        }
+        // Without a system role the instructions ride on the first user turn,
+        // so `pendingSystem` is spent exactly once and only if there is a user
+        // turn to carry it.
+        var pendingSystem = shape.systemRole == nil ? system : ""
         for turn in turns {
             switch turn {
             case .user(let text):
                 messages.append(.object([
                     "role": .string("user"),
-                    "content": .string(text),
+                    "content": .string(shape.firstUserText(text, systemPrompt: pendingSystem)),
                 ]))
+                pendingSystem = ""
 
             case .assistant(let text, let toolCalls):
                 var message: [String: JSONValue] = ["role": .string("assistant")]
