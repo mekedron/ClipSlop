@@ -181,4 +181,28 @@ struct EngineConfigTests {
         #expect(!unrescuable.applied)
         #expect(unrescuable.config.noCloud == ["com.tinyspeck.slackmacgap"])
     }
+
+    /// Warnings come out in iteration order and are shown as a list in
+    /// Settings → Magic. Iterating the parsed fields dictionary directly
+    /// reshuffles that list on every reload of an unchanged file, and the user
+    /// has no way to tell a reorder from a new problem. File order, always.
+    @Test func warningsComeOutInFileOrder() {
+        let text = """
+        ---
+        toast_dismiss_seconds: 999
+        not_a_key: 1
+        ax_call_budget: 1
+        ---
+        """
+        let expected = ["toast_dismiss_seconds", "not_a_key", "ax_call_budget"]
+        // Repeated because a dictionary's order is stable within one process
+        // for one set of keys — a single pass can agree with file order by
+        // luck. What is being pinned is that every parse of the same text
+        // answers the same way.
+        for _ in 0..<8 {
+            let warnings = MagicEngineConfig.parse(text).warnings
+            #expect(warnings.count == 3)
+            #expect(zip(warnings, expected).allSatisfy { $0.contains($1) })
+        }
+    }
 }

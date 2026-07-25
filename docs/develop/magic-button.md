@@ -425,10 +425,15 @@ Workflows never name models. Since M3 the provider layer is files-first:
   explicit fallbacks → app default → first (→ first *capable* for
   tool-calling roles). Capability-unfit candidates are skipped.
 - **Privacy binding** (`PrivacyBinding`, P7): `no_cloud: [entries]` in
-  config.yaml (bundle-id substring, or domain exact/suffix). A press on a
-  matching surface swaps to a local provider from the chain or refuses
-  honestly (trace `error:generation:noCloud`); the cost floor still holds
-  during the swap.
+  config.yaml (bundle-id substring, or domain exact/suffix — a leading
+  `www.` is dropped from both sides). A press on a matching surface swaps to
+  a local provider from the chain or refuses honestly (trace
+  `error:generation:noCloud`); the cost floor still holds during the swap.
+  A web surface (`AXWebArea` in the ancestor spine) whose host could not be
+  read counts as matching whenever any entry contains a `.`: a domain rule is
+  unenforceable without a host, and over-refusing is visible where a silent
+  send is not. Single-label entries are exempt — those are bundle-id
+  shorthand and would already have matched if they applied to the app.
 - **Spend accounting** (`SpendLedger`): one JSONL line per generation in
   `~/.clipslop/logs/spend-YYYY-MM.jsonl` — tokens only, no dollar tables.
   Real usage from Anthropic/OpenAI-compatible responses; chars/4 estimates

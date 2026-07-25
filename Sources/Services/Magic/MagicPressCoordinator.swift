@@ -46,6 +46,19 @@ final class MagicPressCoordinator {
         case planning
         case chips
         case generating
+        /// `MagicInserter.insert` is running: the target has been verified and
+        /// the synthetic ⌘V is about to be — or already has been — posted.
+        ///
+        /// A phase of its own because it is the one stretch of a press that
+        /// nothing may tear down. Every other phase answers a cancel by
+        /// dropping the press; here the paste has already reached the field,
+        /// so dropping it would clear `activePress` and submit its trace while
+        /// `performInsert` is still suspended — and the resumption would then
+        /// write the press back, submitting a second trace for it and
+        /// reopening a toast the teardown had just closed. Undo is the
+        /// affordance for a paste the user did not want, and it lives on the
+        /// toast this phase is on its way to.
+        case inserting
         case toast
     }
 
@@ -454,7 +467,8 @@ final class MagicPressCoordinator {
             providers: plan.providers,
             noCloud: plan.noCloud,
             bundleId: snapshot.app.bundleId,
-            urlHost: EngineRouter.urlHost(of: snapshot.url)
+            urlHost: EngineRouter.urlHost(of: snapshot.url),
+            webSurfaceWithUnknownHost: PrivacyBinding.hasUnreadableWebHost(snapshot)
         ) else {
             showChips(candidates)
             return
@@ -847,7 +861,26 @@ final class MagicPressCoordinator {
             return
         }
 
+        // `.inserting` for the whole of `insert` — the phase every teardown
+        // refuses. `insert` verifies the target, posts the ⌘V and then holds
+        // the pasteboard for the confirmation poll plus the R3 restore grace,
+        // so this suspension lasts of the order of a second with the user
+        // watching a "generating" toast that still carries a cancel.
+        phase = .inserting
         let outcome = await inserter.insert(text, against: press.snapshot)
+
+        // Re-read rather than write the pre-hop capture back. `.inserting`
+        // makes this guard unreachable today, and it is here so that it stays
+        // an invariant rather than a routing accident: every path that could
+        // reintroduce a teardown across this gap ends with the press already
+        // traced and cleared, and an assignment from a stale capture would
+        // resurrect it — a second trace for one press, and a toast over a
+        // surface that was torn down.
+        guard let refreshed = activePress, refreshed.snapshot.ts == snapshot.ts else {
+            phase = .idle
+            return
+        }
+        press = refreshed
         if let start = pressStart {
             press.trace.latencyMs.paste = Self.ms(ContinuousClock().now - start)
         }
@@ -1083,6 +1116,13 @@ final class MagicPressCoordinator {
     }
 
     func dismissToast(outcome: String?) {
+        // A press mid-paste is not dismissible: `performInsert` owns the press
+        // until `insert` returns, and taking it away here would submit its
+        // trace while that method is still suspended — the same teardown
+        // `.inserting` refuses everywhere else. Stated here too rather than
+        // left to the callers, for the reason the paragraph below gives about
+        // `generationTask`: routing order is not an invariant.
+        guard phase != .inserting else { return }
         // Nothing may outlive the surface it would have filled. Escape cannot
         // reach here while generating — `dismissFloatingOverlay` routes that to
         // `cancelGeneration` first — but `rerun` sits in `.generating` across an

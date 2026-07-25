@@ -48,7 +48,8 @@ Entries are matched case-insensitively:
 
 - substring of the app **bundle id** (`telegram`, `com.tinyspeck.slackmacgap`), or
 - **exact or suffix** match of the page URL's host (`gmail.com` matches
-  `mail.gmail.com`).
+  `mail.gmail.com`). A leading `www.` is dropped from both the host and the
+  entry, so `www.gmail.com` and `gmail.com` are the same rule.
 
 The bundle-id rule is a plain substring test, so a short entry catches far
 more than it looks like: `mail` matches `com.apple.mail` **and**
@@ -63,6 +64,16 @@ A press on a matching surface switches to a `locality: local` provider
 from the role's fallback chain, or **refuses honestly** (trace outcome
 `error:generation:noCloud`) when none exists. The role's `min_cost_class`
 still holds during the swap.
+
+A domain rule needs a host to compare against, and on a web page that host
+comes from an Accessibility read that is allowed to fail. When it does — a
+page whose tree is not built yet, a capture that spent its budget — the
+press takes the **protected** path anyway, as long as at least one entry
+contains a `.`. Without that, an unreadable URL would silently switch
+domain protection off for exactly the presses it was written for. The cost
+is that a dotted entry meant for another app (`com.tinyspeck.slackmacgap`)
+also protects browser presses whose URL could not be read; single-label
+entries (`telegram`) never trigger it.
 
 ```yaml
 no_cloud: [telegram, com.tinyspeck.slackmacgap, gmail.com]

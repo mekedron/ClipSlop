@@ -258,7 +258,8 @@ enum MagicPlanner {
         providers: [AIProviderConfig],
         noCloud: [String],
         bundleId: String?,
-        urlHost: String?
+        urlHost: String?,
+        webSurfaceWithUnknownHost: Bool = false
     ) -> AIProviderConfig? {
         let resolved: AIProviderConfig
         let chainBinding: RoleBinding
@@ -275,7 +276,8 @@ enum MagicPlanner {
 
         switch PrivacyBinding.enforce(
             resolved: resolved, binding: chainBinding, providers: providers,
-            noCloud: noCloud, bundleId: bundleId, urlHost: urlHost
+            noCloud: noCloud, bundleId: bundleId, urlHost: urlHost,
+            webSurfaceWithUnknownHost: webSurfaceWithUnknownHost
         ) {
         case .allowed(let provider): return provider
         case .refused: return nil

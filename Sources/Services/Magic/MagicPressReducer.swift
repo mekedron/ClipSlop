@@ -126,7 +126,14 @@ enum MagicPressReducer {
             // 150 ms focus delay, across which neither `phase` nor `toastState`
             // moves — so it is the only thing a second ⌘↩ (or a second hold, or
             // a plain Magic press) can be refused by.
-            guard state.verifierWarningPending,
+            //
+            // `.inserting` is refused on top of that flag rather than through
+            // it. The flag does cover the same window today — it is cleared
+            // only after `performInsert` returns — but that is one assignment's
+            // worth of coincidence standing between a second ⌘↩ and two pastes
+            // racing each other. The phase says what is true.
+            guard state.phase != .inserting,
+                  state.verifierWarningPending,
                   state.hasActivePress,
                   !state.insertAnywayInFlight
             else { return .ignore }
@@ -145,7 +152,7 @@ enum MagicPressReducer {
 
     private static func press(_ state: State, forceChips: Bool) -> Action {
         switch state.phase {
-        case .collecting, .generating:
+        case .collecting, .generating, .inserting:
             // Single-flight; ✕ on the toast is the cancel affordance (R10).
             return .ignore
 
@@ -185,6 +192,12 @@ enum MagicPressReducer {
     /// the key. Order is the behaviour here; the phase and the window are
     /// different facts and both surfaces can be up at once.
     private static func dismissOverlay(_ state: State) -> Action {
+        // `.inserting` outranks every surface, including the generating toast
+        // that is still on screen. The ⌘V has reached the field by now, so
+        // there is nothing left for a dismissal to call off — it would only
+        // clear the press out from under `performInsert` and cost the user the
+        // Undo the toast is one step away from offering.
+        if state.phase == .inserting { return .ignore }
         if state.chipPanelOpen { return .dismissChips }
         if state.phase == .planning { return .cancelPlanner }
         if state.phase == .generating { return .cancelGeneration }

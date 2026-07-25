@@ -60,6 +60,29 @@ enum FrontmatterParser {
         let body = lines[(closingIndex + 1)...].joined(separator: "\n")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
+        // Leading tabs are refused up front, before any line is claimed by a
+        // key or a block.
+        //
+        // Block structure is decided by a two-SPACE prefix, so a tab-indented
+        // nested key does not read as indented anywhere: it ends its parent's
+        // block, and the top-level loop then takes it for a brand-new key
+        // because `first == " "` is false. Depending on where it sits that is
+        // either a confusing error about the PARENT ("'when:' has no value")
+        // or, for a block that already had one good line, no error at all and
+        // a file that means something the author never wrote. The second is the
+        // outcome a hot-reloaded, hand-edited tree may not produce, and neither
+        // is diagnosable from the message. YAML forbids tabs for indentation
+        // for the same reason; say so, with the line.
+        //
+        // LEADING tabs only — a tab inside a quoted scalar is content and is
+        // preserved verbatim by `parseScalar`.
+        if let offset = frontmatterLines.firstIndex(where: { $0.first == "\t" }) {
+            throw FrontmatterError(
+                line: offset + 2,
+                message: "line is indented with a tab — use two spaces per level (YAML does not allow tabs for indentation)"
+            )
+        }
+
         var fields: [String: FrontmatterValue] = [:]
         var fieldLines: [String: Int] = [:]
 

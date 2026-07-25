@@ -315,6 +315,34 @@ struct FrontmatterParserTests {
         }
     }
 
+    /// A tab-indented nested key does not arrive as an indented line at all:
+    /// block structure is decided by a two-SPACE prefix, so the tab ends its
+    /// parent's block and the line is re-read as a brand-new top-level key.
+    /// The file then means something the author never wrote, with no error
+    /// anywhere — the one outcome a hot-reloaded, hand-edited tree may not
+    /// produce. Named explicitly instead.
+    @Test func rejectsTabIndentation() {
+        let error = #expect(throws: FrontmatterError.self) {
+            try FrontmatterParser.parse("""
+            ---
+            when:
+            \turl: gmail.com
+            ---
+            """)
+        }
+        #expect(error?.line == 3)
+        #expect(error?.message.contains("tab") == true)
+
+        // Two spaces for the same document is the supported spelling.
+        let parsed = try? FrontmatterParser.parse("""
+        ---
+        when:
+          url: gmail.com
+        ---
+        """)
+        #expect(parsed?.fields["when"] == .map(["url": .scalar("gmail.com")]))
+    }
+
     @Test func rejectsBlockNestingInsideRecord() {
         #expect(throws: FrontmatterError.self) {
             try FrontmatterParser.parse("""

@@ -198,7 +198,8 @@ enum MagicPressPipeline {
         switch PrivacyBinding.enforce(
             resolved: plan.provider, binding: plan.roleBinding, providers: plan.providers,
             noCloud: plan.noCloud, bundleId: snapshot.app.bundleId,
-            urlHost: EngineRouter.urlHost(of: snapshot.url)
+            urlHost: EngineRouter.urlHost(of: snapshot.url),
+            webSurfaceWithUnknownHost: PrivacyBinding.hasUnreadableWebHost(snapshot)
         ) {
         case .allowed(let allowed):
             provider = allowed

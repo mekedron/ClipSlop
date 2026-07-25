@@ -102,6 +102,27 @@ fileprivate actor AXFieldReader {
         return (value, selection)
     }
 
+    /// The field's value alone, for the paste-confirmation poll.
+    ///
+    /// Separate from `currentFieldState` because that one also reads
+    /// `kAXSelectedText`, which the poll discards. The poll runs every 60 ms
+    /// for up to 700 ms, and every AX attribute is a synchronous round-trip
+    /// charged the process-wide 0.35 s messaging timeout against an
+    /// unresponsive target — so the discarded half is up to a dozen more
+    /// blocking IPC calls per press, spent to answer a question nobody asks.
+    ///
+    /// The live focused element is preferred, like `currentFieldProbe` and for
+    /// the same reason: confirmation is about what is in the field NOW, and
+    /// apps that rebuild their AXUIElement on re-render answer through the
+    /// remembered reference with the value from before the rebuild — which
+    /// reads as "the paste never landed" and stamps `:unconfirmed` on a paste
+    /// that went in perfectly.
+    fileprivate func currentFieldValue(_ snapshot: MagicSnapshot) -> String? {
+        guard let focused = Self.currentFocusedElement() ?? snapshot.focusedElement?.element
+        else { return nil }
+        return Self.copyString(focused, kAXValueAttribute)
+    }
+
     /// Value + caret/selection as the target holds them right now.
     ///
     /// The live focused element is preferred over the snapshot's remembered
@@ -409,6 +430,25 @@ final class MagicInserter {
         // large clipboard does not stall the UI here. Still ordered before our
         // own write — the `await` is what guarantees it.
         let saved = await PasteboardTransaction.save()
+
+        // Focus is re-checked one last time, between the capture and the ⌘V.
+        //
+        // The verification above happened before two suspension points, and the
+        // second of them is open-ended: `save()` copies every representation of
+        // every pasteboard item across process boundaries, bounded only by
+        // `saveBudgetBytes`. A screenshot-sized clipboard turns "we just checked
+        // focus" into a reading from hundreds of milliseconds ago, and the paste
+        // that follows is exactly the blind paste §3.5 forbids.
+        //
+        // Identity only, not the field-state guard: nothing may have changed the
+        // field in the gap that the full check would catch, and re-running the
+        // state comparison here would refuse presses over an app that merely
+        // re-rendered while the clipboard was being read.
+        guard await reader.isSnapshotFieldFocused(snapshot) else {
+            PasteboardTransaction.writeGenerated(text)
+            return .focusMismatch
+        }
+
         let ourCount = PasteboardTransaction.writeGenerated(text)
         PasteboardTransaction.postPaste()
 
@@ -443,7 +483,7 @@ final class MagicInserter {
             // walked away from.
             if Task.isCancelled { break }
             try? await Task.sleep(for: .milliseconds(60))
-            guard let (value, _) = await reader.currentFieldState(snapshot) else { continue }
+            guard let value = await reader.currentFieldValue(snapshot) else { continue }
             if value != freshValue, value.contains(probe) {
                 confirmed = true
                 break
@@ -496,7 +536,13 @@ final class MagicInserter {
         // The app applies the ⌘Z on its own run loop, so wait for the value to
         // move rather than guessing a delay; a value we could not read in the
         // first place has nothing to wait for.
-        let pasted = lastWrite?.probe.value
+        // Keyed by press, like every other read of `lastWrite`: a probe left by
+        // an EARLIER press describes a different field at a different moment,
+        // and waiting for the value to move away from it is either an
+        // instant no-op or a 250 ms wait for a change that already happened.
+        // Nil means "no baseline" and the loop below is skipped, which is the
+        // honest answer rather than a guess dressed up as one.
+        let pasted = lastWrite.flatMap { $0.press == snapshot.ts ? $0.probe.value : nil }
         var settled = await reader.currentFieldProbe(snapshot)
         if pasted != nil {
             let clock = ContinuousClock()

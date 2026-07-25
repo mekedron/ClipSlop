@@ -315,4 +315,48 @@ struct MagicPressReducerToastTests {
         generating.phase = .generating
         #expect(MagicPressReducer.reduce(state: generating, event: .toastSettleCheck) == .ignore)
     }
+
+    /// `.inserting` is the one phase nothing may tear down.
+    ///
+    /// `MagicInserter.insert` posts the ⌘V and then holds the pasteboard for
+    /// the confirmation poll and the R3 restore grace — of the order of a
+    /// second, with a "generating" toast still on screen carrying a cancel. A
+    /// teardown accepted in that window submits the press's trace and clears it
+    /// while `performInsert` is still suspended, and the resumption submits a
+    /// second trace for the same press and reopens the toast that was just
+    /// closed. The text is in the field either way by then: Undo is the
+    /// affordance for a paste the user did not want, and it lives on the toast
+    /// this phase is on its way to.
+    @Test func insertingRefusesEveryTeardown() {
+        var inserting = MagicPressReducer.State(
+            phase: .inserting, toastOpen: true, hasActivePress: true, hasWorkflow: true
+        )
+        func reduce(_ state: MagicPressReducer.State, _ event: MagicPressReducer.Event)
+            -> MagicPressReducer.Action {
+            MagicPressReducer.reduce(state: state, event: event)
+        }
+
+        // Escape outranks the toast that is still on screen.
+        #expect(reduce(inserting, .dismissOverlay) == .ignore)
+        // …and the chip panel, if a teardown left one up.
+        inserting.chipPanelOpen = true
+        #expect(reduce(inserting, .dismissOverlay) == .ignore)
+        inserting.chipPanelOpen = false
+
+        // Single-flight: a second hotkey during the paste is not a new press.
+        #expect(reduce(inserting, .press(forceChips: false)) == .ignore)
+        #expect(reduce(inserting, .press(forceChips: true)) == .ignore)
+
+        // Nothing else can claim the press either.
+        #expect(reduce(inserting, .regenerateOrRefine) == .ignore)
+        #expect(reduce(inserting, .toastSettleCheck) == .ignore)
+        #expect(reduce(inserting, .selectChip(0)) == .ignore)
+
+        // Including a verifier accept: `insertAnyway` routes back into
+        // `performInsert`, so honouring it here would run two pastes at once.
+        var flagged = inserting
+        flagged.verifierWarningPending = true
+        #expect(reduce(flagged, .press(forceChips: false)) == .ignore)
+        #expect(reduce(flagged, .insertAnyway) == .ignore)
+    }
 }

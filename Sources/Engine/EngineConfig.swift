@@ -164,7 +164,19 @@ struct MagicEngineConfig: Sendable, Equatable {
         }
 
         let known = Dictionary(uniqueKeysWithValues: ranges().map { ($0.key, $0) })
-        for (key, value) in document.fields {
+        // In file order, because the warnings come out in iteration order and
+        // are shown as a list in Settings → Magic. `fields` is a Dictionary, so
+        // iterating it directly reshuffles that list on every reload of an
+        // unchanged file — the user watches their config warnings rearrange
+        // themselves and has no way to tell a reorder from a new problem.
+        // Keys the parser recorded no line for sort last, deterministically.
+        let orderedKeys = document.fields.keys.sorted {
+            let left = document.fieldLines[$0] ?? .max
+            let right = document.fieldLines[$1] ?? .max
+            return left == right ? $0 < $1 : left < right
+        }
+        for key in orderedKeys {
+            guard let value = document.fields[key] else { continue }
             if key == "no_cloud" {
                 switch value {
                 case .list(let items):
@@ -278,8 +290,28 @@ final class EngineConfigStore {
         hasLoaded = true
 
         guard let text = try? String(contentsOf: Self.fileURL, encoding: .utf8) else {
-            config = .default
-            warnings = []
+            // Unreadable is not the same fact as absent, and only one of the
+            // two means "no settings". A file that is not there has nothing to
+            // say, and the defaults are the honest answer — first launch before
+            // seeding, or a user who deleted it. A file that IS there and
+            // cannot be read says nothing about what it holds: a permissions
+            // change, a volume that went away, an editor caught mid-rewrite.
+            // Answering that with the all-default config empties `no_cloud`,
+            // and the very next press may send a protected surface to a cloud
+            // provider (P7) — the same loss `load(_:retaining:)` refuses to
+            // take on a parse error, refused here for the same reason.
+            if FileManager.default.fileExists(atPath: Self.fileURL.path) {
+                warnings = ["config.yaml could not be read — the previous settings (no_cloud rules included) stay in effect until it is readable again"]
+                // The failed read must not be remembered as the state of the
+                // file: leaving `lastModified` at the value we just stamped
+                // would make the next reload a no-op until something touches
+                // the file again, stranding the retained config even after the
+                // condition clears.
+                lastModified = .distantPast
+            } else {
+                config = .default
+                warnings = []
+            }
             return
         }
         // `retaining: config` is what keeps a broken hand edit from resetting
