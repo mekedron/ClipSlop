@@ -599,7 +599,23 @@ final class EngineToolExecutor {
             ))
         }
 
-        let baseline = Set(WorkflowResolver.resolve(others).errors.map { "\($0.workflowID ?? ""):\($0.message)" })
+        // The baseline has to be the catalog AS IT IS NOW, which includes the
+        // file being written whenever it already exists. Resolving `others`
+        // alone made every dependent of the target's CURRENT id broken in the
+        // baseline as well, so the combined-vs-baseline diff wrote the breakage
+        // off as pre-existing — and an `id:` change silently disabled every
+        // card that `extends` the old id, which is precisely what these
+        // side-effect warnings exist to catch.
+        var baselineRaws = others
+        if let existing = try? String(contentsOf: target, encoding: .utf8),
+           let document = try? FrontmatterParser.parse(existing),
+           let (card, explicitKeys, _) = try? WorkflowCardParser.make(from: document) {
+            baselineRaws.append(RawWorkflow(
+                card: card, explicitKeys: explicitKeys,
+                body: document.body, fileURL: target
+            ))
+        }
+        let baseline = Set(WorkflowResolver.resolve(baselineRaws).errors.map { "\($0.workflowID ?? ""):\($0.message)" })
         let combined = WorkflowResolver.resolve(others + [newRaw]).errors
 
         var errors: [String] = []
@@ -785,10 +801,18 @@ final class EngineToolExecutor {
         }
 
         let rolesResult = parsedRoles()
-        // Never rewrite a file whose records were partially dropped by the
-        // parser — serializing would silently discard them.
-        if rolesResult.warnings.contains(where: { $0.contains("skipped") }) {
-            throw ToolError(message: "roles.yaml has broken records the parser skipped — a rewrite would drop them. Fix the file first (see engine_status):\n" + rolesResult.warnings.joined(separator: "\n"))
+        // Never rewrite a file the parser could not read in full: `serialize`
+        // emits exactly what `bindings` holds, so anything it warned about is
+        // dropped on write. Every warning RolesFile emits describes that kind
+        // of loss — a skipped record, a duplicate role, an unknown key, an
+        // out-of-range timeout — so the *presence* of a warning is the test.
+        // Matching the substring "skipped" missed the top-level parse errors,
+        // "missing 'roles:' list", "'roles:' must be a list of records", and
+        // "duplicate role … first record kept", each of which let a change to
+        // one timeout serialize an empty or partial binding set over the
+        // user's file.
+        if !rolesResult.warnings.isEmpty {
+            throw ToolError(message: "roles.yaml has problems the parser could not carry through a rewrite — saving would drop them. Fix the file first (see engine_status):\n" + rolesResult.warnings.joined(separator: "\n"))
         }
         let providersResult = parsedProviders()
         let old = rolesResult.bindings[role] ?? RoleBinding()
@@ -797,7 +821,15 @@ final class EngineToolExecutor {
 
         if let providerText = args["provider"]?.stringValue {
             if providerText.lowercased() == "default" {
+                // "default" means the app default actually serves the role, so
+                // the fallback chain has to go with it: `EngineRoleStore.resolve`
+                // tries fallbacks BEFORE the app default, so clearing only
+                // `provider` left the first fallback serving the role while the
+                // assistant reported a reset to default that never happened.
+                // An explicit `fallbacks` argument in the same call still wins
+                // (it is applied below).
                 new.provider = nil
+                new.fallbacks = []
             } else {
                 let provider = try resolveProvider(providerText, in: providersResult.providers)
                 new.provider = provider.id
@@ -851,8 +883,11 @@ final class EngineToolExecutor {
 
     private func resolveProviderMetadataChange(_ args: [String: JSONValue]) throws -> ProviderMetadataChange {
         let providersResult = parsedProviders()
-        if providersResult.warnings.contains(where: { $0.contains("skipped") }) {
-            throw ToolError(message: "providers.yaml has broken records the parser skipped — a rewrite would drop them. Fix the file first (see engine_status):\n" + providersResult.warnings.joined(separator: "\n"))
+        // Same rule as roles.yaml above: any warning means the round-trip is
+        // lossy — an ignored key, a defaulted-away typo, a second `default: 1`
+        // — so none of them may be written over.
+        if !providersResult.warnings.isEmpty {
+            throw ToolError(message: "providers.yaml has problems the parser could not carry through a rewrite — saving would drop them. Fix the file first (see engine_status):\n" + providersResult.warnings.joined(separator: "\n"))
         }
         let provider = try resolveProvider(try requireString(args, "provider"), in: providersResult.providers)
 

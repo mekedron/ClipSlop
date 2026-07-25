@@ -133,6 +133,63 @@ struct EngineToolExecutorTests {
         }
     }
 
+    /// `standardizedFileURL` does not resolve symlinks, so a link planted
+    /// inside the tree used to satisfy the prefix check and be followed.
+    @Test func rejectsSymlinkedEntriesInsideTheTree() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let outside = root.deletingLastPathComponent()
+            .appendingPathComponent("secret-\(UUID().uuidString).md")
+        try "---\nid: secret\n---\nSecrets.".write(to: outside, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: outside) }
+
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("workflows/leak.md"), withDestinationURL: outside
+        )
+        // A link to a directory outside the tree hides the escape one level up.
+        try FileManager.default.createSymbolicLink(
+            at: root.appendingPathComponent("workflows/elsewhere"),
+            withDestinationURL: root.deletingLastPathComponent()
+        )
+
+        let executor = executor(root)
+        #expect(throws: ToolError.self) {
+            try executor.perform(call("read_engine_file", ["path": "workflows/leak.md"]))
+        }
+        #expect(throws: ToolError.self) {
+            try executor.perform(call("read_engine_file", ["path": "workflows/elsewhere/x.md"]))
+        }
+        #expect(throws: ToolError.self) {
+            try executor.perform(call("write_workflow", ["path": "workflows/leak.md", "content": "x"]))
+        }
+        // The file outside is untouched.
+        #expect(try String(contentsOf: outside, encoding: .utf8).contains("Secrets."))
+    }
+
+    /// workflows/library/** is PromptStore's tree: writing it here bypasses the
+    /// prompts.json mirror, the hotkey refresh, and the UUID bookkeeping.
+    @Test func workflowWritesRejectThePromptLibrarySubtree() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let executor = executor(root)
+
+        for path in ["workflows/library/fix-grammar.md", "workflows/library/format/tldr.md"] {
+            #expect(throws: ToolError.self) {
+                try executor.perform(call("write_workflow", ["path": path, "content": "x"]))
+            }
+            #expect(throws: ToolError.self) {
+                try executor.perform(call("delete_workflow", ["path": path]))
+            }
+        }
+        // Reading them is still fine — the library is part of the engine tree.
+        try FileManager.default.createDirectory(
+            at: root.appendingPathComponent("workflows/library"), withIntermediateDirectories: true
+        )
+        try write(root, "workflows/library/card.md", "---\nid: library.card\n---\nBody.")
+        let output = try executor.perform(call("read_engine_file", ["path": "workflows/library/card.md"]))
+        #expect(output.contains("library.card"))
+    }
+
     // MARK: - Reading
 
     @Test func listsEngineFilesWithWorkflowIDs() throws {
@@ -279,6 +336,34 @@ struct EngineToolExecutorTests {
             call("write_workflow", ["path": "workflows/comment.social.md", "content": updated])
         )
         #expect(output.contains("written"))
+    }
+
+    /// Renaming a parent's `id:` orphans every child that `extends` the old
+    /// one. The baseline used to exclude the file being written, so those
+    /// children were already broken in the baseline and the diff wrote the
+    /// breakage off as pre-existing — the warning never fired.
+    @Test func changingAnIDWarnsAboutTheDependentsItBreaks() throws {
+        let root = try makeRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let renamed = """
+        ---
+        id: base.generation.v2
+        kind: workflow
+        mode: direct
+        version: 1
+        abstract: true
+        intents: [write]
+        ---
+        ## Rules
+        - Be brief.
+        """
+        let output = try executor(root).perform(
+            call("write_workflow", ["path": "workflows/base/base.generation.md", "content": renamed])
+        )
+        // base.reply and comment.social both extend the old id.
+        #expect(output.contains("side effect"))
+        #expect(output.contains("base.reply") || output.contains("base.reply.md"))
+        #expect(output.contains("comment.social"))
     }
 
     // MARK: - delete_workflow

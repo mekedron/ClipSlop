@@ -35,6 +35,11 @@ enum PromptLibraryFiles {
         /// Files that must be rewritten to persist a generated identity
         /// (missing or duplicate `uuid:`, missing `_folder.md`).
         var pendingWrites: [(url: URL, content: String)] = []
+        /// Relative paths that could not be parsed and are therefore absent
+        /// from `nodes`. `issues` mixes these with benign repairs ("assigned a
+        /// fresh uuid", "using defaults"), so the store needs them called out:
+        /// a model missing a card must not be published as the mirror.
+        var skippedRelativePaths: [String] = []
         var issues: [String] = []
     }
 
@@ -94,9 +99,11 @@ enum PromptLibraryFiles {
             body = document.body
         } catch let error as FrontmatterError {
             result.issues.append("\(relative):\(error.line): \(error.message) — file skipped")
+            result.skippedRelativePaths.append(relative)
             return nil
         } catch {
             result.issues.append("\(relative): \(error.localizedDescription) — file skipped")
+            result.skippedRelativePaths.append(relative)
             return nil
         }
 

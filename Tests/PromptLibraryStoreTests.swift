@@ -144,14 +144,25 @@ private enum StoreFixture {
     static func makeStore(
         root: URL,
         useDefaults: Bool,
-        defaults: @escaping () -> [PromptNode] = PromptStore.loadBundledDefaults
+        defaults: @escaping () -> [PromptNode] = PromptStore.loadBundledDefaults,
+        setDefaultsActive: ((Bool) -> Void)? = nil,
+        stamp: StampBox? = nil
     ) -> PromptStore {
         PromptStore(
             libraryDirectory: root.appendingPathComponent("workflows/library"),
             mirrorFileURL: root.appendingPathComponent("prompts.json"),
             useDefaultPrompts: useDefaults,
-            defaults: defaults
+            defaults: defaults,
+            setDefaultsActive: setDefaultsActive,
+            readDefaultsStamp: { stamp?.value },
+            writeDefaultsStamp: { stamp?.value = $0 }
         )
+    }
+
+    /// Stands in for the `promptLibraryDefaultsStamp` setting across two store
+    /// instances without touching UserDefaults.
+    final class StampBox {
+        var value: String?
     }
 
     static let providerID = UUID(uuidString: "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE")!
@@ -329,6 +340,53 @@ struct PromptLibraryMigrationTests {
         #expect(try Data(contentsOf: mirror) == mirrorBefore)
     }
 
+    /// While `useDefaultPrompts` is true the bundled set is authoritative on
+    /// every launch — but a hand edit of the markdown never goes through the UI
+    /// and so never clears the flag. Bootstrap used to restore the defaults
+    /// over those edits on every single launch.
+    @Test func handEditedLibrarySurvivesWhileDefaultsAreActive() throws {
+        let root = try StoreFixture.tempRoot()
+        let stamp = StoreFixture.StampBox()
+        _ = StoreFixture.makeStore(root: root, useDefaults: true, stamp: stamp)
+        #expect(stamp.value != nil)
+
+        let card = root.appendingPathComponent("workflows/library/format/fix-grammar.md")
+        var text = try String(contentsOf: card, encoding: .utf8)
+        text += "\n- HAND-EDIT-MARKER: keep this line.\n"
+        try text.write(to: card, atomically: true, encoding: .utf8)
+
+        var defaultsStillActive = true
+        let reopened = StoreFixture.makeStore(
+            root: root, useDefaults: true,
+            setDefaultsActive: { defaultsStillActive = $0 }, stamp: stamp
+        )
+        #expect(try String(contentsOf: card, encoding: .utf8).contains("HAND-EDIT-MARKER"))
+        #expect(reopened.allPromptNodes().contains { $0.systemPrompt?.contains("HAND-EDIT-MARKER") == true })
+        // And the edit is recognized as the customization it is, so the next
+        // launch does not have to re-derive it.
+        #expect(!defaultsStillActive)
+    }
+
+    /// The other half of the same branch: a genuinely new bundled set (an app
+    /// update) still refreshes the tree.
+    @Test func newBundledDefaultsStillRefreshTheLibrary() throws {
+        let root = try StoreFixture.tempRoot()
+        let stamp = StoreFixture.StampBox()
+        _ = StoreFixture.makeStore(root: root, useDefaults: true, stamp: stamp)
+        let firstStamp = stamp.value
+
+        let shipped = [PromptNode(
+            id: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+            name: "Shipped In An Update", mnemonicKey: "u", nodeType: .prompt,
+            systemPrompt: "Brand new default."
+        )]
+        let refreshed = StoreFixture.makeStore(
+            root: root, useDefaults: true, defaults: { shipped }, stamp: stamp
+        )
+        #expect(refreshed.prompts == PromptStore.canonicalize(shipped))
+        #expect(stamp.value != firstStamp)
+    }
+
     @Test func uuidsAreStableAcrossReloadAndMutation() throws {
         let root = try StoreFixture.tempRoot()
         let mirror = root.appendingPathComponent("prompts.json")
@@ -378,6 +436,31 @@ struct PromptLibraryMutationTests {
         let file = root.appendingPathComponent("workflows/library/fix-grammar.md")
         #expect(try String(contentsOf: file, encoding: .utf8)
             .contains("Fix all grammar and spelling mistakes."))
+    }
+
+    /// A card that fails to parse is skipped, so the tree in memory is a
+    /// PARTIAL view. Publishing it as the mirror uploads that gap to iCloud,
+    /// and the receiving Mac's `replaceFromSync` → `persist()` deletes the
+    /// markdown for every card the mirror is missing.
+    @Test func unparseableCardBlocksMirrorPublication() throws {
+        let (store, root) = try makeStore()
+        let mirrorURL = root.appendingPathComponent("prompts.json")
+        let mirrorBefore = try Data(contentsOf: mirrorURL)
+        var uploaded: Data?
+        store.onPromptsChanged = { uploaded = $0 }
+
+        let card = root.appendingPathComponent("workflows/library/fix-grammar.md")
+        try "---\nid: broken\nsummary: \"unterminated\n---\nBody.\n"
+            .write(to: card, atomically: true, encoding: .utf8)
+        store.reloadIfChanged()
+
+        // The card is gone from the model — that part is the documented
+        // skip-don't-destroy behaviour.
+        #expect(!store.allPromptNodes().contains { $0.name == "Fix Grammar" })
+        // But nothing was published: no upload, and the mirror still holds it.
+        #expect(uploaded == nil)
+        #expect(try Data(contentsOf: mirrorURL) == mirrorBefore)
+        #expect(store.unparsedFiles == ["fix-grammar.md"])
     }
 
     @Test func renameMovesTheFileAndKeepsTheUUID() throws {

@@ -206,6 +206,16 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultPrompts, forKey: "useDefaultPrompts") }
     }
 
+    /// Fingerprint of the bundled default prompt set that was last written to
+    /// the library tree. `PromptStore` needs it to tell an app update shipping
+    /// new defaults (refresh the tree) apart from a hand edit of the markdown
+    /// (keep it) — both look like "disk differs from the bundled defaults".
+    var promptLibraryDefaultsStamp: String? {
+        didSet {
+            UserDefaults.standard.set(promptLibraryDefaultsStamp, forKey: "promptLibraryDefaultsStamp")
+        }
+    }
+
     var useDefaultQuickAccess: Bool {
         didSet { UserDefaults.standard.set(useDefaultQuickAccess, forKey: "useDefaultQuickAccess") }
     }
@@ -297,6 +307,7 @@ final class AppSettings {
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
+        promptLibraryDefaultsStamp = defaults.string(forKey: "promptLibraryDefaultsStamp")
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
         spotlightIndexingEnabled = defaults.object(forKey: "spotlightIndexingEnabled") as? Bool ?? true
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")

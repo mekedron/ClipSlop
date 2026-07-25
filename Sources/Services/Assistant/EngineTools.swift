@@ -135,7 +135,36 @@ enum EngineTools {
         guard candidate.path.hasPrefix(rootPath + "/") else {
             throw ToolError(message: "Path escapes the engine directory.")
         }
+        try rejectSymlinks(in: candidate, under: root)
         return candidate
+    }
+
+    /// `standardizedFileURL` resolves "." and ".." lexically but never
+    /// symlinks, so a symlinked entry *inside* the tree — `workflows/leak.md`
+    /// pointing at `~/.ssh/id_rsa` — satisfied the prefix check above and
+    /// `read_engine_file` followed it straight out of the sandbox.
+    ///
+    /// Rejected rather than resolved: nothing in an engine tree we write
+    /// ourselves legitimately needs a symlink, and rejection is also the right
+    /// answer for a dangling link, whose target cannot be classified at all
+    /// yet a write through it would still land outside.
+    private nonisolated static func rejectSymlinks(in url: URL, under root: URL) throws {
+        let rootURL = URL(fileURLWithPath: root.standardizedFileURL.path)
+        var cursor = rootURL
+        let components = url.pathComponents.dropFirst(rootURL.pathComponents.count)
+        for component in components {
+            cursor.appendPathComponent(component)
+            // `attributesOfItem` is lstat-like: it reports the link itself
+            // instead of following it, which is the whole point here.
+            guard let type = try? FileManager.default
+                .attributesOfItem(atPath: cursor.path)[.type] as? FileAttributeType
+            else { continue }  // does not exist yet — nothing to follow
+            guard type != .typeSymbolicLink else {
+                throw ToolError(
+                    message: "'\(component)' is a symlink. Engine paths must be real files inside the engine directory."
+                )
+            }
+        }
     }
 
     /// Readable whitelist: the four top-level engine files, core/*.md, and
@@ -159,6 +188,16 @@ enum EngineTools {
         let parts = relative.components(separatedBy: "/")
         guard parts.first == "workflows", parts.count >= 2, url.pathExtension == "md" else {
             throw ToolError(message: "Workflow paths must be under workflows/ and end in .md, like \"workflows/comment.social.md\".")
+        }
+        // workflows/library/** is the prompt library (§7.3), owned by
+        // PromptStore. Writing it through here bypasses the prompts.json
+        // mirror, the per-prompt hotkey refresh, and the UUID bookkeeping —
+        // and the store's next persist() can recreate a file this tool
+        // deleted. Library edits go through the PromptLibraryTools instead.
+        guard parts[1] != "library" else {
+            throw ToolError(
+                message: "'\(relativePath)' is in the prompt library. Use the prompt-library tools (list_prompts / write_prompt / delete_prompt) for those cards — writing them as workflow files bypasses the library's mirror and hotkeys."
+            )
         }
         return url
     }

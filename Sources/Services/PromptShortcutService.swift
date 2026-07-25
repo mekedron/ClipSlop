@@ -87,25 +87,32 @@ final class PromptShortcutService {
         isSyncing = true
         defer { isSyncing = false }
 
-        for prompt in appState.promptStore.allPromptNodes() {
-            let qpName = Self.quickPasteName(for: prompt.id)
-            let orName = Self.openRunName(for: prompt.id)
-
-            if let config = prompt.quickPasteShortcut {
-                KeyboardShortcuts.setShortcut(
-                    .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
-                    for: qpName
-                )
-            }
-            if let config = prompt.openRunShortcut {
-                KeyboardShortcuts.setShortcut(
-                    .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
-                    for: orName
-                )
-            }
-        }
-        // Also migrate any existing UserDefaults shortcuts into the model
+        // Migration runs FIRST, before the push below: it adopts a stored
+        // shortcut the model does not know about yet, and the push now treats
+        // a nil model value as "no shortcut" and clears the stored one — which
+        // would otherwise eat the very value migration exists to rescue.
         migrateFromUserDefaults()
+
+        for prompt in appState.promptStore.allPromptNodes() {
+            // The model is authoritative in BOTH directions. Only ever setting
+            // meant a shortcut deleted by hand from a card's frontmatter kept
+            // firing forever: this loop skipped it, `registerHandlers`
+            // registers a handler per prompt UUID whether or not a shortcut
+            // exists, and `cleanupOrphaned` only drops unknown UUIDs.
+            Self.store(prompt.quickPasteShortcut, for: Self.quickPasteName(for: prompt.id))
+            Self.store(prompt.openRunShortcut, for: Self.openRunName(for: prompt.id))
+        }
+    }
+
+    private static func store(_ config: ShortcutConfig?, for name: KeyboardShortcuts.Name) {
+        guard let config else {
+            KeyboardShortcuts.setShortcut(nil, for: name)
+            return
+        }
+        KeyboardShortcuts.setShortcut(
+            .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
+            for: name
+        )
     }
 
     /// Pull current shortcut from KeyboardShortcuts back into the PromptNode model and save.

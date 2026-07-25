@@ -139,7 +139,7 @@ final class MagicInserter {
                     }) {
                         window.makeKeyAndOrderFront(nil)
                     }
-                } else {
+                } else if Self.mayReclaimFocus(snapshot) {
                     if NSWorkspace.shared.frontmostApplication?.processIdentifier != snapshot.app.pid {
                         NSRunningApplication(processIdentifier: snapshot.app.pid)?
                             .activate(options: [])
@@ -164,6 +164,21 @@ final class MagicInserter {
         snapshot.app.pid == ProcessInfo.processInfo.processIdentifier
     }
 
+    /// Whether the focus we are about to reclaim is focus *we* took.
+    ///
+    /// The repair below re-activates the target app, which yanks the user out
+    /// of whatever they are doing. That is right when our own chip panel is
+    /// what holds key, and right when focus merely drifted inside the target
+    /// app — but wrong when a third app is frontmost: the user switched away
+    /// deliberately, and stealing activation back pastes into a window they
+    /// left. The press ends in `focusMismatch` instead, which puts the result
+    /// on the clipboard and in the toast (§3.5, P8).
+    private static func mayReclaimFocus(_ snapshot: MagicSnapshot) -> Bool {
+        guard let frontmost = NSWorkspace.shared.frontmostApplication else { return false }
+        return frontmost.processIdentifier == snapshot.app.pid
+            || frontmost.processIdentifier == ProcessInfo.processInfo.processIdentifier
+    }
+
     private func focusMatches(_ snapshot: MagicSnapshot) -> Bool {
         // Self-targeted presses verify in-process: ClipSlop is an accessory
         // (menu bar) app, so NSWorkspace.frontmostApplication and the
@@ -185,22 +200,70 @@ final class MagicInserter {
         if let expected = snapshot.focusedElement, CFEqual(expected.element, focused) {
             return true
         }
-        // AXUIElements have no stable identity across some apps' re-renders;
-        // fall back to role + window-title + value agreement.
-        guard let field = snapshot.field else { return false }
-        var roleValue: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(focused, kAXRoleAttribute as CFString, &roleValue) == .success,
-              roleValue as? String == field.role
+        // AXUIElements have no stable identity across some apps' re-renders
+        // (Chromium rebuilds the element as the user types), so an identity
+        // mismatch is not by itself proof that focus moved — but the
+        // corroboration has to be strong enough that a DIFFERENT field cannot
+        // supply it. Role and window title must agree, and then either the
+        // on-screen frame or a distinctive value. The old test was role +
+        // value alone, which every other empty composer in the same window
+        // satisfies: a field focused during generation accepted the paste.
+        guard let field = snapshot.field,
+              Self.copyString(focused, kAXRoleAttribute) == field.role,
+              Self.windowTitle(of: focused) == snapshot.windowTitle
         else { return false }
 
-        var currentValue: CFTypeRef?
-        if AXUIElementCopyAttributeValue(focused, kAXValueAttribute as CFString, &currentValue) == .success,
-           let current = currentValue as? String {
-            return current == field.value
+        if let expectedFrame = field.frame, let currentFrame = Self.frame(of: focused) {
+            return Self.framesAgree(expectedFrame, currentFrame)
         }
-        // Value unreadable (some web fields): bundle + role agreement is the
-        // best evidence available.
-        return true
+        // No geometry published: value agreement is the only evidence left,
+        // and it is evidence only when the value is distinctive. An empty
+        // value matches every empty field, so it decides nothing and the
+        // press goes to the toast rather than into an unidentified field.
+        guard let current = Self.copyString(focused, kAXValueAttribute) else { return false }
+        return !field.value.isEmpty && current == field.value
+    }
+
+    /// Sub-point differences are AX rounding, not movement; anything larger
+    /// means the field scrolled or a different one took focus, and either way
+    /// the press should not paste blind.
+    private static func framesAgree(_ lhs: CGRect, _ rhs: CGRect) -> Bool {
+        abs(lhs.minX - rhs.minX) < 1 && abs(lhs.minY - rhs.minY) < 1
+            && abs(lhs.width - rhs.width) < 1 && abs(lhs.height - rhs.height) < 1
+    }
+
+    private static func copyString(_ element: AXUIElement, _ attribute: String) -> String? {
+        var raw: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &raw) == .success
+        else { return nil }
+        return raw as? String
+    }
+
+    private static func windowTitle(of element: AXUIElement) -> String? {
+        var raw: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, kAXWindowAttribute as CFString, &raw) == .success,
+              let raw, CFGetTypeID(raw) == AXUIElementGetTypeID()
+        else { return nil }
+        return copyString((raw as! AXUIElement), kAXTitleAttribute)
+    }
+
+    private static func frame(of element: AXUIElement) -> CGRect? {
+        func axValue(_ attribute: String) -> AXValue? {
+            var raw: CFTypeRef?
+            guard AXUIElementCopyAttributeValue(element, attribute as CFString, &raw) == .success,
+                  let raw, CFGetTypeID(raw) == AXValueGetTypeID()
+            else { return nil }
+            return (raw as! AXValue)
+        }
+        guard let originValue = axValue(kAXPositionAttribute),
+              let sizeValue = axValue(kAXSizeAttribute)
+        else { return nil }
+        var origin = CGPoint.zero
+        var size = CGSize.zero
+        guard AXValueGetValue(originValue, .cgPoint, &origin),
+              AXValueGetValue(sizeValue, .cgSize, &size)
+        else { return nil }
+        return CGRect(origin: origin, size: size)
     }
 
     private func currentFocusedElement() -> AXUIElement? {

@@ -66,6 +66,13 @@ struct MagicSnapshot: Sendable {
         let value: String
         let selection: SelectionInfo?
         let placeholder: String?
+        /// Screen frame at capture time, when the app publishes AXPosition and
+        /// AXSize. The Inserter's identity check needs it: Chromium rebuilds
+        /// the AXUIElement on re-render, so `CFEqual` fails for a field that
+        /// never moved, and role + value agreement alone is satisfied by every
+        /// *other* empty composer in the same window. Geometry is what tells
+        /// "the same field, re-rendered" apart from "a different field".
+        var frame: CGRect? = nil
 
         /// True when the selection spans the entire field content — the
         /// "rewrite everything" grammar variant.

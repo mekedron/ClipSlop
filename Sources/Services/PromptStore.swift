@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import os
 
@@ -38,6 +39,18 @@ final class PromptStore {
     /// only ever deletes paths from this set, so files it failed to parse
     /// (a hand-edit typo) are skipped, never destroyed.
     @ObservationIgnored private var knownPaths: Set<String> = []
+    /// Library files the last load could not parse. While this is non-empty
+    /// `prompts` is a PARTIAL view of the tree, so the derived mirror must not
+    /// be published: `prompts.json` is what CloudSyncService uploads, and the
+    /// receiving Mac's `replaceFromSync` → `persist()` → `PromptLibraryFiles.sync`
+    /// deletes the markdown for every card missing from it. Skipping a broken
+    /// file locally is the contract; propagating that skip to another Mac as a
+    /// deletion is the opposite of it.
+    @ObservationIgnored private(set) var unparsedFiles: [String] = []
+    /// Reads/writes the fingerprint of the bundled default set last written to
+    /// disk. Injected so tests stay out of UserDefaults.
+    @ObservationIgnored private let readDefaultsStamp: () -> String?
+    @ObservationIgnored private let writeDefaultsStamp: (String) -> Void
 
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "prompts.library")
 
@@ -46,7 +59,9 @@ final class PromptStore {
             libraryDirectory: Constants.Engine.workflowsDirectory.appendingPathComponent("library"),
             mirrorFileURL: Constants.promptsFileURL,
             useDefaultPrompts: AppSettings.shared.useDefaultPrompts,
-            setDefaultsActive: { AppSettings.shared.useDefaultPrompts = $0 }
+            setDefaultsActive: { AppSettings.shared.useDefaultPrompts = $0 },
+            readDefaultsStamp: { AppSettings.shared.promptLibraryDefaultsStamp },
+            writeDefaultsStamp: { AppSettings.shared.promptLibraryDefaultsStamp = $0 }
         )
     }
 
@@ -57,13 +72,17 @@ final class PromptStore {
         mirrorFileURL: URL,
         useDefaultPrompts: Bool,
         defaults: @escaping () -> [PromptNode] = PromptStore.loadBundledDefaults,
-        setDefaultsActive: ((Bool) -> Void)? = nil
+        setDefaultsActive: ((Bool) -> Void)? = nil,
+        readDefaultsStamp: @escaping () -> String? = { nil },
+        writeDefaultsStamp: @escaping (String) -> Void = { _ in }
     ) {
         self.libraryDirectory = libraryDirectory
         self.mirrorFileURL = mirrorFileURL
         self.defaultsActive = useDefaultPrompts
         self.bundledDefaults = defaults
         self.setDefaultsActive = setDefaultsActive
+        self.readDefaultsStamp = readDefaultsStamp
+        self.writeDefaultsStamp = writeDefaultsStamp
         bootstrap()
     }
 
@@ -91,6 +110,7 @@ final class PromptStore {
             }
             prompts = Self.canonicalize(source)
             persist()
+            if defaultsActive { writeDefaultsStamp(Self.stamp(of: prompts)) }
             return
         }
 
@@ -101,10 +121,30 @@ final class PromptStore {
             // customized, the latest bundled defaults are authoritative on
             // every launch (app updates refresh the default library).
             let defaults = Self.canonicalize(bundledDefaults())
-            if defaults != prompts {
+            let stamp = Self.stamp(of: defaults)
+            if defaults == prompts {
+                writeDefaultsStamp(stamp)
+            } else if let applied = readDefaultsStamp(), applied != stamp {
+                // The bundled set itself changed since we last wrote it: this
+                // is an app update shipping a new default library, and it stays
+                // authoritative until the user customizes.
                 prompts = defaults
                 persist()
+                writeDefaultsStamp(stamp)
                 return
+            } else {
+                // Same bundled defaults as last time, different tree on disk —
+                // the user edited the markdown by hand, which never goes
+                // through the UI and so never cleared `useDefaultPrompts`.
+                // Restoring the defaults here destroyed those edits on every
+                // launch; treat the edit as the customization it is.
+                //
+                // Also the no-stamp case (upgrading from a build that never
+                // recorded one): the two situations are indistinguishable
+                // there, and only one of the two possible mistakes loses the
+                // user's work.
+                markCustomized()
+                writeDefaultsStamp(stamp)
             }
         }
         refreshMirrorIfStale()
@@ -131,6 +171,7 @@ final class PromptStore {
         }
         prompts = result.nodes
         knownPaths = result.parsedRelativePaths
+        unparsedFiles = result.skippedRelativePaths
         directorySignature = PromptLibraryFiles.signature(of: libraryDirectory)
     }
 
@@ -401,6 +442,12 @@ final class PromptStore {
     }
 
     private func writeMirrorAndNotify() {
+        guard unparsedFiles.isEmpty else {
+            Self.logger.error(
+                "mirror not published — \(self.unparsedFiles.joined(separator: ", "), privacy: .public) failed to parse; the tree in memory is incomplete and publishing it would delete those cards on other Macs"
+            )
+            return
+        }
         guard let data = try? JSONEncoder.pretty.encode(prompts) else { return }
         if (try? Data(contentsOf: mirrorFileURL)) != data {
             try? data.write(to: mirrorFileURL)
@@ -421,6 +468,7 @@ final class PromptStore {
     }
 
     private func refreshMirrorIfStale() {
+        guard unparsedFiles.isEmpty else { return }
         guard let data = try? JSONEncoder.pretty.encode(prompts) else { return }
         if (try? Data(contentsOf: mirrorFileURL)) != data {
             try? data.write(to: mirrorFileURL)
@@ -431,6 +479,13 @@ final class PromptStore {
     private func markCustomized() {
         defaultsActive = false
         setDefaultsActive?(false)
+    }
+
+    /// Content fingerprint of a canonicalized tree. Only ever compared against
+    /// another stamp, so any stable encoding works.
+    private static func stamp(of nodes: [PromptNode]) -> String {
+        guard let data = try? JSONEncoder.pretty.encode(nodes) else { return "" }
+        return SHA256.hash(data: data).compactMap { String(format: "%02x", $0) }.joined()
     }
 
     // MARK: - Canonical form

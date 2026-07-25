@@ -184,7 +184,8 @@ actor AXSnapshotService {
 
         let field = MagicSnapshot.FieldInfo(
             role: role, subrole: subrole, editable: editable, secure: false,
-            value: value, selection: selection, placeholder: placeholder
+            value: value, selection: selection, placeholder: placeholder,
+            frame: copyFrame(focused, &budget)
         )
 
         // Window title + URL, walking ancestors once. Web content gets a
@@ -977,6 +978,23 @@ actor AXSnapshotService {
     private func copyElementArray(_ element: AXUIElement, _ attribute: String, _ budget: inout Budget) -> [AXUIElement]? {
         guard let raw = copyRaw(element, attribute, &budget) as? [AnyObject] else { return nil }
         return raw.compactMap { CFGetTypeID($0) == AXUIElementGetTypeID() ? ($0 as! AXUIElement) : nil }
+    }
+
+    /// AXPosition + AXSize as one rect. Two calls, spent from the same budget
+    /// as everything else; a field that publishes neither simply has no frame
+    /// and the Inserter falls back to value agreement.
+    private func copyFrame(_ element: AXUIElement, _ budget: inout Budget) -> CGRect? {
+        guard let originRaw = copyRaw(element, kAXPositionAttribute, &budget),
+              CFGetTypeID(originRaw) == AXValueGetTypeID(),
+              let sizeRaw = copyRaw(element, kAXSizeAttribute, &budget),
+              CFGetTypeID(sizeRaw) == AXValueGetTypeID()
+        else { return nil }
+        var origin = CGPoint.zero
+        var size = CGSize.zero
+        guard AXValueGetValue((originRaw as! AXValue), .cgPoint, &origin),
+              AXValueGetValue((sizeRaw as! AXValue), .cgSize, &size)
+        else { return nil }
+        return CGRect(origin: origin, size: size)
     }
 
     private func copyRange(_ element: AXUIElement, _ attribute: String, _ budget: inout Budget) -> CFRange? {

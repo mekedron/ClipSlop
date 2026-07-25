@@ -571,7 +571,21 @@ final class MagicPressCoordinator {
 
         // After a chip round-trip some apps drop the selection on
         // deactivate — re-assert the captured range before pasting over it.
-        reassertSelectionIfLost(press.snapshot)
+        guard reassertSelectionIfLost(press.snapshot) else {
+            // The user selected something else inside the field while chips or
+            // generation were up. The plan addressed the OLD selection, so
+            // pasting would replace text nobody asked about — the same class
+            // of error as focus moving, and handled the same way: clipboard +
+            // toast, field untouched.
+            PasteboardTransaction.writeGenerated(text)
+            press.trace.outcome = "selectionChanged"
+            activePress = press
+            phase = .toast
+            toastState = .panelResult(text: text, reason: .focusMismatch, warnings: [])
+            showToast()
+            scheduleToastDismissIfSettled()
+            return
+        }
 
         let outcome = await inserter.insert(text, against: press.snapshot)
         if let start = pressStart {
@@ -900,10 +914,18 @@ final class MagicPressCoordinator {
         }
     }
 
-    private func reassertSelectionIfLost(_ snapshot: MagicSnapshot) {
+    /// Restores the captured selection when the target dropped it (some apps
+    /// collapse the selection when a panel takes key), and reports whether the
+    /// field is still in the state the press was planned against.
+    ///
+    /// Returns false when a *different* non-empty selection is live: the user
+    /// re-selected during chips or generation, and the plan — written for the
+    /// old selection — would paste over text nobody addressed. Accepting any
+    /// non-empty selection, as this used to, silently did exactly that.
+    private func reassertSelectionIfLost(_ snapshot: MagicSnapshot) -> Bool {
         guard let element = snapshot.focusedElement?.element,
               let range = snapshot.field?.selection?.range
-        else { return }
+        else { return true }
 
         var currentRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(
@@ -911,7 +933,8 @@ final class MagicPressCoordinator {
         ) == .success, let currentRef, CFGetTypeID(currentRef) == AXValueGetTypeID() {
             var current = CFRange()
             if AXValueGetValue((currentRef as! AXValue), .cfRange, &current), current.length > 0 {
-                return  // selection survived; leave it alone
+                // Selection survived — but only ours may be pasted over.
+                return current.location == range.lowerBound && current.length == range.count
             }
         }
 
@@ -919,6 +942,7 @@ final class MagicPressCoordinator {
         if let value = AXValueCreate(.cfRange, &cfRange) {
             AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, value)
         }
+        return true
     }
 
     // MARK: - Dry-run (debug surface, §17)
