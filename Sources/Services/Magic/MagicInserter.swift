@@ -68,13 +68,19 @@ final class MagicInserter {
         // never take the pasteboard back before the target has visibly
         // consumed it (with the fixed grace as the floor for late readers,
         // R3).
+        // Confirmation requires the field to have actually CHANGED, not just
+        // to contain the probe: when the draft already opened with the same
+        // words the model generated, a substring test alone marks a swallowed
+        // or ignored ⌘V as landed — and then reports a paste that never
+        // happened while quietly taking the clipboard back.
         let clock = ContinuousClock()
         let start = clock.now
         var confirmed = false
         let probe = String(text.prefix(64))
         while clock.now - start < .milliseconds(700) {
             try? await Task.sleep(for: .milliseconds(60))
-            if let (value, _) = currentFieldState(snapshot), value.contains(probe) {
+            guard let (value, _) = currentFieldState(snapshot) else { continue }
+            if value != freshValue, value.contains(probe) {
                 confirmed = true
                 break
             }

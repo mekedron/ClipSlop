@@ -38,11 +38,38 @@ final class MagicToastWindow: NSPanel {
 
     @MainActor
     func show(anchoredAt anchor: NSRect) {
-        layoutIfNeeded()
+        resizeToFit()
         guard let visible = CaretLocator.screenFor(anchor: anchor)?.visibleFrame else { return }
         let origin = CaretLocator.panelOrigin(anchor: anchor, panelSize: frame.size, visibleFrame: visible)
         setFrameOrigin(origin)
         orderFrontRegardless()
+    }
+
+    /// Matches the panel to its SwiftUI content (the `ChipPanelWindow` /
+    /// `ProcessingHUDWindow` idiom). Nothing else resized it from the nominal
+    /// 80 pt it is created at, so every taller state — a verifier warning with
+    /// its output scroll view and action row, a focus-mismatch panel, the
+    /// expanded refine row — was clipped, and controls below the first 80
+    /// points could not be clicked at all.
+    ///
+    /// Called on every `show()` (the state transitions) and by the view when
+    /// the refine row grows, which does not go through `show()`.
+    @MainActor
+    func resizeToFit() {
+        layoutIfNeeded()
+        guard let content = contentView else { return }
+        let fitting = content.fittingSize
+        guard fitting.width > 0, fitting.height > 0 else { return }
+        guard abs(fitting.height - content.frame.height) > 0.5
+            || abs(fitting.width - content.frame.width) > 0.5
+        else { return }
+        // Pin the bottom-left so the panel grows upward: it is anchored above
+        // the caret, and growing downward would walk it over the field it
+        // belongs to. Set explicitly rather than relying on which corner
+        // `setContentSize` happens to hold.
+        let corner = NSPoint(x: frame.minX, y: frame.minY)
+        setContentSize(fitting)
+        setFrameOrigin(corner)
     }
 
     override func cancelOperation(_ sender: Any?) {
@@ -189,7 +216,10 @@ struct MagicToastView: View {
             if refineExpanded {
                 VStack(alignment: .leading, spacing: 4) {
                     ChatInputTextView(text: $refineText, verticalInset: 3) { height in
-                        refineHeight = min(max(height, 22), 66)
+                        let clamped = min(max(height, 22), 66)
+                        guard clamped != refineHeight else { return }
+                        refineHeight = clamped
+                        coordinator.resizeToast()
                     }
                     .frame(height: refineHeight)
                     HStack {
@@ -212,6 +242,9 @@ struct MagicToastView: View {
                     // The click that expands the pill also makes the panel
                     // key (becomesKeyOnlyIfNeeded) so typing lands here.
                     coordinator.makeToastKey()
+                    // The expanded row is taller than the pill it replaced and
+                    // no state transition re-runs `show()`.
+                    coordinator.resizeToast()
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: "pencil.line")

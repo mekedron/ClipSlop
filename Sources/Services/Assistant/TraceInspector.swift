@@ -226,6 +226,8 @@ enum TraceInspector {
             meaning = "the user copied the result instead of inserting"
         case "dismissed":
             meaning = "the chip panel or toast was dismissed without acting"
+        case "verifierDismissed":
+            meaning = "the verifier flagged the output and the user declined it — the warning panel was closed without inserting (the counterpart of insertedAnyway; both together are the §10.2 guard-health signal)"
         case "undone":
             meaning = "the user undid the insertion"
         case "unknown":

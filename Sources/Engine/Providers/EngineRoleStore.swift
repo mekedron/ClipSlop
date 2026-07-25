@@ -59,9 +59,11 @@ final class EngineRoleStore {
     }
 
     func reloadIfChanged() {
-        guard let modified = Self.modificationDate(of: Constants.Engine.rolesYamlURL),
-              modified != fileModified
-        else { return }
+        // A missing file is a change too: deleting roles.yaml is how a user
+        // resets model routing, and binding on `let modified = …` meant the
+        // old provider/min-cost/timeout bindings stayed live until restart.
+        let modified = Self.modificationDate(of: Constants.Engine.rolesYamlURL)
+        guard modified != fileModified else { return }
         load()
     }
 
@@ -155,8 +157,16 @@ final class EngineRoleStore {
             fileModified = Self.modificationDate(of: url)
             return
         }
-        bindings = migrateFromLegacyJSON() ?? [:]
+        // No roles.yaml: the legacy migration writes one (and stamps
+        // `fileModified`) when it finds a roles.json to convert.
+        let migrated = migrateFromLegacyJSON()
+        bindings = migrated ?? [:]
         loadWarnings = []
+        if migrated == nil {
+            // Record the absence, or `reloadIfChanged` would see nil != old
+            // date forever and re-run this on every press.
+            fileModified = nil
+        }
     }
 
     /// One-time move from Application Support/roles.json (pre-M3 flat

@@ -42,9 +42,12 @@ final class ProviderStore {
     /// on press (`MagicPressPipeline.plan`) and when Settings opens — the
     /// same reload-on-use model as the other engine stores.
     func reloadIfChanged() {
-        guard let modified = Self.modificationDate(of: Constants.Engine.providersFileURL),
-              modified != fileModified
-        else { return }
+        // A missing file is a change too: binding on `let modified = …` meant
+        // deleting or renaming providers.yaml left the old list live in memory
+        // and Magic kept sending requests through a provider the user had
+        // removed until the next launch.
+        let modified = Self.modificationDate(of: Constants.Engine.providersFileURL)
+        guard modified != fileModified else { return }
         load()
     }
 
@@ -121,8 +124,16 @@ final class ProviderStore {
             }
             return
         }
-        providers = migrateFromLegacyJSON() ?? []
+        // No providers.yaml: fall back to the legacy JSON migration, which
+        // writes the file (and stamps `fileModified`) when it finds one.
+        let migrated = migrateFromLegacyJSON()
+        providers = migrated ?? []
         loadWarnings = []
+        if migrated == nil {
+            // Record the absence, or `reloadIfChanged` would see nil != old
+            // date forever and re-run this on every press.
+            fileModified = nil
+        }
     }
 
     /// One-time move from Application Support/providers.json (pre-M3). The

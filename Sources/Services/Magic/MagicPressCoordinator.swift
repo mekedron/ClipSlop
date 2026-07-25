@@ -91,6 +91,10 @@ final class MagicPressCoordinator {
     @ObservationIgnored private var plannerTask: Task<Void, Never>?
     @ObservationIgnored private var toastDismissTask: Task<Void, Never>?
     @ObservationIgnored private var pressStart: ContinuousClock.Instant?
+    /// An accepted verifier warning is waiting out its focus delay. Neither
+    /// `phase` nor `toastState` changes across that gap, so this is what keeps
+    /// a second ⌘↩ from pasting the flagged output twice.
+    @ObservationIgnored private var insertAnywayInFlight = false
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.magic")
 
     init() {
@@ -536,6 +540,14 @@ final class MagicPressCoordinator {
         if result.verdict.passed {
             await performInsert(result.output)
         } else {
+            // Stamp the default outcome now: `execute` never sets one, so a
+            // warning panel closed with ✕/Escape or left to auto-dismiss used
+            // to submit the trace with PressTrace's `unknown`, losing the
+            // guard-health signal for warnings the user declined (§10.2).
+            // Every other exit — insertAnyway, regenerate, copy — overwrites
+            // it, so this only survives when the user really did walk away.
+            press.trace.outcome = "verifierDismissed"
+            activePress = press
             phase = .toast
             toastState = .panelResult(
                 text: result.output, reason: .verifierFailed, warnings: result.verdict.warnings
@@ -680,6 +692,13 @@ final class MagicPressCoordinator {
     /// run against the original snapshot.
     private func rerun(hint: String?) {
         guard phase == .toast, var press = activePress, let workflow = press.workflow else { return }
+        // Leave `.toast` before the async undo, not after it: two fast clicks
+        // on Regenerate/Refine both passed this guard while the first was
+        // still inside its undo + 150 ms sleep, submitting two traces and
+        // racing two provider requests against one `activePress` — the loser
+        // could still land through `handleResult`. `.generating` also makes
+        // handlePress single-flight and lets Escape cancel the pending run.
+        phase = .generating
         press.trace.outcome = "regenerated"
         submitTrace(press.trace)
 
@@ -720,7 +739,12 @@ final class MagicPressCoordinator {
     /// its rate is a guard-health metric).
     func insertAnyway() {
         guard case .panelResult(let text, .verifierFailed, _) = toastState else { return }
-        guard var press = activePress else { return }
+        // Claim it before the focus delay: `toastState` and `phase` are both
+        // unchanged across the 150 ms sleep below, so a repeated ⌘↩ / Magic
+        // press (or a second hold) used to queue another `performInsert` and
+        // paste the flagged output twice.
+        guard var press = activePress, !insertAnywayInFlight else { return }
+        insertAnywayInFlight = true
         press.trace.outcome = "insertedAnyway"
         activePress = press
         // Yield focus only when we actually hold it (the user clicked into
@@ -733,12 +757,26 @@ final class MagicPressCoordinator {
             // this panel, not the target app.
             try? await Task.sleep(for: .milliseconds(150))
             await self?.performInsert(text)
+            self?.insertAnywayInFlight = false
         }
     }
 
     func makeToastKey() {
         toastWindow?.makeKey()
         cancelToastDismiss()
+    }
+
+    /// The toast's SwiftUI content grows without a state transition when the
+    /// refine row expands or its text view gains lines; `show()` is not called
+    /// on those, so the view asks the panel to re-measure itself.
+    ///
+    /// Deferred by one main-actor hop: callers are inside a button action or a
+    /// height callback, so the state change that makes the content taller has
+    /// not been rendered yet and `fittingSize` would still report the old one.
+    func resizeToast() {
+        Task { @MainActor [weak self] in
+            self?.toastWindow?.resizeToFit()
+        }
     }
 
     func dismissToast(outcome: String?) {

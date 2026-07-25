@@ -108,13 +108,28 @@ enum PromptAssembler {
                 let slot = slots[index]
                 let excess = total - surroundingTokens - cap
                 let target = max(0, slot.tokensEstimated - excess)
-                let (trimmed, didTrim) = trimToTokens(slot.text, tokens: target)
-                let newEstimate = TokenEstimator.estimate(trimmed)
-                total -= (slot.tokensEstimated - newEstimate)
-                slots[index] = AssembledSlot(
-                    id: slotID, text: trimmed, tokensEstimated: newEstimate,
-                    truncated: slot.truncated || didTrim, untrusted: slot.untrusted
-                )
+                let replacement: AssembledSlot
+                if slotID == .pinned {
+                    // Re-budget PINNED structurally rather than trimming the
+                    // assembled string from the tail. Its section order is
+                    // identity → style → constraints → aliases, so a tail
+                    // trim deletes constraints.md first — the one section
+                    // §10.1 says is never trimmed, and the one whose loss can
+                    // let unsafe output through. `pinnedSlot` sheds aliases,
+                    // then style, then identity, and keeps constraints whole
+                    // even when that leaves the slot above `target`: the
+                    // invariant outranks a card's cost budget.
+                    replacement = pinnedSlot(core: core, budget: target)
+                } else {
+                    let (trimmed, didTrim) = trimToTokens(slot.text, tokens: target)
+                    replacement = AssembledSlot(
+                        id: slotID, text: trimmed,
+                        tokensEstimated: TokenEstimator.estimate(trimmed),
+                        truncated: slot.truncated || didTrim, untrusted: slot.untrusted
+                    )
+                }
+                total -= (slot.tokensEstimated - replacement.tokensEstimated)
+                slots[index] = replacement
             }
         }
 
@@ -156,8 +171,14 @@ enum PromptAssembler {
     /// PINNED: identity + style + constraints + aliases. Trim order when over
     /// budget: aliases dropped first, then writing-style from the end, then
     /// identity — constraints are never trimmed (§10.1).
-    private static func pinnedSlot(core: CoreFileSet) -> AssembledSlot {
-        let budget = SlotID.pinned.budgetTokens
+    ///
+    /// `budget` is a parameter so the cross-slot pass in `assemble` can
+    /// re-budget this slot through the same structural order instead of
+    /// tail-trimming the finished string, which would cut constraints first.
+    private static func pinnedSlot(
+        core: CoreFileSet,
+        budget: Int = SlotID.pinned.budgetTokens
+    ) -> AssembledSlot {
         let constraints = section("HARD CONSTRAINTS (always apply)", core.constraintsText)
 
         var identity = section("WHO YOU ARE WRITING AS", core.identity)

@@ -212,7 +212,15 @@ enum FrontmatterParser {
     // MARK: - Inline values
 
     private static func parseInlineValue(_ raw: String, line: Int) throws -> FrontmatterValue {
-        let trimmed = raw.trimmingCharacters(in: .whitespaces)
+        var trimmed = raw.trimmingCharacters(in: .whitespaces)
+        // Comments are advertised for these files, but the closing-bracket
+        // checks below run before `parseScalar` gets its chance to strip one —
+        // so the documented `intents: [reply] # note` used to throw "missing
+        // its closing ']'" and disable the whole card. Scalars keep stripping
+        // their own comments (they must preserve a quoted '#' verbatim).
+        if trimmed.hasPrefix("[") || trimmed.hasPrefix("{") {
+            trimmed = stripFlowComment(trimmed)
+        }
         if trimmed.hasPrefix("[") {
             guard trimmed.hasSuffix("]") else {
                 throw FrontmatterError(line: line, message: "flow list is missing its closing ']'")
@@ -237,6 +245,40 @@ enum FrontmatterParser {
             return .map(map)
         }
         return .scalar(try parseScalar(trimmed, line: line))
+    }
+
+    /// Cuts a trailing ` # comment` off a flow collection. A '#' only starts a
+    /// comment when it follows whitespace and sits outside every quote and
+    /// bracket, so `[a#b]`, `["a # b"]`, and nested `{k: [1, 2]}` are left
+    /// alone. Flow-only: `parseScalar` handles scalars, where a quoted '#'
+    /// must survive.
+    private static func stripFlowComment(_ text: String) -> String {
+        var depth = 0
+        var quote: Character?
+        var previousWasSpace = false
+        var index = text.startIndex
+        while index < text.endIndex {
+            let character = text[index]
+            if let open = quote {
+                if character == open { quote = nil }
+            } else {
+                switch character {
+                case "\"", "'":
+                    quote = character
+                case "[", "{":
+                    depth += 1
+                case "]", "}":
+                    depth -= 1
+                case "#" where depth <= 0 && previousWasSpace:
+                    return String(text[..<index]).trimmingCharacters(in: .whitespaces)
+                default:
+                    break
+                }
+            }
+            previousWasSpace = character == " " || character == "\t"
+            index = text.index(after: index)
+        }
+        return text
     }
 
     /// Splits `key: rest`. The key may contain dots (`field.role`).

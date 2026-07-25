@@ -31,20 +31,41 @@ enum PasteboardTransaction {
     static let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
 
     struct Saved: Sendable {
-        let string: String?
-        let rtf: Data?
-        let html: Data?
+        /// Every representation of every item, keyed by raw type name. The
+        /// whole pasteboard is captured — not just the text types — because
+        /// `restore()` re-declares what it holds: recording only string/RTF/
+        /// HTML would silently destroy an image, file URL, PDF, or color
+        /// clipboard on every Magic paste.
+        let items: [[String: Data]]
         let changeCount: Int
+
+        /// Plain-text view of what was saved, when it had one. The legacy
+        /// inline path compares it against the text it last pasted to decide
+        /// whether a hotkey without a fresh selection is a follow-up prompt.
+        var string: String? {
+            for representations in items {
+                if let data = representations[NSPasteboard.PasteboardType.string.rawValue] {
+                    return String(data: data, encoding: .utf8)
+                }
+            }
+            return nil
+        }
     }
 
     static func save() -> Saved {
         let pasteboard = NSPasteboard.general
-        return Saved(
-            string: pasteboard.string(forType: .string),
-            rtf: pasteboard.data(forType: .rtf),
-            html: pasteboard.data(forType: .html),
-            changeCount: pasteboard.changeCount
-        )
+        let items = (pasteboard.pasteboardItems ?? []).map { item in
+            var representations: [String: Data] = [:]
+            for type in item.types {
+                // Reads promised/lazy data eagerly — the item is gone by the
+                // time we restore, so there is nothing left to promise.
+                if let data = item.data(forType: type) {
+                    representations[type.rawValue] = data
+                }
+            }
+            return representations
+        }
+        return Saved(items: items, changeCount: pasteboard.changeCount)
     }
 
     /// Writes generated text marked transient + concealed. Returns the
@@ -70,11 +91,22 @@ enum PasteboardTransaction {
         guard shouldRestore(currentCount: pasteboard.changeCount, ourWriteCount: expected) else {
             return false
         }
-        pasteboard.declareTypes([.string, .rtf, .html, transientType], owner: nil)
-        if let string = saved.string { pasteboard.setString(string, forType: .string) }
-        if let rtf = saved.rtf { pasteboard.setData(rtf, forType: .rtf) }
-        if let html = saved.html { pasteboard.setData(html, forType: .html) }
-        pasteboard.setString("", forType: transientType)
+        pasteboard.clearContents()
+        // An empty clipboard restores as an empty clipboard: writeObjects
+        // rejects a typeless item, so there is nothing to write.
+        let items: [NSPasteboardItem] = saved.items.compactMap { representations in
+            guard !representations.isEmpty else { return nil }
+            let item = NSPasteboardItem()
+            for (rawType, data) in representations {
+                item.setData(data, forType: NSPasteboard.PasteboardType(rawType))
+            }
+            return item
+        }
+        guard !items.isEmpty else { return true }
+        // Transient marker so clipboard managers skip the restore churn —
+        // one item carries it, same as our own writes.
+        items[0].setString("", forType: transientType)
+        pasteboard.writeObjects(items)
         return true
     }
 

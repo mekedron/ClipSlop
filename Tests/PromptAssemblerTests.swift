@@ -89,6 +89,63 @@ struct PromptAssemblerTests {
         #expect(pinned.text.contains("NEVER-TRIM-MARKER"))
     }
 
+    /// The cross-slot cap used to tail-trim the already-assembled PINNED
+    /// string, and PINNED is ordered identity → style → constraints → aliases
+    /// — so a low `budget.prompt_tokens_total` cut constraints.md off the end
+    /// first, exactly the section §10.1 says is never trimmed. The re-budget
+    /// has to go through the same structural order the slot itself uses.
+    @Test func workflowCapNeverTrimsPinnedConstraints() {
+        let huge = String(repeating: "style rule. ", count: 800)
+        let prompt = assemble(
+            workflow: MagicTestSupport.makeWorkflow(
+                id: "tiny-budget",
+                budget: BudgetSpec(promptTokensTotal: 120, ms: 6000),
+                body: String(repeating: "- body rule.\n", count: 200)
+            ),
+            core: CoreFileSet(
+                identity: "Name: NAME-MARKER",
+                writingStyle: huge,
+                constraintsText: "- NEVER-TRIM-MARKER stays.",
+                aliases: "- ALIAS-MARKER = Somebody",
+                constraints: [],
+                systemPromptOverride: nil
+            )
+        )
+        let pinned = prompt.slots.first { $0.id == .pinned }!
+        #expect(pinned.truncated)
+        #expect(pinned.text.contains("NEVER-TRIM-MARKER"))
+        // Aliases are the first section to go, exactly as in the slot's own
+        // trim order — not whatever happened to sit at the end of the string.
+        #expect(!pinned.text.contains("ALIAS-MARKER"))
+        // And the constraints reach the model, not just the slot.
+        #expect(prompt.userMessage.contains("NEVER-TRIM-MARKER"))
+    }
+
+    /// The floor of the same invariant: squeezed to nothing, PINNED is the
+    /// constraints and only the constraints. A tail trim produced the exact
+    /// opposite — everything *except* the constraints.
+    @Test func constraintsSurviveEvenAZeroPinnedBudget() {
+        let prompt = assemble(
+            workflow: MagicTestSupport.makeWorkflow(
+                id: "no-budget",
+                budget: BudgetSpec(promptTokensTotal: 1, ms: 6000)
+            ),
+            core: CoreFileSet(
+                identity: "Name: NAME-MARKER",
+                writingStyle: String(repeating: "style rule. ", count: 800),
+                constraintsText: "- NEVER-TRIM-MARKER stays.",
+                aliases: "- ALIAS-MARKER = Somebody",
+                constraints: [],
+                systemPromptOverride: nil
+            )
+        )
+        let pinned = prompt.slots.first { $0.id == .pinned }!
+        #expect(pinned.text.contains("NEVER-TRIM-MARKER"))
+        #expect(!pinned.text.contains("style rule."))
+        #expect(!pinned.text.contains("NAME-MARKER"))
+        #expect(!pinned.text.contains("ALIAS-MARKER"))
+    }
+
     @Test func workflowBodyTrimsAntiExamplesBeforeRules() {
         let body = """
         ## Rules

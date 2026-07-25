@@ -75,6 +75,34 @@ struct FrontmatterParserTests {
         #expect(doc.fields["b"] == .scalar("value"))
     }
 
+    /// The `]`/`}` checks used to run before any comment was stripped, so the
+    /// documented style below threw "flow list is missing its closing ']'" and
+    /// disabled the whole card.
+    @Test func flowCollectionsAcceptTrailingComments() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        intents: [reply] # note
+        output: {lang: en, max_chars: 400}   # another note
+        ---
+        """)
+        #expect(doc.fields["intents"] == .list(["reply"]))
+        #expect(doc.fields["output"] == .map([
+            "lang": .scalar("en"), "max_chars": .scalar("400"),
+        ]))
+    }
+
+    /// A '#' only opens a comment outside quotes and brackets.
+    @Test func flowCollectionsKeepHashInsideBracketsAndQuotes() throws {
+        let doc = try FrontmatterParser.parse("""
+        ---
+        tags: [c#, "a # b"]
+        nested: {url: "x#y"} # trailing
+        ---
+        """)
+        #expect(doc.fields["tags"] == .list(["c#", "a # b"]))
+        #expect(doc.fields["nested"] == .map(["url": .scalar("x#y")]))
+    }
+
     @Test func singleQuotedScalarIsVerbatim() throws {
         let doc = try FrontmatterParser.parse("""
         ---
