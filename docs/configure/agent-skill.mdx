@@ -1,0 +1,97 @@
+---
+sidebar_position: 7
+title: Agent Skill
+description: Export ClipSlop's built-in Agent Skill — a portable knowledge package that teaches Claude Code, Codex CLI, and other AI agents to configure, manage, and audit ClipSlop by editing its files under ~/.clipslop.
+---
+
+# Agent Skill
+
+ClipSlop ships with a built-in **Agent Skill** — a portable knowledge
+package in the [Agent Skills](https://agentskills.io) open format
+(`SKILL.md` + `references/`) that teaches any compatible AI agent how
+ClipSlop works and how to manage it safely.
+
+Because ClipSlop is configured entirely by plain files under
+`~/.clipslop/`, an agent with this skill can do real work with nothing but
+file reads and edits:
+
+- **Configure** — tune engine budgets and limits in `config.yaml`, set the
+  `no_cloud` privacy list, bind models to roles in `roles.yaml`.
+- **Manage** — create and edit Magic Button workflow cards, reorganize the
+  prompt library (`workflows/library/`), adjust core memory files
+  (identity, writing style, constraints, aliases).
+- **Audit** — read the contentless press traces and token-spend logs,
+  diagnose routing/verifier/latency problems, and suggest exactly which
+  file and key to change.
+
+The same knowledge drives the in-app [Settings
+Assistant](./settings-assistant.mdx) — its engine briefing is loaded from
+this very skill, so the assistant in the app and an external agent with
+the installed skill always describe the same engine.
+
+## Installing into Claude Code
+
+**Settings → Magic → Install Agent Skill… → Claude Code
+(~/.claude/skills)**.
+
+This copies the skill to `~/.claude/skills/clipslop/`, Claude Code's
+user-scope skills directory — available in every project. Claude Code
+picks it up automatically; ask something like *"make ClipSlop's LinkedIn
+comments shorter"* or *"why did my last Magic press get flagged?"* and it
+will load the skill and work on the files.
+
+If a copy is already installed you're asked before it is replaced (the
+dialog shows the installed and bundled versions).
+
+## Other agents
+
+**Settings → Magic → Install Agent Skill… → Export…** lets you pick any
+folder; the skill is written into it as a `clipslop/` directory.
+
+The package is plain markdown in the Agent Skills format, adopted by many
+agent tools (Codex CLI, Gemini CLI, and others). Point your agent's skill
+mechanism at the exported directory — or simply tell any file-capable
+agent to read `clipslop/SKILL.md` before touching ClipSlop's
+configuration.
+
+What's inside:
+
+```
+clipslop/
+├── SKILL.md                      # the operating manual (~3k tokens)
+└── references/
+    ├── workflow-schema.md        # full workflow-card schema
+    ├── config-keys.md            # every config.yaml key, default, range
+    ├── providers-roles.md        # providers.yaml / roles.yaml schemas
+    ├── traces.md                 # trace & spend field vocabulary
+    └── prompt-library.md         # library layout, slug & uuid rules
+```
+
+## What the skill teaches (and forbids)
+
+The skill teaches agents the same safety rules the app itself enforces:
+
+- validate any YAML edit against the documented schema before writing —
+  broken files are disabled visibly, but a correct edit beats a fix-up;
+- never edit `prompts.json` — it is a derived mirror of the markdown
+  library and gets regenerated;
+- never touch API keys, `api_key_ref`, or the Keychain;
+- never change or duplicate a prompt's `uuid:` (hotkeys and tiles bind to
+  it);
+- nothing an agent configures can ever press Send — the engine only
+  pastes, the human always sends.
+
+## Audit and the debug log — a privacy note
+
+The traces agents read for debugging are **contentless by construction**:
+routing decisions, verifier verdicts, latency, outcomes — never your text
+or screen content.
+
+For deep debugging an agent may suggest enabling the **full-content debug
+log** (`debug_log_enabled: 1` in `config.yaml`, the same switch as the
+checkbox in Settings → Magic). That log records everything about each
+press — your screen content, the exact prompt, the model's raw output —
+one markdown file per press under `~/.clipslop/logs/debug/`, pruned after
+7 days. It exists precisely so you (or an agent you trust) can see what
+the engine saw. Enable it deliberately, and turn it off when the
+investigation is done.

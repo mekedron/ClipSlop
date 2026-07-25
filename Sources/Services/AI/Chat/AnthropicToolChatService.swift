@@ -13,12 +13,21 @@ struct AnthropicToolChatService: ToolChatService {
             throw AIServiceError.missingAPIKey
         }
 
-        let url = URL(string: config.baseURL)!.appendingPathComponent("v1/messages")
+        // See `AnthropicService.buildRequest`: `base_url` is hand-editable, and
+        // an empty one makes `URL(string:)` nil rather than falling back.
+        guard let url = URL(string: config.baseURL)?.appendingPathComponent("v1/messages") else {
+            throw AIServiceError.invalidURL
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue(Constants.Anthropic.apiVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
+        // The chat.assistant role offers a timeout in Settings → Routing like
+        // every other role, and EngineRoleStore stamps it here — only the three
+        // streaming services were reading it, so the picker did nothing for the
+        // tool-chat path it is displayed for.
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
 
         let body: JSONValue = .object([
             "model": .string(config.modelID),

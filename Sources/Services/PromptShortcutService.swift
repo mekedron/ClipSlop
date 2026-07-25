@@ -87,25 +87,33 @@ final class PromptShortcutService {
         isSyncing = true
         defer { isSyncing = false }
 
-        for prompt in appState.promptStore.allPromptNodes() {
-            let qpName = Self.quickPasteName(for: prompt.id)
-            let orName = Self.openRunName(for: prompt.id)
-
-            if let config = prompt.quickPasteShortcut {
-                KeyboardShortcuts.setShortcut(
-                    .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
-                    for: qpName
-                )
-            }
-            if let config = prompt.openRunShortcut {
-                KeyboardShortcuts.setShortcut(
-                    .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
-                    for: orName
-                )
-            }
-        }
-        // Also migrate any existing UserDefaults shortcuts into the model
+        // Migration runs FIRST, before the push below: it adopts a stored
+        // shortcut the model does not know about yet, and the push now treats
+        // a nil model value as "no shortcut" and clears the stored one — which
+        // would otherwise eat the very value migration exists to rescue. It is
+        // a one-shot, though; see `migrateFromUserDefaults`.
         migrateFromUserDefaults()
+
+        for prompt in appState.promptStore.allPromptNodes() {
+            // The model is authoritative in BOTH directions. Only ever setting
+            // meant a shortcut deleted by hand from a card's frontmatter kept
+            // firing forever: this loop skipped it, `registerHandlers`
+            // registers a handler per prompt UUID whether or not a shortcut
+            // exists, and `cleanupOrphaned` only drops unknown UUIDs.
+            Self.store(prompt.quickPasteShortcut, for: Self.quickPasteName(for: prompt.id))
+            Self.store(prompt.openRunShortcut, for: Self.openRunName(for: prompt.id))
+        }
+    }
+
+    private static func store(_ config: ShortcutConfig?, for name: KeyboardShortcuts.Name) {
+        guard let config else {
+            KeyboardShortcuts.setShortcut(nil, for: name)
+            return
+        }
+        KeyboardShortcuts.setShortcut(
+            .init(carbonKeyCode: config.carbonKeyCode, carbonModifiers: config.carbonModifiers),
+            for: name
+        )
     }
 
     /// Pull current shortcut from KeyboardShortcuts back into the PromptNode model and save.
@@ -229,9 +237,28 @@ final class PromptShortcutService {
         }
     }
 
-    /// Migrate shortcuts that exist in UserDefaults but not yet in the model (upgrade path).
+    /// Marks the one-time adoption of legacy KeyboardShortcuts/selectAll values
+    /// into the card model as done. Stored in `UserDefaults.standard` beside
+    /// the very keys it drains, and deliberately outside the
+    /// `KeyboardShortcuts_prompt_` / `prompt_selectAll_` prefixes that
+    /// `cleanupOrphaned` sweeps by UUID suffix.
+    private static let legacyMigrationDoneKey = "promptShortcutsMigratedIntoLibrary"
+
+    /// Migrate shortcuts that exist in UserDefaults but not yet in the model
+    /// (upgrade path). Runs exactly **once** per install.
+    ///
+    /// Once per install, not once per `syncFromModel`, because re-running it
+    /// cancels the other half of the model-is-authoritative contract: deleting
+    /// `shortcut_inline` from a card leaves the old value in KeyboardShortcuts'
+    /// UserDefaults, adoption pulls it straight back into the model, and the
+    /// push loop then has a shortcut to *store* rather than a nil to clear — so
+    /// the deleted shortcut keeps firing and gets stamped back into the card on
+    /// the next save. With the marker set, a nil model value clears the stored
+    /// shortcut normally and the hand edit stands.
     private func migrateFromUserDefaults() {
         guard let appState else { return }
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.legacyMigrationDoneKey) else { return }
         var didMigrate = false
 
         for prompt in appState.promptStore.allPromptNodes() {
@@ -250,9 +277,9 @@ final class PromptShortcutService {
             }
             // Migrate selectAll from UserDefaults to model
             let udKey = "prompt_selectAll_\(node.id.uuidString)"
-            if node.selectAllBeforeCapture == nil && UserDefaults.standard.bool(forKey: udKey) {
+            if node.selectAllBeforeCapture == nil && defaults.bool(forKey: udKey) {
                 node.selectAllBeforeCapture = true
-                UserDefaults.standard.removeObject(forKey: udKey)
+                defaults.removeObject(forKey: udKey)
                 changed = true
             }
 
@@ -264,6 +291,15 @@ final class PromptShortcutService {
 
         if didMigrate {
             appState.promptStore.save()
+        }
+
+        // Only claim completion over a tree we could see all of. A card that
+        // failed to parse is absent from `allPromptNodes()`, so its stored
+        // shortcut was never offered for adoption — marking done here would let
+        // the push clear it the moment the user fixes the typo. Leaving the
+        // marker unset re-runs the (idempotent) migration next launch instead.
+        if appState.promptStore.unparsedFiles.isEmpty {
+            defaults.set(true, forKey: Self.legacyMigrationDoneKey)
         }
     }
 
@@ -356,51 +392,56 @@ final class PromptShortcutService {
         isProcessingInline = true
         let shouldSelectAll = selectAllOverride ?? (prompt.selectAllBeforeCapture == true)
 
-        // Save original clipboard
-        let originalClipboard = ClipboardService.getText()
-
         // Optionally simulate Cmd+A first to select all text
         if shouldSelectAll {
-            let source = CGEventSource(stateID: .combinedSessionState)
-            let aDown = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: true)
-            let aUp = CGEvent(keyboardEventSource: source, virtualKey: 0x00, keyDown: false)
-            aDown?.flags = .maskCommand
-            aUp?.flags = .maskCommand
-            aDown?.post(tap: .cghidEventTap)
-            aUp?.post(tap: .cghidEventTap)
+            SyntheticKeystroke.post(SyntheticKeystroke.keyA)
         }
 
         inlineTask = Task { [weak self] in
             guard let self else { return }
 
+            // Save the original clipboard (string + rich representations).
+            //
+            // Inside the task rather than before it, because the capture now
+            // runs off the main thread and this method is synchronous. Ordering
+            // is unaffected: what must not precede the save is the ⌘C below,
+            // which is the only thing here that writes the pasteboard — the ⌘A
+            // above changes the selection and nothing else.
+            let saved = await PasteboardTransaction.save()
+
             if shouldSelectAll {
                 try? await Task.sleep(for: .milliseconds(100))
             }
 
-            // Simulate Cmd+C to capture selection
-            let source = CGEventSource(stateID: .combinedSessionState)
-            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: true)
-            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x08, keyDown: false)
-            keyDown?.flags = .maskCommand
-            keyUp?.flags = .maskCommand
-            keyDown?.post(tap: .cghidEventTap)
-            keyUp?.post(tap: .cghidEventTap)
+            // ⌘C with changeCount polling — resolves in 40–80 ms on
+            // cooperative apps instead of the old fixed 200 ms sleep, and an
+            // unchanged count is a real "nothing selected" signal (the old
+            // string comparison misread re-copying identical text as
+            // failure).
+            let capturedText = await PasteboardTransaction.captureViaCommandC()
 
-            // Wait for clipboard update
-            try? await Task.sleep(for: .milliseconds(200))
+            // Restore the user's clipboard before the AI round-trip — and
+            // before every early exit below, cancelled or empty-handed.
+            //
+            // The signal is the pasteboard's own `changeCount`, not whether a
+            // plain string came back: an app that answers ⌘C with an image, a
+            // file URL, or a rich-only item has already replaced what the user
+            // was carrying, and `captureViaCommandC` returns nil for all three.
+            // Gating restoration on a decoded string therefore walked away
+            // leaving the probe's spoils on the clipboard permanently — the
+            // Accessibility fallback would then even succeed, so the run looked
+            // perfectly healthy while the user's clipboard was gone.
+            let countAfterProbe = NSPasteboard.general.changeCount
+            if countAfterProbe != saved.changeCount {
+                PasteboardTransaction.restore(saved, ifChangeCountStill: countAfterProbe)
+            }
+
             guard !Task.isCancelled else {
                 self.finishInlineProcessing()
                 return
             }
 
-            let capturedText = ClipboardService.getText()
-
-            // Restore original clipboard
-            if let original = originalClipboard {
-                ClipboardService.setText(original)
-            }
-
-            guard let text = capturedText, !text.isEmpty, text != originalClipboard else {
+            guard let text = capturedText, !text.isEmpty else {
                 if let accessibilityText = TextCaptureService.captureSelectedText(), !accessibilityText.isEmpty {
                     // Accessibility API found a selection — use it.
                     await self.processAndPaste(
@@ -411,7 +452,7 @@ final class PromptShortcutService {
                         displayMode: prompt.displayMode
                     )
                 } else if let lastPaste = self.lastPaste,
-                          originalClipboard == lastPaste.text,
+                          saved.string == lastPaste.text,
                           Date().timeIntervalSince(lastPaste.date) < Self.followUpWindow {
                     // No new selection was made and the clipboard still holds the result
                     // we pasted moments ago — treat this as a follow-up prompt on that
@@ -491,6 +532,10 @@ final class PromptShortcutService {
             case .plainText:
                 ClipboardService.setText(paddedResult)
             }
+            // Generated drafts are marked transient+concealed so well-behaved
+            // clipboard managers skip them (§3.5). The result itself stays on
+            // the clipboard — the 30 s follow-up re-paste depends on it.
+            PasteboardTransaction.markCurrentItemGenerated()
 
             dismissHUD()
 

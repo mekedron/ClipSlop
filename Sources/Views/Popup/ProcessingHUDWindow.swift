@@ -81,6 +81,22 @@ final class ErrorHUDWindow: NSPanel {
         orderFrontRegardless()
     }
 
+    /// Anchored like the chip panel and the toast: above the focused field
+    /// (below only when there is no room above), so a Magic press error
+    /// appears where the user is already looking. Never takes key — it is
+    /// informational.
+    @MainActor
+    func show(anchoredAt anchor: NSRect) {
+        guard anchor != .zero,
+              let visible = CaretLocator.screenFor(anchor: anchor)?.visibleFrame else {
+            showAtCenter()
+            return
+        }
+        let origin = CaretLocator.panelOrigin(anchor: anchor, panelSize: frame.size, visibleFrame: visible)
+        setFrameOrigin(origin)
+        orderFrontRegardless()
+    }
+
     override func cancelOperation(_ sender: Any?) {
         onDismiss()
     }

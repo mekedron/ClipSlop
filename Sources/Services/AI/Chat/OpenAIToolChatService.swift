@@ -27,6 +27,9 @@ struct OpenAIToolChatService: ToolChatService {
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            // See AnthropicToolChatService: the chat.assistant role's timeout
+            // is read by the streaming services too.
+            if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
             if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
                 request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             }

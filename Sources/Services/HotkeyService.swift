@@ -10,7 +10,11 @@ final class HotkeyService {
         .triggerScreenCapture,
         .triggerOCRToClipboard,
         .triggerQuickAccess,
-        .togglePromptAssistant,
+        .toggleSettingsAssistant,
+        .triggerMagic,
+        .triggerMagicChips,
+        .dismissMagicOverlay,
+        .confirmMagicInsert,
     ]
 
     private let shortcutDidChangeNotification = Notification.Name("KeyboardShortcuts_shortcutByNameDidChange")
@@ -24,6 +28,10 @@ final class HotkeyService {
     var onTriggerOCRToClipboard: (() -> Void)?
     var onTriggerQuickAccess: (() -> Void)?
     var onTriggerPromptAssistant: (() -> Void)?
+    var onTriggerMagic: (() -> Void)?
+    var onTriggerMagicChips: (() -> Void)?
+    var onDismissMagicOverlay: (() -> Void)?
+    var onConfirmMagicInsert: (() -> Void)?
 
     func register() {
         registerHandlers()
@@ -56,9 +64,30 @@ final class HotkeyService {
         KeyboardShortcuts.onKeyUp(for: .triggerQuickAccess) { [weak self] in
             self?.onTriggerQuickAccess?()
         }
-        KeyboardShortcuts.onKeyUp(for: .togglePromptAssistant) { [weak self] in
+        KeyboardShortcuts.onKeyUp(for: .toggleSettingsAssistant) { [weak self] in
             self?.onTriggerPromptAssistant?()
         }
+        KeyboardShortcuts.onKeyUp(for: .triggerMagic) { [weak self] in
+            self?.onTriggerMagic?()
+        }
+        KeyboardShortcuts.onKeyUp(for: .triggerMagicChips) { [weak self] in
+            self?.onTriggerMagicChips?()
+        }
+        KeyboardShortcuts.onKeyDown(for: .dismissMagicOverlay) { [weak self] in
+            self?.onDismissMagicOverlay?()
+        }
+        // On key UP: the synthetic ⌘V that follows must not race the user's
+        // still-held Return.
+        KeyboardShortcuts.onKeyUp(for: .confirmMagicInsert) { [weak self] in
+            self?.onConfirmMagicInsert?()
+        }
+        // Registering a handler arms the hotkey, and neither bare Escape nor
+        // ⌘↩ may be armed while no Magic overlay is up — the coordinator
+        // enables each around its overlay's lifetime. (If handlers are
+        // re-registered while an overlay happens to be visible, that overlay
+        // loses its key — rare enough to accept.)
+        KeyboardShortcuts.disable(.dismissMagicOverlay)
+        KeyboardShortcuts.disable(.confirmMagicInsert)
 
         isRegistered = true
     }

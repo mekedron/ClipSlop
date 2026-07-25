@@ -1,0 +1,284 @@
+import Foundation
+import Testing
+@testable import ClipSlop
+
+@Suite("providers.yaml codec")
+struct ProvidersFileTests {
+    @Test func roundTripPreservesEveryField() {
+        let providers = [
+            AIProviderConfig(
+                name: "Anthropic \"Main\"", providerType: .anthropic,
+                modelID: "claude-sonnet-5", isDefault: true,
+                maxTokens: 2_048, temperature: 0.3
+            ),
+            AIProviderConfig(
+                name: "Local Llama", providerType: .ollama,
+                modelID: "llama3.2", reasoningEffort: .high,
+                locality: .local, costClass: .local
+            ),
+            AIProviderConfig(name: "ChatGPT", providerType: .openAIChatGPT),
+        ]
+        let result = ProvidersFile.parse(ProvidersFile.serialize(providers))
+        #expect(result.warnings.isEmpty, "warnings: \(result.warnings)")
+        #expect(result.providers == providers)
+    }
+
+    @Test func emptyListRoundTrips() {
+        let result = ProvidersFile.parse(ProvidersFile.serialize([]))
+        #expect(result.providers.isEmpty)
+        #expect(result.warnings.isEmpty)
+    }
+
+    /// A name carrying a newline or a tab survives being written back.
+    ///
+    /// `FrontmatterParser.parseScalar` decodes `\n` and `\t` inside double
+    /// quotes, so a hand-edited `name: "Work\nLlama"` puts a real newline into
+    /// the model — and the serializer has to put the escape back. Written raw,
+    /// the quoted scalar spans two physical lines, the parser (which reads line
+    /// by line) refuses the WHOLE file as an unterminated string, and the app
+    /// loses every provider to a file it wrote itself. The assertion that
+    /// matters is `warnings.isEmpty`: a failure here is total, not partial.
+    @Test func namesWithNewlinesAndTabsSurviveTheRoundTrip() {
+        let providers = [
+            AIProviderConfig(
+                name: "Work\nLlama", providerType: .ollama, modelID: "llama3.2"
+            ),
+            AIProviderConfig(
+                name: "Tabbed\tName", providerType: .anthropic,
+                modelID: "claude\\sonnet \"5\""
+            ),
+        ]
+        let result = ProvidersFile.parse(ProvidersFile.serialize(providers))
+        #expect(result.warnings.isEmpty, "warnings: \(result.warnings)")
+        #expect(result.providers == providers)
+    }
+
+    @Test func brokenRecordIsSkippedWithWarningOthersSurvive() {
+        let good = AIProviderConfig(name: "Good", providerType: .anthropic, isDefault: true)
+        let text = """
+        ---
+        providers:
+          - id: not-a-uuid
+            name: "Broken"
+            type: anthropic
+          - id: \(good.id.uuidString)
+            name: "Good"
+            type: anthropic
+            max_tokens: \(good.maxTokens)
+            temperature: \(good.temperature)
+            default: 1
+        ---
+        """
+        let result = ProvidersFile.parse(text)
+        #expect(result.providers.count == 1)
+        #expect(result.providers.first?.name == "Good")
+        #expect(result.warnings.count == 1)
+        #expect(result.warnings[0].contains("id"))
+    }
+
+    @Test func unknownTypeAndKeysWarn() {
+        let id = UUID().uuidString
+        let result = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(id)
+            type: skynet
+          - id: \(UUID().uuidString)
+            type: anthropic
+            favourite_color: blue
+        ---
+        """)
+        #expect(result.providers.count == 1)
+        #expect(result.warnings.contains { $0.contains("skynet") })
+        #expect(result.warnings.contains { $0.contains("favourite_color") })
+    }
+
+    /// `max_tokens: -1` / `: 0` used to be copied straight into the config and
+    /// put on the wire, so every generation failed at the API — from a file the
+    /// app advertises as validated and hot-reloaded.
+    @Test func nonPositiveMaxTokensIsRejectedAndTheDefaultKept() {
+        for bad in ["-1", "0", "nine", "99999999"] {
+            let result = ProvidersFile.parse("""
+            ---
+            providers:
+              - id: \(UUID().uuidString)
+                type: anthropic
+                max_tokens: \(bad)
+            ---
+            """)
+            #expect(result.providers.count == 1)
+            #expect(result.providers[0].maxTokens == Constants.Defaults.maxTokens)
+            #expect(result.warnings.contains { $0.contains("max_tokens") }, "no warning for '\(bad)'")
+        }
+
+        let ok = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: anthropic
+            max_tokens: 8192
+        ---
+        """)
+        #expect(ok.providers[0].maxTokens == 8192)
+        #expect(ok.warnings.isEmpty)
+    }
+
+    /// An empty `base_url:` used to reach `URL(string:)!` in the two Anthropic
+    /// request builders and trap the process — `URL(string: "")` is nil, and an
+    /// empty *scalar* is not an absent key, so `AIProviderConfig`'s fall back to
+    /// the type's default endpoint never engaged. A hand-editable file must not
+    /// be able to crash the app from a typo.
+    @Test func unusableBaseURLIsRejectedAndTheTypeDefaultKept() {
+        // `""` is the crashing spelling — a *quoted* empty scalar reaches the
+        // config as "" rather than as an absent key. (A bare `base_url:` with
+        // nothing after it never got that far: the frontmatter parser refuses
+        // the whole record, which the case below pins.) The rest have no scheme
+        // or no host, so `appendingPathComponent` would build a nonsense request
+        // and `effectiveLocality` could not see a host to call local.
+        for bad in ["\"\"", "\"   \"", "api.anthropic.com", "localhost:11434", "ftp://example.com"] {
+            let result = ProvidersFile.parse("""
+            ---
+            providers:
+              - id: \(UUID().uuidString)
+                type: anthropic
+                base_url: \(bad)
+            ---
+            """)
+            guard result.providers.count == 1 else {
+                Issue.record("record dropped for '\(bad)': \(result.warnings)")
+                continue
+            }
+            #expect(
+                result.providers[0].baseURL == AIProviderType.anthropic.defaultBaseURL,
+                "kept unusable base_url '\(bad)'"
+            )
+            #expect(result.warnings.contains { $0.contains("base_url") }, "no warning for '\(bad)'")
+            // The guarantee the crash depended on: whatever survives parsing is
+            // something the request builders can actually turn into a URL.
+            #expect(URL(string: result.providers[0].baseURL) != nil)
+        }
+
+        // The one spelling that fails earlier and harder: no value at all is a
+        // structural error, so the record is skipped rather than defaulted.
+        let bare = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: anthropic
+            base_url:
+        ---
+        """)
+        #expect(bare.providers.isEmpty)
+        #expect(bare.warnings.contains { $0.contains("base_url") })
+
+        let ok = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: ollama
+            base_url: "http://localhost:11434"
+        ---
+        """)
+        #expect(ok.providers[0].baseURL == "http://localhost:11434")
+        #expect(ok.warnings.isEmpty, "warnings: \(ok.warnings)")
+        // And it still reads as this machine, so the P7 privacy binding can
+        // serve a no_cloud surface from it.
+        #expect(ok.providers[0].effectiveLocality == .local)
+    }
+
+    /// The legacy providers.json is the only copy of this configuration until
+    /// providers.yaml is verifiably on disk; an atomic write reports success
+    /// from the rename, not from the bytes.
+    @Test func providerMigrationVerificationCatchesALostWrite() {
+        let configs = [
+            AIProviderConfig(name: "A", providerType: .anthropic, isDefault: true),
+            AIProviderConfig(name: "B", providerType: .ollama),
+        ]
+        #expect(ProviderStore.migrationRoundTrips(ProvidersFile.serialize(configs), expected: configs))
+        #expect(!ProviderStore.migrationRoundTrips("", expected: configs))
+        #expect(!ProviderStore.migrationRoundTrips(ProvidersFile.serialize([configs[0]]), expected: configs))
+    }
+
+    @Test func secondDefaultIsDemotedWithWarning() {
+        var a = AIProviderConfig(name: "A", providerType: .anthropic, isDefault: true)
+        var b = AIProviderConfig(name: "B", providerType: .openAI, isDefault: true)
+        let result = ProvidersFile.parse(ProvidersFile.serialize([a, b]))
+        #expect(result.warnings.count == 1)
+        #expect(result.providers.filter(\.isDefault).count == 1)
+        a.isDefault = true
+        b.isDefault = false
+        #expect(result.providers == [a, b])
+    }
+
+    @Test func localityAndCostClassDerivation() {
+        #expect(AIProviderConfig(name: "o", providerType: .ollama).effectiveLocality == .local)
+        #expect(AIProviderConfig(name: "a", providerType: .anthropic).effectiveLocality == .cloud)
+        // CLI tools run locally but call cloud APIs — data-path locality.
+        #expect(AIProviderConfig(name: "c", providerType: .cliTool).effectiveLocality == .cloud)
+        #expect(AIProviderConfig(
+            name: "x", providerType: .openAICompatible, baseURL: "http://localhost:8080/v1"
+        ).effectiveLocality == .local)
+
+        #expect(AIProviderConfig(name: "a", providerType: .anthropic).effectiveCostClass == .premium)
+        #expect(AIProviderConfig(name: "o", providerType: .ollama).effectiveCostClass == .local)
+        // Explicit override beats derivation.
+        #expect(AIProviderConfig(
+            name: "a", providerType: .anthropic, locality: .local
+        ).effectiveLocality == .local)
+    }
+}
+
+@Suite("roles.yaml codec")
+struct RolesFileTests {
+    @Test func roundTripPreservesBindings() {
+        let bindings: [EngineRole: RoleBinding] = [
+            .generationMagic: RoleBinding(
+                provider: UUID(), fallbacks: [UUID(), UUID()],
+                timeoutSeconds: 60, minCostClass: .premium
+            ),
+            .chatAssistant: RoleBinding(provider: UUID()),
+        ]
+        let result = RolesFile.parse(RolesFile.serialize(bindings))
+        #expect(result.warnings.isEmpty, "warnings: \(result.warnings)")
+        #expect(result.bindings == bindings)
+    }
+
+    @Test func emptyBindingsRoundTrip() {
+        let result = RolesFile.parse(RolesFile.serialize([:]))
+        #expect(result.bindings.isEmpty)
+        #expect(result.warnings.isEmpty)
+    }
+
+    /// Same contract as the provider migration: roles.json only retires once
+    /// roles.yaml reads back with every binding intact.
+    @Test func roleMigrationVerificationCatchesALostWrite() {
+        let bindings: [EngineRole: RoleBinding] = [
+            .generationMagic: RoleBinding(provider: UUID()),
+            .chatAssistant: RoleBinding(provider: UUID()),
+        ]
+        #expect(EngineRoleStore.migrationRoundTrips(RolesFile.serialize(bindings), expected: bindings))
+        #expect(!EngineRoleStore.migrationRoundTrips("", expected: bindings))
+        #expect(!EngineRoleStore.migrationRoundTrips(RolesFile.serialize([:]), expected: bindings))
+    }
+
+    @Test func unknownRoleSkippedBadValuesIgnoredWithWarnings() {
+        let id = UUID().uuidString
+        let result = RolesFile.parse("""
+        ---
+        roles:
+          - role: time.travel
+            provider: \(id)
+          - role: generation.magic
+            provider: \(id)
+            timeout_seconds: 9000
+            min_cost_class: platinum
+        ---
+        """)
+        #expect(result.bindings.count == 1)
+        let binding = result.bindings[.generationMagic]
+        #expect(binding?.provider?.uuidString == id)
+        #expect(binding?.timeoutSeconds == nil)
+        #expect(binding?.minCostClass == nil)
+        #expect(result.warnings.count == 3)
+    }
+}

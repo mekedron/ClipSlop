@@ -28,7 +28,7 @@ Open **Settings → Keyboard** and click any row to rebind. Defaults:
 
 Press the new combination to record it; press <kbd>Esc</kbd> to clear the binding entirely.
 
-The [Prompt Assistant](./prompt-assistant.mdx) has its own global shortcut — <kbd>⌃⌘⌥P</kbd> by default — rebindable in **Settings → General → Keyboard Shortcuts**.
+The [Settings Assistant](./settings-assistant.mdx) has its own global shortcut — <kbd>⌃⌘⌥P</kbd> by default — rebindable in **Settings → General → Keyboard Shortcuts**.
 
 ## Per-prompt shortcuts
 

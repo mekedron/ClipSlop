@@ -7,6 +7,10 @@ import Foundation
 /// than surfaced — see that type for why one endpoint needs several dialects.
 struct OpenAICompatibleService: AIService {
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
+        try await processWithUsage(text: text, systemPrompt: systemPrompt, config: config).text
+    }
+
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
         var shape = await OpenAIShapeMemo.shared.shape(for: config)
         var reshapes = 0
 
@@ -32,10 +36,28 @@ struct OpenAICompatibleService: AIService {
             await OpenAIShapeMemo.shared.remember(shape, for: config)
 
             let decoded = try JSONDecoder().decode(OpenAIResponse.self, from: data)
-            guard let text = decoded.choices.first?.message.content, !text.isEmpty else {
+            guard let choice = decoded.choices.first else {
                 throw AIServiceError.emptyResponse
             }
-            return text
+            guard let text = choice.message.content, !text.isEmpty else {
+                // A reasoning model spends the same budget on thinking and on
+                // answering, so a cap sized for the answer alone runs out
+                // before the answer starts and returns a well-formed response
+                // with nothing in it. Naming the cap is the difference between
+                // a setting the user can raise and an inexplicable blank.
+                if choice.finishReason == "length" {
+                    throw AIServiceError.generationStopped(
+                        reason: "the \(config.maxTokens)-token limit ran out before any text was produced"
+                            + " — raise Max Tokens for this provider"
+                    )
+                }
+                throw AIServiceError.emptyResponse
+            }
+            return AIGenerationResult(
+                text: text,
+                inputTokens: decoded.usage?.promptTokens,
+                outputTokens: decoded.usage?.completionTokens
+            )
         }
     }
 
@@ -51,10 +73,10 @@ struct OpenAICompatibleService: AIService {
                         // while the same request unstreamed is allowed. The
                         // whole answer arriving at once is a worse experience
                         // than a refusal only in theory.
-                        let whole = try await process(
+                        let result = try await processWithUsage(
                             text: text, systemPrompt: systemPrompt, config: config
                         )
-                        continuation.yield(whole)
+                        continuation.yield(result.text)
                         continuation.finish()
                         return
                     }
@@ -145,6 +167,7 @@ struct OpenAICompatibleService: AIService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
@@ -176,13 +199,30 @@ struct OpenAICompatibleService: AIService {
 
 private struct OpenAIResponse: Decodable {
     let choices: [Choice]
+    let usage: Usage?
 
     struct Choice: Decodable {
         let message: Message
+        let finishReason: String?
+
+        enum CodingKeys: String, CodingKey {
+            case message
+            case finishReason = "finish_reason"
+        }
     }
 
     struct Message: Decodable {
         let content: String?
+    }
+
+    struct Usage: Decodable {
+        let promptTokens: Int?
+        let completionTokens: Int?
+
+        enum CodingKeys: String, CodingKey {
+            case promptTokens = "prompt_tokens"
+            case completionTokens = "completion_tokens"
+        }
     }
 }
 

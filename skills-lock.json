@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "liquid-glass": {
+      "source": "casper-studios/casper-marketplace",
+      "sourceType": "github",
+      "computedHash": "7fa2a67e9ec725e0efbcc8e1e1dc2d094e960ff50d7b2aed853c97b1c3248fe1"
+    }
+  }
+}

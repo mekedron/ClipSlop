@@ -206,6 +206,16 @@ final class AppSettings {
         didSet { UserDefaults.standard.set(useDefaultPrompts, forKey: "useDefaultPrompts") }
     }
 
+    /// Fingerprint of the bundled default prompt set that was last written to
+    /// the library tree. `PromptStore` needs it to tell an app update shipping
+    /// new defaults (refresh the tree) apart from a hand edit of the markdown
+    /// (keep it) — both look like "disk differs from the bundled defaults".
+    var promptLibraryDefaultsStamp: String? {
+        didSet {
+            UserDefaults.standard.set(promptLibraryDefaultsStamp, forKey: "promptLibraryDefaultsStamp")
+        }
+    }
+
     var useDefaultQuickAccess: Bool {
         didSet { UserDefaults.standard.set(useDefaultQuickAccess, forKey: "useDefaultQuickAccess") }
     }
@@ -227,6 +237,11 @@ final class AppSettings {
     var promptLibraryCollapsed: Bool {
         didSet { UserDefaults.standard.set(promptLibraryCollapsed, forKey: "promptLibraryCollapsed") }
     }
+
+    // Magic Button debug logging moved to `debug_log_enabled` in
+    // ~/.clipslop/config.yaml (files-first, reachable by external agents);
+    // `MagicPressCoordinator.init` migrates the old "magicDebugLogging"
+    // UserDefaults key once.
 
     /// System prompt template for the ⌘K one-off instruction bar. The typed
     /// instruction replaces `{instruction}`, or is appended when the
@@ -292,13 +307,14 @@ final class AppSettings {
         customConversionPrompt = defaults.string(forKey: "customConversionPrompt") ?? AppSettings.defaultConversionPrompt
         suppressPermissionAlert = defaults.bool(forKey: "suppressPermissionAlert")
         useDefaultPrompts = defaults.object(forKey: "useDefaultPrompts") as? Bool ?? true
+        promptLibraryDefaultsStamp = defaults.string(forKey: "promptLibraryDefaultsStamp")
         useDefaultQuickAccess = defaults.object(forKey: "useDefaultQuickAccess") as? Bool ?? true
         spotlightIndexingEnabled = defaults.object(forKey: "spotlightIndexingEnabled") as? Bool ?? true
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
         adHocSystemPrompt = defaults.string(forKey: "adHocSystemPrompt") ?? AppSettings.defaultAdHocSystemPrompt
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
-        // iCloud-synced, exportable). It used to live here in UserDefaults
-        // and the store performs a one-shot migration on first launch.
+        // iCloud-synced, exportable), not here — the store migrates the legacy
+        // UserDefaults copy on first launch.
     }
 }
 

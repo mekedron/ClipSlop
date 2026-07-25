@@ -1,43 +1,219 @@
+import CryptoKit
 import Foundation
+import os
 
+/// The prompt library, §7.3-unified: canonical storage is the markdown card
+/// tree under `~/.clipslop/workflows/library/` (folders = subdirectories,
+/// prompts = workflow cards, parsed by the same `FrontmatterParser` /
+/// `WorkflowCardParser` the engine uses). This store is the facade that maps
+/// that subtree onto the `PromptNode` tree API every consumer already speaks:
+/// the popup UI, Quick Access tiles, App Intents/Spotlight, per-prompt
+/// hotkeys (`prompt_quickPaste_<uuid>`), and the assistant's library tools.
+///
+/// `prompts.json` lives on as a **derived mirror**, regenerated after every
+/// mutation: the existing `CloudSyncService` uploads it unchanged, and the
+/// App Intents cold-launch path keeps reading it. It is never edited
+/// independently — inbound remote data is decoded and written back into the
+/// markdown tree (`replaceFromSync`).
 @MainActor
 @Observable
 final class PromptStore {
     private(set) var prompts: [PromptNode] = []
 
-    /// Called after every local save with the encoded JSON data.
-    /// CloudSyncService hooks into this to upload changes.
+    /// Called after every local save with the encoded mirror JSON.
+    /// CloudSyncService hooks into this to upload changes. Fires only when
+    /// the mirror is publishable and the change is local — see
+    /// `writeMirrorAndNotify`.
     var onPromptsChanged: ((_ data: Data) -> Void)?
+
+    /// Called after every change to the in-memory tree, whatever the mirror
+    /// and the sync direction are doing. This is what per-prompt hotkey
+    /// registration hangs off: it reads `prompts`, so it must not inherit the
+    /// conditions that govern publishing `prompts.json`.
+    var onLibraryChanged: (() -> Void)?
 
     /// True while applying a remote sync — suppresses onPromptsChanged to prevent echo loops.
     private var isSyncing = false
 
-    init() {
-        let settings = AppSettings.shared
-        if settings.useDefaultPrompts {
-            // Always load latest defaults when user hasn't customized
-            prompts = loadDefaults()
-            saveToDisk(prompts)
-        } else {
-            prompts = loadFromDisk() ?? loadDefaults()
-        }
+    @ObservationIgnored private let libraryDirectory: URL
+    @ObservationIgnored private let mirrorFileURL: URL
+    @ObservationIgnored private let bundledDefaults: () -> [PromptNode]
+    @ObservationIgnored private let setDefaultsActive: ((Bool) -> Void)?
+    @ObservationIgnored private var defaultsActive: Bool
+    /// Mtime signature of the library tree — reload-on-demand, same pattern
+    /// as `WorkflowStore`.
+    @ObservationIgnored private var directorySignature: [String: Date] = [:]
+    /// Relative paths of the files the current model owns. The diff sync
+    /// only ever deletes paths from this set, so files it failed to parse
+    /// (a hand-edit typo) are skipped, never destroyed.
+    @ObservationIgnored private var knownPaths: Set<String> = []
+    /// Library files the last load could not parse. While this is non-empty
+    /// `prompts` is a PARTIAL view of the tree, so the derived mirror must not
+    /// be published: `prompts.json` is what CloudSyncService uploads, and the
+    /// receiving Mac's `replaceFromSync` → `persist()` → `PromptLibraryFiles.sync`
+    /// deletes the markdown for every card missing from it. Skipping a broken
+    /// file locally is the contract; propagating that skip to another Mac as a
+    /// deletion is the opposite of it.
+    @ObservationIgnored private(set) var unparsedFiles: [String] = []
+    /// Reads/writes the fingerprint of the bundled default set last written to
+    /// disk. Injected so tests stay out of UserDefaults.
+    @ObservationIgnored private let readDefaultsStamp: () -> String?
+    @ObservationIgnored private let writeDefaultsStamp: (String) -> Void
+
+    private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "prompts.library")
+
+    convenience init() {
+        self.init(
+            libraryDirectory: Constants.Engine.workflowsDirectory.appendingPathComponent("library"),
+            mirrorFileURL: Constants.promptsFileURL,
+            useDefaultPrompts: AppSettings.shared.useDefaultPrompts,
+            setDefaultsActive: { AppSettings.shared.useDefaultPrompts = $0 },
+            readDefaultsStamp: { AppSettings.shared.promptLibraryDefaultsStamp },
+            writeDefaultsStamp: { AppSettings.shared.promptLibraryDefaultsStamp = $0 }
+        )
     }
 
-    /// Replace prompts from a remote iCloud sync. Saves locally but does NOT fire onPromptsChanged.
+    /// Designated initializer with injectable locations so tests run against
+    /// temp directories and never touch `~/.clipslop` or UserDefaults.
+    init(
+        libraryDirectory: URL,
+        mirrorFileURL: URL,
+        useDefaultPrompts: Bool,
+        defaults: @escaping () -> [PromptNode] = PromptStore.loadBundledDefaults,
+        setDefaultsActive: ((Bool) -> Void)? = nil,
+        readDefaultsStamp: @escaping () -> String? = { nil },
+        writeDefaultsStamp: @escaping (String) -> Void = { _ in }
+    ) {
+        self.libraryDirectory = libraryDirectory
+        self.mirrorFileURL = mirrorFileURL
+        self.defaultsActive = useDefaultPrompts
+        self.bundledDefaults = defaults
+        self.setDefaultsActive = setDefaultsActive
+        self.readDefaultsStamp = readDefaultsStamp
+        self.writeDefaultsStamp = writeDefaultsStamp
+        bootstrap()
+    }
+
+    // MARK: - Bootstrap & migration
+
+    private func bootstrap() {
+        let fm = FileManager.default
+
+        guard fm.fileExists(atPath: libraryDirectory.path) else {
+            // §7.3 migration, first launch without `workflows/library/`:
+            // materialize the tree from prompts.json (or the bundled defaults
+            // when defaults are active), keeping the original JSON as a
+            // one-time backup.
+            if fm.fileExists(atPath: mirrorFileURL.path) {
+                let backupURL = URL(fileURLWithPath: mirrorFileURL.path + ".pre-unification.bak")
+                if !fm.fileExists(atPath: backupURL.path) {
+                    try? fm.copyItem(at: mirrorFileURL, to: backupURL)
+                }
+            }
+            let source: [PromptNode]
+            if defaultsActive {
+                source = bundledDefaults()
+            } else {
+                source = Self.decodeMirror(at: mirrorFileURL) ?? bundledDefaults()
+            }
+            prompts = Self.canonicalize(source)
+            persist()
+            if defaultsActive { writeDefaultsStamp(Self.stamp(of: prompts)) }
+            return
+        }
+
+        reload()
+
+        if defaultsActive {
+            // Same semantic as the old JSON store: while the user hasn't
+            // customized, the latest bundled defaults are authoritative on
+            // every launch (app updates refresh the default library).
+            let defaults = Self.canonicalize(bundledDefaults())
+            let stamp = Self.stamp(of: defaults)
+            if defaults == prompts {
+                writeDefaultsStamp(stamp)
+            } else if let applied = readDefaultsStamp(), applied != stamp {
+                // The bundled set itself changed since we last wrote it: this
+                // is an app update shipping a new default library, and it stays
+                // authoritative until the user customizes.
+                prompts = defaults
+                persist()
+                writeDefaultsStamp(stamp)
+                return
+            } else {
+                // Same bundled defaults as last time, different tree on disk —
+                // the user edited the markdown by hand, which never goes
+                // through the UI and so never cleared `useDefaultPrompts`.
+                // Restoring the defaults here destroyed those edits on every
+                // launch; treat the edit as the customization it is.
+                //
+                // Also the no-stamp case (upgrading from a build that never
+                // recorded one): the two situations are indistinguishable
+                // there, and only one of the two possible mistakes loses the
+                // user's work.
+                markCustomized()
+                writeDefaultsStamp(stamp)
+            }
+        }
+        refreshMirrorIfStale()
+    }
+
+    /// Reloads the tree when any library file's mtime (or the file set)
+    /// changed — external edits are live on next access, like workflows are
+    /// live on the next press. Regenerates the mirror so iCloud and the
+    /// hotkey registrations follow.
+    func reloadIfChanged() {
+        let signature = PromptLibraryFiles.signature(of: libraryDirectory)
+        guard signature != directorySignature else { return }
+        reload()
+        // Bootstrap's hand-edit branch, one launch earlier. Observing the edit
+        // here but leaving `useDefaultPrompts` set left the tree looking
+        // pristine to the *next* launch: if that launch is an app update with a
+        // different bundled-default stamp, bootstrap takes the "new defaults are
+        // authoritative" branch and overwrites the very edits this reload just
+        // published. A tree that no longer matches the bundled set is a
+        // customization no matter who typed it, so record it as one now.
+        if defaultsActive, prompts != Self.canonicalize(bundledDefaults()) {
+            markCustomized()
+        }
+        writeMirrorAndNotify()
+    }
+
+    private func reload() {
+        let result = PromptLibraryFiles.load(from: libraryDirectory)
+        for issue in result.issues {
+            Self.logger.error("library \(issue, privacy: .public)")
+        }
+        for write in result.pendingWrites {
+            try? write.content.write(to: write.url, atomically: true, encoding: .utf8)
+        }
+        prompts = result.nodes
+        knownPaths = result.parsedRelativePaths
+        unparsedFiles = result.skippedRelativePaths
+        directorySignature = PromptLibraryFiles.signature(of: libraryDirectory)
+    }
+
+    // MARK: - Sync (iCloud mirror)
+
+    /// Replace prompts from a remote iCloud sync. Writes the markdown tree
+    /// (diffed by UUID-carrying file content) but does NOT fire
+    /// onPromptsChanged, preventing an echo loop.
     func replaceFromSync(_ nodes: [PromptNode]) {
         isSyncing = true
-        prompts = nodes
-        saveToDisk(nodes)
+        prompts = Self.canonicalize(nodes)
+        persist()
         isSyncing = false
     }
 
     func save() {
-        saveToDisk(prompts)
+        persist()
     }
 
+    // MARK: - CRUD (unchanged API; every mutation rewrites the tree)
+
     func updatePrompts(_ newPrompts: [PromptNode]) {
-        prompts = newPrompts
-        saveToDisk(newPrompts)
+        prompts = Self.canonicalize(newPrompts)
+        persist()
         markCustomized()
     }
 
@@ -48,24 +224,24 @@ final class PromptStore {
         } else {
             updated.append(node)
         }
-        prompts = updated
-        saveToDisk(updated)
+        prompts = Self.canonicalize(updated)
+        persist()
         markCustomized()
     }
 
     func removeNode(withID id: UUID) {
         var updated = prompts
         removeNodeRecursive(id: id, from: &updated)
-        prompts = updated
-        saveToDisk(updated)
+        prompts = Self.canonicalize(updated)
+        persist()
         markCustomized()
     }
 
     func updateNode(_ node: PromptNode) {
         var updated = prompts
         updateNodeRecursive(node, in: &updated)
-        prompts = updated
-        saveToDisk(updated)
+        prompts = Self.canonicalize(updated)
+        persist()
         markCustomized()
     }
 
@@ -74,8 +250,8 @@ final class PromptStore {
     func moveNode(id: UUID, direction: MoveDirection) {
         var updated = prompts
         moveNodeRecursive(id: id, direction: direction, in: &updated)
-        prompts = updated
-        saveToDisk(updated)
+        prompts = Self.canonicalize(updated)
+        persist()
         markCustomized()
     }
 
@@ -89,8 +265,8 @@ final class PromptStore {
         } else {
             updated.append(node)
         }
-        prompts = updated
-        saveToDisk(updated)
+        prompts = Self.canonicalize(updated)
+        persist()
         markCustomized()
     }
 
@@ -254,9 +430,10 @@ final class PromptStore {
     }
 
     func restoreDefaults() {
-        prompts = loadDefaults()
-        saveToDisk(prompts)
-        AppSettings.shared.useDefaultPrompts = true
+        prompts = Self.canonicalize(bundledDefaults())
+        persist()
+        defaultsActive = true
+        setDefaultsActive?(true)
     }
 
     func exportJSON() -> Data? {
@@ -265,18 +442,104 @@ final class PromptStore {
 
     func importJSON(from data: Data) throws {
         let decoded = try JSONDecoder().decode([PromptNode].self, from: data)
-        prompts = decoded
-        saveToDisk(decoded)
+        prompts = Self.canonicalize(decoded)
+        persist()
         markCustomized()
     }
 
-    // MARK: - Private
+    // MARK: - Persistence
 
-    private func markCustomized() {
-        AppSettings.shared.useDefaultPrompts = false
+    /// Writes the markdown tree (diffed — untouched files keep their mtimes),
+    /// regenerates the derived `prompts.json` mirror, and notifies consumers.
+    private func persist() {
+        knownPaths = PromptLibraryFiles.sync(
+            nodes: prompts, previousPaths: knownPaths, in: libraryDirectory
+        )
+        directorySignature = PromptLibraryFiles.signature(of: libraryDirectory)
+        writeMirrorAndNotify()
     }
 
-    private func loadDefaults() -> [PromptNode] {
+    private func writeMirrorAndNotify() {
+        // Consumers that read the TREE follow every mutation, including one
+        // taken while some other card is unparseable — and including one that
+        // arrived from another Mac.
+        //
+        // What they read is `prompts`, not the mirror, so the reason the mirror
+        // is withheld below does not apply to them. Holding them back anyway
+        // left a just-assigned per-prompt hotkey unregistered (and a
+        // just-removed one still firing) for the rest of the session, because
+        // the only other thing that registers them is `syncFromModel()` at
+        // launch — so one typo in one library file bought a class of bug whose
+        // single symptom is "my new shortcut does nothing", with nothing on
+        // screen connecting the two.
+        //
+        // Posted/called ABOVE the `isSyncing` guard too: a tree that changed
+        // under a remote sync is still a tree whose hotkeys and Spotlight index
+        // are now stale. Only the *upload* echoes.
+        NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
+        onLibraryChanged?()
+
+        guard unparsedFiles.isEmpty else {
+            Self.logger.error(
+                "mirror not published — \(self.unparsedFiles.joined(separator: ", "), privacy: .public) failed to parse; the tree in memory is incomplete and publishing it would delete those cards on other Macs"
+            )
+            return
+        }
+        guard let data = try? JSONEncoder.pretty.encode(prompts) else { return }
+        if (try? Data(contentsOf: mirrorFileURL)) != data {
+            try? data.write(to: mirrorFileURL)
+        }
+
+        if !isSyncing {
+            onPromptsChanged?(data)
+        }
+    }
+
+    private func refreshMirrorIfStale() {
+        guard unparsedFiles.isEmpty else { return }
+        guard let data = try? JSONEncoder.pretty.encode(prompts) else { return }
+        if (try? Data(contentsOf: mirrorFileURL)) != data {
+            try? data.write(to: mirrorFileURL)
+            NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
+        }
+    }
+
+    private func markCustomized() {
+        defaultsActive = false
+        setDefaultsActive?(false)
+    }
+
+    /// Content fingerprint of a canonicalized tree. Only ever compared against
+    /// another stamp, so any stable encoding works.
+    private static func stamp(of nodes: [PromptNode]) -> String {
+        guard let data = try? JSONEncoder.pretty.encode(nodes) else { return "" }
+        return SHA256.hash(data: data).compactMap { String(format: "%02x", $0) }.joined()
+    }
+
+    // MARK: - Canonical form
+
+    /// The file tree's canonical shape: prompt bodies are
+    /// whitespace-trimmed (frontmatter parsing trims the markdown body, so
+    /// padding could never round-trip), prompts carry no children, folders
+    /// always carry a (possibly empty) children array and no body.
+    nonisolated static func canonicalize(_ nodes: [PromptNode]) -> [PromptNode] {
+        nodes.map { node in
+            var updated = node
+            if node.isFolder {
+                updated.systemPrompt = nil
+                updated.children = canonicalize(node.children ?? [])
+            } else {
+                updated.systemPrompt = (node.systemPrompt ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                updated.children = nil
+            }
+            return updated
+        }
+    }
+
+    // MARK: - Sources
+
+    nonisolated static func loadBundledDefaults() -> [PromptNode] {
         guard let url = Bundle.module.url(forResource: "DefaultPrompts", withExtension: "json"),
               let data = try? Data(contentsOf: url),
               let nodes = try? JSONDecoder().decode([PromptNode].self, from: data)
@@ -284,30 +547,12 @@ final class PromptStore {
         return nodes
     }
 
-    private func loadFromDisk() -> [PromptNode]? {
-        guard FileManager.default.fileExists(atPath: Constants.promptsFileURL.path),
-              let data = try? Data(contentsOf: Constants.promptsFileURL),
+    nonisolated private static func decodeMirror(at url: URL) -> [PromptNode]? {
+        guard FileManager.default.fileExists(atPath: url.path),
+              let data = try? Data(contentsOf: url),
               let nodes = try? JSONDecoder().decode([PromptNode].self, from: data)
         else { return nil }
         return nodes
-    }
-
-    private func saveToDisk(_ nodes: [PromptNode]) {
-        guard let data = try? JSONEncoder.pretty.encode(nodes) else { return }
-        try? data.write(to: Constants.promptsFileURL)
-
-        // Posted unconditionally — deliberately ABOVE the isSyncing guard.
-        //
-        // `onPromptsChanged` is a single-assignment closure already claimed by
-        // AppState (iCloud upload + shortcut refresh), and it is suppressed during
-        // remote sync to avoid an echo loop. Consumers that only need to *observe*
-        // the library — like Spotlight indexing — must also see changes arriving
-        // from another Mac, so they hang off this instead.
-        NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
-
-        if !isSyncing {
-            onPromptsChanged?(data)
-        }
     }
 
     private func insertNode(_ node: PromptNode, into nodes: inout [PromptNode], parentID: UUID) {

@@ -22,6 +22,9 @@ struct ChatGPTToolChatService: ToolChatService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        // See AnthropicToolChatService: the chat.assistant role's timeout was
+        // read only by the streaming services.
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
         if let accountID, !accountID.isEmpty {
             request.setValue(accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
         }

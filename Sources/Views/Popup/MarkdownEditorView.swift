@@ -396,7 +396,7 @@ struct MarkdownEditorView: View {
                     text: $text,
                     editorContext: editorContext,
                     findBarState: findBarState,
-                    highlightsMarkdown: highlightsMarkdown
+                    highlighting: highlightsMarkdown ? .markdown : nil
                 )
                 .id(highlightsMarkdown ? "md-edit-colored" : "md-edit-plain")
             }
@@ -568,8 +568,9 @@ struct MarkdownTextView: NSViewRepresentable {
     @Binding var text: String
     let editorContext: MarkdownEditorContext
     var findBarState: FindBarState?
-    /// Styles the Markdown source in place (bold/italic/links with ⌘-click).
-    var highlightsMarkdown: Bool = false
+    /// Styles the source in place — Markdown, YAML, or frontmatter+Markdown
+    /// combined. `nil` keeps the plain uncoloured editor.
+    var highlighting: SourceSyntax?
     /// Read-only source doubles as the "coloured source" Markdown viewer.
     var isEditable: Bool = true
 
@@ -606,11 +607,11 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.isEditable = isEditable
         textView.delegate = context.coordinator
         textView.string = text
-        if highlightsMarkdown {
+        if let highlighting {
             // Styling comes from the highlighter; keep the automatic link
             // overlay down to a hover cursor.
             textView.linkTextAttributes = [.cursor: NSCursor.pointingHand]
-            MarkdownSourceHighlighter.highlight(textStorage)
+            highlighting.highlight(textStorage)
         }
 
         textView.isVerticallyResizable = true
@@ -642,11 +643,14 @@ struct MarkdownTextView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
+        // Keep the coordinator's copy fresh: the Magic tab reuses one view
+        // across file switches, so `highlighting` can change between updates.
+        context.coordinator.parent = self
         context.coordinator.isUpdating = true
         if textView.string != text {
             textView.string = text
-            if highlightsMarkdown, let textStorage = textView.textStorage {
-                MarkdownSourceHighlighter.highlight(textStorage)
+            if let highlighting, let textStorage = textView.textStorage {
+                highlighting.highlight(textStorage)
             }
         }
         context.coordinator.isUpdating = false
@@ -678,8 +682,8 @@ struct MarkdownTextView: NSViewRepresentable {
             guard !isUpdating else { return }
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
-            if parent.highlightsMarkdown, let textStorage = textView.textStorage {
-                MarkdownSourceHighlighter.highlight(textStorage)
+            if let highlighting = parent.highlighting, let textStorage = textView.textStorage {
+                highlighting.highlight(textStorage)
                 textView.typingAttributes = [
                     .font: NSFont.monospacedSystemFont(
                         ofSize: MarkdownSourceHighlighter.baseFontSize,

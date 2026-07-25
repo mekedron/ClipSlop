@@ -13,7 +13,7 @@ struct PromptsSettingsView: View {
     private let loc = Loc.shared
     private var promptStore: PromptStore { appState.promptStore }
 
-    /// Prominent entry point to the AI Prompt Assistant from the library editor.
+    /// Prominent entry point to the Settings Assistant from the library editor.
     private var assistantBanner: some View {
         VStack(alignment: .leading, spacing: 6) {
             Label(loc.t("settings.prompts.assistant.title"), systemImage: "wand.and.stars")

@@ -4,8 +4,8 @@ import Textual
 /// Renders one transcript item. Proposal cards get Approve/Reject buttons that
 /// resolve the assistant's pending confirmation.
 struct AssistantChatItemView: View {
-    let item: PromptAssistantService.ChatItem
-    let service: PromptAssistantService
+    let item: SettingsAssistantService.ChatItem
+    let service: SettingsAssistantService
 
     var body: some View {
         switch item {

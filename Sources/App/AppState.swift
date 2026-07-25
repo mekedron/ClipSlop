@@ -20,9 +20,8 @@ final class AppState {
     /// which app regains focus when a ClipSlop window closes. Both are wrong if it
     /// points at Spotlight — the user summoned Spotlight *from* some real app and
     /// expects to land back there, not in a search field that has since closed.
-    /// This matters now that Spotlight is a supported way to invoke prompts, but
-    /// it was already reachable before via global hotkeys pressed while Spotlight
-    /// was open.
+    /// Reachable two ways: Spotlight is a supported way to invoke prompts, and
+    /// a global hotkey can be pressed while Spotlight is open.
     static let transientLauncherBundleIDs: Set<String> = [
         "com.apple.Spotlight",
         "com.apple.shortcuts",
@@ -35,7 +34,8 @@ final class AppState {
     let chatGPTTokenManager = ChatGPTTokenManager.shared
     let hotkeyService = HotkeyService()
     let promptShortcutService = PromptShortcutService()
-    let promptAssistant = PromptAssistantService()
+    let settingsAssistant = SettingsAssistantService()
+    let magicCoordinator = MagicPressCoordinator()
     let settings = AppSettings.shared
     let syncService = CloudSyncService(
         syncFileName: "prompts.json",
@@ -279,6 +279,18 @@ final class AppState {
         hotkeyService.onTriggerPromptAssistant = { [weak self] in
             self?.toggleAssistant()
         }
+        hotkeyService.onTriggerMagic = { [weak self] in
+            self?.magicCoordinator.handlePress(forceChips: false)
+        }
+        hotkeyService.onTriggerMagicChips = { [weak self] in
+            self?.magicCoordinator.handlePress(forceChips: true)
+        }
+        hotkeyService.onDismissMagicOverlay = { [weak self] in
+            self?.magicCoordinator.dismissFloatingOverlay()
+        }
+        hotkeyService.onConfirmMagicInsert = { [weak self] in
+            self?.magicCoordinator.insertAnyway()
+        }
         hotkeyService.register()
 
         // Wire prompt shortcut service
@@ -287,7 +299,12 @@ final class AppState {
         promptShortcutService.registerAll()
 
         // Wire the prompt-library assistant
-        promptAssistant.appState = self
+        settingsAssistant.appState = self
+
+        // Wire the Magic Button press band + the warm frontmost-app observer
+        magicCoordinator.appState = self
+        magicCoordinator.startWarmObserver()
+        magicCoordinator.logProviderLayerHealth()
 
         // Wire prompt search to the store so it can read all prompts on demand
         promptSearchState.promptStore = promptStore
@@ -298,6 +315,12 @@ final class AppState {
         // is routed back to the store via `applyRemote`, decoded there.
         promptStore.onPromptsChanged = { [weak self] data in
             self?.syncService.handleLocalChange(data: data)
+        }
+        // Hotkey registration reads the prompt TREE, not the mirror, so it
+        // hangs off the tree callback: a library file the store could not parse
+        // withholds `prompts.json` from iCloud, and that must not also stop the
+        // shortcuts of every card that DID parse from following the edit.
+        promptStore.onLibraryChanged = { [weak self] in
             self?.promptShortcutService.refreshShortcuts()
         }
         syncService.applyRemote = { [weak self] data in
@@ -1026,6 +1049,9 @@ final class AppState {
     // MARK: - Popup
 
     func showPopup() {
+        // External edits to the markdown library (§7.3) are live on the next
+        // open, the same way workflow edits are live on the next press.
+        promptStore.reloadIfChanged()
         if popupWindow == nil {
             popupWindow = PopupWindow(appState: self)
         }
@@ -1092,6 +1118,7 @@ final class AppState {
     // MARK: - Quick Access
 
     func showQuickAccess() {
+        promptStore.reloadIfChanged()
         if quickAccessWindow == nil {
             quickAccessWindow = QuickAccessWindow(appState: self)
         }
@@ -1125,7 +1152,7 @@ final class AppState {
         }
     }
 
-    // MARK: - Prompt-library assistant
+    // MARK: - Settings Assistant
 
     func showAssistant(initialMessage: String? = nil) {
         if assistantWindow == nil {
@@ -1135,8 +1162,8 @@ final class AppState {
         isAssistantVisible = true
         // Auto-send a first message (used by the onboarding "Try it" button) only
         // when starting fresh, so reopening an existing chat doesn't re-send.
-        if let initialMessage, promptAssistant.items.isEmpty, !promptAssistant.isBusy {
-            promptAssistant.send(initialMessage)
+        if let initialMessage, settingsAssistant.items.isEmpty, !settingsAssistant.isBusy {
+            settingsAssistant.send(initialMessage)
         }
     }
 
@@ -1145,7 +1172,7 @@ final class AppState {
         // Auto-reject any pending confirmation so a closed window doesn't leave
         // the agent loop blocked on a card nobody can approve. The conversation
         // itself is preserved for when the window reopens.
-        promptAssistant.resolveConfirmation(approved: false)
+        settingsAssistant.resolveConfirmation(approved: false)
         isAssistantVisible = false
         assistantWindow?.close()
 
@@ -1182,7 +1209,7 @@ final class AppState {
     func assistantWindowWillClose() {
         guard isAssistantVisible else { return }
         isAssistantVisible = false
-        promptAssistant.resolveConfirmation(approved: false)
+        settingsAssistant.resolveConfirmation(approved: false)
     }
 
     func activateQuickAccessTile(_ tile: QuickAccessTile) {

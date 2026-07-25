@@ -1,8 +1,26 @@
 import Foundation
 
+/// One generation with the usage the provider reported. Token counts are
+/// nil when the API exposes none — callers fall back to estimates and mark
+/// the spend record `estimated` (§14 accounting is honest about precision).
+struct AIGenerationResult: Sendable {
+    let text: String
+    var inputTokens: Int?
+    var outputTokens: Int?
+}
+
 protocol AIService: Sendable {
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error>
+    /// Like `process`, plus reported usage. Services without usage data
+    /// inherit the default (text only, nil counts).
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult
+}
+
+extension AIService {
+    func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
+        AIGenerationResult(text: try await process(text: text, systemPrompt: systemPrompt, config: config))
+    }
 }
 
 enum AIServiceError: LocalizedError {
@@ -12,6 +30,18 @@ enum AIServiceError: LocalizedError {
     case decodingError(String)
     case networkError(Error)
     case emptyResponse
+    /// The provider REPORTED a terminal state instead of returning text — the
+    /// reason is its own words (refusal text, incomplete reason, failure
+    /// message), so the user sees WHY instead of a generic "empty response".
+    /// Terminal by definition: an immediate retry just repeats a decision the
+    /// provider already made.
+    case generationStopped(reason: String)
+    /// The stream ran to completion but carried no output text at all — the
+    /// intermittent reasoning-backend behaviour that one silent retry absorbs.
+    /// Deliberately separate from `generationStopped`: folded together, the
+    /// Magic pipeline's one-retry rule would fire for provider failures and
+    /// refusals too.
+    case emptyStream(reason: String)
     case cancelled
     case cliToolNotFound(String)
     case cliToolFailed(exitCode: Int32, stderr: String)
@@ -38,6 +68,10 @@ enum AIServiceError: LocalizedError {
             "Network error: \(error.localizedDescription)"
         case .emptyResponse:
             "The AI returned an empty response. Try rephrasing your text."
+        case .generationStopped(let reason):
+            "The AI stopped without returning text: \(reason)"
+        case .emptyStream(let reason):
+            "The AI returned no text: \(reason)"
         case .cancelled:
             "Request was cancelled"
         case .cliToolNotFound(let name):

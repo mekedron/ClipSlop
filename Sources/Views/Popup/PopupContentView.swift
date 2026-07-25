@@ -92,7 +92,7 @@ struct PopupContentView: View {
                                 text: .constant(appState.currentDisplayText),
                                 editorContext: markdownViewerContext,
                                 findBarState: appState.findBarState,
-                                highlightsMarkdown: true,
+                                highlighting: .markdown,
                                 isEditable: false
                             )
                             .id("md-colored-view")

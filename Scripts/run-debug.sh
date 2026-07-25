@@ -55,7 +55,15 @@ if [ "$USE_BUNDLE" -eq 1 ]; then
 else
     "$SCRIPT_DIR/codesign.sh"
     echo "Launching..."
-    .build/debug/ClipSlop &
+    if [ -t 1 ]; then
+        .build/debug/ClipSlop &
+    else
+        # Non-interactive callers (CI, agents) block forever on the stdout
+        # pipe the app would inherit — send its output to a file instead.
+        LOG_FILE="${TMPDIR:-/tmp}/clipslop-debug.log"
+        .build/debug/ClipSlop >"$LOG_FILE" 2>&1 &
+        echo "  Console output: $LOG_FILE"
+    fi
     disown
     echo "✓ ClipSlop running (PID $!)"
 fi

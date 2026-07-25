@@ -10,7 +10,7 @@ struct OnboardingView: View {
     @State private var screenRecordingPending = false
 
     private let loc = Loc.shared
-    private let totalSteps = 8
+    private let totalSteps = 10
 
     var body: some View {
         VStack(spacing: 0) {
@@ -22,9 +22,11 @@ struct OnboardingView: View {
                 case 2: permissionsStep
                 case 3: shortcutsStep
                 case 4: providerStep
-                case 5: iCloudStep
-                case 6: demoStep
-                case 7: assistantStep
+                case 5: OnboardingMagicInterviewView(appState: appState)
+                case 6: OnboardingMagicWalkthroughView(appState: appState)
+                case 7: iCloudStep
+                case 8: demoStep
+                case 9: assistantStep
                 default: EmptyView()
                 }
             }
@@ -234,7 +236,15 @@ struct OnboardingView: View {
                 )
                 ShortcutRow(
                     label: loc.t("onboarding.shortcuts.assistant"),
-                    name: .togglePromptAssistant
+                    name: .toggleSettingsAssistant
+                )
+                ShortcutRow(
+                    label: loc.t("onboarding.shortcuts.magic"),
+                    name: .triggerMagic
+                )
+                ShortcutRow(
+                    label: loc.t("settings.general.shortcuts.magic_chips"),
+                    name: .triggerMagicChips
                 )
             }
             .frame(maxWidth: 420)
@@ -262,7 +272,7 @@ struct OnboardingView: View {
         OnboardingDemoView(appState: appState)
     }
 
-    // MARK: - Step 8: Prompt Assistant
+    // MARK: - Step 8: Settings Assistant
 
     private var assistantStep: some View {
         VStack(spacing: 20) {
@@ -288,7 +298,9 @@ struct OnboardingView: View {
             .padding(.top, 4)
 
             Button {
-                appState.completeOnboarding()
+                // The onboarding stays open — the user finishes it with
+                // "Get Started"; this button only opens the assistant chat
+                // next to it.
                 appState.showAssistant(initialMessage: loc.t("assistant.intro_message"))
             } label: {
                 Label(loc.t("onboarding.assistant.try"), systemImage: "wand.and.stars")

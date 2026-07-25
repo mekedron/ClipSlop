@@ -1,0 +1,97 @@
+---
+sidebar_position: 5
+title: Settings Assistant
+description: An always-on-top chat window where an AI assistant manages ClipSlop for you — edit your prompt library, tune the Magic Button engine, and ask why a press did what it did, with every change gated behind an Approve/Reject card.
+---
+
+# Settings Assistant
+
+```
+⌃⌘⌥P → "the grammar prompt doesn't handle passive voice — fix it" → Approve
+⌃⌘⌥P → "why did my last Magic press show chips?"
+```
+
+The Settings Assistant (formerly the *Prompt Assistant*) is a floating, always-on-top chat window where an AI assistant manages ClipSlop's configuration for you. Instead of digging through Settings, you describe what you want in plain language and the assistant finds the right prompt, workflow, or setting and proposes the change.
+
+It manages two systems:
+
+- **The prompt library** — everything the Prompt Assistant always did: create, edit, move, and organize prompts and folders, bind shortcuts, set modes.
+- **The Magic Button engine** — the whole file tree under `~/.clipslop/`: workflow cards, the pinned core files (identity, writing style, constraints, aliases), `config.yaml` tuning, and model routing (`providers.yaml` / `roles.yaml`). It can also *explain* the engine: read the contentless press traces and answer "why did that press route there / get flagged / refuse".
+
+Every change is shown as an **Approve / Reject** card and applied only after you confirm — nothing is modified without your explicit approval.
+
+## Opening it
+
+Two ways in:
+
+- **Global shortcut** — <kbd>⌃⌘⌥P</kbd> by default. Reconfigurable in **Settings → General → Keyboard Shortcuts**.
+- **Menu-bar menu** — click the ClipSlop menu-bar icon and pick **Settings Assistant**.
+
+The window is a frosted, always-on-top panel, so it stays in view while you keep working in another app.
+
+## How it works
+
+1. **Ask in plain language.** For example: *"make replies on LinkedIn shorter"*, *"add gmail.com to the no-cloud list"*, or *"why was my last press flagged as too long?"*.
+2. **The assistant reads before it writes.** It lists your library or the engine files, reads the relevant one, and drafts the smallest edit.
+3. **You approve or reject.** Each proposed change appears as an Approve / Reject card with a before → after diff. It's applied only when you confirm.
+
+<Callout type="note" title="Validated before saving">
+  Every engine file the assistant writes is validated with the same parser the engine itself uses — workflow cards against the card schema and the whole catalog (duplicate ids, broken `extends` chains), config values against their allowed ranges. An invalid edit is rejected with the exact line-numbered error, and nothing is written. The assistant can never save a file the engine cannot load.
+</Callout>
+
+<Callout type="warn" title="Deletes ask twice">
+  Deleting a prompt, folder, or workflow shows an extra warning before it happens — including how many items a folder holds, or which workflows would break because they extend the one being deleted.
+</Callout>
+
+## What it can do
+
+**Prompt library** (unchanged from the Prompt Assistant):
+
+- Create, edit, and delete prompts; create, rename, and delete folders; move things around.
+- Assign or clear the per-prompt global shortcuts: [Inline Run](../use/quick-paste.mdx) and [Run in Editor](../use/open-and-run.mdx).
+- Set display modes, the "select all before capture" option, and per-prompt providers.
+
+**Magic Button engine** (see [Magic Button internals](../develop/magic-button.md) for what these files are):
+
+- List and read every engine file: workflows, core files, `system-prompt.md`, `config.yaml`, `providers.yaml`, `roles.yaml`.
+- Create, edit, and delete workflow cards — "make a workflow for LinkedIn comments", "lower the max length on replies".
+- Edit the pinned core files, including the machine-checked `constraints.md` rules.
+- Tune `config.yaml` (collector budgets, the warm observer, the `no_cloud` privacy list) — out-of-range values are rejected with the valid range.
+- Change model routing: which provider serves each engine role, fallback chains, per-role timeouts, and cost floors; and a provider's `locality` / `cost_class` metadata.
+- Debug presses from the contentless traces: recent press history with filters, one-press explanations, the aggregate stats report, and token spend per role.
+
+Edits are live on the next Magic press — the engine hot-reloads its files by modification time, no restart needed.
+
+<Callout type="warn" title="What it can never touch">
+  API keys and OAuth state stay in the Keychain and app internals — no tool can read or write them, and provider edits are limited to `locality` and `cost_class`. File access is confined to the engine tree; the full-content debug logs are off-limits by design (traces carry no text content, ever). And nothing the assistant configures can ever press Send in another app — the engine only pastes.
+</Callout>
+
+## Chatting in the window
+
+The chat input reuses the same field as the <kbd>⌘K</kbd> quick-instruction bar, so it behaves the same way:
+
+| Key | Action |
+|-----|--------|
+| <kbd>Enter</kbd> | Send the message |
+| <kbd>⇧Enter</kbd> | New line |
+| <kbd>Esc</kbd> | Close the window |
+
+## Choosing a provider
+
+A small provider switcher in the window's header lets you pick which tool-calling provider the assistant uses, and jump straight to **Provider Settings**. The choice is stored as the `chat.assistant` role in `~/.clipslop/roles.yaml` — the same routing table shown in **Settings → Providers**.
+
+The Settings Assistant relies on **AI tool calling**, so it works with any provider that supports it:
+
+- OpenAI (API key)
+- OpenAI (Sign In / ChatGPT)
+- Anthropic
+- Ollama
+- OpenAI-compatible endpoints
+
+<Callout type="warn" title="Not available on the CLI Tool provider">
+  The **CLI Tool** provider does not support tool calling. When it's selected, the Settings Assistant shows a notice asking you to switch to a tool-calling provider — use the header's provider switcher to pick one.
+</Callout>
+
+## Localisation
+
+The Settings Assistant is fully localised into all 17 supported languages, and the onboarding flow ends with a **Settings Assistant** step whose **Try it** button opens the window and auto-sends a localised greeting to get you started.

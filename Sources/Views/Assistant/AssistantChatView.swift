@@ -1,13 +1,13 @@
 import AppKit
 import SwiftUI
 
-/// Root view of the prompt-library assistant window: a provider notice when
+/// Root view of the Settings Assistant window: a provider notice when
 /// tool calling isn't available, otherwise the chat transcript + input bar.
 struct AssistantChatView: View {
     let appState: AppState
     private let loc = Loc.shared
 
-    private var service: PromptAssistantService { appState.promptAssistant }
+    private var service: SettingsAssistantService { appState.settingsAssistant }
 
     var body: some View {
         Group {
@@ -174,7 +174,7 @@ struct AssistantChatView: View {
 /// transcript. Sizing mirrors `AdHocPromptBar`: grows one line per newline up
 /// to `maxAutoLines`, then the editor scrolls internally.
 private struct AssistantInputBar: View {
-    @Bindable var service: PromptAssistantService
+    @Bindable var service: SettingsAssistantService
     private let loc = Loc.shared
 
     /// Height the text needs to fit (reported by the editor), used for auto-grow.
@@ -369,7 +369,7 @@ private struct AssistantKeyHandler: NSViewRepresentable {
                 return true
             case KeyCode.enter where !flags.contains(.shift) && !flags.contains(.command):
                 // Enter sends; Shift+Enter falls through to insert a newline.
-                appState.promptAssistant.send(appState.promptAssistant.draft)
+                appState.settingsAssistant.send(appState.settingsAssistant.draft)
                 return true
             default:
                 return false
