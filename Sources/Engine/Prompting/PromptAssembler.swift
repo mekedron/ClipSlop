@@ -60,6 +60,12 @@ enum PromptAssembler {
     The SURROUNDING CONTEXT block, when present, is the conversation or page the user is \
     writing into. Always read it first and ground your output in it — who is being answered, \
     what was asked, what tone the conversation carries.
+    When the context is a SCREEN OUTLINE with a ⟨YOUR FIELD⟩ marker, your text is inserted \
+    exactly at that marker. Anchor on it: what you write belongs to the sections marked \
+    "contains your field" — the conversation or post the field is part of. A screen often \
+    shows several conversations at once (a conversation list, previews, a chat window docked \
+    in a corner); everything outside the field's own sections is background to read, never \
+    the thing to answer — even when its messages are newer.
     LANGUAGE: write in the language of the surrounding conversation. If the user's draft, \
     selection, or note is in a different language than the conversation, translate — deliver \
     the output in the conversation's language — unless the user explicitly asks for a specific \

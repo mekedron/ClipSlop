@@ -251,7 +251,7 @@ enum EngineSeedContent {
     id: base.reply
     kind: workflow
     mode: direct
-    version: 1
+    version: 2
     extends: base.generation
     summary: "Reply to what's on screen"
     intents: [reply]
@@ -260,7 +260,8 @@ enum EngineSeedContent {
     ---
     ## Rules
     - The surrounding content is a conversation or post; write the user's reply to it.
-    - Address the most recent message directed at the user.
+    - Reply inside the conversation that holds ⟨YOUR FIELD⟩: address the most recent message directed at the user in that conversation.
+    - Screens often show several conversations at once — a conversation list, previews, a chat window docked in a corner. Messages outside the field's own conversation are background: never answer them, even when they are newer.
     - Keep the reply proportionate: a short message earns a short reply.
     """
 

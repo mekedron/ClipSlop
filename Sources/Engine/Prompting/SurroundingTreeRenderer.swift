@@ -11,8 +11,17 @@ enum SurroundingTreeRenderer {
     static let fieldMarkerPrefix = "⟨YOUR FIELD — you are writing here"
     static let trimMarker = "[… more content trimmed …]"
     static let chainHeaderPrefix = "YOU ARE WRITING IN: "
+    /// Suffix on every container line on the field path. A screen routinely
+    /// holds several conversation-shaped regions at once (a conversation
+    /// list, a docked chat overlay, the thread the field is actually in),
+    /// and indentation alone across a long outline is not legible enough for
+    /// a model to tell which of them encloses the field — the containment
+    /// must be readable from the line itself, so the field's enclosing
+    /// sections carry it in words and every other region visibly lacks it.
+    static let containsFieldNote = "contains your field"
     static let outlineHeader =
-        "SCREEN OUTLINE (⟨YOUR FIELD⟩ marks the exact box you are writing in):"
+        "SCREEN OUTLINE (⟨YOUR FIELD⟩ marks the exact box you are writing in; "
+        + "the nested containers marked \"contains your field\" are the sections that enclose it):"
 
     private static let indentStep = "  "
     private static let maxLabelChars = 80
@@ -99,15 +108,18 @@ enum SurroundingTreeRenderer {
 
     /// The bracketed tag line a container emits — or nil for an unlabeled
     /// generic container off the field path (its children keep the indent
-    /// level; the container itself is silent).
+    /// level; the container itself is silent). On-path containers carry the
+    /// `containsFieldNote` suffix (see its comment for why containment has
+    /// to be spelled out).
     private static func containerLine(for node: SurroundingNode, onFieldPath: Bool) -> String? {
         let generic = genericContainerRoles.contains(node.role)
+        let note = onFieldPath ? " — \(containsFieldNote)" : ""
         if let label = node.label, !label.isEmpty {
             let clipped = truncatedLabel(label)
-            return generic ? "[\(clipped)]" : "[\(roleTag(node.role)): \(clipped)]"
+            return generic ? "[\(clipped)\(note)]" : "[\(roleTag(node.role)): \(clipped)\(note)]"
         }
         guard !generic || onFieldPath else { return nil }
-        return "[\(roleTag(node.role))]"
+        return "[\(roleTag(node.role))\(note)]"
     }
 
     private static func fieldMarkerLine(note: String?) -> String {

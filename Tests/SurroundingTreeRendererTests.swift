@@ -106,12 +106,34 @@ struct SurroundingTreeRendererTests {
         // Labeled generic container: label only, no "group" tag noise.
         #expect(rendered.contains("[post by Priya]"))
         #expect(!rendered.contains("[group: post by Priya]"))
-        // Labeled non-generic container: tag + label.
-        #expect(rendered.contains("[list: comments]"))
-        // Unlabeled non-generic container: bare tag.
+        // Labeled non-generic container ON the field path: tag + label +
+        // containment note.
+        #expect(rendered.contains("[list: comments — contains your field]"))
+        // Unlabeled non-generic container off the path: bare tag, no note.
         #expect(rendered.contains("[list]"))
-        // Unlabeled web area on the field path: bare tag line.
-        #expect(rendered.contains("[webarea]"))
+        // Unlabeled web area on the field path: tag + containment note.
+        #expect(rendered.contains("[webarea — contains your field]"))
+    }
+
+    @Test func onlyTheFieldsEnclosingSectionsCarryTheContainmentNote() {
+        // Two conversations on one screen — the thread that holds the field,
+        // and a docked chat overlay rendered after it with newer messages.
+        // The containment notes must single out the field's sections; the
+        // overlay must visibly lack one, or the model cannot tell which
+        // conversation it is replying in.
+        let main = SurroundingNode(role: "AXGroup", children: [
+            SurroundingNode(role: "AXList", label: "messages", children: [text("THREAD question for the user")]),
+            field,
+        ])
+        let overlay = SurroundingNode(role: "AXGroup", label: "Messaging", children: [
+            text("OVERLAY newer message from a different person"),
+        ])
+        let tree = SurroundingNode(role: "AXWebArea", children: [main, overlay])
+        let (rendered, _) = SurroundingTreeRenderer.render(tree, maxTokens: 0)
+        #expect(rendered.contains("[webarea — contains your field]"))
+        #expect(rendered.contains("[group — contains your field]"))
+        #expect(rendered.contains("[Messaging]"))
+        #expect(!rendered.contains("[Messaging — contains your field]"))
     }
 
     @Test func unlabeledGroupOffPathEmitsNoLineButIndents() {
@@ -170,7 +192,7 @@ struct SurroundingTreeRendererTests {
     @Test func trimKeepsChainAndNearestSiblingsFirst() {
         // Budget for the chain + post 2's own content, not the whole feed:
         // the other posts vanish, the comments beside the field stay.
-        let (rendered, truncated) = SurroundingTreeRenderer.render(linkedInFeed(), maxTokens: 100)
+        let (rendered, truncated) = SurroundingTreeRenderer.render(linkedInFeed(), maxTokens: 140)
         #expect(truncated)
         #expect(rendered.contains("YOU ARE WRITING IN: feed › post by Priya Patel › comments"))
         #expect(rendered.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
@@ -186,8 +208,8 @@ struct SurroundingTreeRendererTests {
         #expect(truncated)
         #expect(rendered.contains("YOU ARE WRITING IN: feed › post by Priya Patel › comments"))
         #expect(rendered.contains(SurroundingTreeRenderer.outlineHeader))
-        #expect(rendered.contains("[post by Priya Patel]"))
-        #expect(rendered.contains("[list: comments]"))
+        #expect(rendered.contains("[post by Priya Patel — contains your field]"))
+        #expect(rendered.contains("[list: comments — contains your field]"))
         #expect(rendered.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
         // Every content unit dropped — no text lines survive.
         #expect(!rendered.contains("COMMENT"))
@@ -200,7 +222,7 @@ struct SurroundingTreeRendererTests {
         let markerLines = lines.filter { $0.contains(SurroundingTreeRenderer.trimMarker) }
         #expect(!markerLines.isEmpty)
         // Post 1's subtree was dropped: a trim marker precedes post 2's line.
-        let postTwo = try #require(lines.firstIndex { $0.contains("[post by Priya Patel]") })
+        let postTwo = try #require(lines.firstIndex { $0.contains("[post by Priya Patel") })
         #expect(lines[..<postTwo].contains { $0.contains(SurroundingTreeRenderer.trimMarker) })
     }
 
@@ -238,7 +260,7 @@ struct SurroundingTreeRendererTests {
     @Test func chatMessagesPartialTrimDropsOldestFirst() {
         // Tighter still: the messages unit itself no longer fits whole —
         // its oldest (farthest-from-field) lines drop, the newest stay.
-        let (rendered, truncated) = SurroundingTreeRenderer.render(chatSurface(messageCount: 12), maxTokens: 80)
+        let (rendered, truncated) = SurroundingTreeRenderer.render(chatSurface(messageCount: 12), maxTokens: 115)
         #expect(truncated)
         #expect(rendered.contains("MESSAGE-12"))
         #expect(!rendered.contains("MESSAGE-1 "))
