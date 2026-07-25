@@ -7,11 +7,11 @@ enum ModelFetcher {
         let fetched: [String]
         switch config.providerType {
         case .openAI, .openAICompatible:
-            fetched = await fetchOpenAIModels(baseURL: config.baseURL, apiKeyRef: config.apiKeyRef)
+            fetched = await fetchOpenAIModels(config: config)
         case .openAIChatGPT:
             fetched = await fetchChatGPTModels(config: config)
         case .ollama:
-            fetched = await fetchOpenAIModels(baseURL: config.baseURL, apiKeyRef: config.apiKeyRef)
+            fetched = await fetchOpenAIModels(config: config)
         case .anthropic:
             fetched = await fetchAnthropicModels(baseURL: config.baseURL, apiKeyRef: config.apiKeyRef)
         case .cliTool:
@@ -38,13 +38,15 @@ enum ModelFetcher {
             ]
         case .openAI:
             [
+                "gpt-5",
+                "gpt-5-mini",
+                "gpt-5-nano",
                 "gpt-4.1",
                 "gpt-4.1-mini",
                 "gpt-4.1-nano",
                 "gpt-4o",
                 "gpt-4o-mini",
                 "o3",
-                "o3-mini",
                 "o4-mini",
             ]
         case .openAIChatGPT:
@@ -64,14 +66,14 @@ enum ModelFetcher {
 
     // MARK: - OpenAI / Compatible / Ollama
 
-    private static func fetchOpenAIModels(baseURL: String, apiKeyRef: String) async -> [String] {
-        guard let url = URL(string: baseURL + "/v1/models") else { return [] }
+    private static func fetchOpenAIModels(config: AIProviderConfig) async -> [String] {
+        guard let url = URL(string: config.baseURL + "/v1/models") else { return [] }
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 10
 
-        if let apiKey = KeychainService.load(key: apiKeyRef), !apiKey.isEmpty {
+        if let apiKey = KeychainService.load(key: config.apiKeyRef), !apiKey.isEmpty {
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         }
 
@@ -80,9 +82,32 @@ enum ModelFetcher {
               let json = try? JSONDecoder().decode(OpenAIModelsResponse.self, from: data)
         else { return [] }
 
-        return json.data
-            .map(\.id)
-            .sorted()
+        let ids = json.data.map(\.id)
+        let usable = OpenAIRequestShape.isOpenAIHosted(config)
+            ? ids.filter(servesChatCompletions)
+            : ids
+        return usable.sorted()
+    }
+
+    /// Whether an id from OpenAI's catalogue can answer a chat request at all.
+    ///
+    /// `/v1/models` lists every model on the account — embeddings, speech,
+    /// images, moderation — and the ones served only by `/v1/responses`. All
+    /// of them fail a transformation, so offering them in the picker offers a
+    /// choice that cannot work. Named families are excluded rather than a
+    /// chat allow-list built, so a chat model released after this build still
+    /// reaches the picker.
+    private static func servesChatCompletions(_ id: String) -> Bool {
+        let model = id.lowercased()
+        let otherModality = [
+            "embedding", "tts", "whisper", "dall-e", "sora", "moderation",
+            "audio", "realtime", "transcribe", "image", "davinci", "babbage",
+        ]
+        // `-pro` and `codex-mini` are text models that only the Responses API
+        // serves; `computer-use` needs a tool loop no prompt provides.
+        let otherEndpoint = ["-pro", "codex-mini", "computer-use"]
+        return !otherModality.contains(where: model.contains)
+            && !otherEndpoint.contains(where: model.contains)
     }
 
     // MARK: - ChatGPT (OAuth)
