@@ -31,15 +31,49 @@ struct StreamWatchdogTests {
         #expect(fired.count == 1)
     }
 
+    /// The load-bearing property — an idle timer, not a total-duration cap —
+    /// asserted against explicit idle values rather than by sleeping. The
+    /// sleeping version of this test asserted that its own `Task.sleep` was
+    /// punctual and failed on CI, where a late pet looks exactly like a stalled
+    /// tool.
+    @Test(arguments: [
+        // (idle, expected remaining sleep) — a fresh chunk buys a full window,
+        // and a partial wait resumes for only what is left of it.
+        (Duration.zero, Duration.milliseconds(100)),
+        (.milliseconds(1), .milliseconds(99)),
+        (.milliseconds(60), .milliseconds(40)),
+        (.milliseconds(99), .milliseconds(1)),
+    ])
+    func idleBelowTheTimeoutWaitsOutTheRemainder(_ idle: Duration, _ remaining: Duration) {
+        #expect(
+            StreamWatchdog.step(idle: idle, timeout: Self.timeout, finished: false)
+                == .wait(remaining)
+        )
+    }
+
+    @Test(arguments: [Duration.milliseconds(100), .milliseconds(101), .seconds(30)])
+    func idleAtOrBeyondTheTimeoutFires(_ idle: Duration) {
+        #expect(StreamWatchdog.step(idle: idle, timeout: Self.timeout, finished: false) == .fire)
+    }
+
+    /// `finished` outranks a blown deadline: the process exiting normally must
+    /// not be reported as a timeout just because the loop woke up late.
+    @Test(arguments: [Duration.zero, .milliseconds(100), .seconds(30)])
+    func finishedAlwaysStopsRegardlessOfIdle(_ idle: Duration) {
+        #expect(StreamWatchdog.step(idle: idle, timeout: Self.timeout, finished: true) == .stop)
+    }
+
+    /// End-to-end counterpart to the cases above: activity really does reset the
+    /// live timer. Deliberately generous — a 1 s window petted every 100 ms —
+    /// so it tolerates a ~900 ms scheduling hiccup per chunk while total
+    /// elapsed (~1.5 s) still exceeds the window a duration cap would enforce.
     @Test func steadyOutputNeverTimesOut() async throws {
         let fired = Counter()
         let watchdog = StreamWatchdog()
-        watchdog.start(timeout: Self.timeout) { fired.increment() }
+        watchdog.start(timeout: .seconds(1)) { fired.increment() }
 
-        // 10 chunks at 40 ms — total elapsed (400 ms) is 4× the timeout, but no
-        // single gap reaches it. A total-duration cap would have killed this.
-        for _ in 0..<10 {
-            try await Task.sleep(for: .milliseconds(40))
+        for _ in 0..<15 {
+            try await Task.sleep(for: .milliseconds(100))
             watchdog.noteActivity()
         }
         #expect(fired.count == 0)
@@ -73,7 +107,7 @@ struct StreamWatchdogTests {
     /// claim share one lock precisely so a stream that already finished can
     /// never be handed a `cliToolTimeout` afterwards.
     @Test func stopRightAtTheDeadlineIsExclusive() async throws {
-        for _ in 0..<20 {
+        for _ in 0..<10 {
             let fired = Counter()
             let watchdog = StreamWatchdog()
             watchdog.start(timeout: .milliseconds(20)) { fired.increment() }

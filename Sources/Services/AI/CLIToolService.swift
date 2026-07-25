@@ -37,14 +37,34 @@ final class StreamWatchdog: Sendable {
         state.withLock { $0.finished = true }
     }
 
+    /// One turn of the loop below.
+    enum Step: Equatable {
+        case stop
+        case fire
+        /// Sleep the rest of the window, then look again — a chunk that lands
+        /// meanwhile moves the stamp forward and buys another full window.
+        case wait(Duration)
+    }
+
+    /// The decision, pulled out of the loop so reset-on-activity can be tested
+    /// against explicit idle values instead of against the scheduler. Sleeping
+    /// for real made the test assert that its own `Task.sleep` was punctual,
+    /// which on a loaded CI runner it is not — a late pet is indistinguishable
+    /// from a stalled tool, and the watchdog was right to fire.
+    static func step(idle: Duration, timeout: Duration, finished: Bool) -> Step {
+        if finished { return .stop }
+        return idle < timeout ? .wait(timeout - idle) : .fire
+    }
+
     func start(timeout: Duration, onTimeout: @escaping @Sendable () -> Void) {
         let state = self.state
         Task.detached {
             while true {
                 let (last, finished) = state.withLock { ($0.lastActivity, $0.finished) }
-                if finished { return }
-                let idle = last.duration(to: .now)
-                guard idle < timeout else {
+                switch Self.step(idle: last.duration(to: .now), timeout: timeout, finished: finished) {
+                case .stop:
+                    return
+                case .fire:
                     // Claim the timeout under the lock: the process can exit
                     // between the read above and here, and a stream that
                     // already finished must not be handed a timeout error.
@@ -55,8 +75,9 @@ final class StreamWatchdog: Sendable {
                     }
                     if won { onTimeout() }
                     return
+                case .wait(let remaining):
+                    do { try await Task.sleep(for: remaining) } catch { return }
                 }
-                do { try await Task.sleep(for: timeout - idle) } catch { return }
             }
         }
     }
