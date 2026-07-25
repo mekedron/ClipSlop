@@ -22,10 +22,16 @@ struct CoreFileSet: Sendable {
     /// `~/.clipslop/system-prompt.md` — replaces the built-in system prompt
     /// when present and non-empty (edited from the Magic settings tab).
     let systemPromptOverride: String?
+    /// `~/.clipslop/planner-prompt.md` — replaces the built-in fast-mode
+    /// chip-planner system prompt when present and non-empty (same
+    /// delete-to-restore contract as system-prompt.md). Defaulted so the
+    /// memberwise init stays source-compatible for callers that only care
+    /// about the generation-side files.
+    var plannerPromptOverride: String? = nil
 
     static let empty = CoreFileSet(
         identity: "", writingStyle: "", constraintsText: "", aliases: "",
-        constraints: [], systemPromptOverride: nil
+        constraints: [], systemPromptOverride: nil, plannerPromptOverride: nil
     )
 }
 
@@ -59,18 +65,24 @@ final class CoreFileStore {
         let constraintsText = read("constraints.md")
         let overrideText = (try? String(contentsOf: Self.systemPromptURL, encoding: .utf8))?
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        let plannerText = (try? String(contentsOf: Self.plannerPromptURL, encoding: .utf8))?
+            .trimmingCharacters(in: .whitespacesAndNewlines)
         files = CoreFileSet(
             identity: read("identity.md"),
             writingStyle: read("writing-style.md"),
             constraintsText: constraintsText,
             aliases: read("aliases.md"),
             constraints: Self.parseConstraints(constraintsText),
-            systemPromptOverride: (overrideText?.isEmpty == false) ? overrideText : nil
+            systemPromptOverride: (overrideText?.isEmpty == false) ? overrideText : nil,
+            plannerPromptOverride: (plannerText?.isEmpty == false) ? plannerText : nil
         )
     }
 
     nonisolated static let systemPromptURL =
         Constants.Engine.rootDirectory.appendingPathComponent("system-prompt.md")
+
+    nonisolated static let plannerPromptURL =
+        Constants.Engine.rootDirectory.appendingPathComponent("planner-prompt.md")
 
     /// Recognized bullet shapes, anywhere in the file:
     ///   - never say: "some phrase"     → case/diacritic-insensitive substring rule
@@ -124,6 +136,9 @@ final class CoreFileStore {
                 .contentModificationDate ?? .distantPast
         }
         signature["system-prompt.md"] = (try? systemPromptURL.resourceValues(
+            forKeys: [.contentModificationDateKey]
+        ))?.contentModificationDate ?? .distantPast
+        signature["planner-prompt.md"] = (try? plannerPromptURL.resourceValues(
             forKeys: [.contentModificationDateKey]
         ))?.contentModificationDate ?? .distantPast
         return signature

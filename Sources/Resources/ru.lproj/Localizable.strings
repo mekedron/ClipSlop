@@ -579,6 +579,7 @@
 "settings.magic.section.core" = "Базовая память";
 "settings.magic.section.workflows" = "Воркфлоу";
 "settings.magic.system_prompt" = "Системный промпт генерации";
+"settings.magic.planner_prompt" = "Системный промпт планировщика";
 "settings.magic.reset" = "Вернуть по умолчанию";
 "settings.magic.reveal" = "Показать в Finder";
 "settings.magic.reveal_folder" = "Открыть ~/.clipslop";

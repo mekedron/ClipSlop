@@ -121,10 +121,12 @@ final class EngineToolExecutor {
                 warning = "constraints.md holds your hard rules — the verifier enforces them on every generation. This version defines \(rules.count) machine-checkable rule\(rules.count == 1 ? "" : "s")."
             } else if name == "system-prompt.md" {
                 warning = "A non-empty system-prompt.md replaces the engine's built-in generation system prompt entirely."
+            } else if name == "planner-prompt.md" {
+                warning = "A non-empty planner-prompt.md replaces the engine's built-in fast-mode chip-planner system prompt entirely."
             }
             return ToolProposal(
                 call: call,
-                title: "\(existing == nil ? "Create" : "Edit") \(name == "system-prompt.md" ? "" : "core/")\(name)",
+                title: "\(existing == nil ? "Create" : "Edit") \(Self.rootPromptFiles.contains(name) ? "" : "core/")\(name)",
                 fields: [ProposalField(label: name, oldValue: existing, newValue: content)],
                 isDestructive: false,
                 warning: warning
@@ -375,15 +377,18 @@ final class EngineToolExecutor {
     private var providersURL: URL { root.appendingPathComponent("providers.yaml") }
     private var rolesURL: URL { root.appendingPathComponent("roles.yaml") }
 
+    /// Prompt overrides that live at the engine root rather than in core/.
+    private static let rootPromptFiles: Set<String> = ["system-prompt.md", "planner-prompt.md"]
+
     private func coreFileURL(_ name: String) -> URL {
-        name == "system-prompt.md"
+        Self.rootPromptFiles.contains(name)
             ? root.appendingPathComponent(name)
             : coreDirectory.appendingPathComponent(name)
     }
 
     private func listEngineFiles() -> String {
         var top: [JSONValue] = []
-        for name in ["config.yaml", "system-prompt.md", "providers.yaml", "roles.yaml"] {
+        for name in ["config.yaml", "system-prompt.md", "planner-prompt.md", "providers.yaml", "roles.yaml"] {
             let exists = FileManager.default.fileExists(atPath: root.appendingPathComponent(name).path)
             top.append(.object(["path": .string(name), "exists": .bool(exists)]))
         }

@@ -10,12 +10,13 @@ enum EngineTools {
     /// Core files writable by name — the whitelist *is* the schema enum.
     static let coreFileNames = [
         "identity.md", "writing-style.md", "constraints.md", "aliases.md",
-        "system-prompt.md",
+        "system-prompt.md", "planner-prompt.md",
     ]
 
     /// Top-level engine files readable by relative path.
     static let topLevelReadable: Set<String> = [
         "config.yaml", "providers.yaml", "roles.yaml", "system-prompt.md",
+        "planner-prompt.md",
     ]
 
     static func contains(_ toolName: String) -> Bool {
@@ -30,7 +31,7 @@ enum EngineTools {
         // MARK: Read-only
         ToolDefinition(
             name: "list_engine_files",
-            description: "List the Magic Button engine tree (~/.clipslop): config.yaml, system-prompt.md, providers.yaml, roles.yaml, core/*.md, and every workflow markdown file with its parsed id and any load error. Call this before referencing any engine file by path.",
+            description: "List the Magic Button engine tree (~/.clipslop): config.yaml, system-prompt.md, planner-prompt.md, providers.yaml, roles.yaml, core/*.md, and every workflow markdown file with its parsed id and any load error. Call this before referencing any engine file by path.",
             parametersSchemaJSON: #"{"type":"object","properties":{},"additionalProperties":false}"#,
             isMutating: false
         ),
@@ -88,8 +89,8 @@ enum EngineTools {
         ),
         ToolDefinition(
             name: "write_core_file",
-            description: "Write one of the pinned core files that enter every Magic generation prompt (identity.md, writing-style.md, constraints.md, aliases.md) or the system-prompt.md override. For constraints.md the result reports how many machine-checkable rules ('- never say: \"…\"' / '- never match: /…/') were recognized.",
-            parametersSchemaJSON: #"{"type":"object","properties":{"name":{"type":"string","enum":["identity.md","writing-style.md","constraints.md","aliases.md","system-prompt.md"]},"content":{"type":"string","description":"Full new file content (markdown)."}},"required":["name","content"],"additionalProperties":false}"#,
+            description: "Write one of the pinned core files that enter every Magic generation prompt (identity.md, writing-style.md, constraints.md, aliases.md) or a prompt override: system-prompt.md (generation) or planner-prompt.md (fast-mode chip planner). For constraints.md the result reports how many machine-checkable rules ('- never say: \"…\"' / '- never match: /…/') were recognized.",
+            parametersSchemaJSON: #"{"type":"object","properties":{"name":{"type":"string","enum":["identity.md","writing-style.md","constraints.md","aliases.md","system-prompt.md","planner-prompt.md"]},"content":{"type":"string","description":"Full new file content (markdown)."}},"required":["name","content"],"additionalProperties":false}"#,
             isMutating: true
         ),
         ToolDefinition(
@@ -179,7 +180,7 @@ enum EngineTools {
         if parts.count == 1, topLevelReadable.contains(parts[0]) { return url }
         if parts.first == "core", parts.count == 2, url.pathExtension == "md" { return url }
         if parts.first == "workflows", parts.count >= 2, url.pathExtension == "md" { return url }
-        throw ToolError(message: "'\(relativePath)' is not a readable engine file. Readable: config.yaml, providers.yaml, roles.yaml, system-prompt.md, core/*.md, workflows/**.md.")
+        throw ToolError(message: "'\(relativePath)' is not a readable engine file. Readable: config.yaml, providers.yaml, roles.yaml, system-prompt.md, planner-prompt.md, core/*.md, workflows/**.md.")
     }
 
     /// Writable workflow paths: under workflows/, .md extension.

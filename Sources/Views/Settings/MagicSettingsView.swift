@@ -111,6 +111,13 @@ struct MagicSettingsView: View {
                 section: .system
             ),
             FileItem(
+                id: "planner-prompt",
+                title: loc.t("settings.magic.planner_prompt"),
+                url: CoreFileStore.plannerPromptURL,
+                defaultContent: MagicPlanner.defaultSystemPrompt,
+                section: .system
+            ),
+            FileItem(
                 id: "config.yaml",
                 title: "config.yaml",
                 url: EngineConfigStore.fileURL,

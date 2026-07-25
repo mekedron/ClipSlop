@@ -571,6 +571,7 @@
 "settings.magic.section.core" = "Core Memory";
 "settings.magic.section.workflows" = "Workflows";
 "settings.magic.system_prompt" = "Generation system prompt";
+"settings.magic.planner_prompt" = "Planner system prompt";
 "settings.magic.reset" = "Reset to Default";
 "settings.magic.reveal" = "Show in Finder";
 "settings.magic.reveal_folder" = "Open ~/.clipslop";

@@ -3,7 +3,7 @@ name: clipslop
 description: ClipSlop is the user's global AI shortcut manager on macOS — library prompts (translate, rewrite, fix grammar, summarize, …) bound to system-wide hotkeys that transform selected text in any app, plus a context-aware compose key (⌘⌃M) that writes into the focused field. Use whenever the user wants a new text shortcut (e.g. translate selected text to French with one keypress), wants an existing shortcut tuned (e.g. the email-rewrite shortcut fixes grammar poorly), or asks to reorganize prompts, change ClipSlop settings, pick AI providers or models, set privacy no_cloud rules, or diagnose why a shortcut or the compose key behaved oddly. Everything is files — edit the markdown/YAML tree at ~/.clipslop/ (prompts + hotkeys in workflows/library/**, settings in config.yaml, models in providers.yaml and roles.yaml, contentless logs in logs/). Edits hot-reload. Never edit prompts.json (a derived mirror); never touch API keys or the Keychain.
 license: MIT
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # ClipSlop
@@ -38,6 +38,8 @@ ENGINE FILE TREE (~/.clipslop/ — dev builds: ~/.clipslop-dev/)
   hot-reloaded.
 - system-prompt.md — optional override of the built-in generation system
   prompt (delete to restore the default).
+- planner-prompt.md — optional override of the built-in fast-mode chip
+  planner system prompt (delete to restore the default).
 - providers.yaml — the AI provider list. API keys are NOT here (Keychain,
   referenced by provider id) and must never be touched; only `locality`
   and `cost_class` are safe to edit by hand.

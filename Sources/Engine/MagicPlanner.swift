@@ -292,8 +292,10 @@ enum MagicPlanner {
     static let fieldBudgetTokens = 120
 
     /// Model-facing, English on purpose (like the generation system
-    /// prompt). No override plumbing — the planner is not a writing surface.
-    static let systemPrompt = """
+    /// prompt). `~/.clipslop/planner-prompt.md` overrides it when present
+    /// and non-empty — same contract as system-prompt.md; delete the file
+    /// to restore this default.
+    static let defaultSystemPrompt = """
     You are the action planner inside a text tool. The user pressed a compose hotkey in a \
     text field, and several prepared actions could apply. Pick the ONE candidate the \
     situation clearly calls for.
@@ -415,7 +417,8 @@ enum MagicPlanner {
         candidates: [Candidate],
         provider: AIProviderConfig,
         timeoutMs: Int,
-        service: any AIService
+        service: any AIService,
+        systemPrompt: String = MagicPlanner.defaultSystemPrompt
     ) async -> Run {
         let clock = ContinuousClock()
         let start = clock.now

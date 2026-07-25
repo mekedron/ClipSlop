@@ -483,13 +483,15 @@ final class MagicPressCoordinator {
 
         let plannerCandidates = candidates.map(MagicPlanner.Candidate.init(workflow:))
         let timeoutMs = plan.plannerTimeoutMs
+        let plannerPrompt = plan.core.plannerPromptOverride ?? MagicPlanner.defaultSystemPrompt
         plannerTask = Task { [weak self, spendLedger] in
             let run = await MagicPlanner.run(
                 snapshot: snapshot,
                 candidates: plannerCandidates,
                 provider: provider,
                 timeoutMs: timeoutMs,
-                service: AIServiceFactory.service(for: provider.providerType)
+                service: AIServiceFactory.service(for: provider.providerType),
+                systemPrompt: plannerPrompt
             )
             // Bill BEFORE the cancellation guard, and off `spendLedger` rather
             // than `self`, because the money is already gone by the time we

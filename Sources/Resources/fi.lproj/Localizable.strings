@@ -579,6 +579,7 @@
 "settings.magic.section.core" = "Ydinmuisti";
 "settings.magic.section.workflows" = "Työnkulut";
 "settings.magic.system_prompt" = "Generoinnin järjestelmäkehote";
+"settings.magic.planner_prompt" = "Suunnittelijan järjestelmäkehote";
 "settings.magic.reset" = "Palauta oletus";
 "settings.magic.reveal" = "Näytä Finderissa";
 "settings.magic.reveal_folder" = "Avaa ~/.clipslop";
