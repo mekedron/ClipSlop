@@ -91,6 +91,36 @@ actor AXSnapshotService {
         "AXTextArea", "AXTextField", "AXComboBox", "AXSearchField",
     ]
 
+    /// The `textRoles` members that can carry `AXSecureTextField` as a SUBROLE
+    /// rather than as their role. Static text, headings, links and cells never
+    /// do, so only these two ever pay for the extra read below.
+    private static let subroleMayBeSecure: Set<String> = ["AXTextArea", "AXTextField"]
+
+    /// Whether a node the walk is about to read the value of is a password
+    /// field.
+    ///
+    /// The focused field is guarded by role OR subrole before any value is
+    /// touched, because a password field routinely publishes a plain
+    /// `AXTextField` role and carries the secure marker in its subrole alone.
+    /// Every node the surrounding walk reaches deserves the same test: a login
+    /// form, a "confirm password" row or an unlock sheet sitting beside the
+    /// composer is a sibling like any other, and role membership alone would
+    /// read its value into the prompt. macOS usually hands back a mask rather
+    /// than the characters — that is a mitigation, not the invariant. The
+    /// invariant is that a secure value is never touched, and it has to hold on
+    /// every path that reads one, not only on the one the press is aimed at.
+    ///
+    /// One extra attribute read, spent from the same budget as everything else
+    /// and only for the two roles that can answer yes. An unreadable subrole is
+    /// not evidence of safety, but it is not evidence of danger either: the
+    /// element already failed the role test for `AXSecureTextField`, and
+    /// refusing every field whose subrole merely timed out would silently empty
+    /// the context on exactly the flaky AX servers R4 exists for.
+    private func isSecureField(_ element: AXUIElement, role: String, budget: inout Budget) -> Bool {
+        guard Self.subroleMayBeSecure.contains(role) else { return false }
+        return copyString(element, kAXSubroleAttribute, &budget) == "AXSecureTextField"
+    }
+
     /// Captures the focused field and its surroundings. Always returns a
     /// snapshot — on budget/deadline exhaustion it is partial, never absent.
     /// `appInfo` is read by the caller on the main actor before the hop
@@ -515,6 +545,7 @@ actor AXSnapshotService {
             guard depth < budget.maxWebDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return }
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
             if Self.textRoles.contains(role) {
+                if isSecureField(element, role: role, budget: &budget) { return }
                 let text = copyString(element, kAXValueAttribute, &budget)
                     ?? copyString(element, kAXTitleAttribute, &budget)
                 if let text {
@@ -592,6 +623,7 @@ actor AXSnapshotService {
 
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
             if Self.textRoles.contains(role) {
+                if isSecureField(element, role: role, budget: &budget) { return }
                 let text = copyString(element, kAXValueAttribute, &budget)
                     ?? copyString(element, kAXTitleAttribute, &budget)
                 if let text {
@@ -698,6 +730,7 @@ actor AXSnapshotService {
         guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
 
         if Self.textRoles.contains(role) {
+            if isSecureField(element, role: role, budget: &budget) { return }
             let text = copyString(element, kAXValueAttribute, &budget)
                 ?? copyString(element, kAXTitleAttribute, &budget)
                 ?? copyString(element, kAXDescriptionAttribute, &budget)
@@ -789,6 +822,7 @@ actor AXSnapshotService {
         guard depth < maxDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return nil }
         guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
         if Self.textRoles.contains(role) {
+            if isSecureField(element, role: role, budget: &budget) { return nil }
             var text = copyString(element, kAXValueAttribute, &budget)
                 ?? copyString(element, kAXTitleAttribute, &budget)
             if text == nil, descriptionFallback {
@@ -912,6 +946,7 @@ actor AXSnapshotService {
 
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
             if Self.textRoles.contains(role) {
+                if isSecureField(element, role: role, budget: &budget) { return nil }
                 let text = copyString(element, kAXValueAttribute, &budget)
                     ?? copyString(element, kAXTitleAttribute, &budget)
                 guard let text else { return nil }

@@ -733,14 +733,23 @@ final class MagicPressCoordinator {
         let decision = press.decision
         let classification = press.classification
 
-        generationTask = Task { [weak self] in
+        generationTask = Task { [weak self, spendLedger] in
             do {
                 let result = try await MagicPressPipeline.execute(
                     plan: plan, snapshot: snapshot, workflow: workflow,
                     decision: decision, classification: classification, hint: hint
                 )
+                // Bill BEFORE the cancellation guard, and off `spendLedger`
+                // rather than `self`, for the same reason the planner call does
+                // (see `startPlannerOrChips`): the provider has answered, so the
+                // tokens are spent whatever the press decides next. An Escape
+                // landing in this gap ends the press, not the invoice — and
+                // this is the expensive call of the two, so a hole here
+                // under-reports `spend_summary` by more than the planner's ever
+                // could.
+                await spendLedger.append(Self.generationSpend(result))
                 guard !Task.isCancelled else { return }
-                await self?.handleResult(result)
+                await self?.handleResult(result, for: snapshot.ts)
             } catch {
                 guard !Task.isCancelled, !Self.isCancellation(error) else { return }
                 await self?.handleGenerationError(error)
@@ -748,10 +757,11 @@ final class MagicPressCoordinator {
         }
     }
 
-    private func handleResult(_ result: MagicPressResult) async {
-        guard var press = activePress else { return }
-        press.result = result
-        let spend = SpendRecord(
+    /// The generation's ledger entry. `nonisolated`: pure arithmetic on values,
+    /// run from the generation task, which must be able to bill without
+    /// touching coordinator state. Twin of `plannerSpend`.
+    private nonisolated static func generationSpend(_ result: MagicPressResult) -> SpendRecord {
+        SpendRecord(
             ts: Date(),
             role: EngineRole.generationMagic.rawValue,
             provider: result.traceDraft.providerType ?? "unknown",
@@ -760,7 +770,22 @@ final class MagicPressCoordinator {
             outputTokens: result.outputTokens,
             estimated: result.usageEstimated
         )
-        Task { [spendLedger] in await spendLedger.append(spend) }
+    }
+
+    /// Takes the press identity the result was generated for, and refuses to
+    /// act on anything else — the same rule `performInsert` applies one step
+    /// later, and for the same reason: reaching here costs a hop onto the main
+    /// actor, and the band mutates freely across it. Escape while `.generating`
+    /// clears `activePress`; a hotkey right after starts a different one. A bare
+    /// `activePress != nil` test cannot tell those two apart, so the losing
+    /// press's output, trace and toast could be hung on the winner.
+    ///
+    /// Spend is deliberately NOT this method's business — the caller appends it
+    /// ahead of its cancellation guard, because the invoice is owed however this
+    /// guard answers.
+    private func handleResult(_ result: MagicPressResult, for pressTs: Date) async {
+        guard var press = activePress, press.snapshot.ts == pressTs else { return }
+        press.result = result
         var trace = result.traceDraft
         trace.latencyMs.snapshot = press.trace.latencyMs.snapshot
         trace.latencyMs.planner = press.trace.latencyMs.planner

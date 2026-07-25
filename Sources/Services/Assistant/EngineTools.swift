@@ -194,7 +194,16 @@ enum EngineTools {
         // mirror, the per-prompt hotkey refresh, and the UUID bookkeeping —
         // and the store's next persist() can recreate a file this tool
         // deleted. Library edits go through the PromptLibraryTools instead.
-        guard parts[1] != "library" else {
+        //
+        // Compared case-INSENSITIVELY, unlike the allow-rules above. The
+        // default macOS volume is case-insensitive, so "workflows/Library/x.md"
+        // names the very same directory; an exact comparison would let a
+        // one-letter spelling walk straight past the one guard standing between
+        // a model-authored write and the library's bookkeeping. The allow-rules
+        // may stay exact — a case they refuse is a path they simply do not
+        // grant, which is the safe direction; this one is a denial, where the
+        // safe direction is the opposite.
+        guard parts[1].caseInsensitiveCompare("library") != .orderedSame else {
             throw ToolError(
                 message: "'\(relativePath)' is in the prompt library. Use the prompt-library tools (list_prompts / write_prompt / delete_prompt) for those cards — writing them as workflow files bypasses the library's mirror and hotkeys."
             )

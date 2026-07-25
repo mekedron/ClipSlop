@@ -173,7 +173,14 @@ struct EngineToolExecutorTests {
         defer { try? FileManager.default.removeItem(at: root) }
         let executor = executor(root)
 
-        for path in ["workflows/library/fix-grammar.md", "workflows/library/format/tldr.md"] {
+        for path in [
+            "workflows/library/fix-grammar.md", "workflows/library/format/tldr.md",
+            // Case variants name the same directory on the default
+            // case-insensitive macOS volume, so the refusal has to be
+            // case-insensitive too — an exact comparison would let a one-letter
+            // spelling write into the library with none of its bookkeeping.
+            "workflows/Library/fix-grammar.md", "workflows/LIBRARY/format/tldr.md",
+        ] {
             #expect(throws: ToolError.self) {
                 try executor.perform(call("write_workflow", ["path": path, "content": "x"]))
             }
