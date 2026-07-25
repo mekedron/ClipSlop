@@ -543,8 +543,21 @@ actor AXSnapshotService {
         }
 
         let systemWide = AXUIElementCreateSystemWide()
+        // Bound to the app the caller sampled, twice, exactly as `capture` is
+        // and for a weaker but real version of the same reason. `appInfo` is
+        // read on the main actor before the hop here, so the user can have
+        // switched apps in between; without these guards the cached URL, title
+        // and element belong to the new process while the record still claims
+        // the old one's pid and bundle id. The press-time backfill would not
+        // act on it — it additionally requires `CFEqual` against the element it
+        // just read, which a foreign element cannot satisfy — but nothing else
+        // downstream re-checks provenance, and a cache entry that names the
+        // wrong app is not a thing to keep merely because today's one consumer
+        // happens to look past it.
         guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget),
-              let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
+              Self.pid(of: app) == appInfo.pid,
+              let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget),
+              Self.pid(of: focused) == appInfo.pid
         else { return context() }
 
         let role = copyString(focused, kAXRoleAttribute, &budget)
