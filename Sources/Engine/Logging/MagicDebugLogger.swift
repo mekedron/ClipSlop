@@ -23,6 +23,16 @@ struct MagicDebugEntry: Sendable {
 /// `~/.clipslop/logs/debug/`, pruned after 7 days. These files contain the
 /// user's actual screen content and drafts — the header of every file says
 /// so.
+///
+/// Every press, `no_cloud` surfaces included, and deliberately: `no_cloud`
+/// (§14, P7) is a rule about which *provider* may see a surface, and skipping
+/// those presses here would blind the one diagnostic on exactly the apps whose
+/// routing is hardest to reason about — the ones that refuse, or silently swap
+/// to a local model. Local disk is not the boundary that setting draws. What
+/// carries the risk instead is the mode being on at all, so it is opt-in, the
+/// files are 0600 in a 0700 directory, they expire in a week, and both the file
+/// header and `docs/guides/privacy-and-data` say plainly that a protected app's
+/// content lands here too.
 actor MagicDebugLogger {
     private let directory: URL
     private let keepDays: Int
@@ -105,8 +115,10 @@ actor MagicDebugLogger {
     nonisolated static func render(_ entry: MagicDebugEntry) -> String {
         var out = """
         # Magic Button debug log
-        > Contains full screen content, prompts, and model output. Delete freely;
-        > files older than 7 days are pruned automatically.
+        > Contains full screen content, prompts, and model output — including
+        > presses on `no_cloud` surfaces, which that setting keeps off the
+        > network rather than off this disk. Delete freely; files older than
+        > 7 days are pruned automatically.
 
         - trace: `\(entry.trace.traceID.uuidString)` (links to traces-*.jsonl)
         - time: \(entry.trace.ts.ISO8601Format())

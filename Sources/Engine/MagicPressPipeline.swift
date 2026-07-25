@@ -107,6 +107,16 @@ enum MagicPressPipelineError: LocalizedError {
 enum MagicPressPipeline {
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.pipeline")
 
+    /// Token counts owed for calls whose text a press discarded — the retried
+    /// attempts. `estimated` is sticky: a total that mixes one reported count
+    /// with one chars/4 guess is a guess, and `spend_summary` must not show it
+    /// as measured.
+    struct Usage: Sendable {
+        var input = 0
+        var output = 0
+        var estimated = false
+    }
+
     /// "The model gave us nothing, for no stated reason" — the only shape a
     /// blind retry can fix. `generationStopped` is deliberately excluded: the
     /// provider reported a failure, an incomplete response, or a refusal, and
@@ -235,26 +245,70 @@ enum MagicPressPipeline {
         let generateStart = clock.now
         let service = AIServiceFactory.service(for: provider.providerType)
 
-        func attemptGeneration() async throws -> (AIGenerationResult, String) {
+        // One attempt's outcome. `.empty` rather than a thrown error because
+        // the call ANSWERED — the usage it reports is owed whatever its text was
+        // worth, and an error carries no payload back to the caller.
+        enum Attempt {
+            case produced(AIGenerationResult, String)
+            case empty(AIGenerationResult)
+        }
+
+        func attemptGeneration() async throws -> Attempt {
             let generation = try await service.processWithUsage(
                 text: assembled.userMessage,
                 systemPrompt: assembled.systemPrompt,
                 config: provider
             )
             let output = generation.text.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !output.isEmpty else { throw AIServiceError.emptyResponse }
-            return (generation, output)
+            return output.isEmpty ? .empty(generation) : .produced(generation, output)
         }
 
         // Reasoning backends intermittently complete a stream with no
         // output text at all. One silent retry absorbs that; a second
         // empty stream surfaces the (now descriptive) error.
-        func generateWithOneRetry() async throws -> (AIGenerationResult, String) {
+        //
+        // The retry travels with the bill for what it replaced. A retried press
+        // pays the provider twice, so the ledger has to say so or
+        // `spend_summary` under-reports by exactly the retry rate — on the
+        // reasoning backends the retry exists for, which are the expensive ones.
+        // Same rule the press band applies to a planner call that lost its race
+        // (`MagicPressCoordinator.startPlannerOrChips`): routing is what the
+        // press moved on from, the invoice is not.
+        //
+        // Only attempts that COMPLETED can be counted. A service that throws
+        // `.emptyStream` from inside itself reports no usage at all, so those
+        // tokens are unrecoverable here and stay unbilled — a gap in what the
+        // provider tells us, not one this function can close. Carried back as a
+        // return value rather than accumulated in a captured `var`: this runs as
+        // a task-group child below, and shared mutable state across that
+        // boundary is a data race the compiler is right to refuse.
+        func generateWithOneRetry() async throws -> (AIGenerationResult, String, Usage) {
+            var abandoned = Usage()
+            func recordAbandoned(_ generation: AIGenerationResult) {
+                abandoned.input += generation.inputTokens ?? assembled.totalTokensEstimated
+                abandoned.output += generation.outputTokens ?? 0
+                abandoned.estimated = abandoned.estimated
+                    || generation.inputTokens == nil || generation.outputTokens == nil
+            }
+
             do {
-                return try await attemptGeneration()
+                switch try await attemptGeneration() {
+                case .produced(let generation, let output):
+                    return (generation, output, abandoned)
+                case .empty(let generation):
+                    recordAbandoned(generation)
+                    Self.logger.warning("first generation attempt returned no text — retrying once")
+                }
             } catch let error where Self.isEmptyGeneration(error) {
                 Self.logger.warning("first generation attempt returned nothing (\(error.localizedDescription, privacy: .public)) — retrying once")
-                return try await attemptGeneration()
+            }
+
+            switch try await attemptGeneration() {
+            case .produced(let generation, let output):
+                return (generation, output, abandoned)
+            case .empty(let generation):
+                recordAbandoned(generation)
+                throw AIServiceError.emptyResponse
             }
         }
 
@@ -263,6 +317,7 @@ enum MagicPressPipeline {
         // budget — and 0 (the default) means no cap.
         let generation: AIGenerationResult
         var output: String
+        let abandoned: Usage
         let budgetMs = workflow.card.budget.ms
         if budgetMs > 0 {
             // A task group here is only a HARD cap because every `AIService`
@@ -280,8 +335,18 @@ enum MagicPressPipeline {
             // cancel breaks this cap and nothing else will say so — such a
             // service must either be made cancellable or this code must move to
             // the planner's pattern.
-            (generation, output) = try await withThrowingTaskGroup(
-                of: (AIGenerationResult, String).self
+            //
+            // Spend when the cap wins is knowingly unbilled: `execute` throws,
+            // the press band's `catch` has no result to append, and the
+            // cancelled generation never reports usage — there is nothing to
+            // record rather than something being dropped. It is not the planner
+            // hole in a new place: that call had ANSWERED and was thrown away
+            // behind a cancellation guard, while this one is stopped mid-flight.
+            // The residual — a provider that billed for tokens produced before
+            // the SIGTERM/cancel landed — is accepted, and is the reason
+            // `budget.ms` defaults to 0.
+            (generation, output, abandoned) = try await withThrowingTaskGroup(
+                of: (AIGenerationResult, String, Usage).self
             ) { group in
                 group.addTask { try await generateWithOneRetry() }
                 group.addTask {
@@ -293,7 +358,7 @@ enum MagicPressPipeline {
                 return first
             }
         } else {
-            (generation, output) = try await generateWithOneRetry()
+            (generation, output, abandoned) = try await generateWithOneRetry()
         }
         trace.latencyMs.generate = Self.ms(clock.now - generateStart)
         output = ContinuationSeam.adjust(output: output, for: snapshot)
@@ -311,11 +376,15 @@ enum MagicPressPipeline {
         trace.verifierPassed = verdict.passed
         trace.verifierChecks = verdict.warnings.map(\.check.rawValue)
 
+        // What this press cost in total, abandoned attempts included — the press
+        // band appends exactly this once, so anything missing here is missing
+        // from `spend_summary` for good.
         return MagicPressResult(
             output: output, verdict: verdict, assembled: assembled, traceDraft: trace,
-            inputTokens: generation.inputTokens ?? assembled.totalTokensEstimated,
-            outputTokens: generation.outputTokens ?? TokenEstimator.estimate(output),
+            inputTokens: (generation.inputTokens ?? assembled.totalTokensEstimated) + abandoned.input,
+            outputTokens: (generation.outputTokens ?? TokenEstimator.estimate(output)) + abandoned.output,
             usageEstimated: generation.inputTokens == nil || generation.outputTokens == nil
+                || abandoned.estimated
         )
     }
 

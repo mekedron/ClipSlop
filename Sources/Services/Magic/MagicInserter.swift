@@ -165,8 +165,16 @@ fileprivate actor AXFieldReader {
         ) == .success, let selectedRef, CFGetTypeID(selectedRef) == AXValueGetTypeID()
         else { return MagicSelectionProbe(value: value, hasLiveSelection: false, liveRange: nil) }
 
+        // Type-checked before the read, like `fieldProbe` and
+        // `AXSnapshotService.copyRange`: `AXValueGetValue` does return false on a
+        // mismatch, so this is agreement between the three sites that decode the
+        // same attribute rather than a crash guard — a field publishing a
+        // `.cgRect` here must read as "no live selection", not as one whose
+        // bounds happened to survive the cast.
+        let selectedValue = selectedRef as! AXValue
         var current = CFRange()
-        guard AXValueGetValue((selectedRef as! AXValue), .cfRange, &current), current.length > 0
+        guard AXValueGetType(selectedValue) == .cfRange,
+              AXValueGetValue(selectedValue, .cfRange, &current), current.length > 0
         else { return MagicSelectionProbe(value: value, hasLiveSelection: false, liveRange: nil) }
 
         // Converted inside the same hop that read the value: AX speaks UTF-16

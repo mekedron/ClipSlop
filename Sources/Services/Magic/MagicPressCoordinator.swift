@@ -1415,8 +1415,18 @@ final class MagicPressCoordinator {
         let config = configStore.config
 
         let warm = frontmostObserver.warm
+        // Claim the band for the whole settle + capture, synchronously, before
+        // the task exists. The `.idle` test above is only true at the instant it
+        // runs: the settle below leaves the main actor free, so a ⌘⌃M landing in
+        // it starts a real press — and the `writeGenerated` at the end of this
+        // method then bumps `changeCount` inside that press's open pasteboard
+        // transaction, whose `restore` refuses on principle (§3.5, R3) and
+        // leaves the user's clipboard destroyed. `.collecting` is what the
+        // reducer already refuses a second press from.
+        phase = .collecting
         Task { [weak self] in
             guard let self else { return }
+            defer { self.phase = .idle }
             try? await Task.sleep(for: .milliseconds(600))
             let snapshot = await self.snapshotService.capture(
                 appInfo: self.frontmostAppInfo(), locale: locale, config: config, warm: warm
@@ -1491,8 +1501,14 @@ final class MagicPressCoordinator {
         let config = configStore.config
 
         let warm = frontmostObserver.warm
+        // Same claim as `dryRunToClipboard`, and here the stake is a second
+        // synthetic ⌘V: a real press starting during the settle would run its
+        // own `inserter.insert` against the same `lastWrite` bookkeeping this
+        // one is about to write.
+        phase = .collecting
         Task { [weak self] in
             guard let self else { return }
+            defer { self.phase = .idle }
             try? await Task.sleep(for: .milliseconds(600))
             let snapshot = await self.snapshotService.capture(
                 appInfo: self.frontmostAppInfo(), locale: locale, config: config, warm: warm
