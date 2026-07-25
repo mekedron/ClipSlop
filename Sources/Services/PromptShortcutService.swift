@@ -392,9 +392,6 @@ final class PromptShortcutService {
         isProcessingInline = true
         let shouldSelectAll = selectAllOverride ?? (prompt.selectAllBeforeCapture == true)
 
-        // Save the original clipboard (string + rich representations).
-        let saved = PasteboardTransaction.save()
-
         // Optionally simulate Cmd+A first to select all text
         if shouldSelectAll {
             SyntheticKeystroke.post(SyntheticKeystroke.keyA)
@@ -402,6 +399,15 @@ final class PromptShortcutService {
 
         inlineTask = Task { [weak self] in
             guard let self else { return }
+
+            // Save the original clipboard (string + rich representations).
+            //
+            // Inside the task rather than before it, because the capture now
+            // runs off the main thread and this method is synchronous. Ordering
+            // is unaffected: what must not precede the save is the ⌘C below,
+            // which is the only thing here that writes the pasteboard — the ⌘A
+            // above changes the selection and nothing else.
+            let saved = await PasteboardTransaction.save()
 
             if shouldSelectAll {
                 try? await Task.sleep(for: .milliseconds(100))

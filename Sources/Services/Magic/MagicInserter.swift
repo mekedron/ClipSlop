@@ -406,7 +406,10 @@ final class MagicInserter {
             snapshot.field?.value ?? "", snapshot.field?.selection
         )
 
-        let saved = PasteboardTransaction.save()
+        // Off the main thread (see `PasteboardTransaction.readQueue`), so a
+        // large clipboard does not stall the UI here. Still ordered before our
+        // own write — the `await` is what guarantees it.
+        let saved = await PasteboardTransaction.save()
         let ourCount = PasteboardTransaction.writeGenerated(text)
         PasteboardTransaction.postPaste()
 

@@ -83,8 +83,15 @@ struct AnthropicService: AIService {
             throw AIServiceError.missingAPIKey
         }
 
-        let url = URL(string: config.baseURL)!
-            .appendingPathComponent("v1/messages")
+        // Throwing, not force-unwrapping: `base_url` is hand-editable in
+        // `~/.clipslop/providers.yaml`, and `URL(string:)` is nil for an empty
+        // string — which is exactly what `base_url:` with nothing after it
+        // parses to. `ProvidersFile.isUsableBaseURL` rejects that at the door,
+        // but this value also arrives from the older JSON provider store, so
+        // the request builder refuses rather than trapping.
+        guard let url = URL(string: config.baseURL)?.appendingPathComponent("v1/messages") else {
+            throw AIServiceError.invalidURL
+        }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

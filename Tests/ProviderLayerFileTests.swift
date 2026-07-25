@@ -99,6 +99,69 @@ struct ProvidersFileTests {
         #expect(ok.warnings.isEmpty)
     }
 
+    /// An empty `base_url:` used to reach `URL(string:)!` in the two Anthropic
+    /// request builders and trap the process — `URL(string: "")` is nil, and an
+    /// empty *scalar* is not an absent key, so `AIProviderConfig`'s fall back to
+    /// the type's default endpoint never engaged. A hand-editable file must not
+    /// be able to crash the app from a typo.
+    @Test func unusableBaseURLIsRejectedAndTheTypeDefaultKept() {
+        // `""` is the crashing spelling — a *quoted* empty scalar reaches the
+        // config as "" rather than as an absent key. (A bare `base_url:` with
+        // nothing after it never got that far: the frontmatter parser refuses
+        // the whole record, which the case below pins.) The rest have no scheme
+        // or no host, so `appendingPathComponent` would build a nonsense request
+        // and `effectiveLocality` could not see a host to call local.
+        for bad in ["\"\"", "\"   \"", "api.anthropic.com", "localhost:11434", "ftp://example.com"] {
+            let result = ProvidersFile.parse("""
+            ---
+            providers:
+              - id: \(UUID().uuidString)
+                type: anthropic
+                base_url: \(bad)
+            ---
+            """)
+            guard result.providers.count == 1 else {
+                Issue.record("record dropped for '\(bad)': \(result.warnings)")
+                continue
+            }
+            #expect(
+                result.providers[0].baseURL == AIProviderType.anthropic.defaultBaseURL,
+                "kept unusable base_url '\(bad)'"
+            )
+            #expect(result.warnings.contains { $0.contains("base_url") }, "no warning for '\(bad)'")
+            // The guarantee the crash depended on: whatever survives parsing is
+            // something the request builders can actually turn into a URL.
+            #expect(URL(string: result.providers[0].baseURL) != nil)
+        }
+
+        // The one spelling that fails earlier and harder: no value at all is a
+        // structural error, so the record is skipped rather than defaulted.
+        let bare = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: anthropic
+            base_url:
+        ---
+        """)
+        #expect(bare.providers.isEmpty)
+        #expect(bare.warnings.contains { $0.contains("base_url") })
+
+        let ok = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: ollama
+            base_url: "http://localhost:11434"
+        ---
+        """)
+        #expect(ok.providers[0].baseURL == "http://localhost:11434")
+        #expect(ok.warnings.isEmpty, "warnings: \(ok.warnings)")
+        // And it still reads as this machine, so the P7 privacy binding can
+        // serve a no_cloud surface from it.
+        #expect(ok.providers[0].effectiveLocality == .local)
+    }
+
     /// The legacy providers.json is the only copy of this configuration until
     /// providers.yaml is verifiably on disk; an atomic write reports success
     /// from the rename, not from the bytes.

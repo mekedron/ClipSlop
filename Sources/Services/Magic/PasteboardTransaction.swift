@@ -31,8 +31,34 @@ enum PasteboardTransaction {
     static let transientType = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
     static let concealedType = NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType")
 
-    private static let logger = Logger(
+    /// `nonisolated` so `readSaved` can log from `readQueue`. `Logger` is
+    /// `Sendable`, and os_log is itself thread-safe.
+    nonisolated private static let logger = Logger(
         subsystem: Constants.bundleIdentifier, category: "engine.pasteboard"
+    )
+
+    /// The thread `save()`'s bulk read runs on.
+    ///
+    /// That read walks every representation of every pasteboard item and copies
+    /// the bytes — synchronous IPC to the pasteboard server, bounded only by
+    /// `saveBudgetBytes`, i.e. up to a quarter of a gigabyte for a screenshot
+    /// carried as TIFF + PNG + PDF. On the main actor that is a stall on the
+    /// insert path at the exact moment the user is watching for their paste,
+    /// which is the same reason capture and the insert path's AX I/O are off the
+    /// main actor (R4, `AXFieldReader`).
+    ///
+    /// A dedicated serial queue rather than an `actor`: an actor guarantees the
+    /// reads never overlap, but not that they share a thread, and `NSPasteboard`
+    /// is only safe under single-thread use. One queue gives both.
+    ///
+    /// Only the *read* moves. `writeGenerated`, `restore` and
+    /// `markCurrentItemGenerated` are O(1) type declarations rather than bulk
+    /// copies, and they sit inside the save → write → paste → confirm → grace →
+    /// restore transaction whose ordering is load bearing — putting suspension
+    /// points between those steps would buy nothing and reopen every window the
+    /// press band's guards were written to close.
+    nonisolated private static let readQueue = DispatchQueue(
+        label: "\(Constants.bundleIdentifier).pasteboard-read", qos: .userInitiated
     )
 
     /// A fuse against a pasteboard that should not exist — NOT a memory policy
@@ -124,7 +150,21 @@ enum PasteboardTransaction {
         var isRestorable: Bool { items != nil }
     }
 
-    static func save() -> Saved {
+    /// Captures the whole pasteboard, off the main thread (see `readQueue`).
+    ///
+    /// Callers always `await` this before their own write, so our own writes
+    /// still cannot interleave with the walk below. A *foreign* write can — it
+    /// always could, the pasteboard being a shared multi-process resource — and
+    /// the outcome is unchanged: `Saved.changeCount` may then predate the items
+    /// it was read with, and `restore` declines rather than fighting the other
+    /// writer (§3.5, R3).
+    nonisolated static func save() async -> Saved {
+        await withCheckedContinuation { continuation in
+            readQueue.async { continuation.resume(returning: readSaved()) }
+        }
+    }
+
+    nonisolated private static func readSaved() -> Saved {
         let pasteboard = NSPasteboard.general
         let changeCount = pasteboard.changeCount
 

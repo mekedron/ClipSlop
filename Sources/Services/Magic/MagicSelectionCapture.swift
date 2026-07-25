@@ -30,7 +30,7 @@ enum MagicSelectionCapture {
     /// Captures the selection via ⌘C with changeCount polling, restores the
     /// previous pasteboard, and returns an updated snapshot. One retry.
     static func refine(_ snapshot: MagicSnapshot) async -> MagicSnapshot {
-        let saved = PasteboardTransaction.save()
+        let saved = await PasteboardTransaction.save()
 
         var captured = await PasteboardTransaction.captureViaCommandC()
         if captured == nil {

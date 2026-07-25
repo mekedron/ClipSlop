@@ -13,7 +13,11 @@ struct AnthropicToolChatService: ToolChatService {
             throw AIServiceError.missingAPIKey
         }
 
-        let url = URL(string: config.baseURL)!.appendingPathComponent("v1/messages")
+        // See `AnthropicService.buildRequest`: `base_url` is hand-editable, and
+        // an empty one makes `URL(string:)` nil rather than falling back.
+        guard let url = URL(string: config.baseURL)?.appendingPathComponent("v1/messages") else {
+            throw AIServiceError.invalidURL
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")

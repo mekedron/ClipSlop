@@ -50,6 +50,15 @@ Entries are matched case-insensitively:
 - **exact or suffix** match of the page URL's host (`gmail.com` matches
   `mail.gmail.com`).
 
+The bundle-id rule is a plain substring test, so a short entry catches far
+more than it looks like: `mail` matches `com.apple.mail` **and**
+`com.google.Gmail` **and** `com.microsoft.MailApp`, and `com` matches
+essentially every app on the machine. The error always falls the safe way —
+an over-broad entry sends presses to a local provider or refuses them, never
+the reverse — but it is still surprising, and "the Magic Button stopped
+working everywhere" is usually a one-word `no_cloud` entry. Prefer full
+bundle ids when a rule is meant for one app.
+
 A press on a matching surface switches to a `locality: local` provider
 from the role's fallback chain, or **refuses honestly** (trace outcome
 `error:generation:noCloud`) when none exists. The role's `min_cost_class`

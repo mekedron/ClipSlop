@@ -26,6 +26,34 @@ enum ProvidersFile {
     /// is caught but a future model is not.
     static let maxTokensRange = 1...1_000_000
 
+    /// Whether a hand-written `base_url` can actually be turned into a request.
+    ///
+    /// The request builders append their path to this value and hand the result
+    /// to `URLRequest` — and two of them (`AnthropicService`,
+    /// `AnthropicToolChatService`) used to do it through a force-unwrap, so a
+    /// `base_url:` typed with nothing after it crashed the app on the next
+    /// press: `URL(string: "")` is nil, and an empty *scalar* is not the same as
+    /// an absent key, so `AIProviderConfig`'s "fall back to the type's default"
+    /// never engaged. Those unwraps now throw, and this stops the value at the
+    /// door instead — a validated, hot-reloaded config file must not be able to
+    /// break generation from a typo (the same reasoning as `maxTokensRange`).
+    ///
+    /// A scheme and a host are both required, not just parseability:
+    /// `URL(string: "api.example.com")` succeeds and yields a *relative* URL
+    /// with no host, which `appendingPathComponent` turns into a nonsense
+    /// request — and `AIProviderConfig.effectiveLocality` reads `.host` to
+    /// decide whether the endpoint is this machine, so a hostless URL silently
+    /// derives `.cloud` and the P7 privacy binding stops recognising a local
+    /// provider as local.
+    static func isUsableBaseURL(_ raw: String) -> Bool {
+        let trimmed = raw.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, let url = URL(string: trimmed) else { return false }
+        guard let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme) else {
+            return false
+        }
+        return !(url.host ?? "").isEmpty
+    }
+
     // MARK: - Parse
 
     static func parse(_ text: String) -> ParseResult {
@@ -119,12 +147,23 @@ enum ProvidersFile {
                 }
             }
 
+            // nil is "not set", which the memberwise init backfills with the
+            // type's default endpoint. An unusable value is reported and mapped
+            // back to nil so it takes that same path — keeping the record on a
+            // working endpoint, the way an out-of-range `max_tokens` keeps the
+            // default rather than skipping the provider.
+            var baseURL = scalar("base_url")
+            if let raw = baseURL, !isUsableBaseURL(raw) {
+                result.warnings.append("providers.yaml \(line("base_url")): 'base_url' must be an absolute http(s) URL like \"https://api.anthropic.com\" — default \(type.defaultBaseURL) kept")
+                baseURL = nil
+            }
+
             let isDefault = ["1", "true"].contains(scalar("default") ?? "")
             var config = AIProviderConfig(
                 id: id,
                 name: scalar("name") ?? type.displayName,
                 providerType: type,
-                baseURL: scalar("base_url"),
+                baseURL: baseURL,
                 apiKeyRef: scalar("api_key_ref"),
                 modelID: scalar("model"),
                 isDefault: isDefault,
