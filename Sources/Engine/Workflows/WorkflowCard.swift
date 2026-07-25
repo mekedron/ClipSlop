@@ -36,9 +36,18 @@ struct WhenPredicate: Sendable, Equatable {
 
 struct BudgetSpec: Sendable, Equatable {
     let promptTokensTotal: Int
+    /// Wall-clock deadline for the generation call, in milliseconds. **0 means
+    /// no cap** — the same 0-is-off convention as `surrounding_max_tokens` and
+    /// `planner_timeout_ms`, and the default, because a card that says nothing
+    /// about time should not acquire a deadline.
+    ///
+    /// It was previously parsed, documented as a "time budget", defaulted to
+    /// 6000, and read by nothing at all. Enforcing that default retroactively
+    /// would have killed most presses on a reasoning model, so the default
+    /// became "no cap" and a positive value is now a promise the engine keeps.
     let ms: Int
 
-    static let `default` = BudgetSpec(promptTokensTotal: 3500, ms: 6000)
+    static let `default` = BudgetSpec(promptTokensTotal: 3500, ms: 0)
 }
 
 struct OutputSpec: Sendable, Equatable {

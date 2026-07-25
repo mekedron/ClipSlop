@@ -306,6 +306,44 @@ struct MagicPlannerTests {
         #expect(elapsed < .seconds(2))
     }
 
+    /// A provider that ignores cancellation — the CLIToolService shape, where
+    /// the wait is a subprocess and not a `Task.sleep`. `withTaskGroup` awaits
+    /// its children even after `cancelAll()`, so the old race let such a
+    /// provider hold `run` open long past `planner_timeout_ms`.
+    private struct UncancellableAIService: AIService {
+        let delayMs: Int
+
+        func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
+            try await processWithUsage(text: text, systemPrompt: systemPrompt, config: config).text
+        }
+
+        func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
+            AsyncThrowingStream { $0.finish() }
+        }
+
+        func processWithUsage(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> AIGenerationResult {
+            let delayMs = delayMs
+            await withUnsafeContinuation { continuation in
+                DispatchQueue.global().asyncAfter(deadline: .now() + .milliseconds(delayMs)) {
+                    continuation.resume()
+                }
+            }
+            return AIGenerationResult(text: "base.reply")
+        }
+    }
+
+    @Test func capIsHardEvenWhenTheProviderIgnoresCancellation() async {
+        let clock = ContinuousClock()
+        let start = clock.now
+        let run = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 60,
+            service: UncancellableAIService(delayMs: 3_000)
+        )
+        #expect(run.outcome == .timedOut)
+        #expect(clock.now - start < .seconds(1))
+    }
+
     @Test func serviceErrorFailsSoftly() async {
         let service = MockAIService(delayMs: 0) {
             throw AIServiceError.emptyResponse

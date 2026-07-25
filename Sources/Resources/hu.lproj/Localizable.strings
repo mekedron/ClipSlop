@@ -527,6 +527,7 @@
 
 // Magic Button (context engine V0)
 "magic.name" = "Magic Button";
+"magic.hud.no_routable_workflow" = "No workflow matches this app or field. Add or fix a workflow card with a `when:` block (Settings → Magic).";
 "magic.hud.no_target" = "Click into a text field or select text, then press the Magic hotkey.";
 "magic.chips.hint_placeholder" = "Describe what you want…";
 "magic.chips.context_blind" = "Nothing readable here — this app may not share its content. The result relies on your hint.";

@@ -35,7 +35,7 @@ visible error** (Settings badge), never silently dropped.
 | `summary` | conditional | scalar | The chip label. Required on routable cards (has `when:`, not abstract). Never inherited — every routable card labels its own chip. |
 | `intents` | no | list | First entry = primary intent, used to dedupe chips (two cards sharing a primary intent are ranking, not ambiguity). Inheritable. |
 | `when` | no | nested block | Match conditions, see below. Absent → the card never enters routing (prompt-library cards; invocable by id/uuid only). |
-| `budget` | no | flow map | `{prompt_tokens_total: 3500, ms: 6000}` (defaults shown). Prompt-assembly token budget and time budget. Inheritable. |
+| `budget` | no | flow map | `{prompt_tokens_total: 3500, ms: 0}` (defaults shown). `prompt_tokens_total` is the prompt-assembly token budget. `ms` is a hard wall-clock deadline on the generation call (retry included) — **`0` means no cap**, which is the default, so a card only gets a deadline if it asks for one. Exceeding it fails the press with `budgetExceeded`. Inheritable. |
 | `output` | no | flow map | `{lang: match_context, max_chars: 400, format: plain}`. `lang`: `match_context` (default) or a fixed code like `en`. `max_chars` is optional — when absent, config.yaml `output_max_chars_default` applies; a card's explicit value always wins. `format`: only `plain`. Inheritable. |
 
 Forward-compatible keys parsed for later milestones — they produce a

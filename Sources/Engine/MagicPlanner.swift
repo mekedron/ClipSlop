@@ -1,4 +1,20 @@
 import Foundation
+import os
+
+/// One-shot claim shared by the two sides of a race, so exactly one of them
+/// resumes the continuation.
+private final class LockedFlag: Sendable {
+    private let state = OSAllocatedUnfairLock(initialState: false)
+
+    /// True for the first caller only.
+    func claim() -> Bool {
+        state.withLock { claimed in
+            if claimed { return false }
+            claimed = true
+            return true
+        }
+    }
+}
 
 /// The fast-mode chip planner: when deterministic routing was ambiguous and
 /// the press would show chips, one tiny, hard-capped model call may pick the
@@ -246,23 +262,32 @@ enum MagicPlanner {
             case timedOut
         }
 
-        let raced = await withTaskGroup(of: RaceResult.self) { group -> RaceResult in
-            group.addTask {
+        // Deliberately NOT a task group: `withTaskGroup` awaits every child
+        // before it returns a value, so `cancelAll()` only *asks* the provider
+        // task to stop — and a service that does not cooperatively cancel
+        // (CLIToolService waits on a subprocess) kept `run` blocked long past
+        // the cap, which made `planner_timeout_ms` advisory instead of the hard
+        // bound config.yaml documents. Two detached tasks with a first-wins
+        // continuation return exactly at the cap; the loser is cancelled and
+        // finishes unobserved (one bounded, non-streaming request).
+        let raced: RaceResult = await withCheckedContinuation { continuation in
+            let settled = LockedFlag()
+            let call = Task {
+                let result: RaceResult
                 do {
-                    return .response(try await service.processWithUsage(
+                    result = .response(try await service.processWithUsage(
                         text: userMessage, systemPrompt: systemPrompt, config: provider
                     ))
                 } catch {
-                    return .failed
+                    result = .failed
                 }
+                if settled.claim() { continuation.resume(returning: result) }
             }
-            group.addTask {
+            Task {
                 try? await Task.sleep(for: .milliseconds(timeoutMs))
-                return .timedOut
+                if settled.claim() { continuation.resume(returning: .timedOut) }
+                call.cancel()
             }
-            let first = await group.next() ?? .timedOut
-            group.cancelAll()
-            return first
         }
         let ms = Self.ms(clock.now - start)
 

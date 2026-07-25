@@ -86,7 +86,8 @@ Optional: extends (parent id; chain resolves root-first; cycles/missing
 parents disable the file), abstract (extends-target only, never routed),
 priority (0–100, default 50, tie-break within a tier), surface (public|
 team|private; parsed, not yet enforced), intents ([list], first = primary,
-used for chip dedup; inheritable), budget {prompt_tokens_total, ms},
+used for chip dedup; inheritable), budget {prompt_tokens_total, ms —
+a hard generation deadline, 0 (default) = no cap},
 output {lang: match_context|<code>, max_chars (optional — falls back to
 config output_max_chars_default), format: plain}. `when:` block — ALL
 present conditions must pass: app [bundle ids] (→ domain tier), url

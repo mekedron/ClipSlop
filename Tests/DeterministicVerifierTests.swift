@@ -127,6 +127,38 @@ struct DeterministicVerifierTests {
         #expect(verdict.warnings.isEmpty)
     }
 
+    /// The grounding check used to collapse the whole context into one digit
+    /// stream and accept a match at any offset inside it, so two unrelated
+    /// numbers spliced into a third and a longer number grounded any fragment
+    /// of itself.
+    @Test func spliceAndFragmentNumbersAreNotGrounded() {
+        // "1" and "234" are separate values; "1234" is not in the context.
+        let splice = verify(
+            output: "Transfer 1234 euros as agreed.",
+            trusted: "Point 1. The invoice covers 234 units."
+        )
+        #expect(splice.warnings.contains { $0.check == .concreteness })
+
+        // "500" is the tail of "1500", not a value the context states.
+        let fragment = verify(
+            output: "The fee is 500 per seat.",
+            trusted: "The contract value is 1500 in total."
+        )
+        #expect(fragment.warnings.contains { $0.check == .concreteness })
+    }
+
+    /// The separator handling the run-based check has to keep: group separators
+    /// inside one value, and boundary alignment for sub-components.
+    @Test func spacedAndPartialNumbersStillGround() {
+        #expect(verify(output: "That is 5000 euros.", trusted: "Budget: 5 000 €").warnings.isEmpty)
+        #expect(verify(
+            output: "Our IBAN is FI2112345600000785.",
+            trusted: "My IBAN: FI21 1234 5600 0007 85"
+        ).warnings.isEmpty)
+        // A year off a full date: "2026" is the run's prefix.
+        #expect(verify(output: "Let's aim for 2026.", trusted: "Deadline 2026-07-25.").warnings.isEmpty)
+    }
+
     @Test func authorNameFromThePostIsReferentialAndPasses() {
         let verdict = verify(
             output: "Great point, Ville Korhonen — the benchmark numbers back it up.",

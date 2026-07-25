@@ -62,6 +62,10 @@ struct WorkflowCardParsingTests {
         #expect(parsed.budget == .default)
         #expect(parsed.output == .default)
         #expect(parsed.tier == .base)
+        // A card that says nothing about time gets no deadline: `budget.ms`
+        // used to default to 6000 while being read by nothing, so enforcing it
+        // retroactively would have killed every press on a reasoning model.
+        #expect(parsed.budget.ms == 0)
     }
 
     @Test func unknownKeyFailsWithSuggestion() {

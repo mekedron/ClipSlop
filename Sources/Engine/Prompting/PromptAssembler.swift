@@ -224,9 +224,20 @@ enum PromptAssembler {
     private static func workflowBodySlot(workflow: ResolvedWorkflow, outputMaxChars: Int) -> AssembledSlot {
         let limitLine = "LENGTH CEILING: never exceed \(outputMaxChars) characters. "
             + "It is a ceiling, not a target — within it, the content and the surface decide the right length."
-        // The ceiling line spends from the same slot budget, reserved up
-        // front so appending it after the trims can never overflow the slot.
-        let budget = max(0, SlotID.workflowBody.budgetTokens - TokenEstimator.estimate(limitLine))
+        // A card with `output: {lang: <code>}` has to SAY so in the prompt.
+        // Only DeterministicVerifier knew about it, so the model wrote in the
+        // context language and the card's own verifier then blocked the output
+        // as a language mismatch — a fixed-language workflow could not produce
+        // a passing generation at all. The system prompt's match-the-conversation
+        // rule already defers to "the workflow's rules", which is this line.
+        var directives = limitLine
+        if case .fixed(let code) = workflow.card.output.lang {
+            directives = "OUTPUT LANGUAGE: write in \(code), whatever language the surrounding "
+                + "conversation or the user's draft is in.\n" + directives
+        }
+        // The directives spend from the same slot budget, reserved up front so
+        // appending them after the trims can never overflow the slot.
+        let budget = max(0, SlotID.workflowBody.budgetTokens - TokenEstimator.estimate(directives))
         var body = workflow.body
         var truncated = false
 
@@ -241,7 +252,7 @@ enum PromptAssembler {
             (body, _) = trimToTokens(body, tokens: budget)
         }
 
-        body = body.isEmpty ? limitLine : body + "\n\n" + limitLine
+        body = body.isEmpty ? directives : body + "\n\n" + directives
 
         let text = section("HOW TO WRITE THIS (workflow: \(workflow.id))", body)
         return AssembledSlot(

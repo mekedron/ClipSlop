@@ -527,6 +527,7 @@
 
 // Magic Button (context engine V0)
 "magic.name" = "Taikanappi";
+"magic.hud.no_routable_workflow" = "No workflow matches this app or field. Add or fix a workflow card with a `when:` block (Settings → Magic).";
 "magic.hud.no_target" = "Siirry tekstikenttään tai valitse tekstiä ja paina sitten taikanäppäintä.";
 "magic.chips.hint_placeholder" = "Kuvaile mitä haluat…";
 "magic.chips.context_blind" = "Sisältöä ei voitu lukea — sovellus ei ehkä jaa sisältöään. Tulos perustuu vihjeeseesi.";

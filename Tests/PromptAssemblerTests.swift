@@ -94,6 +94,22 @@ struct PromptAssemblerTests {
     /// — so a low `budget.prompt_tokens_total` cut constraints.md off the end
     /// first, exactly the section §10.1 says is never trimmed. The re-budget
     /// has to go through the same structural order the slot itself uses.
+    /// `output: {lang: <code>}` was honoured only by DeterministicVerifier, so
+    /// the model wrote in the context language and the card's own verifier then
+    /// blocked the result as a language mismatch.
+    @Test func fixedOutputLanguageReachesThePrompt() {
+        let fixed = assemble(workflow: MagicTestSupport.makeWorkflow(
+            id: "always-english",
+            output: OutputSpec(lang: .fixed("en"), maxChars: nil, format: "plain")
+        ))
+        #expect(fixed.userMessage.contains("OUTPUT LANGUAGE: write in en"))
+
+        // match_context (the default) says nothing extra — the system prompt's
+        // own LANGUAGE rule already covers it.
+        let matching = assemble()
+        #expect(!matching.userMessage.contains("OUTPUT LANGUAGE"))
+    }
+
     @Test func workflowCapNeverTrimsPinnedConstraints() {
         let huge = String(repeating: "style rule. ", count: 800)
         let prompt = assemble(

@@ -392,6 +392,16 @@ final class MagicPressCoordinator {
 
     private func showChips(_ candidates: [ResolvedWorkflow]) {
         guard !candidates.isEmpty else {
+            // Never silent (§15.3). An empty candidate list means routing
+            // matched nothing on this surface — the bare `phase = .idle` this
+            // replaces ended the press with no hint, no toast and no trace,
+            // indistinguishable from the hotkey never having fired.
+            if var press = activePress {
+                press.trace.outcome = "noCandidates"
+                submitTrace(press.trace)
+                activePress = nil
+                showHint(Loc.shared.t("magic.hud.no_routable_workflow"), near: press.snapshot)
+            }
             phase = .idle
             return
         }
@@ -646,6 +656,7 @@ final class MagicPressCoordinator {
             case .noWorkflows: return "noWorkflows"
             case .downgradeRefused: return "downgradeRefused"
             case .noCloudRefused: return "noCloud"
+            case .budgetExceeded: return "budgetExceeded"
             }
         }
         if let aiError = error as? AIServiceError {
@@ -657,6 +668,7 @@ final class MagicPressCoordinator {
             case .networkError: return "networkError"
             case .emptyResponse: return "emptyResponse"
             case .generationStopped: return "generationStopped"
+            case .emptyStream: return "emptyStream"
             case .cancelled: return "cancelled"
             case .cliToolNotFound: return "cliToolNotFound"
             case .cliToolFailed(let exitCode, _): return "cliToolFailed\(exitCode)"

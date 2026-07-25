@@ -30,11 +30,18 @@ enum AIServiceError: LocalizedError {
     case decodingError(String)
     case networkError(Error)
     case emptyResponse
-    /// The stream ended in a terminal state without usable text — the
-    /// reason is the provider's own words (refusal text, incomplete
-    /// reason, failure message), so the user sees WHY instead of a
-    /// generic "empty response".
+    /// The provider REPORTED a terminal state instead of returning text — the
+    /// reason is its own words (refusal text, incomplete reason, failure
+    /// message), so the user sees WHY instead of a generic "empty response".
+    /// Terminal by definition: an immediate retry just repeats a decision the
+    /// provider already made.
     case generationStopped(reason: String)
+    /// The stream ran to completion but carried no output text at all — the
+    /// intermittent reasoning-backend behaviour that one silent retry absorbs.
+    /// Deliberately separate from `generationStopped`: both used to be the
+    /// same case, so the Magic pipeline's one-retry rule fired for provider
+    /// failures and refusals too.
+    case emptyStream(reason: String)
     case cancelled
     case cliToolNotFound(String)
     case cliToolFailed(exitCode: Int32, stderr: String)
@@ -63,6 +70,8 @@ enum AIServiceError: LocalizedError {
             "The AI returned an empty response. Try rephrasing your text."
         case .generationStopped(let reason):
             "The AI stopped without returning text: \(reason)"
+        case .emptyStream(let reason):
+            "The AI returned no text: \(reason)"
         case .cancelled:
             "Request was cancelled"
         case .cliToolNotFound(let name):

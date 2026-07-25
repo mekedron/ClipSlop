@@ -97,7 +97,11 @@ struct ChatGPTService: AIService {
                             .sorted { $0.key < $1.key }
                             .map { "\($0.key)×\($0.value)" }
                             .joined(separator: ", ")
-                        throw AIServiceError.generationStopped(
+                        // The one genuinely retriable shape: the stream ran to
+                        // completion, the provider reported nothing wrong, and
+                        // there is simply no text. `.generationStopped` above
+                        // stays terminal.
+                        throw AIServiceError.emptyStream(
                             reason: "the stream ended without any output text (events: \(histogram.isEmpty ? "none" : histogram))"
                         )
                     }

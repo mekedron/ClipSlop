@@ -228,6 +228,8 @@ enum TraceInspector {
             meaning = "the chip panel or toast was dismissed without acting"
         case "verifierDismissed":
             meaning = "the verifier flagged the output and the user declined it — the warning panel was closed without inserting (the counterpart of insertedAnyway; both together are the §10.2 guard-health signal)"
+        case "noCandidates":
+            meaning = "routing matched no workflow for this app/field — the press ended with a hint instead of a generation (check that a card's `when:` block covers this surface)"
         case "selectionChanged":
             meaning = "the user selected something else inside the field while chips or generation were up, so the result went to the clipboard and the toast instead of replacing a selection nobody addressed (the selection counterpart of focusMismatch)"
         case "undone":

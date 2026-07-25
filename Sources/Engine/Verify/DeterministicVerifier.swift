@@ -337,15 +337,44 @@ enum DeterministicVerifier {
     // MARK: Grounding
 
     /// Pre-normalized context: lowercase/diacritic-folded text for name and
-    /// email matching, digits-only stream for numeric matching (so "5 000 €"
-    /// grounds "5000€" and a spaced IBAN grounds a compact one).
+    /// email matching, and the context's numbers as separate digit *runs* for
+    /// numeric matching (so "5 000 €" grounds "5000€" and a spaced IBAN grounds
+    /// a compact one, without letting two unrelated numbers be spliced).
     struct Normalized {
         let folded: String
-        let digits: String
+        let digitRuns: [String]
 
         init(_ text: String) {
             folded = text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
-            digits = String(text.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) })
+            digitRuns = Normalized.runs(in: text)
+        }
+
+        /// Characters that separate digit *groups inside one value* — but only
+        /// when a digit follows: "5 000", "1,234.50", "2026-07-25" and a spaced
+        /// IBAN are each one run, while "1." at the end of a sentence and a
+        /// "234" in the next one stay two.
+        private static let groupSeparators: Set<Unicode.Scalar> = [
+            " ", "\u{00A0}", "\u{202F}", "\u{2009}", ",", ".", "'", "\u{2019}", "-",
+        ]
+
+        private static func runs(in text: String) -> [String] {
+            var runs: [String] = []
+            var current = ""
+            var sawSeparator = false
+            for scalar in text.unicodeScalars {
+                if CharacterSet.decimalDigits.contains(scalar) {
+                    current.unicodeScalars.append(scalar)
+                    sawSeparator = false
+                } else if !current.isEmpty, !sawSeparator, groupSeparators.contains(scalar) {
+                    sawSeparator = true  // provisional: kept only if a digit follows
+                } else {
+                    if !current.isEmpty { runs.append(current) }
+                    current = ""
+                    sawSeparator = false
+                }
+            }
+            if !current.isEmpty { runs.append(current) }
+            return runs
         }
     }
 
@@ -354,7 +383,23 @@ enum DeterministicVerifier {
         case .number, .money, .iban, .phone, .date:
             let tokenDigits = String(token.text.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) })
             guard !tokenDigits.isEmpty else { return true }
-            return context.digits.contains(tokenDigits)
+            // Within a SINGLE run, aligned to its start. The old check
+            // collapsed the whole context into one digit stream and accepted a
+            // match at any offset inside it, so a context holding "1" and "234"
+            // grounded an invented "1234" and a context holding "1500" grounded
+            // "$50" — invented amounts and dates walked straight through the
+            // pre-insert guard.
+            //
+            // Start alignment is what makes an amount safe while keeping the
+            // legitimate sub-value readings: "50" still grounds off "50.00" and
+            // "2026" off "2026-07-25", but nothing grounds off the tail of a
+            // larger number. Identifiers are the exception — a phone number or
+            // IBAN is routinely quoted without its country prefix — so those
+            // two classes accept a trailing match as well.
+            let allowsTail = token.tokenClass == .phone || token.tokenClass == .iban
+            return context.digitRuns.contains { run in
+                run.hasPrefix(tokenDigits) || (allowsTail && run.hasSuffix(tokenDigits))
+            }
         case .properName, .email:
             let folded = token.text.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
             return context.folded.contains(folded)

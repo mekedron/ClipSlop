@@ -19,6 +19,11 @@ struct AnthropicToolChatService: ToolChatService {
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
         request.setValue(Constants.Anthropic.apiVersion, forHTTPHeaderField: "anthropic-version")
         request.setValue("application/json", forHTTPHeaderField: "content-type")
+        // The chat.assistant role offers a timeout in Settings → Routing like
+        // every other role, and EngineRoleStore stamps it here — only the three
+        // streaming services were reading it, so the picker did nothing for the
+        // tool-chat path it is displayed for.
+        if let timeout = config.requestTimeout { request.timeoutInterval = timeout }
 
         let body: JSONValue = .object([
             "model": .string(config.modelID),

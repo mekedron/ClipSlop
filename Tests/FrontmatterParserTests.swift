@@ -154,6 +154,26 @@ struct FrontmatterParserTests {
         }
     }
 
+    /// A repeated key used to win by being last, so a duplicated `when:` or
+    /// `no_cloud:` changed engine behaviour while the file still reported as
+    /// valid — the opposite of the fail-visible contract.
+    @Test func rejectsDuplicateTopLevelKeys() {
+        do {
+            _ = try FrontmatterParser.parse("---\nid: x\nsummary: \"a\"\nid: y\n---\n")
+            Issue.record("expected an error")
+        } catch let error as FrontmatterError {
+            #expect(error.line == 4)
+            #expect(error.message.contains("duplicate key 'id'"))
+            #expect(error.message.contains("line 2"))
+        } catch {
+            Issue.record("unexpected error type")
+        }
+        // Block form counts too.
+        #expect(throws: FrontmatterError.self) {
+            try FrontmatterParser.parse("---\nwhen:\n  app: [a]\nwhen:\n  app: [b]\n---\n")
+        }
+    }
+
     @Test func rejectsYamlAnchors() {
         #expect(throws: FrontmatterError.self) {
             try FrontmatterParser.parse("---\nid: &anchor value\n---\n")

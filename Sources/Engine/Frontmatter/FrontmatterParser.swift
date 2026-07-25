@@ -82,6 +82,17 @@ enum FrontmatterParser {
 
             let (key, rest) = try splitKey(trimmed, line: fileLine)
 
+            // A repeated top-level key used to silently win by being last, so a
+            // duplicated `when:` or `no_cloud:` changed engine behaviour while
+            // Settings reported the file as valid — the opposite of the
+            // fail-visible contract (§15.3). Reject it with both line numbers.
+            if let firstLine = fieldLines[key] {
+                throw FrontmatterError(
+                    line: fileLine,
+                    message: "duplicate key '\(key)' — already set on line \(firstLine); remove one"
+                )
+            }
+
             if rest.isEmpty {
                 // Block form: nested map or block list on the following indented lines.
                 let (value, consumed) = try parseBlock(

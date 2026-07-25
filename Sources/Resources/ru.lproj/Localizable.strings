@@ -527,6 +527,7 @@
 
 // Magic Button (context engine V0)
 "magic.name" = "Волшебная кнопка";
+"magic.hud.no_routable_workflow" = "No workflow matches this app or field. Add or fix a workflow card with a `when:` block (Settings → Magic).";
 "magic.hud.no_target" = "Поставьте курсор в текстовое поле или выделите текст, затем нажмите волшебную клавишу.";
 "magic.chips.hint_placeholder" = "Опишите, что нужно…";
 "magic.chips.context_blind" = "Контекст не прочитан — приложение не отдаёт содержимое. Результат зависит от вашей подсказки.";

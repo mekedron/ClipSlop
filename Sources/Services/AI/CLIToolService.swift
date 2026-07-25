@@ -1,7 +1,18 @@
 import Foundation
 
 struct CLIToolService: AIService {
-    private static let timeoutSeconds: UInt64 = 120
+    /// Used only when the resolved provider carries no timeout of its own.
+    private static let defaultTimeoutSeconds: TimeInterval = 120
+
+    /// The role's `timeout_seconds` when one is bound, the 120 s default
+    /// otherwise. `EngineRoleStore.resolve` and `PrivacyBinding` both stamp
+    /// `requestTimeout` on the provider they hand back; the three HTTP services
+    /// apply it as `URLRequest.timeoutInterval`, and this raced a hard-coded
+    /// constant instead — so a 15 s role timeout had no effect whatsoever on
+    /// CLI-backed generation.
+    private static func timeout(for config: AIProviderConfig) -> Duration {
+        .seconds(config.requestTimeout ?? defaultTimeoutSeconds)
+    }
 
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
         let (binaryPath, definition) = try resolveToolInfo(config: config)
@@ -19,8 +30,8 @@ struct CLIToolService: AIService {
             group.addTask {
                 try await runProcess(binaryPath: binaryPath, arguments: arguments, outputFile: outputFile)
             }
-            group.addTask {
-                try await Task.sleep(nanoseconds: Self.timeoutSeconds * 1_000_000_000)
+            group.addTask { [timeout = Self.timeout(for: config)] in
+                try await Task.sleep(for: timeout)
                 throw AIServiceError.cliToolTimeout
             }
 

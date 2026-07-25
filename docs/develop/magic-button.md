@@ -169,7 +169,7 @@ when:                       # ALL present conditions must pass
   field.role: [AXTextArea]  # raw AX role, case-insensitive
   field.state: [empty, draft, selection]
   selection: [instruction, mixed]   # gates on the classifier's top class
-budget: {prompt_tokens_total: 3500, ms: 6000}
+budget: {prompt_tokens_total: 3500, ms: 0}   # ms = hard generation deadline; 0 (default) = no cap
 output: {lang: match_context, max_chars: 400, format: plain}
 ---
 ## Rules

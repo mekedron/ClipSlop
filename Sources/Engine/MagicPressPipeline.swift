@@ -76,17 +76,21 @@ enum MagicPressPipelineError: LocalizedError {
     case downgradeRefused(min: ProviderCostClass)
     /// P7: the surface is marked `no_cloud` and no local provider exists.
     case noCloudRefused
+    /// The card's `budget.ms` deadline passed before the model answered.
+    case budgetExceeded(ms: Int)
 
     var errorDescription: String? {
         switch self {
         case .noProvider:
             String(localized: "No AI provider is configured for the Magic Button.")
         case .noWorkflows:
-            String(localized: "No workflows could be loaded from the workflows folder.")
+            String(localized: "No routable workflow could be loaded — every card needs a `when:` block to take part in routing.")
         case .downgradeRefused(let min):
             String(localized: "No provider meets this role's minimum cost class (\(min.rawValue)) — generation refused instead of silently downgrading.")
         case .noCloudRefused:
             String(localized: "This app or site is marked no-cloud and no local model is configured — nothing was sent.")
+        case .budgetExceeded(let ms):
+            String(localized: "The model did not answer within this workflow's \(ms) ms budget (budget.ms).")
         }
     }
 }
@@ -96,11 +100,14 @@ enum MagicPressPipelineError: LocalizedError {
 enum MagicPressPipeline {
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.pipeline")
 
-    /// "The model gave us nothing" in both shapes — the service-level
-    /// terminal state and the trimmed-to-whitespace output.
+    /// "The model gave us nothing, for no stated reason" — the only shape a
+    /// blind retry can fix. `generationStopped` is deliberately excluded: the
+    /// provider reported a failure, an incomplete response, or a refusal, and
+    /// repeating the identical request just repeats that decision (and pays for
+    /// it twice).
     private static func isEmptyGeneration(_ error: Error) -> Bool {
         switch error as? AIServiceError {
-        case .emptyResponse, .generationStopped: true
+        case .emptyResponse, .emptyStream: true
         default: false
         }
     }
@@ -127,7 +134,13 @@ enum MagicPressPipeline {
         case .noneAvailable:
             throw MagicPressPipelineError.noProvider
         }
-        guard !workflowStore.catalog.workflows.isEmpty else {
+        // "Routable", not merely "loaded": `EngineRouter.route` only considers
+        // cards that declare `when:`, so a catalog holding nothing but library
+        // prompts (or one where every routed card is disabled) produced zero
+        // candidates, `showChips([])` reset the phase to `.idle`, and the press
+        // died with no trace and no HUD — the silent death `noWorkflows` exists
+        // to replace.
+        guard workflowStore.catalog.workflows.contains(where: { $0.card.when != nil }) else {
             throw MagicPressPipelineError.noWorkflows
         }
 
@@ -228,13 +241,37 @@ enum MagicPressPipeline {
         // Reasoning backends intermittently complete a stream with no
         // output text at all. One silent retry absorbs that; a second
         // empty stream surfaces the (now descriptive) error.
+        func generateWithOneRetry() async throws -> (AIGenerationResult, String) {
+            do {
+                return try await attemptGeneration()
+            } catch let error where Self.isEmptyGeneration(error) {
+                Self.logger.warning("first generation attempt returned nothing (\(error.localizedDescription, privacy: .public)) — retrying once")
+                return try await attemptGeneration()
+            }
+        }
+
+        // The card's `budget.ms`, which used to be parsed and then read by
+        // nothing at all. It covers the whole generation phase including the
+        // retry — a budget the retry could double is not a budget — and 0
+        // (the default) means no cap.
         let generation: AIGenerationResult
         var output: String
-        do {
-            (generation, output) = try await attemptGeneration()
-        } catch let error where Self.isEmptyGeneration(error) {
-            Self.logger.warning("first generation attempt returned nothing (\(error.localizedDescription, privacy: .public)) — retrying once")
-            (generation, output) = try await attemptGeneration()
+        let budgetMs = workflow.card.budget.ms
+        if budgetMs > 0 {
+            (generation, output) = try await withThrowingTaskGroup(
+                of: (AIGenerationResult, String).self
+            ) { group in
+                group.addTask { try await generateWithOneRetry() }
+                group.addTask {
+                    try await Task.sleep(for: .milliseconds(budgetMs))
+                    throw MagicPressPipelineError.budgetExceeded(ms: budgetMs)
+                }
+                let first = try await group.next()!
+                group.cancelAll()
+                return first
+            }
+        } else {
+            (generation, output) = try await generateWithOneRetry()
         }
         trace.latencyMs.generate = Self.ms(clock.now - generateStart)
         output = ContinuationSeam.adjust(output: output, for: snapshot)
