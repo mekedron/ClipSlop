@@ -370,9 +370,9 @@
 "settings.general.adhoc.help" = "Нажмите ⌘K в окне, чтобы ввести разовую инструкцию и применить её к текущему тексту — без сохранённого промпта. Инструкция подставляется вместо {instruction} в промпте ниже; если плейсхолдера нет, она добавляется в конец.";
 "settings.general.behavior.rich_text_mode" = "Обработка форматированного текста";
 "settings.general.behavior.rich_text_mode_help" = "Как обрабатывать форматированный текст из буфера обмена (например, скопированный из Chrome, Word)";
-"settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
-"settings.general.behavior.rich_text_mode.markdown" = "Convert to Markdown";
-"settings.general.behavior.rich_text_mode.markdown_ai" = "Convert to Markdown (AI)";
+"settings.general.behavior.rich_text_mode.html" = "HTML";
+"settings.general.behavior.rich_text_mode.markdown" = "Markdown";
+"settings.general.behavior.rich_text_mode.markdown_ai" = "MD (AI)";
 "settings.general.behavior.rich_text_mode.plain" = "Простой текст";
 "settings.prompts.move_to" = "Переместить в…";
 "settings.prompts.root" = "Корень (верхний уровень)";

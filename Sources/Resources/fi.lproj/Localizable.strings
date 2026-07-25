@@ -370,9 +370,9 @@
 "settings.general.adhoc.help" = "Paina ⌘K ikkunassa kirjoittaaksesi kertaluonteisen ohjeen ja suorittaaksesi sen nykyiselle tekstille — ilman tallennettua kehotetta. Ohje korvaa alla olevan {instruction}-paikkamerkin; jos paikkamerkkiä ei ole, ohje lisätään loppuun.";
 "settings.general.behavior.rich_text_mode" = "Muotoillun tekstin käsittely";
 "settings.general.behavior.rich_text_mode_help" = "Miten leikepöydän muotoiltua tekstiä käsitellään (esim. Chromesta tai Wordista kopioitu)";
-"settings.general.behavior.rich_text_mode.html" = "Keep as HTML";
-"settings.general.behavior.rich_text_mode.markdown" = "Convert to Markdown";
-"settings.general.behavior.rich_text_mode.markdown_ai" = "Convert to Markdown (AI)";
+"settings.general.behavior.rich_text_mode.html" = "HTML";
+"settings.general.behavior.rich_text_mode.markdown" = "Markdown";
+"settings.general.behavior.rich_text_mode.markdown_ai" = "MD (AI)";
 "settings.general.behavior.rich_text_mode.plain" = "Pelkkä teksti";
 "settings.prompts.move_to" = "Siirrä kohteeseen…";
 "settings.prompts.root" = "Juuri (ylin taso)";
