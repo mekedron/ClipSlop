@@ -141,9 +141,8 @@ struct MagicEngineConfig: Sendable, Equatable {
     /// Reads the file, keeping `previous` whole when the document is not
     /// parseable at all.
     ///
-    /// A fatal syntax error used to return the all-default config with a
-    /// warning, and the press pipeline carried on — so one malformed
-    /// *unrelated* line silently emptied `no_cloud` and sent protected screen
+    /// Answering a fatal syntax error with the all-default config would let one
+    /// malformed *unrelated* line empty `no_cloud` and send protected screen
     /// content to a cloud provider (P7). A file we could not read must not be
     /// able to change any setting, least of all a privacy rule: nothing is
     /// applied, the warning says so in those words, and the last settings that

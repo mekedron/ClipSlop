@@ -126,11 +126,10 @@ enum PromptAssembler {
                     // tail-trimming the assembled string deleted exactly the
                     // two directives the verifier then checks the output
                     // against: a fixed-language card with a low
-                    // `budget.prompt_tokens_total` lost its language line,
-                    // generated in the surrounding conversation's language and
-                    // failed its own verification — the same dead end the
-                    // missing language directive used to cause, reintroduced by
-                    // the cross-slot pass. Re-budget structurally instead:
+                    // `budget.prompt_tokens_total` would lose its language line,
+                    // generate in the surrounding conversation's language and
+                    // fail its own verification — a dead end the prompt can
+                    // never argue its way out of. Re-budget structurally instead:
                     // `workflowBodySlot` reserves the directives first and then
                     // sheds anti-examples, examples, and finally rules, so the
                     // directives survive even a budget of zero.
@@ -622,10 +621,10 @@ enum PromptAssembler {
         }
         // No usable range — web fields routinely hand over selected text
         // without one. Locating it by search is only honest when the text
-        // occurs exactly ONCE. A draft that repeats a phrase and a user who
-        // selected the LATER occurrence used to get before/after context around
-        // the FIRST one while the paste replaced the later one, so the rewrite
-        // was written for the wrong surrounding sentence. Ambiguous → make no
+        // occurs exactly ONCE. In a draft that repeats a phrase, a user who
+        // selected the LATER occurrence would get before/after context around
+        // the FIRST one while the paste replaces the later one — a rewrite
+        // written for the wrong surrounding sentence. Ambiguous → make no
         // positional claim at all; the selection itself is still the request.
         if !selection.text.isEmpty, let found = value.range(of: selection.text) {
             let rest = value.index(after: found.lowerBound)..<value.endIndex

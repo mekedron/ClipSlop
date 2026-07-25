@@ -20,9 +20,8 @@ final class AppState {
     /// which app regains focus when a ClipSlop window closes. Both are wrong if it
     /// points at Spotlight — the user summoned Spotlight *from* some real app and
     /// expects to land back there, not in a search field that has since closed.
-    /// This matters now that Spotlight is a supported way to invoke prompts, but
-    /// it was already reachable before via global hotkeys pressed while Spotlight
-    /// was open.
+    /// Reachable two ways: Spotlight is a supported way to invoke prompts, and
+    /// a global hotkey can be pressed while Spotlight is open.
     static let transientLauncherBundleIDs: Set<String> = [
         "com.apple.Spotlight",
         "com.apple.shortcuts",

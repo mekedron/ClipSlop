@@ -736,22 +736,22 @@ final class EngineToolExecutor {
     /// indented continuation under it (block-list items, indented comments).
     /// Nil when the key is absent.
     ///
-    /// The edit used to rewrite the `key:` line alone, which held only for the
-    /// seeded file — `EngineSeedContent` writes `no_cloud: []` inline. The
-    /// moment a user wrote the block form by hand, which is the whole point of
-    /// a files-first config (§15),
+    /// The whole block, not just the `key:` line. Rewriting that line alone
+    /// holds only for the seeded file, where `EngineSeedContent` writes
+    /// `no_cloud: []` inline. Against the block form — which a files-first
+    /// config exists to let people write by hand (§15) —
     ///
     ///     no_cloud:
     ///       - gmail.com
     ///       - com.tinyspeck.slackmacgap
     ///
-    /// a `set_config` on that key replaced line one with `no_cloud: [...]` and
-    /// left the two item lines dangling under it. `FrontmatterParser` then
-    /// rejected the whole file with "unexpected indented line", the post-edit
-    /// validation below saw a "line …" warning, and every edit to that key was
-    /// refused with a message about someone else's syntax error. Nothing was
-    /// corrupted — the guard held — but the tool was simply unusable on
-    /// perfectly legal YAML, and the user had no way to tell why.
+    /// replacing line one with `no_cloud: [...]` leaves the two item lines
+    /// dangling under it. `FrontmatterParser` then rejects the whole file with
+    /// "unexpected indented line", the post-edit validation below sees a
+    /// "line …" warning, and every subsequent edit to that key is refused with
+    /// a message about a syntax error the tool itself introduced. Nothing is
+    /// corrupted — the guard holds — but the tool becomes unusable on
+    /// perfectly legal YAML with no way for the user to tell why.
     ///
     /// Block bounds are decided by exactly the rule
     /// `MagicEngineConfig.salvagedNoCloud` uses: the key line must start at

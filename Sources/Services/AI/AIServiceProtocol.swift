@@ -38,9 +38,9 @@ enum AIServiceError: LocalizedError {
     case generationStopped(reason: String)
     /// The stream ran to completion but carried no output text at all — the
     /// intermittent reasoning-backend behaviour that one silent retry absorbs.
-    /// Deliberately separate from `generationStopped`: both used to be the
-    /// same case, so the Magic pipeline's one-retry rule fired for provider
-    /// failures and refusals too.
+    /// Deliberately separate from `generationStopped`: folded together, the
+    /// Magic pipeline's one-retry rule would fire for provider failures and
+    /// refusals too.
     case emptyStream(reason: String)
     case cancelled
     case cliToolNotFound(String)

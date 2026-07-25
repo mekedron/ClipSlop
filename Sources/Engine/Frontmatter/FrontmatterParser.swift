@@ -82,10 +82,10 @@ enum FrontmatterParser {
 
             let (key, rest) = try splitKey(trimmed, line: fileLine)
 
-            // A repeated top-level key used to silently win by being last, so a
-            // duplicated `when:` or `no_cloud:` changed engine behaviour while
-            // Settings reported the file as valid — the opposite of the
-            // fail-visible contract (§15.3). Reject it with both line numbers.
+            // Last-wins on a repeated top-level key would let a duplicated
+            // `when:` or `no_cloud:` change engine behaviour while Settings
+            // reports the file as valid — the opposite of the fail-visible
+            // contract (§15.3). Reject it, naming both line numbers.
             if let firstLine = fieldLines[key] {
                 throw FrontmatterError(
                     line: fileLine,
@@ -225,10 +225,11 @@ enum FrontmatterParser {
     private static func parseInlineValue(_ raw: String, line: Int) throws -> FrontmatterValue {
         var trimmed = raw.trimmingCharacters(in: .whitespaces)
         // Comments are advertised for these files, but the closing-bracket
-        // checks below run before `parseScalar` gets its chance to strip one —
-        // so the documented `intents: [reply] # note` used to throw "missing
-        // its closing ']'" and disable the whole card. Scalars keep stripping
-        // their own comments (they must preserve a quoted '#' verbatim).
+        // checks below run before `parseScalar` gets its chance to strip one,
+        // so a flow value has to lose its comment here or the documented
+        // `intents: [reply] # note` throws "missing its closing ']'" and
+        // disables the whole card. Scalars strip their own comments (they must
+        // preserve a quoted '#' verbatim).
         if trimmed.hasPrefix("[") || trimmed.hasPrefix("{") {
             trimmed = stripFlowComment(trimmed)
         }
@@ -266,20 +267,19 @@ enum FrontmatterParser {
     ///
     /// Escapes are tracked exactly as `splitFlowItems` tracks them — a `\`
     /// inside a DOUBLE-quoted item escapes the next character, single quotes
-    /// are verbatim (`parseScalar` documents the same split). This runs on the
-    /// same text as `splitFlowItems` but used to ignore escapes entirely, so
-    /// the two disagreed about where a quote ends: in
-    /// `["quote\"a]", "hash # b"]` this read the escaped `"` as CLOSING the
-    /// quote, then the `]` as ending the list, then ` #` as starting a comment,
-    /// and handed `parseInlineValue` a list with no closing bracket.
+    /// are verbatim (`parseScalar` documents the same split). That parity is
+    /// the whole point: the two run over the same text, and if they disagree
+    /// about where a quote ends they disagree about the value. In
+    /// `["quote\"a]", "hash # b"]`, ignoring escapes here reads the escaped `"`
+    /// as CLOSING the quote, the `]` as ending the list and ` #` as starting a
+    /// comment, handing `parseInlineValue` a list with no closing bracket.
     ///
-    /// The damage was rejection, not corruption — the value threw
-    /// "flow list is missing its closing ']'" and the whole file went with it
-    /// (a card disabled with a visible error, a config.yaml left unapplied).
-    /// That is this parser's designed failure mode and it is why the bug
-    /// survived: a legitimately-quoted list simply could not be written. No
-    /// input has been found where the old code parsed such a list into
-    /// something *different* rather than refusing it outright.
+    /// The failure lands as rejection rather than corruption — "flow list is
+    /// missing its closing ']'", and the whole file with it (a card disabled
+    /// with a visible error, a config.yaml left unapplied). That is the
+    /// designed failure mode, which also makes a mismatch here quiet: it does
+    /// not produce a wrong list, it makes a legitimately-quoted one
+    /// unwritable.
     private static func stripFlowComment(_ text: String) -> String {
         var depth = 0
         var quote: Character?

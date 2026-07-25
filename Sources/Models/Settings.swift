@@ -313,8 +313,8 @@ final class AppSettings {
         promptLibraryCollapsed = defaults.bool(forKey: "promptLibraryCollapsed")
         adHocSystemPrompt = defaults.string(forKey: "adHocSystemPrompt") ?? AppSettings.defaultAdHocSystemPrompt
         // Quick Access tile state lives in `QuickAccessStore` (disk-backed,
-        // iCloud-synced, exportable). It used to live here in UserDefaults
-        // and the store performs a one-shot migration on first launch.
+        // iCloud-synced, exportable), not here — the store migrates the legacy
+        // UserDefaults copy on first launch.
     }
 }
 

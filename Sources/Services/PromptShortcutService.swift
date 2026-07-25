@@ -247,14 +247,14 @@ final class PromptShortcutService {
     /// Migrate shortcuts that exist in UserDefaults but not yet in the model
     /// (upgrade path). Runs exactly **once** per install.
     ///
-    /// Re-running it on every `syncFromModel` quietly cancelled the other half
-    /// of the model-is-authoritative contract: deleting `shortcut_inline` from
-    /// a card left the old value sitting in KeyboardShortcuts' UserDefaults,
-    /// this adopted it straight back into the model, and the push loop then had
-    /// a shortcut to *store* rather than a nil to clear. The deleted shortcut
-    /// kept firing immediately, and the write-back stamped it into the card
-    /// again on the next save. Once the marker is set, a nil model value clears
-    /// the stored shortcut normally and the hand edit stands.
+    /// Once per install, not once per `syncFromModel`, because re-running it
+    /// cancels the other half of the model-is-authoritative contract: deleting
+    /// `shortcut_inline` from a card leaves the old value in KeyboardShortcuts'
+    /// UserDefaults, adoption pulls it straight back into the model, and the
+    /// push loop then has a shortcut to *store* rather than a nil to clear — so
+    /// the deleted shortcut keeps firing and gets stamped back into the card on
+    /// the next save. With the marker set, a nil model value clears the stored
+    /// shortcut normally and the hand edit stands.
     private func migrateFromUserDefaults() {
         guard let appState else { return }
         let defaults = UserDefaults.standard

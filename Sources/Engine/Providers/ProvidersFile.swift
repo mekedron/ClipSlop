@@ -18,10 +18,10 @@ enum ProvidersFile {
     ]
 
     /// Accepted `max_tokens` values. The lower bound is the point of the
-    /// check: `0` and `-1` used to be copied straight into `AIProviderConfig`,
-    /// and the Anthropic / OpenAI-compatible request builders then put them on
-    /// the wire, so *every* generation failed at the API — from a file the app
-    /// advertises as validated and hot-reloaded. The upper bound is a loose
+    /// check: `0` and `-1` copied straight into `AIProviderConfig` go on the
+    /// wire from the Anthropic / OpenAI-compatible request builders, and *every*
+    /// generation then fails at the API — from a file the app advertises as
+    /// validated and hot-reloaded. The upper bound is a loose
     /// sanity rail, well above any model's output ceiling, so a slipped digit
     /// is caught but a future model is not.
     static let maxTokensRange = 1...1_000_000
@@ -29,14 +29,12 @@ enum ProvidersFile {
     /// Whether a hand-written `base_url` can actually be turned into a request.
     ///
     /// The request builders append their path to this value and hand the result
-    /// to `URLRequest` — and two of them (`AnthropicService`,
-    /// `AnthropicToolChatService`) used to do it through a force-unwrap, so a
-    /// `base_url:` typed with nothing after it crashed the app on the next
-    /// press: `URL(string: "")` is nil, and an empty *scalar* is not the same as
-    /// an absent key, so `AIProviderConfig`'s "fall back to the type's default"
-    /// never engaged. Those unwraps now throw, and this stops the value at the
-    /// door instead — a validated, hot-reloaded config file must not be able to
-    /// break generation from a typo (the same reasoning as `maxTokensRange`).
+    /// to `URLRequest`, so an unusable one breaks generation for that provider.
+    /// `base_url: ""` is the trap worth naming: `URL(string: "")` is nil, and an
+    /// empty *scalar* is not the same as an absent key, so `AIProviderConfig`'s
+    /// "fall back to the type's default endpoint" does not engage for it. Stop
+    /// it at the door — a validated, hot-reloaded config file must not be able
+    /// to break generation from a typo (the same reasoning as `maxTokensRange`).
     ///
     /// A scheme and a host are both required, not just parseability:
     /// `URL(string: "api.example.com")` succeeds and yields a *relative* URL

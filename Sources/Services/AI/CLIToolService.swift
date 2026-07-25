@@ -6,8 +6,8 @@ import os
 /// `process(text:…)` races the whole subprocess against `timeout(for:)`, but a
 /// stream cannot be capped the same way: a healthy long generation legitimately
 /// outlives any total-duration limit. What has to be caught is a tool that
-/// produces nothing and never exits — before this, `stream` had no timeout at
-/// all and a hung CLI hung the caller forever.
+/// produces nothing and never exits, which with no timeout at all hangs the
+/// caller forever.
 ///
 /// So this measures *silence*, and every chunk resets it. That is also exactly
 /// what `URLRequest.timeoutInterval` means for the three HTTP streaming
@@ -89,10 +89,10 @@ struct CLIToolService: AIService {
 
     /// The role's `timeout_seconds` when one is bound, the 120 s default
     /// otherwise. `EngineRoleStore.resolve` and `PrivacyBinding` both stamp
-    /// `requestTimeout` on the provider they hand back; the three HTTP services
-    /// apply it as `URLRequest.timeoutInterval`, and this raced a hard-coded
-    /// constant instead — so a 15 s role timeout had no effect whatsoever on
-    /// CLI-backed generation.
+    /// `requestTimeout` on the provider they hand back and the three HTTP
+    /// services apply it as `URLRequest.timeoutInterval`, so honouring it here
+    /// too is what makes one role timeout mean the same thing on both
+    /// transports rather than silently doing nothing on CLI-backed generation.
     private static func timeout(for config: AIProviderConfig) -> Duration {
         .seconds(config.requestTimeout ?? defaultTimeoutSeconds)
     }

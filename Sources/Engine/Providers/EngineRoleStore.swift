@@ -184,11 +184,11 @@ final class EngineRoleStore {
         }
 
         // roles.json is the only surviving copy of the routing until roles.yaml
-        // is really on disk. The write failure used to be swallowed while the
-        // JSON was moved to `.bak` anyway, so an unwritable engine directory or
-        // a full disk silently erased every role binding at the next launch —
-        // invisible to this process, which still held the decoded map. Write,
-        // prove it reads back, and only then retire the JSON.
+        // is really on disk. Swallowing the write failure and moving the JSON
+        // to `.bak` anyway would let an unwritable engine directory or a full
+        // disk erase every role binding at the next launch — invisible to this
+        // process, which still holds the decoded map. Write, prove it reads
+        // back, and only then retire the JSON.
         do {
             try writeToDisk(migrated)
         } catch {

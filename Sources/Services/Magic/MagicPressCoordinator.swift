@@ -136,10 +136,9 @@ final class MagicPressCoordinator {
             snapshotService: snapshotService,
             configProvider: { [configStore] in configStore.config }
         )
-        // One-shot migration: debug logging used to be a UserDefaults-only
-        // toggle; it now lives in config.yaml (`debug_log_enabled`) so
-        // file-editing agents can reach it. Config is the authority from
-        // here on.
+        // One-shot migration of the legacy UserDefaults toggle. Debug logging
+        // lives in config.yaml (`debug_log_enabled`) so file-editing agents can
+        // reach it, and config is the authority once this has run.
         if UserDefaults.standard.bool(forKey: "magicDebugLogging") {
             configStore.setInteger(1, forKey: "debug_log_enabled")
         }
@@ -224,8 +223,8 @@ final class MagicPressCoordinator {
     /// TCC query rather than a cached flag. Only `.press` gates on it, and this
     /// state is built for every event — including `.toastSettleCheck`, which the
     /// toast's `.onHover` fires on each mouse pass across its edge. Reading it
-    /// unconditionally therefore put a TCC round-trip on hover, where the press
-    /// path used to pay for it once. So it is read for the events that consult
+    /// unconditionally would therefore charge a TCC round-trip per hover for a
+    /// question only the press asks. So it is read for the events that consult
     /// it and left at the non-gating `true` for the rest; an event that starts
     /// gating on permission has to add itself to `gatesOnPermission`.
     private func reducerState(for event: MagicPressReducer.Event) -> MagicPressReducer.State {
@@ -252,11 +251,10 @@ final class MagicPressCoordinator {
 
     // MARK: - Press entry
 
-    /// Every branch this used to make in line is a value `MagicPressReducer`
-    /// returns now — the single-flight bounce, the double-press accept, and the
-    /// "a plain press means insert it, a forced press means ask me again" split
-    /// over a verifier warning. What is left here is the doing, in the order it
-    /// was always done in.
+    /// The branching lives in `MagicPressReducer` — the single-flight bounce,
+    /// the double-press accept, and the "a plain press means insert it, a
+    /// forced press means ask me again" split over a verifier warning. This
+    /// method only does what the reducer decided, in order.
     func handlePress(forceChips: Bool) {
         let event = MagicPressReducer.Event.press(forceChips: forceChips)
         switch MagicPressReducer.reduce(state: reducerState(for: event), event: event) {
@@ -327,14 +325,13 @@ final class MagicPressCoordinator {
             // (wrong `no_cloud` identity, wrong routing, wrong paste target).
             let appInfo = self.frontmostAppInfo()
             // …but the target is the app the restoration was aimed at, not
-            // whoever happens to be frontmost when the sleep ends. Moving the
-            // read after the settle also handed the press to an app the user
-            // ⌘-tabbed to *during* those 600 ms, where the pid guard in
-            // `AXSnapshotService.capture` used to produce a contentless
-            // snapshot and the press died. A deliberate switch away is not a
-            // target: end it exactly the way a lost target ends today — trace,
-            // hint, back to `.idle` — instead of following the user into a
-            // field they never pressed the hotkey in.
+            // whoever happens to be frontmost when the sleep ends. Without the
+            // pin, an app the user ⌘-tabbed to *during* those 600 ms becomes
+            // the target, and the pid guard in `AXSnapshotService.capture` then
+            // yields a contentless snapshot and the press dies silently. A
+            // deliberate switch away is not a target: end the press the way a
+            // lost target ends — trace, hint, back to `.idle` — instead of
+            // following the user into a field they never pressed the hotkey in.
             if let pinnedTarget, appInfo.pid != pinnedTarget {
                 self.continuePress(
                     snapshot: Self.lostTargetSnapshot(pid: pinnedTarget, locale: locale),
@@ -482,14 +479,13 @@ final class MagicPressCoordinator {
             )
             // Bill BEFORE the cancellation guard, and off `spendLedger` rather
             // than `self`, because the money is already gone by the time we
-            // get here. `finishPlanner` used to own the ledger append, so a
-            // planner call that completed but lost the race to a human chip
-            // pick — cancelled a millisecond earlier — returned its tokens to
-            // a `guard !Task.isCancelled` that dropped them on the floor, and
-            // `spend_summary` under-reported real spend by however often the
-            // user out-clicks the planner. Routing is what the press moved on
-            // from; the invoice is not. An abandoned call (`.timedOut` /
-            // `.failed`, no usage came back) still appends nothing.
+            // get here. A planner call that completes but loses the race to a
+            // human chip pick has still been paid for, so billing behind
+            // `guard !Task.isCancelled` would drop those tokens on the floor
+            // and make `spend_summary` under-report by however often the user
+            // out-clicks the planner. Routing is what the press moved on from;
+            // the invoice is not. An abandoned call (`.timedOut` / `.failed`,
+            // no usage came back) still appends nothing.
             if let usage = run.billableUsage {
                 await spendLedger.append(Self.plannerSpend(usage, provider: provider))
             }
@@ -799,8 +795,8 @@ final class MagicPressCoordinator {
         // After a chip round-trip some apps drop the selection on
         // deactivate — re-assert the captured range before pasting over it.
         //
-        // The AX work behind this now happens off the main actor, so this is a
-        // suspension point where the press band used to run straight through.
+        // The AX work behind this happens off the main actor, which makes this
+        // a suspension point in the middle of the press band.
         // The band mutates freely across it — Escape while `.generating` runs
         // `cancelGeneration`, which submits the trace and clears `activePress` —
         // and resuming into a capture taken before the hop would resurrect a
@@ -1230,18 +1226,17 @@ final class MagicPressCoordinator {
     ///
     /// Returns false when a *different* non-empty selection is live: the user
     /// re-selected during chips or generation, and the plan — written for the
-    /// old selection — would paste over text nobody addressed. Accepting any
-    /// non-empty selection, as this used to, silently did exactly that.
+    /// old selection — would paste over text nobody addressed. Any non-empty
+    /// selection must therefore be checked for identity, not just presence.
     ///
     /// Every AX read and write this needs happens inside `MagicInserter`'s
     /// reader actor, in one hop, and everything below decides on the value it
-    /// hands back. It used to call `AXUIElementCopyAttributeValue` and
-    /// `AXUIElementSetAttributeValue` straight from here, on the main actor —
-    /// up to three synchronous IPC round-trips at the 0.35 s process-wide AX
-    /// messaging timeout each, i.e. up to a second of frozen UI at the one
-    /// moment the user is actively waiting for text to appear. That is the same
-    /// stall `AXFieldReader` was created for on the insert path (R4); this call
-    /// site simply predated it.
+    /// hands back. Calling `AXUIElementCopyAttributeValue` /
+    /// `AXUIElementSetAttributeValue` straight from here would put up to three
+    /// synchronous IPC round-trips on the main actor at the 0.35 s process-wide
+    /// AX messaging timeout each — up to a second of frozen UI at the one
+    /// moment the user is actively waiting for text to appear, which is the
+    /// stall `AXFieldReader` exists to keep off this path (R4).
     ///
     /// The suspension point that introduces is safe *here* for a reason worth
     /// stating, because it is not safe everywhere (see `focusMatches` and

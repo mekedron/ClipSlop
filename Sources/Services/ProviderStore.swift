@@ -147,12 +147,12 @@ final class ProviderStore {
         else { return nil }
 
         // The legacy file is the only remaining copy of this configuration
-        // until providers.yaml is safely on disk. The write error used to be
-        // swallowed and the JSON moved to `.bak` regardless — so an unwritable
+        // until providers.yaml is safely on disk. Swallowing the write error
+        // and moving the JSON to `.bak` regardless would let an unwritable
         // engine directory or a full disk cost the user every provider at the
-        // next launch, with this process none the wiser because it still held
-        // the decoded list in memory. Write, prove the file reads back, and
-        // only then retire the JSON; otherwise leave it for the next launch.
+        // next launch — invisible to this process, which still holds the
+        // decoded list in memory. Write, prove the file reads back, and only
+        // then retire the JSON; otherwise leave it for the next launch.
         do {
             try writeToDisk(configs)
         } catch {

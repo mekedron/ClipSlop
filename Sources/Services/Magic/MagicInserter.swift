@@ -122,13 +122,12 @@ fileprivate actor AXFieldReader {
     /// handing text to `insert`: the field's value and its live selection, in
     /// one hop.
     ///
-    /// This used to run inline on the main actor in
-    /// `MagicPressCoordinator.reassertSelectionIfLost`, which is exactly the
-    /// shape this actor exists to stop: up to three synchronous AX round-trips
-    /// (value, selected range, and the set that follows) at the process-wide
-    /// 0.35 s messaging timeout each, charged to the main thread at the precise
-    /// moment the user is watching for their paste — close to a second of frozen
-    /// UI against an unresponsive target.
+    /// Here rather than inline in `MagicPressCoordinator.reassertSelectionIfLost`
+    /// because it is up to three synchronous AX round-trips (value, selected
+    /// range, and the set that follows) at the 0.35 s messaging timeout each —
+    /// on the main thread that is close to a second of frozen UI against an
+    /// unresponsive target, at the precise moment the user is watching for
+    /// their paste.
     ///
     /// `fallbackValue` (the caller's captured field value) is passed IN rather
     /// than substituted by the caller afterwards because the character-offset
@@ -202,9 +201,9 @@ fileprivate actor AXFieldReader {
         // mismatch is not by itself proof that focus moved — but the
         // corroboration has to be strong enough that a DIFFERENT field cannot
         // supply it. Role and window title must agree, and then either the
-        // on-screen frame or a distinctive value. The old test was role +
-        // value alone, which every other empty composer in the same window
-        // satisfies: a field focused during generation accepted the paste.
+        // on-screen frame or a distinctive value. Role plus value alone is not
+        // enough: every other empty composer in the same window satisfies it,
+        // so a field focused during generation would take the paste.
         guard let field = snapshot.field,
               copyString(focused, kAXRoleAttribute) == field.role,
               windowTitle(of: focused) == snapshot.windowTitle
@@ -372,9 +371,9 @@ final class MagicInserter {
     ///
     /// Written ONLY through `noteOurOwnWrite`, and read by the guards as a
     /// value captured before they suspend — see `focusMatches`. Both halves
-    /// matter now that the AX reads live in `AXFieldReader`: the checks await
-    /// into that actor mid-decision, so main-actor isolation alone no longer
-    /// makes "read the field, then consult `lastWrite`" atomic.
+    /// matter because the AX reads live in `AXFieldReader`: the checks await
+    /// into that actor mid-decision, so main-actor isolation alone does not
+    /// make "read the field, then consult `lastWrite`" atomic.
     private var lastWrite: (press: Date, probe: FieldProbe)?
 
     /// Bumped by every `lastWrite` mutation, so a guard that captured the value
@@ -437,11 +436,11 @@ final class MagicInserter {
             // skipping either would leave the generated text sitting in their
             // clipboard and undo aimed at nothing.
             //
-            // Without this the loop did not merely run long, it SPUN: a
-            // cancelled task makes `Task.sleep` return immediately, so the 60 ms
-            // pacing vanished and the remainder of the 700 ms went into
-            // back-to-back AX reads of an app the user had already walked away
-            // from.
+            // The break is what stops this loop SPINNING rather than merely
+            // running long: `Task.sleep` returns immediately once cancelled, so
+            // without it the 60 ms pacing disappears and the rest of the 700 ms
+            // goes into back-to-back AX reads of an app the user has already
+            // walked away from.
             if Task.isCancelled { break }
             try? await Task.sleep(for: .milliseconds(60))
             guard let (value, _) = await reader.currentFieldState(snapshot) else { continue }
@@ -685,8 +684,8 @@ final class MagicInserter {
         // Being the right ELEMENT is not the same as being in the right
         // STATE. Apps that keep one AXUIElement across re-renders hand back
         // the very same element after the user has typed half a sentence into
-        // it, so identity alone let a result assembled from the old value and
-        // the old caret be pasted into the new one. When the state has moved
+        // it, so identity alone would paste a result assembled from the old
+        // value and the old caret into the new one. When the state has moved
         // on, the press goes to the clipboard and the toast like any other
         // mismatch — §3.5's "never a blind paste".
         //
@@ -698,13 +697,11 @@ final class MagicInserter {
         }
         // `lastWrite` is captured HERE, before the hop into the reader actor,
         // and the captured value is what decides below — the comparison is a
-        // `nonisolated static` that cannot reach back for a fresher one. Moving
-        // the AX reads into `AXFieldReader` (right fix for the main-thread
-        // stalls) put a suspension point between reading the field and
-        // consulting our own last write, where none existed while the whole
-        // check was synchronous on the main actor; deciding half from before
-        // that gap and half from after it is how a guard starts answering
-        // questions nobody asked.
+        // `nonisolated static` that cannot reach back for a fresher one. The
+        // hop is a suspension point between reading the field and consulting
+        // our own last write, and deciding half from before that gap and half
+        // from after it is how a guard starts answering questions nobody
+        // asked.
         //
         // The generation re-check closes the other half: if a write did land
         // during the await, this reading is judged against nothing and the

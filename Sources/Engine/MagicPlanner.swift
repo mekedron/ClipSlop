@@ -432,9 +432,9 @@ enum MagicPlanner {
         // it — detached is not the same as unowned.
         //
         // Detached tasks do not inherit cancellation, though, and
-        // `withCheckedContinuation` is not a cancellation point — so the press
-        // cancelling `plannerTask` used to change nothing here. The
-        // cancellation handler restores that half without giving the cap back
+        // `withCheckedContinuation` is not a cancellation point, so the press
+        // cancelling `plannerTask` would otherwise reach nothing here. The
+        // cancellation handler supplies that half without giving the cap back
         // to the provider: it settles the race through the same one-shot claim
         // the cap uses, so `run` still returns at or before the cap no matter
         // how the underlying service behaves.

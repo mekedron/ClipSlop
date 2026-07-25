@@ -250,10 +250,9 @@ enum MagicPressPipeline {
             }
         }
 
-        // The card's `budget.ms`, which used to be parsed and then read by
-        // nothing at all. It covers the whole generation phase including the
-        // retry — a budget the retry could double is not a budget — and 0
-        // (the default) means no cap.
+        // The card's `budget.ms`. It covers the whole generation phase
+        // including the retry — a budget the retry could double is not a
+        // budget — and 0 (the default) means no cap.
         let generation: AIGenerationResult
         var output: String
         let budgetMs = workflow.card.budget.ms

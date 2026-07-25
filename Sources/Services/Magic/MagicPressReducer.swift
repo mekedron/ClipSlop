@@ -4,22 +4,21 @@ import Foundation
 /// it can be read — and tested — without AppKit, AX, a window server or a
 /// provider.
 ///
-/// Six consecutive review rounds found bugs in this band and every one of them
-/// was a *transition* bug rather than an algorithmic one: a chip accepted while
-/// the panel was still key and cancelled by the panel's own `resignKey`
-/// teardown; two fast Regenerate clicks both passing the `.toast` guard and
-/// racing two provider calls against one `activePress`; a repeated ⌘↩ pasting
-/// flagged output twice across `insertAnyway`'s focus delay; a forced-chips
-/// press over a verifier warning swallowed as an "insert it" accept. None of
-/// them were reachable from a test, because the decisions lived inside methods
-/// that also drove windows, AX and the network.
+/// The bugs this band attracts are *transition* bugs rather than algorithmic
+/// ones — a chip accepted while the panel is still key and then cancelled by
+/// the panel's own `resignKey` teardown; two fast Regenerate clicks both
+/// passing the `.toast` guard and racing two provider calls against one
+/// `activePress`; a repeated ⌘↩ pasting flagged output twice across
+/// `insertAnyway`'s focus delay. None of those are reachable from a test while
+/// the decision lives inside a method that also drives windows, AX and the
+/// network.
 ///
-/// So the decision moves here and stays pure: `reduce` reads a value and
-/// returns a value. The coordinator keeps the *doing*, in exactly the order it
-/// did before — several of those orderings are themselves bug fixes (leaving
-/// `.chips` before closing the panel, entering `.generating` before the async
-/// undo, closing the toast before clearing `activePress`) and the reducer
-/// deliberately has no opinion about them. It answers WHAT, never WHEN.
+/// So the decision lives here and stays pure: `reduce` reads a value and
+/// returns a value. The coordinator keeps the *doing*, and its ordering is
+/// load bearing in its own right (leaving `.chips` before closing the panel,
+/// entering `.generating` before the async undo, closing the toast before
+/// clearing `activePress`). The reducer deliberately has no opinion about
+/// that: it answers WHAT, never WHEN.
 enum MagicPressReducer {
     /// Everything the transitions actually read — and nothing else. No windows,
     /// no tasks, no snapshot: a decision that needs a new fact has to name it
@@ -112,11 +111,10 @@ enum MagicPressReducer {
             return chipPick(state, index: 0, withHint: true)
 
         case .regenerateOrRefine:
-            // Both the phase and the press must still be there. Two fast clicks
-            // used to pass this together: the first one now leaves `.toast`
-            // *before* its async undo, so the second lands here in `.generating`
-            // and is refused instead of racing a second provider call against
-            // the one `activePress`.
+            // Both the phase and the press must still be there. The first click
+            // leaves `.toast` *before* its async undo, so a second one lands
+            // here in `.generating` and is refused rather than racing a second
+            // provider call against the one `activePress`.
             guard state.phase == .toast, state.hasActivePress, state.hasWorkflow else {
                 return .ignore
             }
@@ -124,9 +122,10 @@ enum MagicPressReducer {
 
         case .insertAnyway:
             // The double-paste guard. `verifierWarningPending` is the
-            // affordance being on screen; `insertAnywayInFlight` is the 150 ms
-            // focus delay a second ⌘↩ (or a second hold, or a plain Magic
-            // press) used to slip through while nothing else had changed.
+            // affordance being on screen; `insertAnywayInFlight` covers the
+            // 150 ms focus delay, across which neither `phase` nor `toastState`
+            // moves — so it is the only thing a second ⌘↩ (or a second hold, or
+            // a plain Magic press) can be refused by.
             guard state.verifierWarningPending,
                   state.hasActivePress,
                   !state.insertAnywayInFlight

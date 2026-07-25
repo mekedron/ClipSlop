@@ -41,10 +41,9 @@ struct BudgetSpec: Sendable, Equatable {
     /// `planner_timeout_ms`, and the default, because a card that says nothing
     /// about time should not acquire a deadline.
     ///
-    /// It was previously parsed, documented as a "time budget", defaulted to
-    /// 6000, and read by nothing at all. Enforcing that default retroactively
-    /// would have killed most presses on a reasoning model, so the default
-    /// became "no cap" and a positive value is now a promise the engine keeps.
+    /// The default is 0 rather than a number because enforcing an inherited
+    /// deadline retroactively would kill most presses on a reasoning model. A
+    /// positive value is a promise the engine keeps.
     let ms: Int
 
     static let `default` = BudgetSpec(promptTokensTotal: 3500, ms: 0)
@@ -168,12 +167,12 @@ enum WorkflowCardParser {
     ]
     static let ignoredForwardKeys: Set<String> = ["needs", "authorship", "execution", "permissions"]
     static let knownWhenKeys: Set<String> = ["app", "url", "field.role", "field.state", "selection"]
-    /// The nested maps are closed schemas too. They used to read the keys they
-    /// recognized and drop the rest without a word, so `budget: {mss: 1000}`
-    /// quietly meant "no deadline" and `output: {max_char: 400}` quietly fell
-    /// back to the engine-wide length limit — while Settings reported the card
-    /// as valid. A typo inside a block is exactly as wrong as a typo at the top
-    /// level, so it fails the same way.
+    /// The nested maps are closed schemas too. Reading the recognized keys and
+    /// dropping the rest in silence would make `budget: {mss: 1000}` mean "no
+    /// deadline" and `output: {max_char: 400}` fall back to the engine-wide
+    /// length limit, while Settings reports the card as valid. A typo inside a
+    /// block is exactly as wrong as a typo at the top level, so it fails the
+    /// same way.
     static let knownBudgetKeys: Set<String> = ["prompt_tokens_total", "ms"]
     static let knownOutputKeys: Set<String> = ["lang", "max_chars", "format"]
 
