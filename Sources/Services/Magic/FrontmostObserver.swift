@@ -44,7 +44,27 @@ private let frontmostAXCallback: AXObserverCallback = { _, _, _, refcon in
 /// first press instead of during it.
 @MainActor
 final class FrontmostObserver {
-    private(set) var warm: WarmContext?
+    private(set) var warmContext: WarmContext?
+
+    /// The cached context, read through the `warm_observer_enabled` kill
+    /// switch. `shouldAttach` already refuses to attach while the switch is 0,
+    /// but flipping it at runtime neither cleared this cache nor tore down a
+    /// live observer — so routing and `no_cloud` decisions kept depending on
+    /// the observer after the user had switched it off. Gating the read makes
+    /// the flip take effect on the very next press no matter which caller asks;
+    /// `applyKillSwitch()` does the teardown.
+    var warm: WarmContext? {
+        configProvider().warmObserverEnabled == 0 ? nil : warmContext
+    }
+
+    /// Tears the observer down once the switch goes off. Idempotent, cheap,
+    /// and called from the press path, which reloads config anyway.
+    func applyKillSwitch() {
+        guard configProvider().warmObserverEnabled == 0 else { return }
+        guard axObserver != nil || warmContext != nil else { return }
+        detach()
+        warmContext = nil
+    }
 
     private var axObserver: AXObserver?
     private var observedPid: pid_t = -1
@@ -125,7 +145,7 @@ final class FrontmostObserver {
     private func appTerminated(_ app: NSRunningApplication) {
         guard app.processIdentifier == observedPid else { return }
         detach()
-        warm = nil
+        warmContext = nil
     }
 
     private func attach(to app: NSRunningApplication) {
@@ -195,7 +215,7 @@ final class FrontmostObserver {
             )
             let context = await self.snapshotService.cheapCapture(appInfo: appInfo, config: config)
             guard !Task.isCancelled, self.observedPid == pid else { return }
-            self.warm = context
+            self.warmContext = context
         }
     }
 }

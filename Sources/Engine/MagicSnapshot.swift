@@ -64,8 +64,24 @@ struct MagicSnapshot: Sendable {
         let editable: Bool
         let secure: Bool
         let value: String
-        let selection: SelectionInfo?
+        /// `var` so `MagicSelectionCapture.refine` can replace just this on a
+        /// copy of the snapshot — rebuilding either struct through its
+        /// memberwise init silently resets every defaulted diagnostic field.
+        var selection: SelectionInfo?
         let placeholder: String?
+        /// The raw `kAXSelectedTextRange` the app reported, in CHARACTER
+        /// offsets into `value` — including a zero-length caret, which
+        /// `selection` can never represent because it only exists when actual
+        /// selected text was recovered. Two things need it:
+        ///
+        /// - `ContinuationSeam`, to know where the caret sits. Reading
+        ///   `selection?.range` meant a plain caret always fell through to the
+        ///   "assume the end of the field" branch, so a mid-field paste was
+        ///   joined against the wrong character.
+        /// - `MagicSelectionCapture.isNeeded`, as the one honest signal that
+        ///   the app claims a selection AX would not hand over — distinct from
+        ///   "this field merely has text in it".
+        var selectedRange: Range<Int>? = nil
         /// Screen frame at capture time, when the app publishes AXPosition and
         /// AXSize. The Inserter's identity check needs it: Chromium rebuilds
         /// the AXUIElement on re-render, so `CFEqual` fails for a field that
@@ -114,7 +130,8 @@ struct MagicSnapshot: Sendable {
     let app: AppInfo
     let windowTitle: String?
     let url: String?
-    let field: FieldInfo?
+    /// See `FieldInfo.selection` — `var` for the same copy-don't-rebuild reason.
+    var field: FieldInfo?
     let surrounding: Surrounding?
     let locale: String
     let ts: Date

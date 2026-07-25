@@ -90,3 +90,41 @@ struct SurroundingAssemblyTests {
         #expect(posMessage < posFooter)
     }
 }
+
+@MainActor
+@Suite("Selection capture trigger")
+struct MagicSelectionCaptureTests {
+    /// The ⌘C probe must fire only when the app CLAIMS a selection AX would
+    /// not hand over. "Editable and non-empty" was true of every draft, and in
+    /// a copy-current-line target the probe returns text with nothing
+    /// selected — `refine` then promoted that to a real selection while the
+    /// paste still landed at the caret, rewriting a line nobody addressed.
+    @Test func firesOnlyOnAClaimedButUnreadableSelection() {
+        // A plain draft: no range, nothing to recover.
+        #expect(!MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            value: "Some draft the user is writing"
+        )))
+        // A caret is not a selection.
+        #expect(!MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            value: "Some draft", selectedRange: 4..<4
+        )))
+        // A non-empty range with no recovered text: this is the real case.
+        #expect(MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            value: "Some draft", selectedRange: 0..<4
+        )))
+        // Already recovered — nothing to do.
+        #expect(!MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            value: "Some draft",
+            selection: .init(range: 0..<4, text: "Some"), selectedRange: 0..<4
+        )))
+        // Non-editable areas publish no range in many apps, and nothing is
+        // ever pasted back into them, so the probe stays the fallback there.
+        #expect(MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            role: "AXStaticText", editable: false, value: "Page text"
+        )))
+        // Secure fields are never probed.
+        #expect(!MagicSelectionCapture.isNeeded(for: MagicTestSupport.makeSnapshot(
+            role: "AXSecureTextField", secure: true, value: "hunter2", selectedRange: 0..<7
+        )))
+    }
+}

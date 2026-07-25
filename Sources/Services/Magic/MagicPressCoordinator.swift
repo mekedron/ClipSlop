@@ -202,6 +202,10 @@ final class MagicPressCoordinator {
         let locale = Locale.preferredLanguages.first ?? "en"
         configStore.reloadIfChanged()
         let config = configStore.config
+        // Config was just reloaded, so this is where a freshly flipped
+        // `warm_observer_enabled: 0` takes effect: drop the cache and tear the
+        // live observer down rather than leaving it running behind the switch.
+        frontmostObserver.applyKillSwitch()
         let warm = frontmostObserver.warm
 
         Task { [weak self] in

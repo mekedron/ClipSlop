@@ -162,21 +162,27 @@ actor AXSnapshotService {
         }
 
         let selectionText = copyString(focused, kAXSelectedTextAttribute, &budget)
+        // AX ranges are UTF-16 offsets. Converting them to character offsets
+        // up front is what makes every consumer below correct: bounds-checking
+        // against `value.count` and slicing with grapheme-based
+        // `String.index(_:offsetBy:)` treated them as characters, so a single
+        // emoji or composed character anywhere before the selection shifted
+        // the recovered text — silently, and by exactly the wrong amount.
         let selectionRange = copyRange(focused, kAXSelectedTextRangeAttribute, &budget)
+        let characterRange = selectionRange.flatMap { Self.characterRange($0, in: value) }
         var selection: MagicSnapshot.SelectionInfo?
         if let selectionText, !selectionText.isEmpty {
-            let range = selectionRange.flatMap { $0.length > 0 ? $0.location..<($0.location + $0.length) : nil }
-            selection = MagicSnapshot.SelectionInfo(range: range, text: selectionText)
-        } else if let selectionRange, selectionRange.length > 0,
-                  !value.isEmpty, selectionRange.location + selectionRange.length <= value.count {
+            selection = MagicSnapshot.SelectionInfo(
+                range: characterRange.flatMap { $0.isEmpty ? nil : $0 }, text: selectionText
+            )
+        } else if let characterRange, !characterRange.isEmpty, !value.isEmpty {
             // Some web fields report a range but empty AXSelectedText —
             // recover the text from the value; if that fails too, the caller
             // runs the synthetic-⌘C fallback.
-            let start = value.index(value.startIndex, offsetBy: selectionRange.location)
-            let end = value.index(start, offsetBy: selectionRange.length)
+            let start = value.index(value.startIndex, offsetBy: characterRange.lowerBound)
+            let end = value.index(value.startIndex, offsetBy: characterRange.upperBound)
             selection = MagicSnapshot.SelectionInfo(
-                range: selectionRange.location..<(selectionRange.location + selectionRange.length),
-                text: String(value[start..<end])
+                range: characterRange, text: String(value[start..<end])
             )
         }
 
@@ -185,6 +191,7 @@ actor AXSnapshotService {
         let field = MagicSnapshot.FieldInfo(
             role: role, subrole: subrole, editable: editable, secure: false,
             value: value, selection: selection, placeholder: placeholder,
+            selectedRange: characterRange,
             frame: copyFrame(focused, &budget)
         )
 
@@ -873,25 +880,42 @@ actor AXSnapshotService {
             guard let children: [AXUIElement] = copyElementArray(ancestor, kAXChildrenAttribute, &budget) else {
                 continue
             }
+            // Sample AROUND the path child, not from the head of the list. A
+            // blind `prefix(maxSiblingsPerLevel)` dropped the siblings nearest
+            // the field whenever the path child sat beyond the cap — and the
+            // old `seenPath` flag then never flipped, so everything collected
+            // was emitted as "before" and ⟨YOUR FIELD⟩ came out after a run of
+            // unrelated leading siblings. The web walk already samples around
+            // its `pathIndex`; this is the same rule for the native walk.
+            let pathIndex = children.firstIndex {
+                CFEqual($0, pathChild) || CFEqual($0, focused)
+            }
+            let cap = budget.maxSiblingsPerLevel
+            let beforeAll = pathIndex.map { children[..<$0] } ?? children[...]
+            let afterAll = pathIndex.map { children[($0 + 1)...] } ?? children[children.endIndex...]
+            // Each side gets half, and whichever side is short gives its
+            // remainder to the other — nearest the field always wins.
+            let afterCount = min(afterAll.count, max(0, cap - min(beforeAll.count, cap / 2)))
+            let beforeCount = min(beforeAll.count, cap - afterCount)
+
             var before: [SurroundingNode] = []
             var after: [SurroundingNode] = []
-            var seenPath = false
-            for sibling in children.prefix(budget.maxSiblingsPerLevel) {
-                if CFEqual(sibling, pathChild) || CFEqual(sibling, focused) {
-                    seenPath = true
-                    continue
-                }
-                guard budget.remainingCalls > 0, !expired(), totalChars < budget.maxContentChars else { break }
-                if let node = gatherNode(
-                    sibling, depth: 0, maxDepth: budget.maxGatherDepth,
-                    maxChildren: budget.maxSiblingsPerLevel, reverse: false,
-                    descriptionFallback: true,
-                    chars: &totalChars, cap: budget.maxContentChars,
-                    budget: &budget, expired: expired
-                ) {
-                    if seenPath { after.append(node) } else { before.append(node) }
+            func gather(_ siblings: ArraySlice<AXUIElement>, into nodes: inout [SurroundingNode]) {
+                for sibling in siblings {
+                    guard budget.remainingCalls > 0, !expired(), totalChars < budget.maxContentChars else { break }
+                    if let node = gatherNode(
+                        sibling, depth: 0, maxDepth: budget.maxGatherDepth,
+                        maxChildren: budget.maxSiblingsPerLevel, reverse: false,
+                        descriptionFallback: true,
+                        chars: &totalChars, cap: budget.maxContentChars,
+                        budget: &budget, expired: expired
+                    ) {
+                        nodes.append(node)
+                    }
                 }
             }
+            gather(beforeAll.suffix(beforeCount), into: &before)
+            gather(afterAll.prefix(afterCount), into: &after)
             var ancestorRole = index < ancestorRoles.count ? ancestorRoles[index] : "?"
             if ancestorRole == "?" { ancestorRole = "AXGroup" }
             let label = children.count >= 2
@@ -978,6 +1002,26 @@ actor AXSnapshotService {
     private func copyElementArray(_ element: AXUIElement, _ attribute: String, _ budget: inout Budget) -> [AXUIElement]? {
         guard let raw = copyRaw(element, attribute, &budget) as? [AnyObject] else { return nil }
         return raw.compactMap { CFGetTypeID($0) == AXUIElementGetTypeID() ? ($0 as! AXUIElement) : nil }
+    }
+
+    /// A UTF-16 `CFRange` from AX mapped onto character offsets into `value`.
+    /// Returns nil when the range does not lie inside the value at all (a
+    /// stale range, or a value we truncated at `maxFieldValueChars`) — a
+    /// caller must not silently act on offsets that point nowhere.
+    nonisolated static func characterRange(_ range: CFRange, in value: String) -> Range<Int>? {
+        guard range.location >= 0, range.length >= 0 else { return nil }
+        let utf16 = value.utf16
+        guard let start = utf16.index(
+                utf16.startIndex, offsetBy: range.location, limitedBy: utf16.endIndex
+              ),
+              let end = utf16.index(start, offsetBy: range.length, limitedBy: utf16.endIndex),
+              // A UTF-16 offset landing mid-surrogate has no character index.
+              let startIndex = String.Index(start, within: value),
+              let endIndex = String.Index(end, within: value)
+        else { return nil }
+        let lower = value.distance(from: value.startIndex, to: startIndex)
+        let upper = value.distance(from: value.startIndex, to: endIndex)
+        return lower..<upper
     }
 
     /// AXPosition + AXSize as one rect. Two calls, spent from the same budget

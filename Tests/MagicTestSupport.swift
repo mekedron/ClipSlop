@@ -14,6 +14,7 @@ enum MagicTestSupport {
         secure: Bool = false,
         value: String = "",
         selection: MagicSnapshot.SelectionInfo? = nil,
+        selectedRange: Range<Int>? = nil,
         placeholder: String? = nil,
         surroundingContent: String? = nil,
         surroundingAuthor: String? = nil,
@@ -41,7 +42,8 @@ enum MagicTestSupport {
                 secure: secure,
                 value: value,
                 selection: selection,
-                placeholder: placeholder
+                placeholder: placeholder,
+                selectedRange: selectedRange
             ) : nil,
             surrounding: surrounding,
             locale: "en",

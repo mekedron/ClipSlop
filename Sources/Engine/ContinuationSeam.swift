@@ -12,7 +12,11 @@ enum ContinuationSeam {
         guard snapshot.grammarRow == .draft, let field = snapshot.field else { return output }
         let value = field.value
         let prev: Character?
-        if let range = field.selection?.range {
+        // `selectedRange`, not `selection?.range`: this row is the DRAFT row,
+        // which by definition has no selected text, so `selection` is always
+        // nil here and the caret branch below could never run. The caret's own
+        // zero-length range is the only thing that says where the paste lands.
+        if let range = field.selectedRange {
             let caret = min(max(0, range.lowerBound), value.count)
             prev = caret > 0 ? value[value.index(value.startIndex, offsetBy: caret - 1)] : nil
         } else {
