@@ -1,17 +1,97 @@
 import Foundation
 import os
 
-/// One-shot claim shared by the two sides of a race, so exactly one of them
-/// resumes the continuation.
-private final class LockedFlag: Sendable {
-    private let state = OSAllocatedUnfairLock(initialState: false)
+/// The three ways one planner call can end: the provider answered (or threw),
+/// the hard cap fired, or the press moved on and cancelled it.
+private enum PlannerRaceResult: Sendable {
+    case response(AIGenerationResult)
+    case failed
+    case timedOut
+}
 
-    /// True for the first caller only.
-    func claim() -> Bool {
-        state.withLock { claimed in
-            if claimed { return false }
-            claimed = true
-            return true
+/// One-shot claim shared by everyone who can end a planner call, so exactly
+/// one of them resumes the continuation — plus the handle an external cancel
+/// pulls to end it *now*.
+///
+/// The continuation lives in here rather than in the racers' capture lists for
+/// one reason: `MagicPressCoordinator` cancels `plannerTask` the instant a
+/// human picks a chip, dismisses the panel or hits Escape, and neither an
+/// unstructured `Task` (it does not inherit cancellation) nor
+/// `withCheckedContinuation` (not a cancellation point) noticed. The cancel
+/// was therefore a no-op on the wire: the request stayed in flight until the
+/// cap task fired up to `planner_timeout_ms` later, so "their pick wins, the
+/// call dies" was only half true. `cancel()` settles the race and kills the
+/// request in the same breath.
+private final class PlannerRace: Sendable {
+    private struct State: Sendable {
+        var settled = false
+        var cancelled = false
+        var continuation: CheckedContinuation<PlannerRaceResult, Never>?
+        var call: Task<Void, Never>?
+    }
+
+    private let lock = OSAllocatedUnfairLock(initialState: State())
+
+    /// Publishes the continuation *before* either racer exists — a provider
+    /// that answers instantly would otherwise settle against a box with
+    /// nothing to resume. False means the press had already cancelled us
+    /// (`withTaskCancellationHandler` runs `onCancel` before the operation
+    /// when the task enters already cancelled): the continuation is resumed
+    /// here and the caller must start nothing, rather than park a
+    /// continuation no one is left to resume.
+    func begin(_ continuation: CheckedContinuation<PlannerRaceResult, Never>) -> Bool {
+        let cancelledEarly = lock.withLock { state -> Bool in
+            guard !state.cancelled else {
+                state.settled = true
+                return true
+            }
+            state.continuation = continuation
+            return false
+        }
+        if cancelledEarly { continuation.resume(returning: .failed) }
+        return !cancelledEarly
+    }
+
+    /// Hands the in-flight provider call over so a cancel can kill it. A
+    /// cancel that landed in the gap since `begin` kills it right here.
+    func attach(_ call: Task<Void, Never>) {
+        let alreadyCancelled = lock.withLock { state -> Bool in
+            guard !state.cancelled else { return true }
+            state.call = call
+            return false
+        }
+        if alreadyCancelled { call.cancel() }
+    }
+
+    /// First caller wins; every later one is a no-op (its result belongs to a
+    /// call the press has stopped waiting for). The resume happens outside the
+    /// lock — the winner can be the provider task, the cap task or the cancel
+    /// handler, and none of them should be holding a lock when the awaiting
+    /// task is scheduled.
+    func settle(_ result: PlannerRaceResult) {
+        takeContinuation()?.resume(returning: result)
+    }
+
+    /// The press stopped waiting. Settle the race as failed and cancel the
+    /// request instead of leaving it running until the cap fires.
+    func cancel() {
+        let call: Task<Void, Never>? = lock.withLock { state in
+            state.cancelled = true
+            let call = state.call
+            state.call = nil
+            return call
+        }
+        settle(.failed)
+        call?.cancel()
+    }
+
+    private func takeContinuation() -> CheckedContinuation<PlannerRaceResult, Never>? {
+        lock.withLock { state in
+            guard !state.settled else { return nil }
+            state.settled = true
+            let continuation = state.continuation
+            state.continuation = nil
+            return continuation
         }
     }
 }
@@ -67,6 +147,13 @@ enum MagicPlanner {
         case failed
     }
 
+    /// Tokens a completed planner call must be billed for.
+    struct Usage: Sendable, Equatable {
+        let inputTokens: Int
+        let outputTokens: Int
+        let estimated: Bool
+    }
+
     /// One planner run's result. Token counts are present only when the
     /// call actually completed — an abandoned call appends no spend.
     struct Run: Sendable {
@@ -75,6 +162,24 @@ enum MagicPlanner {
         let inputTokens: Int?
         let outputTokens: Int?
         let usageEstimated: Bool
+
+        /// The usage that MUST reach the spend ledger, no matter what the
+        /// press decided in the meantime.
+        ///
+        /// Non-nil exactly when the call completed — including the run whose
+        /// answer nobody wants any more because a human picked a chip a
+        /// moment earlier. Those tokens were paid for; billing them only on
+        /// the routing path (as `finishPlanner` used to) meant a planner that
+        /// lost the race by a hair was invisible to `spend_summary`, which
+        /// then under-reported real money. `.timedOut` / `.failed` runs report
+        /// nothing: the call was abandoned before any usage came back, so
+        /// there is nothing to account.
+        var billableUsage: Usage? {
+            guard let inputTokens, let outputTokens else { return nil }
+            return Usage(
+                inputTokens: inputTokens, outputTokens: outputTokens, estimated: usageEstimated
+            )
+        }
     }
 
     // MARK: - Eligibility (pure)
@@ -249,10 +354,16 @@ enum MagicPlanner {
 
     // MARK: - The race
 
-    /// The planner call raced against its hard cap. Never throws — every
-    /// failure mode degrades to "show the chips", and the caller decides
-    /// nothing until this returns (planner-first: the panel is never shown
-    /// and then withdrawn).
+    /// The planner call raced against its hard cap *and* against the press
+    /// itself. Never throws — every failure mode degrades to "show the
+    /// chips", and the caller decides nothing until this returns
+    /// (planner-first: the panel is never shown and then withdrawn).
+    ///
+    /// Cancelling the enclosing task (a human picked a chip, dismissed the
+    /// panel, hit Escape) returns `.failed` promptly and kills the request;
+    /// see `PlannerRace`. A call that had already answered when the cancel
+    /// landed still returns its usage — the tokens are spent either way, and
+    /// `billableUsage` is what the caller bills from.
     static func run(
         snapshot: MagicSnapshot,
         candidates: [Candidate],
@@ -265,12 +376,6 @@ enum MagicPlanner {
         let userMessage = buildUserMessage(snapshot: snapshot, candidates: candidates)
         let candidateIDs = candidates.map(\.id)
 
-        enum RaceResult: Sendable {
-            case response(AIGenerationResult)
-            case failed
-            case timedOut
-        }
-
         // Deliberately NOT a task group: `withTaskGroup` awaits every child
         // before it returns a value, so `cancelAll()` only *asks* the provider
         // task to stop — and a service that does not cooperatively cancel
@@ -279,24 +384,41 @@ enum MagicPlanner {
         // bound config.yaml documents. Two detached tasks with a first-wins
         // continuation return exactly at the cap; the loser is cancelled and
         // finishes unobserved (one bounded, non-streaming request).
-        let raced: RaceResult = await withCheckedContinuation { continuation in
-            let settled = LockedFlag()
-            let call = Task {
-                let result: RaceResult
-                do {
-                    result = .response(try await service.processWithUsage(
-                        text: userMessage, systemPrompt: systemPrompt, config: provider
-                    ))
-                } catch {
-                    result = .failed
+        //
+        // Detached tasks do not inherit cancellation, though, and
+        // `withCheckedContinuation` is not a cancellation point — so the press
+        // cancelling `plannerTask` used to change nothing here. The
+        // cancellation handler restores that half without giving the cap back
+        // to the provider: it settles the race through the same one-shot claim
+        // the cap uses, so `run` still returns at or before the cap no matter
+        // how the underlying service behaves.
+        let race = PlannerRace()
+        let raced: PlannerRaceResult = await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                // `begin` publishes the continuation before either racer
+                // exists and reports a cancel that beat us here; when it does,
+                // it has already resumed and nothing may be started.
+                guard race.begin(continuation) else { return }
+                let call = Task {
+                    let result: PlannerRaceResult
+                    do {
+                        result = .response(try await service.processWithUsage(
+                            text: userMessage, systemPrompt: systemPrompt, config: provider
+                        ))
+                    } catch {
+                        result = .failed
+                    }
+                    race.settle(result)
                 }
-                if settled.claim() { continuation.resume(returning: result) }
+                race.attach(call)
+                Task {
+                    try? await Task.sleep(for: .milliseconds(timeoutMs))
+                    race.settle(.timedOut)
+                    call.cancel()
+                }
             }
-            Task {
-                try? await Task.sleep(for: .milliseconds(timeoutMs))
-                if settled.claim() { continuation.resume(returning: .timedOut) }
-                call.cancel()
-            }
+        } onCancel: {
+            race.cancel()
         }
         let ms = Self.ms(clock.now - start)
 

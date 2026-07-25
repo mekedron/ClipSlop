@@ -423,7 +423,17 @@ enum PromptAssembler {
                 if !beforeText.isEmpty {
                     parts.append("THE USER'S DRAFT BEFORE THE CARET (your output continues from its end; do not repeat it):\n\(beforeText)")
                 }
-                parts.append("THE USER'S DRAFT AFTER THE CARET (your output is inserted at the caret, immediately before this text; do not repeat it and do not answer it):\n\(afterText)")
+                // Guarded like the `before` half above, and for the same
+                // reason: `trimToTokens` can return an empty string on a
+                // heavily trimmed draft (a tiny `draftBudget` gives each half
+                // almost nothing), and an unconditional append then put a
+                // labelled but EMPTY section into the prompt — a header
+                // promising text that is not there, which reads to the model
+                // as "the draft after the caret is blank" when it is merely
+                // untold.
+                if !afterText.isEmpty {
+                    parts.append("THE USER'S DRAFT AFTER THE CARET (your output is inserted at the caret, immediately before this text; do not repeat it and do not answer it):\n\(afterText)")
+                }
             } else {
                 // Caret at the very end, or no usable range at all (common on
                 // web fields) — the original single-block framing, which is

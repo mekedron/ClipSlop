@@ -258,6 +258,21 @@ enum MagicPressPipeline {
         var output: String
         let budgetMs = workflow.card.budget.ms
         if budgetMs > 0 {
+            // A task group here is only a HARD cap because every `AIService`
+            // observes cancellation. The group awaits its losing child before
+            // it returns, so `cancelAll()` merely *asks* the generation task to
+            // stop: a service that ignored cancellation would keep this line
+            // blocked long past `budget.ms` and turn the cap into advice.
+            // `MagicPlanner.run` hit exactly that and had to drop its own task
+            // group for two detached tasks plus a first-wins continuation —
+            // back when `CLIToolService` sat blocked on a subprocess. It no
+            // longer does (`runProcess` wraps the wait in
+            // `withTaskCancellationHandler` and terminates the process, see
+            // `ProcessRun`), which is the whole reason the simpler construct is
+            // safe here. Adding an `AIService` that does not cooperatively
+            // cancel breaks this cap and nothing else will say so — such a
+            // service must either be made cancellable or this code must move to
+            // the planner's pattern.
             (generation, output) = try await withThrowingTaskGroup(
                 of: (AIGenerationResult, String).self
             ) { group in

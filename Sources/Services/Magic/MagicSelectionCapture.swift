@@ -42,8 +42,16 @@ enum MagicSelectionCapture {
         // only non-string representations after bumping `changeCount` (an
         // image, a file URL, a rich-text-only copy), and the user's clipboard
         // was then left holding our probe's spoils forever.
-        if NSPasteboard.general.changeCount != saved.changeCount {
-            PasteboardTransaction.restore(saved, ifChangeCountStill: NSPasteboard.general.changeCount)
+        //
+        // Read the count ONCE and hand that same value to `restore` as the
+        // expected token. Reading it a second time inside the call made
+        // `shouldRestore` compare the pasteboard's count to itself — always
+        // true — which threw away the "never fight other writers" contract
+        // (§3.5, R3): a clipboard manager or another app that wrote between our
+        // ⌘C probe and this line got clobbered by our restore.
+        let countAfterProbe = NSPasteboard.general.changeCount
+        if countAfterProbe != saved.changeCount {
+            PasteboardTransaction.restore(saved, ifChangeCountStill: countAfterProbe)
         }
 
         guard let text = captured, !text.isEmpty, let field = snapshot.field else { return snapshot }

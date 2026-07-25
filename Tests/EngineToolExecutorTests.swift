@@ -477,6 +477,72 @@ struct EngineToolExecutorTests {
         #expect(config.captureDeadlineMs == 2000)
     }
 
+    /// The entries come from a model-supplied tool argument, so the writer has
+    /// to quote them: unquoted, an entry with a ',' became TWO privacy rules
+    /// and one with a ']' or a '#' truncated the list — and because a
+    /// comma-split flow list is still valid YAML, `MagicEngineConfig.parse`
+    /// accepted the result without a warning and the user's rule was quietly
+    /// the wrong rule (P7).
+    @Test func noCloudEntriesWithFlowSyntaxSurviveAsSingleEntries() throws {
+        let awkward = [
+            "weird,name.example.com",   // ',' used to split this into two rules.
+            "bracket]host.example.com", // ']' used to truncate the list here.
+            "hash # host.example.com",  // ' #' used to comment out the rest.
+            "brace}open{host.com",
+            "quote\"host.example.com",
+        ]
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: "---\nno_cloud: []\n---\n",
+            sets: [("no_cloud", .array(awkward.map { JSONValue.string($0) }))]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        // One entry per input, each with its original text (entries are folded
+        // to lower case by `MagicEngineConfig`; these are already lower case).
+        #expect(config.noCloud == awkward)
+    }
+
+    @Test func noCloudRejectsBlankEntriesInsteadOfDroppingThem() throws {
+        let error = #expect(throws: ToolError.self) {
+            try EngineToolExecutor.applyConfigEdits(
+                to: "---\nno_cloud: []\n---\n",
+                sets: [("no_cloud", .array([.string("gmail.com"), .string("  ")]))]
+            )
+        }
+        #expect(error?.message.contains("blank") == true)
+    }
+
+    /// The per-entry round-trip is not the whole guard, and the list-level one
+    /// is not decoration: these two entries are each written faithfully on
+    /// their own, but together `stripFlowComment` (which does not track
+    /// backslash-escaped quotes) reads the ']' as closing the list and then
+    /// treats the ' #' as a comment that eats the second rule. Refusing the
+    /// edit beats writing a privacy list that means something else.
+    @Test func noCloudRefusesEntriesThatCorruptEachOther() throws {
+        let error = #expect(throws: ToolError.self) {
+            try EngineToolExecutor.applyConfigEdits(
+                to: "---\nno_cloud: []\n---\n",
+                sets: [("no_cloud", .array([.string("quote\"a]"), .string("hash # b")]))]
+            )
+        }
+        #expect(error?.message.contains("no_cloud") == true)
+    }
+
+    @Test func noCloudRoundTripsPlainEntriesUnchanged() throws {
+        let edit = try EngineToolExecutor.applyConfigEdits(
+            to: "---\nno_cloud: []\n---\n",
+            sets: [("no_cloud", .array([.string("telegram"), .string("gmail.com")]))]
+        )
+        let (config, warnings) = MagicEngineConfig.parse(edit.text)
+        #expect(warnings.isEmpty)
+        #expect(config.noCloud == ["telegram", "gmail.com"])
+        // Clearing the list stays possible.
+        let cleared = try EngineToolExecutor.applyConfigEdits(
+            to: edit.text, sets: [("no_cloud", .array([]))]
+        )
+        #expect(MagicEngineConfig.parse(cleared.text).config.noCloud.isEmpty)
+    }
+
     @Test func nullResetsAConfigKeyToDefault() throws {
         let root = try makeRoot()
         defer { try? FileManager.default.removeItem(at: root) }

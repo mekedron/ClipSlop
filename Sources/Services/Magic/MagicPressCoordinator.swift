@@ -95,6 +95,15 @@ final class MagicPressCoordinator {
     /// `phase` nor `toastState` changes across that gap, so this is what keeps
     /// a second ⌘↩ from pasting the flagged output twice.
     @ObservationIgnored private var insertAnywayInFlight = false
+    /// When the focus restoration started by the last overlay teardown is
+    /// expected to have landed — see `returnFocusToTarget` (asynchronous by
+    /// construction) and `awaitFocusSettle`. Nil means nothing is in flight and
+    /// the next press captures immediately.
+    @ObservationIgnored private var focusSettlesAt: ContinuousClock.Instant?
+    /// How long `returnFocusToTarget` needs: one main-loop hop to re-activate
+    /// the target plus the 120 ms AX-focus delay, rounded up to the same 600 ms
+    /// the menu-driven entry points already wait for a stolen focus to return.
+    private static let focusSettleMs = 600
     private static let logger = Logger(subsystem: Constants.bundleIdentifier, category: "engine.magic")
 
     init() {
@@ -179,10 +188,15 @@ final class MagicPressCoordinator {
             if !forceChips { selectChip(0) }
             return
         case .toast:
-            // With verifier warnings pending, the press hotkey means "yes,
-            // insert it" — the keyboard twin of hold-to-insert, like the
-            // double-press accept on chips.
-            if case .panelResult(_, .verifierFailed, _) = toastState {
+            // With verifier warnings pending, a PLAIN press means "yes, insert
+            // it" — the keyboard twin of hold-to-insert, like the double-press
+            // accept on chips. A forced-chips press means the opposite ("always
+            // ask me"), so it must not be swallowed as an accept: it tears the
+            // warning panel down and starts a fresh forced press, exactly like
+            // it does from every other toast state. Without the `!forceChips`
+            // half, ⌘⌃⇧M pasted the flagged output instead of re-asking — the
+            // same distinction the .chips/.planning case above makes.
+            if !forceChips, case .panelResult(_, .verifierFailed, _) = toastState {
                 insertAnyway()
                 return
             }
@@ -198,7 +212,6 @@ final class MagicPressCoordinator {
 
         phase = .collecting
         pressStart = ContinuousClock().now
-        let appInfo = frontmostAppInfo()
         let locale = Locale.preferredLanguages.first ?? "en"
         configStore.reloadIfChanged()
         let config = configStore.config
@@ -206,12 +219,33 @@ final class MagicPressCoordinator {
         // `warm_observer_enabled: 0` takes effect: drop the cache and tear the
         // live observer down rather than leaving it running behind the switch.
         frontmostObserver.applyKillSwitch()
-        let warm = frontmostObserver.warm
 
         Task { [weak self] in
             guard let self else { return }
+            // A press that had to tear an overlay down races its own focus
+            // restoration. `dismissToast` → `closeToast` → `returnFocusToTarget`
+            // re-activates the target app on the next main-loop hop and sets
+            // kAXFocusedAttribute 120 ms after *that*, so a capture kicked off
+            // right here reads the field before focus came back — or finds no
+            // field at all and kills the press as `dead:no_target`. Waiting out
+            // the published settle is the same trick `pressFromMenu`,
+            // `dryRunToClipboard` and `insertTestString` use after the menu
+            // steals key; `phase` is already `.collecting`, so a second hotkey
+            // still bounces off the single-flight guard while we wait, and an
+            // `.idle` press with no restoration pending waits zero.
+            //
+            // `pressStart` stays where it is, before the wait: the user really
+            // is waiting from the hotkey, and a press-to-paste sample that
+            // hides the settle would flatter the §3.6 SLO instead of measuring
+            // it.
+            await self.awaitFocusSettle()
             let clock = ContinuousClock()
             let snapshotStart = clock.now
+            // Read the frontmost app and the warm cache *after* the settle:
+            // right after an overlay teardown ClipSlop can still be frontmost,
+            // and an appInfo taken then names the wrong app for the whole press.
+            let appInfo = self.frontmostAppInfo()
+            let warm = self.frontmostObserver.warm
             var snapshot = await self.snapshotService.capture(
                 appInfo: appInfo, locale: locale, config: config, warm: warm
             )
@@ -326,7 +360,7 @@ final class MagicPressCoordinator {
 
         let plannerCandidates = candidates.map(MagicPlanner.Candidate.init(workflow:))
         let timeoutMs = plan.plannerTimeoutMs
-        plannerTask = Task { [weak self] in
+        plannerTask = Task { [weak self, spendLedger] in
             let run = await MagicPlanner.run(
                 snapshot: snapshot,
                 candidates: plannerCandidates,
@@ -334,34 +368,55 @@ final class MagicPressCoordinator {
                 timeoutMs: timeoutMs,
                 service: AIServiceFactory.service(for: provider.providerType)
             )
+            // Bill BEFORE the cancellation guard, and off `spendLedger` rather
+            // than `self`, because the money is already gone by the time we
+            // get here. `finishPlanner` used to own the ledger append, so a
+            // planner call that completed but lost the race to a human chip
+            // pick — cancelled a millisecond earlier — returned its tokens to
+            // a `guard !Task.isCancelled` that dropped them on the floor, and
+            // `spend_summary` under-reported real spend by however often the
+            // user out-clicks the planner. Routing is what the press moved on
+            // from; the invoice is not. An abandoned call (`.timedOut` /
+            // `.failed`, no usage came back) still appends nothing.
+            if let usage = run.billableUsage {
+                await spendLedger.append(Self.plannerSpend(usage, provider: provider))
+            }
             guard !Task.isCancelled else { return }
-            self?.finishPlanner(run, provider: provider, candidates: candidates)
+            self?.finishPlanner(run, candidates: candidates)
         }
     }
 
+    /// The planner's ledger entry, filed under the planner role so
+    /// `spend_summary` can tell the two Magic calls apart. `nonisolated`: it is
+    /// pure arithmetic on values and runs from the planner task, which must be
+    /// able to bill without touching coordinator state.
+    private nonisolated static func plannerSpend(
+        _ usage: MagicPlanner.Usage, provider: AIProviderConfig
+    ) -> SpendRecord {
+        SpendRecord(
+            ts: Date(),
+            role: EngineRole.plannerMagic.rawValue,
+            provider: provider.providerType.rawValue,
+            model: provider.modelID,
+            inputTokens: usage.inputTokens,
+            outputTokens: usage.outputTokens,
+            estimated: usage.estimated
+        )
+    }
+
+    /// The routing half of a planner answer. Takes no provider: spend is not
+    /// its business any more.
     private func finishPlanner(
         _ run: MagicPlanner.Run,
-        provider: AIProviderConfig,
         candidates: [ResolvedWorkflow]
     ) {
         plannerTask = nil
+        // Routing only. The spend was accounted by the planner task itself
+        // (see `startPlannerOrChips`) precisely because this method is
+        // reachable only when the press still wants the answer, and the bill
+        // is owed either way.
         guard phase == .planning, var press = activePress else { return }
         press.trace.latencyMs.planner = run.ms
-
-        // Spend under the planner's own role — only for calls that actually
-        // completed (an abandoned call reports no usage to account).
-        if let inputTokens = run.inputTokens, let outputTokens = run.outputTokens {
-            let spend = SpendRecord(
-                ts: Date(),
-                role: EngineRole.plannerMagic.rawValue,
-                provider: provider.providerType.rawValue,
-                model: provider.modelID,
-                inputTokens: inputTokens,
-                outputTokens: outputTokens,
-                estimated: run.usageEstimated
-            )
-            Task { [spendLedger] in await spendLedger.append(spend) }
-        }
 
         if case .chose(let index) = run.outcome, index < candidates.count {
             press.trace.presentation = "chips_planner"
@@ -455,7 +510,12 @@ final class MagicPressCoordinator {
 
     func selectChip(_ index: Int) {
         guard phase == .chips || phase == .planning, var press = activePress else { return }
-        // The human outraces the planner: their pick wins, the call dies.
+        // The human outraces the planner: their pick wins and the in-flight
+        // request really does die — `MagicPlanner.run` hangs a cancellation
+        // handler off this cancel, so it settles now instead of idling until
+        // the hard cap fires. A call that had already answered still bills;
+        // the ledger append in `startPlannerOrChips` runs ahead of the
+        // cancellation guard.
         plannerTask?.cancel()
         plannerTask = nil
         let candidates = press.decision.chipCandidates
@@ -954,16 +1014,40 @@ final class MagicPressCoordinator {
                 NSApp.hide(nil)
             }
         }
+        // Everything below lands asynchronously, so publish when the field can
+        // be trusted to have focus again: a press arriving in the meantime
+        // waits it out instead of snapshotting the pre-restoration field
+        // (`awaitFocusSettle`). A deadline rather than a flag — it expires on
+        // its own, so a press a second later pays nothing.
+        focusSettlesAt = ContinuousClock().now.advanced(by: .milliseconds(Self.focusSettleMs))
         DispatchQueue.main.async {
             target?.activate(options: [.activateAllWindows])
             if let element {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+                // Off the main thread on purpose: an AX write to an
+                // unresponsive target blocks for the 0.35 s AX messaging
+                // timeout, and on the main queue that is a beachball on top of
+                // whatever the user did next. The 0.12 s delay is what
+                // sequences this after `activate` (activation is asynchronous
+                // in any case), and the timer is armed from inside the main-queue
+                // block, so the ordering is unchanged by the hop.
+                DispatchQueue.global(qos: .userInitiated).asyncAfter(deadline: .now() + 0.12) {
                     AXUIElementSetAttributeValue(
                         element, kAXFocusedAttribute as CFString, kCFBooleanTrue
                     )
                 }
             }
         }
+    }
+
+    /// Blocks a starting press until the focus restoration from a torn-down
+    /// overlay has had time to land. No-op when nothing is pending, so the
+    /// common `.idle` press pays nothing.
+    private func awaitFocusSettle() async {
+        guard let settlesAt = focusSettlesAt else { return }
+        focusSettlesAt = nil
+        let remaining = settlesAt - ContinuousClock().now
+        guard remaining > .zero else { return }
+        try? await Task.sleep(for: remaining)
     }
 
     /// Restores the captured selection when the target dropped it (some apps

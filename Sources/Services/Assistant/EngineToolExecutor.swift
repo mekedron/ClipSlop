@@ -753,7 +753,7 @@ final class EngineToolExecutor {
             default:
                 throw ToolError(message: "'no_cloud' must be a list of app bundle ids / domains.")
             }
-            return "[\(items.joined(separator: ", "))]"
+            return try noCloudFlowList(items)
         }
         switch value {
         case .int(let number):
@@ -767,6 +767,91 @@ final class EngineToolExecutor {
         default:
             throw ToolError(message: "'\(key)' must be an integer (or null to reset to default).")
         }
+    }
+
+    /// Serializes `no_cloud` as a flow list whose entries are quoted the way
+    /// `FrontmatterParser` unquotes them.
+    ///
+    /// The entries arrive verbatim from a model-supplied tool argument, so they
+    /// cannot be pasted in raw: an entry holding a ',' splits into two rules,
+    /// and one holding '[', ']', '{', '}', '#', or a quote character truncates
+    /// or corrupts the rest of the list. Nothing downstream notices — the
+    /// post-edit `MagicEngineConfig.parse` in `applyConfigEdits` reads a
+    /// comma-split list as perfectly valid YAML and emits no warning at all —
+    /// so the edit is accepted and the user is left with a privacy rule that is
+    /// quietly not the rule they asked for. This is the one setting where
+    /// "silently wrong" is intolerable: `PrivacyBinding.enforce` reads this list
+    /// to decide which surfaces may never reach a cloud provider (P7).
+    ///
+    /// Every entry is therefore double-quoted, escaping exactly what
+    /// `FrontmatterParser.parseScalar` unescapes inside double quotes — `\`,
+    /// `"`, newline, tab — the same rule as `PromptLibraryFiles.quote`.
+    /// Belt and braces: each quoted entry, and then the finished list, is
+    /// parsed BACK through the engine's own parser and must return the original
+    /// strings character for character. Anything that does not survive the
+    /// round trip is refused rather than written, because an edit that visibly
+    /// fails is far better than a privacy list that silently means something
+    /// else. (One shape this catches: `stripFlowComment` does not track
+    /// backslash-escaped quotes, so an entry combining a `"` with a `]` or a
+    /// ` #` can still confuse the parser even though it is correctly escaped.)
+    private nonisolated static func noCloudFlowList(_ items: [String]) throws -> String {
+        var quoted: [String] = []
+        for item in items {
+            guard !item.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                // `parseInlineValue` filters empty flow items and
+                // `MagicEngineConfig.normalized` drops blank ones, so a blank
+                // entry would disappear without a single warning while the tool
+                // reported success — and an entry of "" would match nothing
+                // anyway.
+                throw ToolError(message: "'no_cloud' entries cannot be blank — a blank entry is dropped without a warning. Give each entry a bundle id ('com.tinyspeck.slackmacgap') or a domain ('gmail.com').")
+            }
+            let piece = quotedScalar(item)
+            guard parsedFlowList("[\(piece)]") == [item] else {
+                throw ToolError(message: "'no_cloud' entry \(piece) contains characters config.yaml cannot store faithfully — nothing was written. Use the plain bundle id or domain, without quotes, brackets, or newlines.")
+            }
+            quoted.append(piece)
+        }
+        let list = "[\(quoted.joined(separator: ", "))]"
+        // The text actually written is what has to round-trip, not just its
+        // pieces — and this is NOT a theoretical second check: an entry can be
+        // faithful on its own and still change how the parser reads its
+        // neighbours. `["quote\"a]", "hash # b"]` is the live example: both
+        // entries pass individually, but `stripFlowComment` loses track of the
+        // escaped quote, reads the ']' as closing the list, and then treats
+        // ' #' as a comment that eats the second entry.
+        guard parsedFlowList(list) == items else {
+            throw ToolError(message: "'no_cloud' could not be written back as exactly the list you asked for — nothing was written.")
+        }
+        return list
+    }
+
+    /// Runs a flow list through the engine's own frontmatter parser, so the
+    /// round-trip check above is answered by the code that will actually read
+    /// config.yaml instead of by a second guess at its rules. Returns nil when
+    /// the text does not parse, or does not parse as a list.
+    private nonisolated static func parsedFlowList(_ text: String) -> [String]? {
+        guard let document = try? FrontmatterParser.parse("---\nno_cloud: \(text)\n---\n"),
+              case .list(let items)? = document.fields["no_cloud"]
+        else { return nil }
+        return items
+    }
+
+    /// A double-quoted YAML scalar escaped exactly as
+    /// `FrontmatterParser.parseScalar` unescapes it. Mirrors
+    /// `PromptLibraryFiles.quote`; kept local rather than shared because the
+    /// two writers serve different files and must stay free to diverge.
+    private nonisolated static func quotedScalar(_ text: String) -> String {
+        var out = ""
+        for character in text {
+            switch character {
+            case "\\": out += "\\\\"
+            case "\"": out += "\\\""
+            case "\n": out += "\\n"
+            case "\t": out += "\\t"
+            default: out.append(character)
+            }
+        }
+        return "\"\(out)\""
     }
 
     // MARK: - Roles / providers helpers

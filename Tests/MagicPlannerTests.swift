@@ -360,6 +360,135 @@ struct MagicPlannerTests {
         #expect(run.inputTokens == nil)
     }
 
+    // MARK: - Cancellation
+
+    @Test func cancellingThePressEndsTheCallInsteadOfWaitingOutTheCap() async {
+        // The human outraced the planner, so `MagicPressCoordinator` cancels
+        // `plannerTask`. Unstructured tasks do not inherit cancellation and
+        // `withCheckedContinuation` is not a cancellation point, so that cancel
+        // used to do nothing at all: the request stayed in flight and `run`
+        // only came back when the cap fired, up to `planner_timeout_ms` later.
+        let clock = ContinuousClock()
+        let start = clock.now
+        let task = Task { () -> MagicPlanner.Run in
+            await MagicPlanner.run(
+                snapshot: MagicTestSupport.makeSnapshot(),
+                candidates: candidates(), provider: provider, timeoutMs: 5_000,
+                service: MockAIService(delayMs: 5_000) { AIGenerationResult(text: "base.reply") }
+            )
+        }
+        try? await Task.sleep(for: .milliseconds(50))
+        task.cancel()
+        let run = await task.value
+
+        #expect(run.outcome == .failed)
+        // Nothing completed, so nothing is billable.
+        #expect(run.billableUsage == nil)
+        // Returned on the cancel, not on the 5 s cap.
+        #expect(clock.now - start < .seconds(1))
+    }
+
+    @Test func aPressCancelledBeforeTheCallStartsNeverHangs() async {
+        // `withTaskCancellationHandler` runs its handler *before* the operation
+        // when the task enters already cancelled, so the cancel arrives before
+        // there is any continuation to resume. Unless that is latched, the body
+        // parks a continuation nobody is left to resume and the press hangs
+        // forever in `.planning`.
+        let task = Task { () -> MagicPlanner.Run in
+            // The only way out of this sleep is the cancel below, so `run` is
+            // always entered with cancellation already pending — no timing
+            // assumption, and the test never actually waits ten seconds.
+            try? await Task.sleep(for: .seconds(10))
+            return await MagicPlanner.run(
+                snapshot: MagicTestSupport.makeSnapshot(),
+                candidates: candidates(), provider: provider, timeoutMs: 5_000,
+                service: MockAIService(delayMs: 0) { AIGenerationResult(text: "base.reply") }
+            )
+        }
+        task.cancel()
+        let run = await task.value
+
+        #expect(run.outcome == .failed)
+        #expect(run.billableUsage == nil)
+    }
+
+    // MARK: - Spend accounting
+
+    @Test func onlyCompletedCallsAreBillable() async {
+        // Reported usage is billed verbatim.
+        let reported = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 2_000,
+            service: MockAIService(delayMs: 0) {
+                AIGenerationResult(text: "base.write", inputTokens: 120, outputTokens: 4)
+            }
+        )
+        #expect(reported.billableUsage
+            == MagicPlanner.Usage(inputTokens: 120, outputTokens: 4, estimated: false))
+
+        // A provider that reports no usage still spent tokens — estimated,
+        // never dropped. UNSURE is an answer, and answers cost money.
+        let estimated = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 2_000,
+            service: MockAIService(delayMs: 0) { AIGenerationResult(text: "UNSURE") }
+        )
+        #expect(estimated.outcome == .unsure)
+        #expect(estimated.billableUsage?.estimated == true)
+        #expect((estimated.billableUsage?.inputTokens ?? 0) > 0)
+
+        // Abandoned at the cap: nothing came back, so there is nothing to
+        // account — the ledger must not grow a row for it.
+        let timedOut = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 60,
+            service: MockAIService(delayMs: 5_000) { AIGenerationResult(text: "base.reply") }
+        )
+        #expect(timedOut.outcome == .timedOut)
+        #expect(timedOut.billableUsage == nil)
+
+        // A failed call is abandoned by the same rule.
+        let failed = await MagicPlanner.run(
+            snapshot: MagicTestSupport.makeSnapshot(),
+            candidates: candidates(), provider: provider, timeoutMs: 2_000,
+            service: MockAIService(delayMs: 0) { throw AIServiceError.emptyResponse }
+        )
+        #expect(failed.outcome == .failed)
+        #expect(failed.billableUsage == nil)
+    }
+
+    @Test func completedRunStillBillsAfterThePressMovedOn() async {
+        // The leak this guards: the planner answered, and only *then* did a
+        // human chip pick cancel the press. `finishPlanner` — the sole owner of
+        // the ledger append — sits behind a `guard !Task.isCancelled`, so those
+        // tokens were paid for and never recorded, and `spend_summary`
+        // under-reported real spend by however often the user out-clicks the
+        // planner. The spend now rides the run itself, ahead of that guard, so
+        // the value the coordinator bills from must survive the abandonment.
+        let answered = AsyncStream<Void>.makeStream()
+        let plannerTask = Task { () -> MagicPlanner.Run in
+            let run = await MagicPlanner.run(
+                snapshot: MagicTestSupport.makeSnapshot(surroundingContent: "thread"),
+                candidates: candidates(), provider: provider, timeoutMs: 2_000,
+                service: MockAIService(delayMs: 0) {
+                    AIGenerationResult(text: "base.reply", inputTokens: 88, outputTokens: 2)
+                }
+            )
+            answered.continuation.finish()
+            // Park until the press cancels us — this is the window between the
+            // answer landing and the routing decision being taken.
+            try? await Task.sleep(for: .seconds(10))
+            return run
+        }
+        for await _ in answered.stream {}
+        plannerTask.cancel()
+        let run = await plannerTask.value
+
+        #expect(run.outcome == .chose(0))
+        #expect(run.billableUsage
+            == MagicPlanner.Usage(inputTokens: 88, outputTokens: 2, estimated: false))
+    }
+
     @Test func outOfRangeIndexIsImpossibleByParsing() {
         // parse() can only return indices into candidateIDs — the coordinator's
         // extra bounds check is belt-and-braces, not load-bearing.

@@ -309,6 +309,42 @@ struct PromptAssemblerTests {
         #expect(slot.text.contains("AFTER-MARKER"))
     }
 
+    /// The mirror of `caretAtTheStartOfADraftHasNoBeforeSide`: the BEFORE half
+    /// was guarded on non-empty and the AFTER half was appended
+    /// unconditionally, so an empty `after` put a labelled but EMPTY section
+    /// into the prompt — a header promising text that is not there, which reads
+    /// to the model as "the draft after the caret is blank" when it is merely
+    /// untold.
+    ///
+    /// Two things keep that empty half out of reach today, and this test pins
+    /// both, because the guard is what remains once either moves:
+    /// `trimToTokens` only returns "" for a budget of zero (the fieldInput
+    /// slot's 400-token constant keeps each half at 190), and `splitAtCaret`
+    /// refuses a caret at the very end, so `after` always holds at least one
+    /// character. The structural sweep is the invariant itself: no section this
+    /// slot emits may stop at its own header.
+    @Test func draftSectionsAreNeverLabelledButEmpty() {
+        #expect(PromptAssembler.trimToTokens("some draft text", tokens: 0).text.isEmpty)
+        #expect(PromptAssembler.splitAtCaret(value: "abc", range: 3..<3) == nil)
+        #expect(PromptAssembler.splitAtCaret(value: "abc", range: 2..<2)?.after.isEmpty == false)
+
+        let value = "BEFORE-MARKER the draft continues AFTER-MARKER"
+        for caret in [0, 1, 13, value.count - 1] {
+            let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+                value: value, selectedRange: caret..<caret
+            ))
+            let slot = prompt.slots.first { $0.id == .fieldInput }!
+            for section in slot.text.components(separatedBy: "\n\n") {
+                // A section is "HEADER:\nbody", so an empty body leaves the
+                // text ending at the colon (or at the newline after it).
+                #expect(
+                    !section.hasSuffix(":") && !section.hasSuffix(":\n"),
+                    "caret \(caret): section ends at its own header — \(section)"
+                )
+            }
+        }
+    }
+
     /// The common case must not regress: a caret at the end of the draft — or
     /// no usable range at all, which is what most web fields report — keeps the
     /// plain "continue from its end" framing.
