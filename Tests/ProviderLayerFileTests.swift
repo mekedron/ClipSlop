@@ -29,6 +29,30 @@ struct ProvidersFileTests {
         #expect(result.warnings.isEmpty)
     }
 
+    /// A name carrying a newline or a tab survives being written back.
+    ///
+    /// `FrontmatterParser.parseScalar` decodes `\n` and `\t` inside double
+    /// quotes, so a hand-edited `name: "Work\nLlama"` puts a real newline into
+    /// the model — and the serializer has to put the escape back. Written raw,
+    /// the quoted scalar spans two physical lines, the parser (which reads line
+    /// by line) refuses the WHOLE file as an unterminated string, and the app
+    /// loses every provider to a file it wrote itself. The assertion that
+    /// matters is `warnings.isEmpty`: a failure here is total, not partial.
+    @Test func namesWithNewlinesAndTabsSurviveTheRoundTrip() {
+        let providers = [
+            AIProviderConfig(
+                name: "Work\nLlama", providerType: .ollama, modelID: "llama3.2"
+            ),
+            AIProviderConfig(
+                name: "Tabbed\tName", providerType: .anthropic,
+                modelID: "claude\\sonnet \"5\""
+            ),
+        ]
+        let result = ProvidersFile.parse(ProvidersFile.serialize(providers))
+        #expect(result.warnings.isEmpty, "warnings: \(result.warnings)")
+        #expect(result.providers == providers)
+    }
+
     @Test func brokenRecordIsSkippedWithWarningOthersSurvive() {
         let good = AIProviderConfig(name: "Good", providerType: .anthropic, isDefault: true)
         let text = """

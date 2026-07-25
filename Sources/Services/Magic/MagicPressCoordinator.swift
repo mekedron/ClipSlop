@@ -822,7 +822,7 @@ final class MagicPressCoordinator {
         activePress = press
 
         if result.verdict.passed {
-            await performInsert(result.output)
+            await performInsert(result.output, for: pressTs)
         } else {
             // Stamp the default outcome now, because `execute` never sets one
             // and a warning panel closed with ✕/Escape or left to auto-dismiss
@@ -841,8 +841,21 @@ final class MagicPressCoordinator {
         }
     }
 
-    private func performInsert(_ text: String) async {
-        guard let snapshot = activePress?.snapshot else { return }
+    /// Takes the press identity the text was generated for, like every other
+    /// method on this band, and refuses to act on anything else.
+    ///
+    /// Reading `activePress` here instead would make this the one paste that
+    /// aims itself at whatever press happens to be current. `handleResult`
+    /// calls it with no suspension in between, so that would cost nothing —
+    /// but `insertAnyway` reaches it across a 150 ms sleep, and `dismissToast`
+    /// accepts a teardown throughout that gap (the phase is still `.toast`). A
+    /// forced press landing there ends this press and starts another, and a
+    /// bare `activePress?.snapshot` would then paste THIS output into THAT
+    /// press's field. Today the replacement waits out its 600 ms focus settle
+    /// before it publishes an `activePress`, so the gap closes on nil and
+    /// nothing happens — safe by scheduling, which is not the same as safe.
+    private func performInsert(_ text: String, for pressTs: Date) async {
+        guard let snapshot = activePress?.snapshot, snapshot.ts == pressTs else { return }
 
         // After a chip round-trip some apps drop the selection on
         // deactivate — re-assert the captured range before pasting over it.
@@ -1103,6 +1116,7 @@ final class MagicPressCoordinator {
         // proven above.
         guard case .panelResult(let text, .verifierFailed, _) = toastState,
               var press = activePress else { return }
+        let pressTs = press.snapshot.ts
         insertAnywayInFlight = true
         press.trace.outcome = "insertedAnyway"
         activePress = press
@@ -1115,7 +1129,7 @@ final class MagicPressCoordinator {
             // the synthetic ⌘V — a keystroke posted mid-session routes to
             // this panel, not the target app.
             try? await Task.sleep(for: .milliseconds(150))
-            await self?.performInsert(text)
+            await self?.performInsert(text, for: pressTs)
             self?.insertAnywayInFlight = false
         }
     }

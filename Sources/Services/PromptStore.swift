@@ -21,8 +21,16 @@ final class PromptStore {
     private(set) var prompts: [PromptNode] = []
 
     /// Called after every local save with the encoded mirror JSON.
-    /// CloudSyncService hooks into this to upload changes.
+    /// CloudSyncService hooks into this to upload changes. Fires only when
+    /// the mirror is publishable and the change is local — see
+    /// `writeMirrorAndNotify`.
     var onPromptsChanged: ((_ data: Data) -> Void)?
+
+    /// Called after every change to the in-memory tree, whatever the mirror
+    /// and the sync direction are doing. This is what per-prompt hotkey
+    /// registration hangs off: it reads `prompts`, so it must not inherit the
+    /// conditions that govern publishing `prompts.json`.
+    var onLibraryChanged: (() -> Void)?
 
     /// True while applying a remote sync — suppresses onPromptsChanged to prevent echo loops.
     private var isSyncing = false
@@ -452,6 +460,25 @@ final class PromptStore {
     }
 
     private func writeMirrorAndNotify() {
+        // Consumers that read the TREE follow every mutation, including one
+        // taken while some other card is unparseable — and including one that
+        // arrived from another Mac.
+        //
+        // What they read is `prompts`, not the mirror, so the reason the mirror
+        // is withheld below does not apply to them. Holding them back anyway
+        // left a just-assigned per-prompt hotkey unregistered (and a
+        // just-removed one still firing) for the rest of the session, because
+        // the only other thing that registers them is `syncFromModel()` at
+        // launch — so one typo in one library file bought a class of bug whose
+        // single symptom is "my new shortcut does nothing", with nothing on
+        // screen connecting the two.
+        //
+        // Posted/called ABOVE the `isSyncing` guard too: a tree that changed
+        // under a remote sync is still a tree whose hotkeys and Spotlight index
+        // are now stale. Only the *upload* echoes.
+        NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
+        onLibraryChanged?()
+
         guard unparsedFiles.isEmpty else {
             Self.logger.error(
                 "mirror not published — \(self.unparsedFiles.joined(separator: ", "), privacy: .public) failed to parse; the tree in memory is incomplete and publishing it would delete those cards on other Macs"
@@ -462,15 +489,6 @@ final class PromptStore {
         if (try? Data(contentsOf: mirrorFileURL)) != data {
             try? data.write(to: mirrorFileURL)
         }
-
-        // Posted unconditionally — deliberately ABOVE the isSyncing guard.
-        //
-        // `onPromptsChanged` is a single-assignment closure already claimed by
-        // AppState (iCloud upload + shortcut refresh), and it is suppressed during
-        // remote sync to avoid an echo loop. Consumers that only need to *observe*
-        // the library — like Spotlight indexing — must also see changes arriving
-        // from another Mac, so they hang off this instead.
-        NotificationCenter.default.post(name: .clipSlopPromptLibraryDidChange, object: nil)
 
         if !isSyncing {
             onPromptsChanged?(data)

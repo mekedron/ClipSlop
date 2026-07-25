@@ -52,8 +52,11 @@ struct PressTrace: Codable, Sendable {
     var axErrors: Int
     var latencyMs: Latency
     /// "inserted" | "insertedAnyway" | "panelOnly" | "focusMismatch" |
-    /// "regenerated" | "cancelled" | "copied" | "dismissed" | "dead:<reason>"
-    /// | "error:<kind>"
+    /// "selectionChanged" | "verifierDismissed" | "noCandidates" |
+    /// "regenerated" | "undone" | "cancelled" | "copied" | "dismissed" |
+    /// "dead:<reason>" | "error:<kind>", any of the insert outcomes optionally
+    /// carrying a ":unconfirmed" suffix. `TraceInspector.explain` renders the
+    /// same set; keep the two in step.
     var outcome: String
 
     struct Latency: Codable, Sendable {

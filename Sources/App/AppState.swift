@@ -315,6 +315,12 @@ final class AppState {
         // is routed back to the store via `applyRemote`, decoded there.
         promptStore.onPromptsChanged = { [weak self] data in
             self?.syncService.handleLocalChange(data: data)
+        }
+        // Hotkey registration reads the prompt TREE, not the mirror, so it
+        // hangs off the tree callback: a library file the store could not parse
+        // withholds `prompts.json` from iCloud, and that must not also stop the
+        // shortcuts of every card that DID parse from following the edit.
+        promptStore.onLibraryChanged = { [weak self] in
             self?.promptShortcutService.refreshShortcuts()
         }
         syncService.applyRemote = { [weak self] data in

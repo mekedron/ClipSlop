@@ -511,6 +511,35 @@ struct PromptLibraryMutationTests {
         #expect(store.unparsedFiles == ["fix-grammar.md"])
     }
 
+    /// …but the tree's own consumers still follow the change.
+    ///
+    /// Per-prompt hotkey registration reads `prompts`, not the mirror, so the
+    /// reason the mirror is withheld does not reach it. Holding it back anyway
+    /// left a just-assigned shortcut unregistered — and a just-removed one
+    /// still firing — until the next launch, from one typo in an unrelated
+    /// card, with nothing on screen connecting the two.
+    @Test func unparseableCardStillLetsTheTreeConsumersFollow() throws {
+        let (store, root) = try makeStore()
+        let card = root.appendingPathComponent("workflows/library/fix-grammar.md")
+        try "---\nid: broken\nsummary: \"unterminated\n---\nBody.\n"
+            .write(to: card, atomically: true, encoding: .utf8)
+        store.reloadIfChanged()
+        #expect(store.unparsedFiles == ["fix-grammar.md"])
+
+        var uploaded: Data?
+        var treeChanges = 0
+        store.onPromptsChanged = { uploaded = $0 }
+        store.onLibraryChanged = { treeChanges += 1 }
+
+        store.addNode(PromptNode(
+            id: UUID(), name: "New Prompt", mnemonicKey: "n",
+            nodeType: .prompt, systemPrompt: "Do the thing."
+        ))
+
+        #expect(treeChanges == 1)
+        #expect(uploaded == nil, "the partial mirror must still not be uploaded")
+    }
+
     @Test func renameMovesTheFileAndKeepsTheUUID() throws {
         let (store, root) = try makeStore()
         let id = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!

@@ -235,11 +235,31 @@ enum ProvidersFile {
         return out
     }
 
+    /// A double-quoted scalar escaped exactly as `FrontmatterParser.parseScalar`
+    /// unescapes it — `\`, `"`, newline, tab. Mirrors `PromptLibraryFiles.quote`
+    /// and `EngineToolExecutor.quotedScalar`.
+    ///
+    /// The newline is the one that has to be here rather than merely tidy.
+    /// `parseScalar` decodes `\n` inside double quotes, so `name: "Work\nLlama"`
+    /// — a legal hand edit of a file this app advertises as hand-editable —
+    /// yields a string carrying a real newline. Writing it back raw splits the
+    /// quoted scalar across two physical lines, and `FrontmatterParser` reads
+    /// line by line: it sees an unterminated quoted string and refuses the WHOLE
+    /// file, so `ProviderStore` loads zero providers and every generation fails
+    /// with `noProvider`. A round trip through this file may not be able to
+    /// destroy the configuration it just wrote.
     private static func quoted(_ text: String) -> String {
-        "\"" + text
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-            + "\""
+        var out = ""
+        for character in text {
+            switch character {
+            case "\\": out += "\\\\"
+            case "\"": out += "\\\""
+            case "\n": out += "\\n"
+            case "\t": out += "\\t"
+            default: out.append(character)
+            }
+        }
+        return "\"\(out)\""
     }
 
     private static func formatted(_ value: Double) -> String {

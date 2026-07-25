@@ -57,10 +57,22 @@ final class FrontmostObserver {
         configProvider().warmObserverEnabled == 0 ? nil : warmContext
     }
 
-    /// Tears the observer down once the switch goes off. Idempotent, cheap,
-    /// and called from the press path, which reloads config anyway.
+    /// Brings the live observer in line with `warm_observer_enabled`, in both
+    /// directions. Idempotent, cheap, and called from the press path, which
+    /// reloads config anyway.
+    ///
+    /// Both directions, because only `didActivateApplication` ever attaches:
+    /// a user who switches the collector back on while sitting in the app they
+    /// are writing in would otherwise have no observer there until they ⌘-tab
+    /// away and back — the one app where they just asked for one.
     func applyKillSwitch() {
-        guard configProvider().warmObserverEnabled == 0 else { return }
+        guard configProvider().warmObserverEnabled == 0 else {
+            guard started, axObserver == nil,
+                  let app = NSWorkspace.shared.frontmostApplication
+            else { return }
+            appActivated(app)
+            return
+        }
         guard axObserver != nil || warmContext != nil else { return }
         detach()
         warmContext = nil

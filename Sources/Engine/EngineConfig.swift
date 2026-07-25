@@ -336,10 +336,19 @@ final class EngineConfigStore {
 
     /// Pure edit: replace the key's line, or insert before the closing
     /// `---` fence (end of file when there is none).
+    ///
+    /// The key line must start at column 0, the same rule
+    /// `EngineToolExecutor.configKeyBlock` and `salvagedNoCloud` apply: an
+    /// indented `key:` belongs to some other key's block, and rewriting it as a
+    /// top-level line both loses the setting it meant and breaks the block it
+    /// was part of. No integer key takes a block form today, so this changes
+    /// nothing that exists — it keeps the third reading of one grammar from
+    /// being the one that drifts.
     nonisolated static func settingInteger(_ value: Int, forKey key: String, in text: String) -> String {
         var lines = text.components(separatedBy: "\n")
         if let index = lines.firstIndex(where: {
-            $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
+            $0.first != " " && $0.first != "\t"
+                && $0.trimmingCharacters(in: .whitespaces).hasPrefix("\(key):")
         }) {
             lines[index] = "\(key): \(value)"
         } else if let closing = lines.lastIndex(where: {

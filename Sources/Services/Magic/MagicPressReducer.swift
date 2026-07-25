@@ -143,9 +143,19 @@ enum MagicPressReducer {
             // Auto-dismiss is for a toast nobody is using: hovering it or
             // clicking into it (key) means the user is reading or about to
             // refine, and a toast that vanishes mid-sentence loses the output.
-            guard state.phase == .toast, !state.toastHovered, !state.toastIsKey else {
-                return .ignore
-            }
+            //
+            // A verifier warning is never auto-dismissed, whatever the pointer
+            // is doing. Every other toast state is dismissible because its text
+            // is already on the pasteboard — the insert path writes it before
+            // any of them can be reached. The warning panel is the one state
+            // that is NOT reached through the inserter, so the draft it shows
+            // exists nowhere else, and a timer that took it away would destroy
+            // a generation the user has already paid for with no undo, no copy
+            // and no trace of the text. It leaves on an explicit ✕, Escape, or
+            // one of its own actions.
+            guard state.phase == .toast, !state.verifierWarningPending,
+                  !state.toastHovered, !state.toastIsKey
+            else { return .ignore }
             return .scheduleToastDismiss
         }
     }

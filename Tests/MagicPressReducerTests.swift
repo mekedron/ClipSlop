@@ -316,6 +316,33 @@ struct MagicPressReducerToastTests {
         #expect(MagicPressReducer.reduce(state: generating, event: .toastSettleCheck) == .ignore)
     }
 
+    /// A verifier warning is never auto-dismissed, however still the pointer is.
+    ///
+    /// Every other toast state can be taken away by the timer because its text
+    /// is already on the pasteboard — the insert path writes it before any of
+    /// them is reachable. The warning panel is the one state that never goes
+    /// through the inserter, so the draft it shows exists nowhere else and a
+    /// timer would destroy a paid generation with no undo and no copy. The user
+    /// has to say so: ✕, Escape, or one of the panel's own actions.
+    @Test func verifierWarningIsNeverAutoDismissed() {
+        let flagged = toastUp(verifierWarning: true)
+        #expect(MagicPressReducer.reduce(state: flagged, event: .toastSettleCheck) == .ignore)
+
+        // Not merely because the pointer happens to be somewhere: the un-hover
+        // that arms the timer for every other state is exactly the path this
+        // has to survive.
+        var unhovered = flagged
+        unhovered.toastHovered = false
+        unhovered.toastIsKey = false
+        #expect(MagicPressReducer.reduce(state: unhovered, event: .toastSettleCheck) == .ignore)
+
+        // The same toast without the warning still auto-dismisses — the guard
+        // is scoped to the state whose output is unrecoverable, not bolted onto
+        // the whole `.toast` phase.
+        #expect(MagicPressReducer.reduce(state: toastUp(), event: .toastSettleCheck)
+            == .scheduleToastDismiss)
+    }
+
     /// `.inserting` is the one phase nothing may tear down.
     ///
     /// `MagicInserter.insert` posts the ⌘V and then holds the pasteboard for
