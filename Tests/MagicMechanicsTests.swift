@@ -128,3 +128,59 @@ struct MagicSelectionCaptureTests {
         )))
     }
 }
+
+@Suite("Selection range re-encoding")
+struct SelectionRangeEncodingTests {
+    /// Snapshots store selections as character offsets (AXSnapshotService
+    /// converts on the way in); `kAXSelectedTextRangeAttribute` speaks UTF-16
+    /// in both directions. Restoring a dropped selection therefore has to
+    /// translate back — handing AX the character numbers verbatim reselects a
+    /// span shifted by every astral or composed character before it, and the
+    /// paste that follows overwrites text the user never selected.
+    @Test func reEncodesCharacterOffsetsAsUTF16() {
+        // One emoji = one Character, two UTF-16 units.
+        let emoji = MagicPressCoordinator.utf16Range(1..<3, in: "🙂ab")
+        #expect(emoji?.location == 2)
+        #expect(emoji?.length == 2)
+
+        // A ZWJ family is still one Character, but eight UTF-16 units — the
+        // worst case for treating the two as interchangeable.
+        let family = MagicPressCoordinator.utf16Range(1..<3, in: "👩‍👩‍👦xy")
+        #expect(family?.location == 8)
+        #expect(family?.length == 2)
+
+        // Decomposed "café": four Characters, five UTF-16 units.
+        let composed = MagicPressCoordinator.utf16Range(5..<8, in: "cafe\u{301} bar")
+        #expect(composed?.location == 6)
+        #expect(composed?.length == 3)
+
+        // Pure ASCII: the two spaces coincide, which is exactly why the bug
+        // survived every hand test.
+        let ascii = MagicPressCoordinator.utf16Range(4..<7, in: "the quick fox")
+        #expect(ascii?.location == 4)
+        #expect(ascii?.length == 3)
+    }
+
+    /// A range that no longer fits the field's current value describes text
+    /// that is gone; the caller must fall back to the clipboard rather than
+    /// select something arbitrary and paste over it.
+    @Test func refusesRangesOutsideTheCurrentValue() {
+        #expect(MagicPressCoordinator.utf16Range(5..<7, in: "🙂ab") == nil)
+        #expect(MagicPressCoordinator.utf16Range(0..<4, in: "abc") == nil)
+        #expect(MagicPressCoordinator.utf16Range(-1..<2, in: "abc") == nil)
+        // An empty value is the "field was cleared while chips were up" case.
+        #expect(MagicPressCoordinator.utf16Range(0..<1, in: "") == nil)
+    }
+
+    /// The two conversions are inverses: what the snapshot recorded is what
+    /// gets reselected, span for span.
+    @Test func roundTripsThroughTheSnapshotConversion() {
+        let value = "🙂 hei Dana — kiitos"
+        let original = 2..<9
+        guard let encoded = MagicPressCoordinator.utf16Range(original, in: value) else {
+            Issue.record("expected a UTF-16 range")
+            return
+        }
+        #expect(AXSnapshotService.characterRange(encoded, in: value) == original)
+    }
+}

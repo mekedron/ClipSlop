@@ -108,10 +108,77 @@ struct EngineConfigTests {
         #expect(warnings.count == 1)
     }
 
-    @Test func unparseableFileFallsBackToDefaults() {
+    @Test func unparseableFileIsNotAppliedAtAll() {
         let (config, warnings) = MagicEngineConfig.parse("not yaml at all")
-        #expect(config == .default)
+        #expect(config == .default)  // Nothing to retain in the pure form.
         #expect(warnings.count == 1)
-        #expect(warnings[0].contains("defaults"))
+        #expect(warnings[0].contains("NOT applied"))
+        // `EngineToolExecutor.applyConfigEdits` treats a "line …" warning as a
+        // whole-file failure and refuses to write; keep that prefix.
+        #expect(warnings[0].hasPrefix("line "))
+    }
+
+    /// A fatal syntax error used to hand back the all-default config — so a
+    /// typo on an unrelated line emptied `no_cloud` and the press pipeline
+    /// carried protected screen content to a cloud provider (P7). A file that
+    /// does not parse now changes nothing.
+    @Test func brokenFileRetainsTheLastSettingsThatParsed() {
+        let good = MagicEngineConfig.load("""
+        ---
+        no_cloud: [com.tinyspeck.slackmacgap]
+        web_call_budget: 1500
+        ---
+        """, retaining: .default)
+        #expect(good.applied)
+        #expect(good.config.noCloud == ["com.tinyspeck.slackmacgap"])
+
+        let broken = MagicEngineConfig.load("""
+        ---
+        no_cloud: [com.tinyspeck.slackmacgap]
+        web_call_budget: 1500
+        intents: [reply
+        ---
+        """, retaining: good.config)
+        #expect(!broken.applied)
+        #expect(broken.config == good.config)
+        #expect(broken.config.noCloud == ["com.tinyspeck.slackmacgap"])
+        #expect(broken.config.webCallBudget == 1500)
+        #expect(broken.warnings.count == 1)
+        #expect(broken.warnings[0].contains("NOT applied"))
+    }
+
+    /// First launch with a broken file has nothing to retain, so the privacy
+    /// rules are rescued from the raw text instead of defaulting to "none".
+    @Test func brokenFileOnFirstLoadStillHonoursNoCloud() {
+        let result = MagicEngineConfig.load("""
+        ---
+        no_cloud: [Telegram, gmail.com]
+        web_call_budget: [1500
+        ---
+        """, retaining: .default)
+        #expect(!result.applied)
+        #expect(result.config.noCloud == ["telegram", "gmail.com"])
+        // Everything else really is untouched — only privacy is rescued.
+        #expect(result.config.webCallBudget == MagicEngineConfig.default.webCallBudget)
+    }
+
+    @Test func unreadableFileCanAddNoCloudRulesButNeverDropThem() {
+        var previous = MagicEngineConfig.default
+        previous.noCloud = ["com.tinyspeck.slackmacgap"]
+        // The broken file no longer names Slack. A file we could not read is
+        // not allowed to lift a live privacy rule, only to tighten it.
+        let result = MagicEngineConfig.load("""
+        ---
+        no_cloud: [telegram]
+        budget: {ms: 10
+        ---
+        """, retaining: previous)
+        #expect(!result.applied)
+        #expect(result.config.noCloud == ["com.tinyspeck.slackmacgap", "telegram"])
+
+        // A `no_cloud` block that is itself unreadable rescues nothing.
+        let unrescuable = MagicEngineConfig.load("---\nno_cloud: [telegram\n---", retaining: previous)
+        #expect(!unrescuable.applied)
+        #expect(unrescuable.config.noCloud == ["com.tinyspeck.slackmacgap"])
     }
 }

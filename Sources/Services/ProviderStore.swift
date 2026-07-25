@@ -126,10 +126,10 @@ final class ProviderStore {
         }
         // No providers.yaml: fall back to the legacy JSON migration, which
         // writes the file (and stamps `fileModified`) when it finds one.
-        let migrated = migrateFromLegacyJSON()
-        providers = migrated ?? []
-        loadWarnings = []
-        if migrated == nil {
+        let migration = migrateFromLegacyJSON()
+        providers = migration?.providers ?? []
+        loadWarnings = migration?.warnings ?? []
+        if migration == nil {
             // Record the absence, or `reloadIfChanged` would see nil != old
             // date forever and re-run this on every press.
             fileModified = nil
@@ -139,23 +139,56 @@ final class ProviderStore {
     /// One-time move from Application Support/providers.json (pre-M3). The
     /// JSON is kept as `.bak`; Keychain refs ride along unchanged because
     /// the ids are preserved.
-    private func migrateFromLegacyJSON() -> [AIProviderConfig]? {
+    private func migrateFromLegacyJSON() -> (providers: [AIProviderConfig], warnings: [String])? {
         let legacy = Constants.Engine.legacyProvidersFileURL
         guard FileManager.default.fileExists(atPath: legacy.path),
               let data = try? Data(contentsOf: legacy),
               let configs = try? JSONDecoder().decode([AIProviderConfig].self, from: data)
         else { return nil }
-        saveToDisk(configs)
+
+        // The legacy file is the only remaining copy of this configuration
+        // until providers.yaml is safely on disk. The write error used to be
+        // swallowed and the JSON moved to `.bak` regardless — so an unwritable
+        // engine directory or a full disk cost the user every provider at the
+        // next launch, with this process none the wiser because it still held
+        // the decoded list in memory. Write, prove the file reads back, and
+        // only then retire the JSON; otherwise leave it for the next launch.
+        do {
+            try writeToDisk(configs)
+        } catch {
+            return (configs, ["could not write providers.yaml (\(error.localizedDescription)) — providers.json kept; fix ~/.clipslop and relaunch"])
+        }
+        let written = (try? String(contentsOf: Constants.Engine.providersFileURL, encoding: .utf8)) ?? ""
+        guard Self.migrationRoundTrips(written, expected: configs) else {
+            return (configs, ["providers.yaml did not read back with all \(configs.count) providers — providers.json kept; fix ~/.clipslop and relaunch"])
+        }
+
         let backup = legacy.appendingPathExtension("bak")
         try? FileManager.default.removeItem(at: backup)
         try? FileManager.default.moveItem(at: legacy, to: backup)
-        return configs
+        return (configs, [])
+    }
+
+    /// Does the text now on disk still carry every migrated provider? An
+    /// atomic write reports success from the rename, not from the bytes, so a
+    /// truncated result is possible on a full disk — and this is the last
+    /// moment the legacy JSON still exists to fall back on. Pure, so the
+    /// round-trip contract is unit-tested without touching the home directory.
+    nonisolated static func migrationRoundTrips(_ written: String, expected: [AIProviderConfig]) -> Bool {
+        ProvidersFile.parse(written).providers.map(\.id) == expected.map(\.id)
     }
 
     private func saveToDisk(_ configs: [AIProviderConfig]) {
+        try? writeToDisk(configs)
+    }
+
+    /// Throwing form: callers that must know whether the file landed (the
+    /// legacy migration) use this; the Settings edit paths keep the
+    /// fire-and-forget wrapper above.
+    private func writeToDisk(_ configs: [AIProviderConfig]) throws {
         let url = Constants.Engine.providersFileURL
         Constants.Engine.ensureDirectoriesExist()
-        try? ProvidersFile.serialize(configs).write(to: url, atomically: true, encoding: .utf8)
+        try ProvidersFile.serialize(configs).write(to: url, atomically: true, encoding: .utf8)
         fileModified = Self.modificationDate(of: url)
     }
 

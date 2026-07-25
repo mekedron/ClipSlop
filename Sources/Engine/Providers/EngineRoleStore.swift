@@ -159,10 +159,10 @@ final class EngineRoleStore {
         }
         // No roles.yaml: the legacy migration writes one (and stamps
         // `fileModified`) when it finds a roles.json to convert.
-        let migrated = migrateFromLegacyJSON()
-        bindings = migrated ?? [:]
-        loadWarnings = []
-        if migrated == nil {
+        let migration = migrateFromLegacyJSON()
+        bindings = migration?.bindings ?? [:]
+        loadWarnings = migration?.warnings ?? []
+        if migration == nil {
             // Record the absence, or `reloadIfChanged` would see nil != old
             // date forever and re-run this on every press.
             fileModified = nil
@@ -171,7 +171,7 @@ final class EngineRoleStore {
 
     /// One-time move from Application Support/roles.json (pre-M3 flat
     /// role → provider map).
-    private func migrateFromLegacyJSON() -> [EngineRole: RoleBinding]? {
+    private func migrateFromLegacyJSON() -> (bindings: [EngineRole: RoleBinding], warnings: [String])? {
         let legacy = Constants.Engine.legacyRolesFileURL
         guard let data = try? Data(contentsOf: legacy),
               let raw = try? JSONDecoder().decode([String: UUID].self, from: data)
@@ -182,17 +182,51 @@ final class EngineRoleStore {
                 migrated[role] = RoleBinding(provider: value)
             }
         }
-        saveToDisk(migrated)
+
+        // roles.json is the only surviving copy of the routing until roles.yaml
+        // is really on disk. The write failure used to be swallowed while the
+        // JSON was moved to `.bak` anyway, so an unwritable engine directory or
+        // a full disk silently erased every role binding at the next launch —
+        // invisible to this process, which still held the decoded map. Write,
+        // prove it reads back, and only then retire the JSON.
+        do {
+            try writeToDisk(migrated)
+        } catch {
+            return (migrated, ["could not write roles.yaml (\(error.localizedDescription)) — roles.json kept; fix ~/.clipslop and relaunch"])
+        }
+        let written = (try? String(contentsOf: Constants.Engine.rolesYamlURL, encoding: .utf8)) ?? ""
+        guard Self.migrationRoundTrips(written, expected: migrated) else {
+            return (migrated, ["roles.yaml did not read back with all \(migrated.count) role bindings — roles.json kept; fix ~/.clipslop and relaunch"])
+        }
+
         let backup = legacy.appendingPathExtension("bak")
         try? FileManager.default.removeItem(at: backup)
         try? FileManager.default.moveItem(at: legacy, to: backup)
-        return migrated
+        return (migrated, [])
+    }
+
+    /// Does the text now on disk still carry every migrated binding? An atomic
+    /// write reports success from the rename, not from the bytes, so a
+    /// truncated result is possible on a full disk — and this is the last
+    /// moment roles.json still exists to fall back on. Pure, so the round-trip
+    /// contract is unit-tested without touching the home directory.
+    nonisolated static func migrationRoundTrips(
+        _ written: String, expected: [EngineRole: RoleBinding]
+    ) -> Bool {
+        RolesFile.parse(written).bindings == expected
     }
 
     private func saveToDisk(_ override: [EngineRole: RoleBinding]? = nil) {
+        try? writeToDisk(override)
+    }
+
+    /// Throwing form: the legacy migration must know whether the file landed
+    /// before it retires roles.json; the UI edit paths keep the
+    /// fire-and-forget wrapper above.
+    private func writeToDisk(_ override: [EngineRole: RoleBinding]? = nil) throws {
         Constants.Engine.ensureDirectoriesExist()
         let url = Constants.Engine.rolesYamlURL
-        try? RolesFile.serialize(override ?? bindings)
+        try RolesFile.serialize(override ?? bindings)
             .write(to: url, atomically: true, encoding: .utf8)
         fileModified = Self.modificationDate(of: url)
     }

@@ -10,7 +10,11 @@ Behavior of the parser:
 - Out-of-range value → **clamped** to the nearest bound, with a warning
   shown in Settings → Magic.
 - Wrong type or unknown key → warning, value ignored.
-- A file that fails to parse entirely → all defaults, one warning.
+- A file that fails to parse entirely → **nothing in it is applied**, one
+  warning saying so. The settings that last parsed stay in effect — above all
+  the `no_cloud` rules, which a typo elsewhere in the file must never be able
+  to switch off. A `no_cloud:` block that is still readable on its own can
+  only *add* rules on this path, never drop them.
 
 ## Integer keys
 

@@ -368,9 +368,9 @@ final class MagicPressCoordinator {
             press.trace.plannerIndexChosen = index
             activePress = press
             // Proceed exactly as selectChip(index) would: the panel is on
-            // screen, close it and return focus before generating.
-            closeChipPanel(returnFocus: true)
-            startRun(workflow: candidates[index], hint: nil)
+            // screen, so leave the chip phases, close it and return focus
+            // before generating.
+            acceptChipSelection(candidates[index], hint: nil)
         } else {
             // Declined/unsure: the panel is already up — just hand it over
             // to the user (the progress affordance hides with the phase).
@@ -463,8 +463,7 @@ final class MagicPressCoordinator {
 
         press.trace.chipIndexChosen = index
         activePress = press
-        closeChipPanel(returnFocus: true)
-        startRun(workflow: candidates[index], hint: nil)
+        acceptChipSelection(candidates[index], hint: nil)
     }
 
     func submitHint(_ hint: String) {
@@ -474,6 +473,25 @@ final class MagicPressCoordinator {
         guard let workflow = press.decision.chipCandidates.first else { return }
         press.trace.chipIndexChosen = 0
         activePress = press
+        acceptChipSelection(workflow, hint: hint)
+    }
+
+    /// The one way an accepted chip leaves the panel: leave `.chips`/`.planning`
+    /// FIRST, then close, then run.
+    ///
+    /// `ChipPanelWindow` routes `resignKey` to its `onDismiss`, i.e. to
+    /// `dismissChips()` — which clears `activePress` and records the press as
+    /// dismissed. Ordering the panel out while it is still key is exactly what
+    /// makes it resign key, so an accepted selection sits one nested run-loop
+    /// spin (inside `orderOut`/`deactivate`/`hide`) away from being cancelled
+    /// by its own teardown and no-oping instead of generating. Today the hop
+    /// through `Task { @MainActor … }` in the window happens to save us; that
+    /// is an accident of scheduling, not an invariant. Moving out of the chip
+    /// phases up front makes `dismissChips`'s own guard the invariant: however
+    /// the callback arrives, sync or enqueued, it finds a phase it refuses to
+    /// act on.
+    private func acceptChipSelection(_ workflow: ResolvedWorkflow, hint: String?) {
+        phase = .generating
         closeChipPanel(returnFocus: true)
         startRun(workflow: workflow, hint: hint)
     }
@@ -742,6 +760,16 @@ final class MagicPressCoordinator {
         press.trace.outcome = "regenerated"
         submitTrace(press.trace)
 
+        // A fresh trace needs a fresh timing origin. `pressStart` still points
+        // at the original hotkey, so leaving it there makes `performInsert`
+        // bill this generation for the first one *plus* however long the user
+        // spent reading the toast before clicking Regenerate — and those
+        // inflated press-to-paste samples are exactly what `TraceStats` reads
+        // the §3.6 p50/p95 SLO from, so one regeneration could fail a gate that
+        // nothing in the product actually missed.
+        // The click is the press this run is measured from.
+        pressStart = ContinuousClock().now
+
         var trace = PressTrace(
             snapshot: press.snapshot, decision: press.decision, classification: press.classification
         )
@@ -951,22 +979,81 @@ final class MagicPressCoordinator {
               let range = snapshot.field?.selection?.range
         else { return true }
 
+        // Coordinate systems: `range` is in *character* offsets — the snapshot
+        // converts AX's UTF-16 ranges on the way in so every consumer can slice
+        // with `String.index(_:offsetBy:)` — while
+        // `kAXSelectedTextRangeAttribute` speaks UTF-16 in both directions.
+        // Both halves below therefore have to translate, and the translation
+        // is only meaningful against the value the field holds *now* (it may
+        // have been edited while chips or the toast were up), so read it fresh
+        // rather than trusting the captured one, which is also truncated at
+        // `maxFieldValueChars`.
+        let value = Self.currentFieldValue(of: element) ?? snapshot.field?.value ?? ""
+
         var currentRef: CFTypeRef?
         if AXUIElementCopyAttributeValue(
             element, kAXSelectedTextRangeAttribute as CFString, &currentRef
         ) == .success, let currentRef, CFGetTypeID(currentRef) == AXValueGetTypeID() {
             var current = CFRange()
             if AXValueGetValue((currentRef as! AXValue), .cfRange, &current), current.length > 0 {
-                // Selection survived — but only ours may be pasted over.
-                return current.location == range.lowerBound && current.length == range.count
+                // Selection survived — but only ours may be pasted over, and
+                // the two ranges must be compared in one space: a single emoji
+                // earlier in the field makes the live UTF-16 range differ
+                // numerically from our character range over the very same span
+                // (a spurious clipboard fallback) and, worse, lets a
+                // *different* span compare equal (a paste over text nobody
+                // addressed). A range we cannot map into the current value is
+                // stale by definition — treat it as someone else's.
+                guard let live = AXSnapshotService.characterRange(current, in: value) else {
+                    return false
+                }
+                return live == range
             }
         }
 
-        var cfRange = CFRange(location: range.lowerBound, length: range.count)
-        if let value = AXValueCreate(.cfRange, &cfRange) {
-            AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, value)
+        // The target dropped the selection (some apps collapse it when a panel
+        // takes key). Re-encode our character offsets as UTF-16 before handing
+        // them back; sending the character numbers verbatim reselects a
+        // shifted span, and the paste then overwrites text the user never
+        // selected. If the offsets no longer fit the current value the field
+        // has changed underneath the press — same class of mismatch as a
+        // re-selection, and reported the same way.
+        guard var cfRange = Self.utf16Range(range, in: value) else { return false }
+        if let axValue = AXValueCreate(.cfRange, &cfRange) {
+            AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, axValue)
         }
         return true
+    }
+
+    /// The focused field's value as the target holds it right now — no budget,
+    /// no truncation: this is the string the AX range arithmetic above must be
+    /// measured against, and a value clipped at `maxFieldValueChars` would put
+    /// late selections out of bounds.
+    private static func currentFieldValue(of element: AXUIElement) -> String? {
+        var ref: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(
+            element, kAXValueAttribute as CFString, &ref
+        ) == .success, let ref else { return nil }
+        return ref as? String
+    }
+
+    /// Character offsets → the UTF-16 `CFRange` AX expects — the inverse of
+    /// `AXSnapshotService.characterRange(_:in:)`. Nil when the range does not
+    /// lie inside `value`, so a caller never sets a range that points nowhere.
+    /// `nonisolated` for the same reason its inverse is: the arithmetic is pure
+    /// and gets exercised directly by the tests.
+    nonisolated static func utf16Range(_ range: Range<Int>, in value: String) -> CFRange? {
+        guard range.lowerBound >= 0,
+              let lower = value.index(
+                value.startIndex, offsetBy: range.lowerBound, limitedBy: value.endIndex
+              ),
+              let upper = value.index(lower, offsetBy: range.count, limitedBy: value.endIndex)
+        else { return nil }
+        let utf16 = value.utf16
+        return CFRange(
+            location: utf16.distance(from: utf16.startIndex, to: lower),
+            length: utf16.distance(from: lower, to: upper)
+        )
     }
 
     // MARK: - Dry-run (debug surface, §17)
@@ -1161,6 +1248,18 @@ final class MagicPressCoordinator {
     // MARK: - Traces & HUD
 
     private func submitTrace(_ trace: PressTrace) {
+        // This context belongs to the press being submitted and to nothing
+        // else, so it is consumed here whether or not a debug file is
+        // written. Clearing it only on the logging path let a failure recorded
+        // while the checkbox was off survive in `lastErrorDescription`, and the
+        // next entry after the user enabled logging — typically a perfectly
+        // healthy press — was filed with an unrelated provider error under its
+        // Error section, i.e. a diagnostic record that actively misleads.
+        defer {
+            lastBareSnapshot = nil
+            lastErrorDescription = nil
+        }
+
         var stamped = trace
         if let start = pressStart {
             stamped.latencyMs.total = Self.ms(ContinuousClock().now - start)
@@ -1185,8 +1284,6 @@ final class MagicPressCoordinator {
             verdict: press?.result?.verdict,
             errorDescription: lastErrorDescription
         )
-        lastBareSnapshot = nil
-        lastErrorDescription = nil
         Task { [debugLogger] in await debugLogger.write(entry) }
     }
 

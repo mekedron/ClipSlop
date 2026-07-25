@@ -168,6 +168,14 @@ enum WorkflowCardParser {
     ]
     static let ignoredForwardKeys: Set<String> = ["needs", "authorship", "execution", "permissions"]
     static let knownWhenKeys: Set<String> = ["app", "url", "field.role", "field.state", "selection"]
+    /// The nested maps are closed schemas too. They used to read the keys they
+    /// recognized and drop the rest without a word, so `budget: {mss: 1000}`
+    /// quietly meant "no deadline" and `output: {max_char: 400}` quietly fell
+    /// back to the engine-wide length limit — while Settings reported the card
+    /// as valid. A typo inside a block is exactly as wrong as a typo at the top
+    /// level, so it fails the same way.
+    static let knownBudgetKeys: Set<String> = ["prompt_tokens_total", "ms"]
+    static let knownOutputKeys: Set<String> = ["lang", "max_chars", "format"]
 
     static func make(
         from document: FrontmatterDocument
@@ -300,11 +308,32 @@ enum WorkflowCardParser {
         )
     }
 
+    /// The `when:` treatment applied to the other nested blocks: an
+    /// unrecognized subkey is a hand-edit typo and fails the card loudly
+    /// rather than being read as "use the default". Flow maps (`{…}` on one
+    /// line) record no per-subkey line, so the block's own line is the
+    /// fallback location.
+    private static func rejectUnknownSubkeys(
+        _ map: [String: FrontmatterValue],
+        under parent: String,
+        among known: Set<String>,
+        _ document: FrontmatterDocument
+    ) throws {
+        for key in map.keys where !known.contains(key) {
+            let line = document.fieldLines["\(parent).\(key)"] ?? document.fieldLines[parent] ?? 0
+            throw FrontmatterError(
+                line: line,
+                message: "unknown '\(parent)' key '\(key)'\(didYouMean(key, among: known))"
+            )
+        }
+    }
+
     private static func parseBudget(_ document: FrontmatterDocument) throws -> BudgetSpec {
         guard let value = document.fields["budget"] else { return .default }
         guard case .map(let map) = value else {
             throw error("budget", document, "must be a flow map like {prompt_tokens_total: 3500, ms: 6000}")
         }
+        try rejectUnknownSubkeys(map, under: "budget", among: knownBudgetKeys, document)
         return BudgetSpec(
             promptTokensTotal: try intValue(map["prompt_tokens_total"], key: "budget.prompt_tokens_total", document)
                 ?? BudgetSpec.default.promptTokensTotal,
@@ -317,6 +346,7 @@ enum WorkflowCardParser {
         guard case .map(let map) = value else {
             throw error("output", document, "must be a flow map like {lang: match_context, max_chars: 400, format: plain}")
         }
+        try rejectUnknownSubkeys(map, under: "output", among: knownOutputKeys, document)
         let langRaw = try scalarValue(map["lang"], key: "output.lang", document) ?? "match_context"
         let lang: OutputSpec.Lang = langRaw == "match_context" ? .matchContext : .fixed(langRaw)
         let format = try scalarValue(map["format"], key: "output.format", document) ?? "plain"

@@ -17,6 +17,15 @@ enum ProvidersFile {
         "temperature", "reasoning_effort", "default", "locality", "cost_class",
     ]
 
+    /// Accepted `max_tokens` values. The lower bound is the point of the
+    /// check: `0` and `-1` used to be copied straight into `AIProviderConfig`,
+    /// and the Anthropic / OpenAI-compatible request builders then put them on
+    /// the wire, so *every* generation failed at the API — from a file the app
+    /// advertises as validated and hot-reloaded. The upper bound is a loose
+    /// sanity rail, well above any model's output ceiling, so a slipped digit
+    /// is caught but a future model is not.
+    static let maxTokensRange = 1...1_000_000
+
     // MARK: - Parse
 
     static func parse(_ text: String) -> ParseResult {
@@ -71,10 +80,10 @@ enum ProvidersFile {
 
             var maxTokens = Constants.Defaults.maxTokens
             if let raw = scalar("max_tokens") {
-                if let parsed = Int(raw) {
+                if let parsed = Int(raw), maxTokensRange.contains(parsed) {
                     maxTokens = parsed
                 } else {
-                    result.warnings.append("providers.yaml \(line("max_tokens")): 'max_tokens' must be an integer — default kept")
+                    result.warnings.append("providers.yaml \(line("max_tokens")): 'max_tokens' must be an integer between \(maxTokensRange.lowerBound) and \(maxTokensRange.upperBound) — default \(Constants.Defaults.maxTokens) kept")
                 }
             }
             var temperature = Constants.Defaults.temperature

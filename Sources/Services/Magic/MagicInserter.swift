@@ -43,6 +43,34 @@ final class MagicInserter {
     /// race is accepted.
     private static let clipboardRestoreGrace: Duration = .milliseconds(400)
 
+    /// The field's value and caret/selection as read back through AX, the two
+    /// readings every "is this still the state we planned for" question is
+    /// answered from. Both are optional because both are routinely unreadable:
+    /// plenty of web composers publish no `AXValue`, and many apps publish no
+    /// selected range.
+    private struct FieldProbe {
+        let value: String?
+        let range: Range<Int>?
+    }
+
+    /// The field state as one of OUR OWN writes left it — read back right
+    /// after a paste, and again after a ⌘Z that took one away. Two guards need
+    /// it, for opposite reasons:
+    ///
+    /// - Undo has to know the app's newest undo group is still ours. Focus
+    ///   agreement does not say that: type one character into the target after
+    ///   the paste and the ⌘Z removes that character, leaves the generated text
+    ///   sitting there, and the toast still reports "undone".
+    /// - Insert has to tell drift the user caused from drift we caused.
+    ///   Regenerate ⌘Z's its own paste away before re-running, so by the time
+    ///   the replacement lands the field no longer matches the snapshot it was
+    ///   planned against — but nothing the user did is at stake there, so that
+    ///   difference must not block the paste.
+    ///
+    /// Keyed by `MagicSnapshot.ts`, which is the press identity: a probe left
+    /// by an earlier press must never vouch for the current one.
+    private var lastWrite: (press: Date, probe: FieldProbe)?
+
     func insert(_ text: String, against snapshot: MagicSnapshot) async -> Outcome {
         if snapshot.grammarRow == .nonEditableSelection {
             PasteboardTransaction.writeGenerated(text)
@@ -90,6 +118,12 @@ final class MagicInserter {
         }
         let restored = PasteboardTransaction.restore(saved, ifChangeCountStill: ourCount)
 
+        // Ground truth for Undo (and for a regenerate's second insert): what
+        // the field holds now that our paste has settled. Anything else in it
+        // later is the user's doing, and a ⌘Z would then be aimed at their
+        // edit rather than at ours.
+        lastWrite = (press: snapshot.ts, probe: currentFieldProbe(snapshot))
+
         return .inserted(PreInsertRecord(
             fieldValue: freshValue,
             selection: freshSelection,
@@ -100,20 +134,71 @@ final class MagicInserter {
     }
 
     /// Best-effort undo: a synthetic ⌘Z aimed at the still-focused field.
-    /// Returns false when focus has moved — the caller falls back to the
-    /// guaranteed path (copy the recoverable text).
+    /// Returns false when focus has moved, or when the field no longer holds
+    /// what our paste left in it — the caller falls back to the guaranteed
+    /// path (copy the recoverable text).
     func attemptUndo(for snapshot: MagicSnapshot) async -> Bool {
-        guard await verifyFocusStillMatches(snapshot) else { return false }
+        // Field drift is expected on this path — we are the ones who changed
+        // the field — so the insert-time state guard is switched off here and
+        // the undo-specific comparison below takes its place.
+        guard await verifyFocusStillMatches(snapshot, requireUnchangedField: false),
+              undoStillTargetsOurPaste(snapshot)
+        else { return false }
         SyntheticKeystroke.post(SyntheticKeystroke.keyZ)
+
+        // Re-baseline against whatever the undo actually produced: a
+        // regenerate inserts again right after this, and the state its guard
+        // will meet is this one, not the snapshot's — an app that re-selects
+        // the text it restored (AppKit does) leaves a caret matching neither.
+        // The app applies the ⌘Z on its own run loop, so wait for the value to
+        // move rather than guessing a delay; a value we could not read in the
+        // first place has nothing to wait for.
+        let pasted = lastWrite?.probe.value
+        var settled = currentFieldProbe(snapshot)
+        if pasted != nil {
+            let clock = ContinuousClock()
+            let start = clock.now
+            while settled.value == pasted, clock.now - start < .milliseconds(250) {
+                try? await Task.sleep(for: .milliseconds(40))
+                settled = currentFieldProbe(snapshot)
+            }
+        }
+        lastWrite = (press: snapshot.ts, probe: settled)
         return true
+    }
+
+    /// Whether the app's newest undo group is still the one our paste opened.
+    ///
+    /// Only the value decides. Typing, deleting and autocorrect each open a
+    /// fresh undo group — and undoing *that* would take the user's own edit
+    /// away while leaving the generated text in place, which is precisely the
+    /// damage Restore exists to prevent. Moving the caret opens no undo group,
+    /// so a moved caret must not cost the user their undo.
+    ///
+    /// When either side of the comparison is unreadable there is no evidence
+    /// at all, and refusing on no evidence would remove ⌘Z from every app with
+    /// an opaque `AXValue` (most web composers). Those keep the best-effort
+    /// keystroke; the guaranteed copy-previous-text path remains one click
+    /// away either way.
+    private func undoStillTargetsOurPaste(_ snapshot: MagicSnapshot) -> Bool {
+        guard let lastWrite, lastWrite.press == snapshot.ts,
+              let written = lastWrite.probe.value,
+              let current = currentFieldProbe(snapshot).value
+        else { return true }
+        return current == written
     }
 
     /// The safety invariant that makes every timing bug non-destructive:
     /// paste only when the frontmost app and the focused element still match
-    /// the snapshot. Polls briefly to let a chip-panel focus return land.
+    /// the snapshot — and, for the paste itself, only when the field is still
+    /// in the state the result was written for (`requireUnchangedField`). Undo
+    /// passes false: it runs against a field we deliberately changed.
+    ///
+    /// Polls briefly to let a chip-panel focus return land.
     func verifyFocusStillMatches(
         _ snapshot: MagicSnapshot,
-        within timeout: Duration = .milliseconds(600)
+        within timeout: Duration = .milliseconds(600),
+        requireUnchangedField: Bool = true
     ) async -> Bool {
         let clock = ContinuousClock()
         let start = clock.now
@@ -121,7 +206,15 @@ final class MagicInserter {
         var didAttemptRefocus = false
 
         while true {
-            if focusMatches(snapshot) { return true }
+            // The caret is evidence only until we have forced focus back
+            // ourselves: making a text field first responder selects its whole
+            // contents in AppKit, so after the repair below a "moved" caret is
+            // our own artifact, not something the user did.
+            if focusMatches(
+                snapshot,
+                requireUnchangedField: requireUnchangedField,
+                trustCaret: !didAttemptRefocus
+            ) { return true }
             // One active repair before giving up: when our chip panel held
             // key focus (hint field), macOS does not reliably hand key back
             // to the target's composer on dismissal — regardless of which
@@ -179,12 +272,19 @@ final class MagicInserter {
             || frontmost.processIdentifier == ProcessInfo.processInfo.processIdentifier
     }
 
-    private func focusMatches(_ snapshot: MagicSnapshot) -> Bool {
+    private func focusMatches(
+        _ snapshot: MagicSnapshot,
+        requireUnchangedField: Bool,
+        trustCaret: Bool
+    ) -> Bool {
         // Self-targeted presses verify in-process: ClipSlop is an accessory
         // (menu bar) app, so NSWorkspace.frontmostApplication and the
         // system-wide AX focus routinely still report the previous regular
         // app even while our own window is key — the external checks below
-        // would fail every time.
+        // would fail every time. The field-state guard is skipped here too:
+        // the target is our own onboarding sandbox or a Settings field, and
+        // reading our own process through AX is a deadlock hazard, not a
+        // safety gain.
         if Self.isSelfTargeted(snapshot) {
             guard let key = NSApp.keyWindow,
                   !(key is ChipPanelWindow), !(key is MagicToastWindow)
@@ -195,8 +295,26 @@ final class MagicInserter {
               NSWorkspace.shared.frontmostApplication?.bundleIdentifier == expectedBundleId
         else { return false }
 
-        guard let focused = currentFocusedElement() else { return false }
+        guard let focused = currentFocusedElement(),
+              Self.elementIsTheSnapshotField(snapshot, focused)
+        else { return false }
 
+        // Being the right ELEMENT is not the same as being in the right
+        // STATE. Apps that keep one AXUIElement across re-renders hand back
+        // the very same element after the user has typed half a sentence into
+        // it, so identity alone let a result assembled from the old value and
+        // the old caret be pasted into the new one. When the state has moved
+        // on, the press goes to the clipboard and the toast like any other
+        // mismatch — §3.5's "never a blind paste".
+        return !requireUnchangedField
+            || fieldStateUnchanged(snapshot, focused: focused, trustCaret: trustCaret)
+    }
+
+    /// Element identity, with the corroboration apps without stable identity
+    /// need. Says nothing about the field's *contents* — see `focusMatches`.
+    private static func elementIsTheSnapshotField(
+        _ snapshot: MagicSnapshot, _ focused: AXUIElement
+    ) -> Bool {
         if let expected = snapshot.focusedElement, CFEqual(expected.element, focused) {
             return true
         }
@@ -299,5 +417,131 @@ final class MagicInserter {
             selection = snapshotSelection
         }
         return (value, selection)
+    }
+
+    /// Value + caret/selection as the target holds them right now.
+    ///
+    /// The live focused element is preferred over the snapshot's remembered
+    /// one — the opposite order to `currentFieldState`, and deliberately so:
+    /// the apps this guard exists for are the ones that rebuild the
+    /// AXUIElement on re-render, where the remembered reference answers with
+    /// nothing (or with what the field held before the rebuild) and a stale
+    /// reading is worse than no reading. Callers reach here only just after
+    /// focus was verified, so the live element is the target's.
+    private func currentFieldProbe(_ snapshot: MagicSnapshot) -> FieldProbe {
+        guard let focused = currentFocusedElement() ?? snapshot.focusedElement?.element else {
+            return FieldProbe(value: nil, range: nil)
+        }
+        return Self.fieldProbe(of: focused)
+    }
+
+    /// The range is converted to CHARACTER offsets against the value read in
+    /// the same breath — the space `AXSnapshotService` records
+    /// `field.selectedRange` in. AX hands out UTF-16, and comparing the two
+    /// spaces would report a moved caret for any field holding an emoji.
+    private static func fieldProbe(of element: AXUIElement) -> FieldProbe {
+        var valueRef: CFTypeRef?
+        let value: String? = AXUIElementCopyAttributeValue(
+            element, kAXValueAttribute as CFString, &valueRef
+        ) == .success ? valueRef as? String : nil
+
+        var range: Range<Int>?
+        var rangeRef: CFTypeRef?
+        if let value,
+           AXUIElementCopyAttributeValue(
+               element, kAXSelectedTextRangeAttribute as CFString, &rangeRef
+           ) == .success,
+           let rangeRef, CFGetTypeID(rangeRef) == AXValueGetTypeID() {
+            let axValue = rangeRef as! AXValue
+            var cfRange = CFRange()
+            if AXValueGetType(axValue) == .cfRange,
+               AXValueGetValue(axValue, .cfRange, &cfRange) {
+                range = AXSnapshotService.characterRange(cfRange, in: value)
+            }
+        }
+        return FieldProbe(value: value, range: range)
+    }
+
+    /// Whether the field is still in the state the result was assembled from
+    /// — the snapshot's state, or else the state one of our own writes left
+    /// behind (a regenerate undoes its previous paste before re-running, and
+    /// that difference is ours, not the user's).
+    private func fieldStateUnchanged(
+        _ snapshot: MagicSnapshot, focused: AXUIElement, trustCaret: Bool
+    ) -> Bool {
+        let current = Self.fieldProbe(of: focused)
+        let currentRange = trustCaret ? current.range : nil
+        if Self.fieldStateAgrees(
+            expectedValue: snapshot.field?.value, expectedRange: snapshot.field?.selectedRange,
+            currentValue: current.value, currentRange: currentRange
+        ) { return true }
+
+        guard let lastWrite, lastWrite.press == snapshot.ts, lastWrite.probe.value != nil else {
+            return false
+        }
+        return Self.fieldStateAgrees(
+            expectedValue: lastWrite.probe.value, expectedRange: lastWrite.probe.range,
+            currentValue: current.value, currentRange: currentRange
+        )
+    }
+
+    /// Does a field state read now still count as the state a result was
+    /// planned against?
+    ///
+    /// Deliberately asymmetric, because AX readings are: only positive
+    /// evidence of a CHANGE rejects. A value that was unreadable proves
+    /// nothing — and capture writes "" for unreadable just as it does for
+    /// genuinely empty, so an empty expectation cannot be told from a missing
+    /// one and must decide nothing either. Rejecting on that would send every
+    /// app with an opaque field to the toast, forever. The caret is the same
+    /// kind of evidence: it decides only when both readings published one.
+    ///
+    /// The one genuinely ambiguous case is a current value that merely extends
+    /// the expected one. That is what capture's `maxFieldValueChars` clip looks
+    /// like on a long document — and also exactly what the user typing at the
+    /// end of a short one looks like. The caret breaks the tie: typing moves
+    /// it, a clipped tail does not. With no caret to consult, the ambiguity
+    /// resolves against pasting.
+    ///
+    /// `nonisolated` so the tests can exercise the decision table directly;
+    /// everything it decides on has already been read by the caller.
+    nonisolated static func fieldStateAgrees(
+        expectedValue: String?, expectedRange: Range<Int>?,
+        currentValue: String?, currentRange: Range<Int>?
+    ) -> Bool {
+        let caretAgrees: Bool? = (expectedRange == nil || currentRange == nil)
+            ? nil
+            : expectedRange == currentRange
+
+        guard let expectedValue, !expectedValue.isEmpty, let currentValue else {
+            return caretAgrees ?? true
+        }
+        if currentValue == expectedValue { return caretAgrees ?? true }
+        if currentValue.count > expectedValue.count {
+            // Capture keeps at most `field_value_max_chars` of a long field, as
+            // either its head or — once the caret sits past that cap — the
+            // window of that length ending AT the caret. Both are what an
+            // untouched long document looks like from here, and neither may
+            // send the press to the clipboard. The caret still has to agree:
+            // it is the only thing that tells a clip from the user typing.
+            if currentValue.hasPrefix(expectedValue) { return caretAgrees == true }
+            if let expectedRange,
+               Self.slice(of: currentValue, ofLength: expectedValue.count,
+                          endingAt: expectedRange.upperBound) == expectedValue {
+                return caretAgrees == true
+            }
+        }
+        return false
+    }
+
+    /// The `length` characters of `value` ending at `end`, or nil when that
+    /// span does not lie inside it. Offsets are character offsets, the space
+    /// `AXSnapshotService` records ranges in.
+    private nonisolated static func slice(of value: String, ofLength length: Int, endingAt end: Int) -> String? {
+        let start = end - length
+        guard start >= 0, end <= value.count else { return nil }
+        let lower = value.index(value.startIndex, offsetBy: start)
+        let upper = value.index(lower, offsetBy: length)
+        return String(value[lower..<upper])
     }
 }

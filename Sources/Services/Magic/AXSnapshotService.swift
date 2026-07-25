@@ -36,6 +36,22 @@ actor AXSnapshotService {
         /// — no config key of its own — and spent from `remainingCalls`
         /// too, so the overall press ceiling never moves.
         var remainingLabelReads: Int
+        /// The capture's hard deadline (R4), carried with the budget so every
+        /// individual attribute read can honor it. The walks check the
+        /// deadline between steps, but the field's own reads — role,
+        /// settability, value, selection, placeholder, geometry — happen
+        /// before the first such check, and against an AX server that answers
+        /// every one with `kAXErrorCannotComplete` each costs the 0.35 s
+        /// messaging timeout *twice* (the retry in `copyRaw`). That alone
+        /// stretched a nominal 300 ms capture into several seconds. `nil`
+        /// means "no deadline" — the observer's cheap read, which is bounded
+        /// by its call cap instead.
+        var deadline: ContinuousClock.Instant? = nil
+
+        var isPastDeadline: Bool {
+            guard let deadline else { return false }
+            return ContinuousClock().now >= deadline
+        }
 
         static func labelReadCap(forCalls calls: Int) -> Int {
             max(60, calls / 10)
@@ -58,9 +74,14 @@ actor AXSnapshotService {
     }
 
     private var didConfigureTimeout = false
-    /// PIDs we already asked to build an accessibility tree (Chromium /
-    /// Electron enablement) — the request is per-process, once.
-    private var enabledPIDs: Set<pid_t> = []
+    /// Processes we already asked to build an accessibility tree (Chromium /
+    /// Electron enablement) — the request is per-process, once. Keyed by PID
+    /// but *valued* by process identity (the launch date of the application
+    /// holding that PID), because the kernel recycles PIDs: a bare
+    /// `Set<pid_t>` made a replacement Chromium/Electron process that
+    /// inherited a dead one's PID look already-enabled, and it then served an
+    /// empty AX tree for the rest of the menu-bar session.
+    private var enabledApps: [pid_t: Date] = [:]
 
     /// Roles whose text content the surrounding walk collects.
     private static let textRoles: Set<String> = [
@@ -88,6 +109,7 @@ actor AXSnapshotService {
         let clock = ContinuousClock()
         let deadlineInstant = clock.now + .milliseconds(config.captureDeadlineMs)
         var budget = Budget(config: config)
+        budget.deadline = deadlineInstant
 
         let warmUsable = warm.map {
             $0.isUsable(forPid: appInfo.pid, ttlSeconds: config.warmContextTtlSeconds)
@@ -100,15 +122,32 @@ actor AXSnapshotService {
             stamped.axCannotComplete = budget.cannotCompleteCount
             return stamped
         }
-
-        let systemWide = AXUIElementCreateSystemWide()
-        guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget)
-        else {
-            return finish(MagicSnapshot(
+        /// A press that captured nothing: no field, no target, no content.
+        /// `grammarRow` reads `.noTarget`, so nothing can be read from or
+        /// written into an element we could not identify.
+        func contentless(_ budget: Budget) -> MagicSnapshot {
+            finish(MagicSnapshot(
                 app: appInfo, windowTitle: nil, url: nil, field: nil,
                 surrounding: nil, locale: locale, ts: Date(), focusedElement: nil
             ), budget)
         }
+
+        let systemWide = AXUIElementCreateSystemWide()
+        guard let app: AXUIElement = copyElement(systemWide, kAXFocusedApplicationAttribute, &budget)
+        else { return contentless(budget) }
+
+        // Bind the capture to the app the caller sampled (§3.1). `appInfo` is
+        // read on the main actor *before* the hop onto this actor, and it is
+        // the identity routing and `no_cloud` evaluate; the system-wide
+        // focused application is read here, one hop later. If the user
+        // switched apps in between, everything below — field, value,
+        // surroundings — belongs to the new process while the snapshot still
+        // claims the old one's bundle ID, so text from a protected native app
+        // could be sent to a cloud provider under an unprotected identity (and
+        // the Inserter's focus check would only fail afterwards). An
+        // AXUIElement's PID is local bookkeeping, not an AX message, so this
+        // costs neither budget nor latency.
+        guard Self.pid(of: app) == appInfo.pid else { return contentless(budget) }
 
         // Chromium and Electron build their AX tree lazily and only for
         // clients that announce themselves (§5.1). Ask once per process,
@@ -118,15 +157,24 @@ actor AXSnapshotService {
             try? await Task.sleep(for: .milliseconds(250))
         }
 
-        guard let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget)
-        else {
-            return finish(MagicSnapshot(
-                app: appInfo, windowTitle: nil, url: nil, field: nil,
-                surrounding: nil, locale: locale, ts: Date(), focusedElement: nil
-            ), budget)
-        }
+        // The same race, one read later: focus can move to another process
+        // between the two calls, and `focused` is what every read below — and
+        // the Inserter's identity check afterwards — is measured against.
+        guard let focused: AXUIElement = copyElement(app, kAXFocusedUIElementAttribute, &budget),
+              Self.pid(of: focused) == appInfo.pid
+        else { return contentless(budget) }
 
-        let role = copyString(focused, kAXRoleAttribute, &budget) ?? "AXUnknown"
+        // Fail closed when the role is unreadable (§3.1). Defaulting it to
+        // "AXUnknown" meant a secure text field whose role read merely timed
+        // out (`kAXErrorCannotComplete`, a transient this actor sees often
+        // enough to count) sailed past the secure guard below and went on to
+        // read `kAXValueAttribute` — one attribute that may well answer — so
+        // password text could enter the snapshot and the generation prompt.
+        // The invariant is that a secure value is never touched; the only way
+        // to keep it when the role is unknown is to capture nothing.
+        guard let role = copyString(focused, kAXRoleAttribute, &budget) else {
+            return contentless(budget)
+        }
         let subrole = copyString(focused, kAXSubroleAttribute, &budget)
 
         // Secure fields: bail before reading anything else — the value of a
@@ -148,7 +196,9 @@ actor AXSnapshotService {
         // settable" is the authority (web contenteditable reports odd roles
         // but a settable value).
         var editable = Self.editableRoles.contains(role)
-        if !editable {
+        if !editable, budget.remainingCalls > 0, !budget.isPastDeadline {
+            // Not a `copyRaw` read, so it carries its own budget and deadline
+            // accounting; it can block for the messaging timeout like any other.
             var settable = DarwinBoolean(false)
             budget.remainingCalls -= 1
             if AXUIElementIsAttributeSettable(focused, kAXValueAttribute as CFString, &settable) == .success {
@@ -156,10 +206,10 @@ actor AXSnapshotService {
             }
         }
 
-        var value = copyString(focused, kAXValueAttribute, &budget) ?? ""
-        if value.count > budget.maxFieldValueChars {
-            value = String(value.prefix(budget.maxFieldValueChars))
-        }
+        // Read the value WHOLE first: the AX selection range is expressed
+        // against what the field actually holds, so it can only be converted —
+        // and the retained window only chosen — against the untruncated string.
+        let fullValue = copyString(focused, kAXValueAttribute, &budget) ?? ""
 
         let selectionText = copyString(focused, kAXSelectedTextAttribute, &budget)
         // AX ranges are UTF-16 offsets. Converting them to character offsets
@@ -169,16 +219,46 @@ actor AXSnapshotService {
         // emoji or composed character anywhere before the selection shifted
         // the recovered text — silently, and by exactly the wrong amount.
         let selectionRange = copyRange(focused, kAXSelectedTextRangeAttribute, &budget)
-        let characterRange = selectionRange.flatMap { Self.characterRange($0, in: value) }
+        let characterRange = selectionRange.flatMap { Self.characterRange($0, in: fullValue) }
+
+        // `field_value_max_chars` truncation, caret-aware. A bare prefix threw
+        // away the one part of a long field the press is actually about: the
+        // caret sits at the *end* of a draft far more often than in its first
+        // 50k characters. Cutting there also made the range conversion fail
+        // (offsets pointing past the prefix), so the assembler built its
+        // continuation from the end of the prefix while the paste landed at
+        // the real caret, and a selection lost its before/after positioning.
+        // The retained window therefore ends exactly at the reported caret /
+        // selection end — which is the position every consumer already assumes
+        // when no range survives (`ContinuationSeam` clamps to `value.count`,
+        // `PromptAssembler` keeps the draft's tail).
+        //
+        // The offsets stay ABSOLUTE, i.e. character offsets into the field's
+        // whole value: that is what `MagicPressCoordinator.reassertSelectionIfLost`
+        // and `CaretLocator` need, since both measure against the live value
+        // they re-read rather than against `field.value`. Consumers that index
+        // into `value` instead stay safe by construction — a window is only
+        // ever shifted when `upperBound` exceeds `maxFieldValueChars`, and
+        // `value.count` is then that same cap, so their bounds checks reject
+        // the range and they fall back to text search / caret-at-end instead
+        // of slicing at a wrong offset.
+        let window = Self.retainedWindow(
+            valueCount: fullValue.count, around: characterRange,
+            maxChars: budget.maxFieldValueChars
+        )
+        let value = Self.retainedValue(fullValue, window: window)
+
         var selection: MagicSnapshot.SelectionInfo?
         if let selectionText, !selectionText.isEmpty {
             selection = MagicSnapshot.SelectionInfo(
                 range: characterRange.flatMap { $0.isEmpty ? nil : $0 }, text: selectionText
             )
-        } else if let characterRange, !characterRange.isEmpty, !value.isEmpty {
+        } else if let characterRange, !characterRange.isEmpty, !value.isEmpty,
+                  window.lowerBound == 0, characterRange.upperBound <= value.count {
             // Some web fields report a range but empty AXSelectedText —
-            // recover the text from the value; if that fails too, the caller
-            // runs the synthetic-⌘C fallback.
+            // recover the text from the value, which is only possible while
+            // the range still indexes it (an unshifted window). If it does
+            // not, the caller runs the synthetic-⌘C fallback.
             let start = value.index(value.startIndex, offsetBy: characterRange.lowerBound)
             let end = value.index(value.startIndex, offsetBy: characterRange.upperBound)
             selection = MagicSnapshot.SelectionInfo(
@@ -300,6 +380,7 @@ actor AXSnapshotService {
             if !tree.hasText, freshlyEnabled, !expired() {
                 try? await Task.sleep(for: .milliseconds(300))
                 var retryBudget = Budget(config: config)
+                retryBudget.deadline = deadlineInstant
                 retryBudget.remainingCalls = retryBudget.webSweepCalls
                 retryBudget.remainingLabelReads = Budget.labelReadCap(forCalls: retryBudget.remainingCalls)
                 tree = treeWalk(&retryBudget)
@@ -320,6 +401,7 @@ actor AXSnapshotService {
             if surroundingText.isEmpty, freshlyEnabled, !expired() {
                 try? await Task.sleep(for: .milliseconds(300))
                 var retryBudget = Budget(config: config)
+                retryBudget.deadline = deadlineInstant
                 retryBudget.remainingCalls = retryBudget.webSweepCalls
                 surroundingText = walk(&retryBudget)
                 budget.cannotCompleteCount += retryBudget.cannotCompleteCount
@@ -942,8 +1024,18 @@ actor AXSnapshotService {
     /// Returns true on the first request to a process (the caller then
     /// waits for the tree to build).
     private func enableAccessibilityIfNeeded(app: AXUIElement, pid: pid_t) -> Bool {
-        guard pid > 0, !enabledPIDs.contains(pid) else { return false }
-        enabledPIDs.insert(pid)
+        guard pid > 0 else { return false }
+        // A PID is not a process identity — the kernel hands it out again once
+        // the process exits, and this actor lives for the whole menu-bar
+        // session. Keyed on the PID alone, the replacement Chromium/Electron
+        // process looked already-enabled and was never asked to build its
+        // tree, so it kept serving an empty one until ClipSlop restarted. The
+        // launch date of whatever holds the PID *now* is the part a recycled
+        // PID cannot inherit.
+        let identity = Self.processIdentity(pid)
+        guard enabledApps[pid] != identity else { return false }
+        pruneTerminatedApps()
+        enabledApps[pid] = identity
         let manual = AXUIElementSetAttributeValue(
             app, "AXManualAccessibility" as CFString, kCFBooleanTrue
         )
@@ -951,6 +1043,31 @@ actor AXSnapshotService {
             app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue
         )
         return manual == .success || enhanced == .success
+    }
+
+    /// Identity of the application currently holding a PID. `.distantPast`
+    /// stands for "no launch date published" — it still distinguishes that
+    /// process from any successor whose launch date IS readable, and the
+    /// pruning below removes the entry as soon as the process is gone.
+    private static func processIdentity(_ pid: pid_t) -> Date {
+        NSRunningApplication(processIdentifier: pid)?.launchDate ?? .distantPast
+    }
+
+    /// Drops entries whose process has exited, so the enablement cache cannot
+    /// grow for the life of the session and cannot shadow a PID's next owner.
+    /// Runs only on the (rare) enablement path.
+    private func pruneTerminatedApps() {
+        enabledApps = enabledApps.filter { pid, _ in
+            NSRunningApplication(processIdentifier: pid)?.isTerminated == false
+        }
+    }
+
+    /// The process an `AXUIElement` belongs to. Local bookkeeping inside the
+    /// element — no AX message, so it costs nothing from the call budget.
+    private static func pid(of element: AXUIElement) -> pid_t? {
+        var pid: pid_t = 0
+        guard AXUIElementGetPid(element, &pid) == .success else { return nil }
+        return pid
     }
 
     /// One process-global messaging timeout (R4): a hung AX server answers
@@ -962,13 +1079,16 @@ actor AXSnapshotService {
     }
 
     /// Copies an attribute with budget accounting and one retry on
-    /// `.cannotComplete` (§5.1).
+    /// `.cannotComplete` (§5.1). Refuses to start — or to retry — once the
+    /// capture deadline has passed: a single read can block for the 0.35 s
+    /// messaging timeout, so the deadline has to be enforced per call and not
+    /// only between walk steps, or the promised hard bound (R4) is nominal.
     private func copyRaw(_ element: AXUIElement, _ attribute: String, _ budget: inout Budget) -> CFTypeRef? {
-        guard budget.remainingCalls > 0 else { return nil }
+        guard budget.remainingCalls > 0, !budget.isPastDeadline else { return nil }
         var value: CFTypeRef?
         budget.remainingCalls -= 1
         var result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
-        if result == .cannotComplete, budget.remainingCalls > 0 {
+        if result == .cannotComplete, budget.remainingCalls > 0, !budget.isPastDeadline {
             budget.cannotCompleteCount += 1
             budget.remainingCalls -= 1
             result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)
@@ -1004,10 +1124,45 @@ actor AXSnapshotService {
         return raw.compactMap { CFGetTypeID($0) == AXUIElementGetTypeID() ? ($0 as! AXUIElement) : nil }
     }
 
+    /// The slice of an over-long field value the snapshot keeps, as character
+    /// offsets into the whole value. Pure, extracted for tests.
+    ///
+    /// Below the cap nothing is dropped. Above it, a caret or selection that
+    /// still fits inside the leading `maxChars` keeps the historical prefix —
+    /// offsets there index `value` directly, so the cheap consumers stay
+    /// exact. Only when the reported range lies *beyond* the prefix does the
+    /// window slide, and it then ends exactly at the range's upper bound: the
+    /// retained text is the context immediately preceding the caret, which is
+    /// what a draft continuation and a selection's "before" both need.
+    nonisolated static func retainedWindow(
+        valueCount: Int, around range: Range<Int>?, maxChars: Int
+    ) -> Range<Int> {
+        guard maxChars > 0 else { return 0..<0 }
+        guard valueCount > maxChars else { return 0..<valueCount }
+        guard let range, range.upperBound > maxChars, range.upperBound <= valueCount else {
+            return 0..<maxChars
+        }
+        return (range.upperBound - maxChars)..<range.upperBound
+    }
+
+    /// Applies a `retainedWindow` to the value it was computed for. Split from
+    /// the window arithmetic so the offsets are testable without a live field.
+    nonisolated static func retainedValue(_ value: String, window: Range<Int>) -> String {
+        guard window.lowerBound > 0 || window.upperBound < value.count else { return value }
+        guard let start = value.index(
+                value.startIndex, offsetBy: window.lowerBound, limitedBy: value.endIndex
+              ),
+              let end = value.index(start, offsetBy: window.count, limitedBy: value.endIndex)
+        else { return value }
+        return String(value[start..<end])
+    }
+
     /// A UTF-16 `CFRange` from AX mapped onto character offsets into `value`.
-    /// Returns nil when the range does not lie inside the value at all (a
-    /// stale range, or a value we truncated at `maxFieldValueChars`) — a
-    /// caller must not silently act on offsets that point nowhere.
+    /// Always called with the field's WHOLE value, so the offsets it returns
+    /// are absolute — `retainedWindow` may keep less than that, and the
+    /// coordinator re-reads the live value to re-assert a selection. Returns
+    /// nil when the range does not lie inside the value at all (a stale
+    /// range) — a caller must not silently act on offsets that point nowhere.
     nonisolated static func characterRange(_ range: CFRange, in value: String) -> Range<Int>? {
         guard range.location >= 0, range.length >= 0 else { return nil }
         let utf16 = value.utf16

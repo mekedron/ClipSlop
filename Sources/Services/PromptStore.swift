@@ -158,6 +158,16 @@ final class PromptStore {
         let signature = PromptLibraryFiles.signature(of: libraryDirectory)
         guard signature != directorySignature else { return }
         reload()
+        // Bootstrap's hand-edit branch, one launch earlier. Observing the edit
+        // here but leaving `useDefaultPrompts` set left the tree looking
+        // pristine to the *next* launch: if that launch is an app update with a
+        // different bundled-default stamp, bootstrap takes the "new defaults are
+        // authoritative" branch and overwrites the very edits this reload just
+        // published. A tree that no longer matches the bundled set is a
+        // customization no matter who typed it, so record it as one now.
+        if defaultsActive, prompts != Self.canonicalize(bundledDefaults()) {
+            markCustomized()
+        }
         writeMirrorAndNotify()
     }
 

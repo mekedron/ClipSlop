@@ -69,6 +69,49 @@ struct ProvidersFileTests {
         #expect(result.warnings.contains { $0.contains("favourite_color") })
     }
 
+    /// `max_tokens: -1` / `: 0` used to be copied straight into the config and
+    /// put on the wire, so every generation failed at the API — from a file the
+    /// app advertises as validated and hot-reloaded.
+    @Test func nonPositiveMaxTokensIsRejectedAndTheDefaultKept() {
+        for bad in ["-1", "0", "nine", "99999999"] {
+            let result = ProvidersFile.parse("""
+            ---
+            providers:
+              - id: \(UUID().uuidString)
+                type: anthropic
+                max_tokens: \(bad)
+            ---
+            """)
+            #expect(result.providers.count == 1)
+            #expect(result.providers[0].maxTokens == Constants.Defaults.maxTokens)
+            #expect(result.warnings.contains { $0.contains("max_tokens") }, "no warning for '\(bad)'")
+        }
+
+        let ok = ProvidersFile.parse("""
+        ---
+        providers:
+          - id: \(UUID().uuidString)
+            type: anthropic
+            max_tokens: 8192
+        ---
+        """)
+        #expect(ok.providers[0].maxTokens == 8192)
+        #expect(ok.warnings.isEmpty)
+    }
+
+    /// The legacy providers.json is the only copy of this configuration until
+    /// providers.yaml is verifiably on disk; an atomic write reports success
+    /// from the rename, not from the bytes.
+    @Test func providerMigrationVerificationCatchesALostWrite() {
+        let configs = [
+            AIProviderConfig(name: "A", providerType: .anthropic, isDefault: true),
+            AIProviderConfig(name: "B", providerType: .ollama),
+        ]
+        #expect(ProviderStore.migrationRoundTrips(ProvidersFile.serialize(configs), expected: configs))
+        #expect(!ProviderStore.migrationRoundTrips("", expected: configs))
+        #expect(!ProviderStore.migrationRoundTrips(ProvidersFile.serialize([configs[0]]), expected: configs))
+    }
+
     @Test func secondDefaultIsDemotedWithWarning() {
         var a = AIProviderConfig(name: "A", providerType: .anthropic, isDefault: true)
         var b = AIProviderConfig(name: "B", providerType: .openAI, isDefault: true)
@@ -117,6 +160,18 @@ struct RolesFileTests {
         let result = RolesFile.parse(RolesFile.serialize([:]))
         #expect(result.bindings.isEmpty)
         #expect(result.warnings.isEmpty)
+    }
+
+    /// Same contract as the provider migration: roles.json only retires once
+    /// roles.yaml reads back with every binding intact.
+    @Test func roleMigrationVerificationCatchesALostWrite() {
+        let bindings: [EngineRole: RoleBinding] = [
+            .generationMagic: RoleBinding(provider: UUID()),
+            .chatAssistant: RoleBinding(provider: UUID()),
+        ]
+        #expect(EngineRoleStore.migrationRoundTrips(RolesFile.serialize(bindings), expected: bindings))
+        #expect(!EngineRoleStore.migrationRoundTrips("", expected: bindings))
+        #expect(!EngineRoleStore.migrationRoundTrips(RolesFile.serialize([:]), expected: bindings))
     }
 
     @Test func unknownRoleSkippedBadValuesIgnoredWithWarnings() {

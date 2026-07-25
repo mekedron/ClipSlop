@@ -13,6 +13,9 @@ struct TraceStats: Sendable {
 
     struct Bucket: Sendable {
         var presses = 0
+        /// Presses that actually reached a routing decision (`tier != "none"`).
+        /// The denominator every presentation rate uses — see `add`.
+        var routed = 0
         var silent = 0
         /// Chip presentations (forced, planner-resolved, or plain).
         var chips = 0
@@ -44,14 +47,26 @@ struct TraceStats: Sendable {
 
         mutating func add(_ trace: PressTrace) {
             presses += 1
-            if trace.presentation == "silent" {
-                silent += 1
-            } else {
-                chips += 1
-                if trace.presentation == "chips_planner" { plannerPicked += 1 }
-                if let index = trace.chipIndexChosen {
-                    chipChosen += 1
-                    if index == 0 { chipTop1 += 1 }
+            // Presses that died before routing — secure field, no target, plan
+            // failure — carry `tier == "none"` and still inherit `presentation
+            // == "silent"` from `PressTrace.init`, because nothing ever
+            // overwrote it. Counting those as successful silent routing
+            // decisions inflated the silent-rate gate and corrupted the
+            // per-situation experiment buckets, so an unrouted press enters
+            // neither counter and neither denominator. It still counts as a
+            // press, and its outcome, warm hit, and AX errors still count —
+            // only the routing verdict it never made is withheld.
+            if trace.tier != "none" {
+                routed += 1
+                if trace.presentation == "silent" {
+                    silent += 1
+                } else {
+                    chips += 1
+                    if trace.presentation == "chips_planner" { plannerPicked += 1 }
+                    if let index = trace.chipIndexChosen {
+                        chipChosen += 1
+                        if index == 0 { chipTop1 += 1 }
+                    }
                 }
             }
             if trace.hintUsed { hintUsed += 1 }
@@ -81,7 +96,11 @@ struct TraceStats: Sendable {
         // MARK: Derived rates (nil when the denominator is empty)
 
         var top1Rate: Double? { rate(chipTop1, over: chipChosen) }
-        var silentRate: Double? { rate(silent, over: presses) }
+        /// Share of *routed* presses the router resolved without chips. Over
+        /// `presses` this read as a routing quality number while really being
+        /// diluted (or, before unrouted presses were excluded, inflated) by
+        /// presses that never routed at all.
+        var silentRate: Double? { rate(silent, over: routed) }
         /// Of the presses that would have shown chips, how many the planner
         /// resolved silently.
         var plannerPickRate: Double? { rate(plannerPicked, over: chips) }
@@ -166,7 +185,8 @@ struct TraceStats: Sendable {
         out += "\n\n## Overall\n\n"
         out += "| metric | value |\n|---|---|\n"
         out += "| presses | \(overall.presses) |\n"
-        out += "| silent | \(fraction(overall.silent, overall.presses, overall.silentRate)) |\n"
+        out += "| routed | \(overall.routed) (\(overall.presses - overall.routed) never reached a routing decision) |\n"
+        out += "| silent | \(fraction(overall.silent, overall.routed, overall.silentRate)) |\n"
         out += "| chip top-1 | \(fraction(overall.chipTop1, overall.chipChosen, overall.top1Rate))"
         if let rate = overall.top1Rate {
             out += rate >= Self.top1Target ? " ✓" : " ✗ (target ≥ 70%)"

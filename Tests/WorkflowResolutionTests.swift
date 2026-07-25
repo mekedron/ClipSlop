@@ -89,6 +89,72 @@ struct WorkflowCardParsingTests {
         }
     }
 
+    /// The nested blocks used to read the keys they knew and drop the rest in
+    /// silence, so `{mss: 1000}` meant "no deadline" and `{max_char: 400}`
+    /// meant "engine-wide limit" — while Settings called the card valid.
+    @Test func unknownBudgetSubkeyFailsWithSuggestion() {
+        do {
+            _ = try card("""
+            ---
+            id: x
+            kind: workflow
+            mode: direct
+            version: 1
+            summary: "X"
+            intents: [write]
+            budget: {prompt_tokens_total: 3000, mss: 1000}
+            ---
+            """)
+            Issue.record("expected an error")
+        } catch let error as FrontmatterError {
+            #expect(error.message.contains("budget"))
+            #expect(error.message.contains("mss"))
+            #expect(error.message.contains("'ms'"))
+        } catch {
+            Issue.record("unexpected error type")
+        }
+    }
+
+    @Test func unknownOutputSubkeyFailsWithSuggestion() {
+        do {
+            _ = try card("""
+            ---
+            id: x
+            kind: workflow
+            mode: direct
+            version: 1
+            summary: "X"
+            intents: [write]
+            output: {lang: match_context, max_char: 400}
+            ---
+            """)
+            Issue.record("expected an error")
+        } catch let error as FrontmatterError {
+            #expect(error.message.contains("output"))
+            #expect(error.message.contains("max_char"))
+        } catch {
+            Issue.record("unexpected error type")
+        }
+    }
+
+    @Test func recognizedBudgetAndOutputSubkeysStillParse() throws {
+        let (parsed, _, warnings) = try card("""
+        ---
+        id: x
+        kind: workflow
+        mode: direct
+        version: 1
+        summary: "X"
+        intents: [write]
+        budget: {prompt_tokens_total: 3000, ms: 1500}
+        output: {lang: match_context, max_chars: 400, format: plain}
+        ---
+        """)
+        #expect(parsed.budget == BudgetSpec(promptTokensTotal: 3000, ms: 1500))
+        #expect(parsed.output.maxChars == 400)
+        #expect(warnings.isEmpty)
+    }
+
     @Test func needsIsIgnoredWithWarning() throws {
         let (_, _, warnings) = try card("""
         ---

@@ -8,6 +8,7 @@ struct TraceStatsTests {
     /// `TraceStats.load` uses, so field-name drift breaks these tests too.
     private func trace(
         situation: String = "base/com.apple.TextEdit/draft",
+        tier: String = "base",
         presentation: String = "silent",
         chipIndex: Int? = nil,
         outcome: String = "inserted",
@@ -22,7 +23,7 @@ struct TraceStatsTests {
             "situationClass": situation,
             "grammarRow": "draft",
             "fieldState": "draft",
-            "tier": "base",
+            "tier": tier,
             "candidateIDs": ["continue.draft"],
             "presentation": presentation,
             "hintUsed": false,
@@ -65,6 +66,34 @@ struct TraceStatsTests {
         #expect(b.insertions == 6)
         #expect(b.undone == 1)
         #expect(b.insertedAnyway == 1)
+    }
+
+    /// Presses that died before routing (secure field, no target, plan
+    /// failure) keep `tier == "none"` and the "silent" presentation
+    /// `PressTrace.init` set — nothing ever overwrote it. Counting them as
+    /// silent routing decisions inflated the silent-rate gate.
+    @Test func unroutedPressesStayOutOfPresentationCounters() {
+        let b = TraceStats.compute(from: [
+            trace(outcome: "inserted"),
+            trace(presentation: "chips", chipIndex: 0, outcome: "inserted"),
+            trace(tier: "none", outcome: "dead:secure"),
+            trace(tier: "none", outcome: "dead:no_target"),
+        ]).overall
+        #expect(b.presses == 4)
+        #expect(b.routed == 2)
+        #expect(b.silent == 1)
+        #expect(b.chips == 1)
+        #expect(b.silentRate == 0.5)  // Not 3/4, and not 1/4 either.
+        // They are still presses, and their outcomes still count.
+        #expect(b.outcomes["dead:secure"] == 1)
+        #expect(b.outcomes["dead:no_target"] == 1)
+
+        // A situation bucket made only of dead presses reports no rate at all
+        // rather than a fabricated 100% silent.
+        let deadOnly = TraceStats.compute(from: [trace(tier: "none", outcome: "dead:secure")]).overall
+        #expect(deadOnly.presses == 1)
+        #expect(deadOnly.routed == 0)
+        #expect(deadOnly.silentRate == nil)
     }
 
     @Test func outcomeFamiliesCollapseAfterTwoComponents() {

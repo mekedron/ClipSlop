@@ -367,6 +367,54 @@ struct PromptLibraryMigrationTests {
         #expect(!defaultsStillActive)
     }
 
+    /// The same edit, seen by the hot-reload path instead of by bootstrap.
+    /// Republishing the new tree while leaving `useDefaultPrompts` set made the
+    /// library look pristine to the *next* launch — and if that launch shipped a
+    /// different bundled-default stamp, bootstrap's update branch overwrote the
+    /// hand edit this reload had already observed.
+    @Test func hotReloadedEditMarksTheLibraryCustomized() throws {
+        let root = try StoreFixture.tempRoot()
+        let stamp = StoreFixture.StampBox()
+        var defaultsActive = true
+        let store = StoreFixture.makeStore(
+            root: root, useDefaults: true,
+            setDefaultsActive: { defaultsActive = $0 }, stamp: stamp
+        )
+        #expect(defaultsActive)
+
+        try """
+        ---
+        id: library.hand-made
+        kind: workflow
+        mode: direct
+        version: 1
+        uuid: 77777777-7777-7777-7777-777777777777
+        title: "Hand Made"
+        mnemonic: "h"
+        ---
+        Written in a text editor.
+        """.write(
+            to: root.appendingPathComponent("workflows/library/hand-made.md"),
+            atomically: true, encoding: .utf8
+        )
+
+        store.reloadIfChanged()
+        #expect(store.findNode(byID: UUID(uuidString: "77777777-7777-7777-7777-777777777777")!) != nil)
+        #expect(!defaultsActive)
+
+        // The payoff: an app update shipping a different bundled set no longer
+        // discards the card on the launch after the reload that saw it.
+        let shipped = [PromptNode(
+            id: UUID(uuidString: "44444444-4444-4444-4444-444444444444")!,
+            name: "Shipped In An Update", mnemonicKey: "u", nodeType: .prompt,
+            systemPrompt: "Brand new default."
+        )]
+        let relaunched = StoreFixture.makeStore(
+            root: root, useDefaults: defaultsActive, defaults: { shipped }, stamp: stamp
+        )
+        #expect(relaunched.findNode(byID: UUID(uuidString: "77777777-7777-7777-7777-777777777777")!) != nil)
+    }
+
     /// The other half of the same branch: a genuinely new bundled set (an app
     /// update) still refreshes the tree.
     @Test func newBundledDefaultsStillRefreshTheLibrary() throws {

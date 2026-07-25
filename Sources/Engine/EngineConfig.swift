@@ -116,10 +116,39 @@ struct MagicEngineConfig: Sendable, Equatable {
         return ranges().map { ($0.key, $0.range, defaults[keyPath: $0.path]) }
     }
 
+    /// Outcome of reading config.yaml. `applied == false` means the document
+    /// did not parse as a whole: `config` is then the settings the caller
+    /// asked to retain (plus any privacy rules rescued from the raw text),
+    /// never the all-default config.
+    struct LoadResult: Sendable {
+        var config: MagicEngineConfig
+        var warnings: [String]
+        var applied: Bool
+    }
+
     /// Parses the config file (same constrained YAML subset as workflow
     /// frontmatter). Missing keys keep their defaults; out-of-range values
     /// clamp with a warning; unknown keys warn and are ignored.
+    ///
+    /// Convenience over `load(_:retaining:)` for callers that only validate a
+    /// candidate file (the Settings Assistant's `set_config`, the status
+    /// report) and therefore have nothing to retain.
     static func parse(_ text: String) -> (config: MagicEngineConfig, warnings: [String]) {
+        let result = load(text, retaining: .default)
+        return (result.config, result.warnings)
+    }
+
+    /// Reads the file, keeping `previous` whole when the document is not
+    /// parseable at all.
+    ///
+    /// A fatal syntax error used to return the all-default config with a
+    /// warning, and the press pipeline carried on — so one malformed
+    /// *unrelated* line silently emptied `no_cloud` and sent protected screen
+    /// content to a cloud provider (P7). A file we could not read must not be
+    /// able to change any setting, least of all a privacy rule: nothing is
+    /// applied, the warning says so in those words, and the last settings that
+    /// did parse stay in effect.
+    static func load(_ text: String, retaining previous: MagicEngineConfig) -> LoadResult {
         var config = MagicEngineConfig.default
         var warnings: [String] = []
 
@@ -127,9 +156,12 @@ struct MagicEngineConfig: Sendable, Equatable {
         do {
             document = try FrontmatterParser.parse(text)
         } catch let error as FrontmatterError {
-            return (config, ["line \(error.line): \(error.message) — using defaults"])
+            return unapplied(text, retaining: previous, reason: "line \(error.line): \(error.message)")
         } catch {
-            return (config, ["could not parse config — using defaults"])
+            // Unreachable today (the parser only throws `FrontmatterError`),
+            // but the "line …" prefix is load-bearing: `EngineToolExecutor`
+            // treats it as a whole-file failure and refuses to write.
+            return unapplied(text, retaining: previous, reason: "line 1: could not parse config.yaml")
         }
 
         let known = Dictionary(uniqueKeysWithValues: ranges().map { ($0.key, $0) })
@@ -137,9 +169,9 @@ struct MagicEngineConfig: Sendable, Equatable {
             if key == "no_cloud" {
                 switch value {
                 case .list(let items):
-                    config.noCloud = items.map { $0.lowercased() }.filter { !$0.isEmpty }
+                    config.noCloud = normalized(items)
                 case .scalar(let scalar) where !scalar.isEmpty:
-                    config.noCloud = [scalar.lowercased()]
+                    config.noCloud = normalized([scalar])
                 default:
                     warnings.append("'no_cloud' must be a list like [com.tinyspeck.slackmacgap, gmail.com]")
                 }
@@ -159,7 +191,66 @@ struct MagicEngineConfig: Sendable, Equatable {
             }
             config[keyPath: entry.path] = clamped
         }
-        return (config, warnings)
+        return LoadResult(config: config, warnings: warnings, applied: true)
+    }
+
+    /// The retain path: nothing from the file is applied, except that a
+    /// `no_cloud:` block we can still read on its own may *add* rules.
+    private static func unapplied(
+        _ text: String, retaining previous: MagicEngineConfig, reason: String
+    ) -> LoadResult {
+        var config = previous
+        // Privacy is the one setting that must survive a typo somewhere else
+        // in the file (P7), including on a first launch where there is no
+        // previous config to retain. Rescue the `no_cloud:` block and union it
+        // in — union, not replace, because a file we could not read is allowed
+        // to tighten a rule, never to drop one.
+        if let salvaged = salvagedNoCloud(from: text) {
+            config.noCloud = previous.noCloud + salvaged.filter { !previous.noCloud.contains($0) }
+        }
+        return LoadResult(
+            config: config,
+            warnings: ["\(reason) — config.yaml was NOT applied; the previous settings (no_cloud rules included) stay in effect until the file is fixed"],
+            applied: false
+        )
+    }
+
+    /// Best-effort recovery of just the `no_cloud:` entry from a file the
+    /// parser rejected as a whole: the top-level line plus any indented
+    /// continuation, re-parsed as a document of its own. Deliberately routed
+    /// back through `FrontmatterParser` rather than split by hand, so quoting,
+    /// comments, and list forms behave exactly as they do in a healthy file.
+    /// Returns nil when the key is absent or is itself the broken part.
+    static func salvagedNoCloud(from text: String) -> [String]? {
+        let lines = text.components(separatedBy: "\n")
+        guard let start = lines.firstIndex(where: {
+            $0.first != " " && $0.first != "\t"
+                && $0.trimmingCharacters(in: .whitespaces).hasPrefix("no_cloud:")
+        }) else { return nil }
+
+        var end = start + 1
+        while end < lines.count, let first = lines[end].first, first == " " || first == "\t" {
+            end += 1
+        }
+        let snippet = (["---"] + Array(lines[start..<end]) + ["---"]).joined(separator: "\n")
+
+        guard let document = try? FrontmatterParser.parse(snippet),
+              let value = document.fields["no_cloud"]
+        else { return nil }
+        switch value {
+        case .list(let items):
+            return normalized(items)
+        case .scalar(let scalar) where !scalar.isEmpty:
+            return normalized([scalar])
+        default:
+            return nil
+        }
+    }
+
+    /// Entries are matched case-insensitively, so they are stored folded;
+    /// empties would match everything and are dropped.
+    private static func normalized(_ items: [String]) -> [String] {
+        items.map { $0.lowercased() }.filter { !$0.isEmpty }
     }
 }
 
@@ -192,7 +283,11 @@ final class EngineConfigStore {
             warnings = []
             return
         }
-        (config, warnings) = MagicEngineConfig.parse(text)
+        // `retaining: config` is what keeps a broken hand edit from resetting
+        // live settings — above all `no_cloud` — to their defaults mid-session.
+        let result = MagicEngineConfig.load(text, retaining: config)
+        config = result.config
+        warnings = result.warnings
     }
 
     /// Sets one integer key in config.yaml, preserving comments and every

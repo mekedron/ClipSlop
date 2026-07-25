@@ -113,6 +113,10 @@ struct CLIToolService: AIService {
             group.addTask {
                 try await runProcess(binaryPath: binaryPath, arguments: arguments, outputFile: outputFile)
             }
+            // Throwing out of the group cancels the subprocess child and waits
+            // for it, so the timeout is only worth as much as that child's
+            // cancellation handling — see `runProcess`, which terminates the
+            // tool and resumes rather than sitting on a continuation forever.
             group.addTask { [timeout = Self.timeout(for: config)] in
                 try await Task.sleep(for: timeout)
                 throw AIServiceError.cliToolTimeout
@@ -181,7 +185,7 @@ struct CLIToolService: AIService {
 
                     continuation.onTermination = { @Sendable _ in
                         watchdog.stop()
-                        if process.isRunning { process.terminate() }
+                        Self.terminate(process)
                     }
 
                     // Finish before terminating: killing the process fires
@@ -190,7 +194,7 @@ struct CLIToolService: AIService {
                     // not a spurious `cliToolFailed(SIGTERM)`.
                     watchdog.start(timeout: timeout) { @Sendable in
                         continuation.finish(throwing: AIServiceError.cliToolTimeout)
-                        if process.isRunning { process.terminate() }
+                        Self.terminate(process)
                     }
                 } catch {
                     watchdog.stop()
@@ -221,57 +225,171 @@ struct CLIToolService: AIService {
         throw AIServiceError.cliToolNotFound(definition.displayName)
     }
 
+    /// Runs the tool to completion — and, crucially, observes cancellation.
+    ///
+    /// `process(text:…)` races this against `Self.timeout(for:)` in a task
+    /// group, and leaving a group does not abandon the losing child: it cancels
+    /// it and then *awaits* it. A bare `withCheckedThrowingContinuation`
+    /// notices nothing, so the group sat there while a hung CLI kept the
+    /// continuation suspended — forever, for a tool that never exits. The
+    /// `cliToolTimeout` the timeout task had already thrown never reached the
+    /// caller, and cancelling a Magic run left the subprocess running behind
+    /// it. Cancellation now terminates the process and resumes the continuation
+    /// itself, so the group can return the moment the timeout fires.
     private func runProcess(binaryPath: String, arguments: [String], outputFile: URL?) async throws -> String {
-        try await withCheckedThrowingContinuation { continuation in
-            let process = Process()
-            process.executableURL = URL(fileURLWithPath: binaryPath)
-            process.arguments = arguments
-            process.environment = buildEnvironment()
-            process.currentDirectoryURL = URL(fileURLWithPath: NSHomeDirectory())
+        let run = ProcessRun()
+        return try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<String, Error>) in
+                // Cancelled before the body even ran — the group cancels the
+                // loser the instant the timeout task throws. Spawn nothing.
+                guard run.begin(continuation) else {
+                    run.fail(CancellationError())
+                    return
+                }
 
-            let stdoutPipe = Pipe()
-            let stderrPipe = Pipe()
-            process.standardOutput = stdoutPipe
-            process.standardError = stderrPipe
+                let process = Process()
+                process.executableURL = URL(fileURLWithPath: binaryPath)
+                process.arguments = arguments
+                process.environment = buildEnvironment()
+                process.currentDirectoryURL = URL(fileURLWithPath: NSHomeDirectory())
 
-            process.terminationHandler = { proc in
-                guard proc.terminationStatus == 0 else {
-                    let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
-                    let stderr = String(data: stderrData, encoding: .utf8) ?? ""
-                    continuation.resume(
-                        throwing: AIServiceError.cliToolFailed(
-                            exitCode: proc.terminationStatus,
-                            stderr: String(stderr.prefix(500))
+                let stdoutPipe = Pipe()
+                let stderrPipe = Pipe()
+                process.standardOutput = stdoutPipe
+                process.standardError = stderrPipe
+
+                process.terminationHandler = { proc in
+                    // Claim the resume BEFORE touching a pipe. On the
+                    // cancellation path the continuation is already gone, and
+                    // `readDataToEndOfFile` there is a liability rather than a
+                    // courtesy: a grandchild that inherited the write end holds
+                    // it open after we killed its parent, and this handler runs
+                    // on a Foundation thread that would then block on it
+                    // indefinitely for output nobody is waiting for.
+                    guard let continuation = run.claim() else { return }
+
+                    guard proc.terminationStatus == 0 else {
+                        let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+                        let stderr = String(data: stderrData, encoding: .utf8) ?? ""
+                        continuation.resume(
+                            throwing: AIServiceError.cliToolFailed(
+                                exitCode: proc.terminationStatus,
+                                stderr: String(stderr.prefix(500))
+                            )
                         )
-                    )
+                        return
+                    }
+
+                    // If an output file was used, read the final answer from it.
+                    let output: String
+                    if let outputFile,
+                       let fileContent = try? String(contentsOf: outputFile, encoding: .utf8),
+                       !fileContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        output = fileContent.trimmingCharacters(in: .whitespacesAndNewlines)
+                    } else {
+                        // Otherwise read stdout directly.
+                        let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+                        output = (String(data: stdoutData, encoding: .utf8) ?? "")
+                            .trimmingCharacters(in: .whitespacesAndNewlines)
+                    }
+
+                    guard !output.isEmpty else {
+                        continuation.resume(throwing: AIServiceError.emptyResponse)
+                        return
+                    }
+
+                    continuation.resume(returning: output)
+                }
+
+                do {
+                    try process.run()
+                } catch {
+                    run.fail(AIServiceError.cliToolNotFound(binaryPath))
                     return
                 }
 
-                // If an output file was used, read the final answer from it.
-                let output: String
-                if let outputFile,
-                   let fileContent = try? String(contentsOf: outputFile, encoding: .utf8),
-                   !fileContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    output = fileContent.trimmingCharacters(in: .whitespacesAndNewlines)
-                } else {
-                    // Otherwise read stdout directly.
-                    let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-                    output = (String(data: stdoutData, encoding: .utf8) ?? "")
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                // Publish the live process so `onCancel` has something to
+                // signal — and pick up the cancellation that landed while we
+                // were launching, which looked and found nothing.
+                if !run.attach(process) {
+                    Self.terminate(process)
+                    run.fail(CancellationError())
                 }
-
-                guard !output.isEmpty else {
-                    continuation.resume(throwing: AIServiceError.emptyResponse)
-                    return
-                }
-
-                continuation.resume(returning: output)
             }
+        } onCancel: {
+            if let process = run.cancel() { Self.terminate(process) }
+            run.fail(CancellationError())
+        }
+    }
 
-            do {
-                try process.run()
-            } catch {
-                continuation.resume(throwing: AIServiceError.cliToolNotFound(binaryPath))
+    /// SIGTERM now, SIGKILL if the tool is still around a moment later. The
+    /// whole point of the timeout is that nothing outlives it, and a CLI that
+    /// traps SIGTERM (or sits wedged in a syscall) would otherwise keep burning
+    /// tokens and CPU for a request that has already failed.
+    private static let terminationGrace: TimeInterval = 2
+
+    private static func terminate(_ process: Process) {
+        guard process.isRunning else { return }
+        process.terminate()
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + terminationGrace) {
+            // Foundation reaps the child before it flips `isRunning`, so the
+            // pid here is still ours — this cannot land on a recycled one.
+            guard process.isRunning else { return }
+            kill(process.processIdentifier, SIGKILL)
+        }
+    }
+
+    /// One `runProcess` call's shared state: the continuation, resumable
+    /// exactly once, and the process cancellation has to signal.
+    /// `Process.terminationHandler` and `withTaskCancellationHandler`'s
+    /// `onCancel` both arrive on threads of their own choosing and either may
+    /// win, so "who resumes" and "is there anything to kill yet" are single
+    /// decisions taken under one lock — the same shape `ChatGPTAuthService`
+    /// uses for its listener callbacks.
+    private final class ProcessRun: @unchecked Sendable {
+        private let lock = NSLock()
+        private var continuation: CheckedContinuation<String, Error>?
+        private var process: Process?
+        private var isCancelled = false
+
+        /// Adopts the continuation. `false` means cancellation got here first.
+        func begin(_ continuation: CheckedContinuation<String, Error>) -> Bool {
+            lock.withLock { () -> Bool in
+                self.continuation = continuation
+                return !isCancelled
+            }
+        }
+
+        /// Takes the continuation, or nil when somebody else already has it.
+        /// Losing this race means doing nothing whatsoever.
+        func claim() -> CheckedContinuation<String, Error>? {
+            lock.withLock { () -> CheckedContinuation<String, Error>? in
+                defer { continuation = nil }
+                return continuation
+            }
+        }
+
+        func fail(_ error: Error) {
+            claim()?.resume(throwing: error)
+        }
+
+        /// Publishes the launched process. `false` means cancellation already
+        /// ran and found nothing, so the launching side owns terminating it.
+        func attach(_ process: Process) -> Bool {
+            lock.withLock { () -> Bool in
+                guard !isCancelled else { return false }
+                self.process = process
+                return true
+            }
+        }
+
+        /// Marks the run cancelled and hands back a process to signal, if one
+        /// was launched.
+        func cancel() -> Process? {
+            lock.withLock { () -> Process? in
+                isCancelled = true
+                defer { process = nil }
+                return process
             }
         }
     }

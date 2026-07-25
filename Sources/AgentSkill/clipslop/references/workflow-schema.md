@@ -42,6 +42,12 @@ Forward-compatible keys parsed for later milestones — they produce a
 warning and are ignored, not an error: `needs`, `authorship`, `execution`,
 `permissions`. Any other unknown key is an **error** (typo protection).
 
+`budget:` and `output:` are closed schemas too: an unrecognized subkey is an
+error, with a "did you mean" hint. `budget: {mss: 1000}` would otherwise have
+quietly meant "no deadline" and `output: {max_char: 400}` would have quietly
+fallen back to the engine-wide length limit, while Settings reported the card
+as valid.
+
 Prompt-library cards (under `workflows/library/`) may additionally carry
 the §7.3 library metadata keys: `uuid`, `title`, `order`, `mnemonic`,
 `mnemonic_modifiers`, `provider`, `display_mode`, `select_all`,

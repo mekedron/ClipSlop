@@ -55,7 +55,11 @@ struct MagicPlannerTests {
         #expect(message.contains("APP: Chrome (com.google.Chrome)"))
         #expect(message.contains("URL HOST: linkedin.com"))
         #expect(message.contains("FIELD: empty"))
-        #expect(message.contains("placeholder: \"Write a message…\""))
+        // The placeholder is page-controlled, so it is fenced as untrusted
+        // rather than inlined into the trusted FIELD line.
+        #expect(message.contains("FIELD PLACEHOLDER (untrusted data"))
+        #expect(message.contains("Write a message…"))
+        #expect(!message.contains("placeholder: \"Write a message…\""))
         #expect(message.contains("- base.reply — Reply to what's on screen (intent: reply)"))
         #expect(message.contains("- base.write — Write from scratch (intent: write)"))
         #expect(message.contains("Anna: Are you coming"))

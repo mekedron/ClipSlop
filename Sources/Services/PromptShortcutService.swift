@@ -90,7 +90,8 @@ final class PromptShortcutService {
         // Migration runs FIRST, before the push below: it adopts a stored
         // shortcut the model does not know about yet, and the push now treats
         // a nil model value as "no shortcut" and clears the stored one — which
-        // would otherwise eat the very value migration exists to rescue.
+        // would otherwise eat the very value migration exists to rescue. It is
+        // a one-shot, though; see `migrateFromUserDefaults`.
         migrateFromUserDefaults()
 
         for prompt in appState.promptStore.allPromptNodes() {
@@ -236,9 +237,28 @@ final class PromptShortcutService {
         }
     }
 
-    /// Migrate shortcuts that exist in UserDefaults but not yet in the model (upgrade path).
+    /// Marks the one-time adoption of legacy KeyboardShortcuts/selectAll values
+    /// into the card model as done. Stored in `UserDefaults.standard` beside
+    /// the very keys it drains, and deliberately outside the
+    /// `KeyboardShortcuts_prompt_` / `prompt_selectAll_` prefixes that
+    /// `cleanupOrphaned` sweeps by UUID suffix.
+    private static let legacyMigrationDoneKey = "promptShortcutsMigratedIntoLibrary"
+
+    /// Migrate shortcuts that exist in UserDefaults but not yet in the model
+    /// (upgrade path). Runs exactly **once** per install.
+    ///
+    /// Re-running it on every `syncFromModel` quietly cancelled the other half
+    /// of the model-is-authoritative contract: deleting `shortcut_inline` from
+    /// a card left the old value sitting in KeyboardShortcuts' UserDefaults,
+    /// this adopted it straight back into the model, and the push loop then had
+    /// a shortcut to *store* rather than a nil to clear. The deleted shortcut
+    /// kept firing immediately, and the write-back stamped it into the card
+    /// again on the next save. Once the marker is set, a nil model value clears
+    /// the stored shortcut normally and the hand edit stands.
     private func migrateFromUserDefaults() {
         guard let appState else { return }
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: Self.legacyMigrationDoneKey) else { return }
         var didMigrate = false
 
         for prompt in appState.promptStore.allPromptNodes() {
@@ -257,9 +277,9 @@ final class PromptShortcutService {
             }
             // Migrate selectAll from UserDefaults to model
             let udKey = "prompt_selectAll_\(node.id.uuidString)"
-            if node.selectAllBeforeCapture == nil && UserDefaults.standard.bool(forKey: udKey) {
+            if node.selectAllBeforeCapture == nil && defaults.bool(forKey: udKey) {
                 node.selectAllBeforeCapture = true
-                UserDefaults.standard.removeObject(forKey: udKey)
+                defaults.removeObject(forKey: udKey)
                 changed = true
             }
 
@@ -271,6 +291,15 @@ final class PromptShortcutService {
 
         if didMigrate {
             appState.promptStore.save()
+        }
+
+        // Only claim completion over a tree we could see all of. A card that
+        // failed to parse is absent from `allPromptNodes()`, so its stored
+        // shortcut was never offered for adoption — marking done here would let
+        // the push clear it the moment the user fixes the typo. Leaving the
+        // marker unset re-runs the (idempotent) migration next launch instead.
+        if appState.promptStore.unparsedFiles.isEmpty {
+            defaults.set(true, forKey: Self.legacyMigrationDoneKey)
         }
     }
 
@@ -384,16 +413,26 @@ final class PromptShortcutService {
             // string comparison misread re-copying identical text as
             // failure).
             let capturedText = await PasteboardTransaction.captureViaCommandC()
+
+            // Restore the user's clipboard before the AI round-trip — and
+            // before every early exit below, cancelled or empty-handed.
+            //
+            // The signal is the pasteboard's own `changeCount`, not whether a
+            // plain string came back: an app that answers ⌘C with an image, a
+            // file URL, or a rich-only item has already replaced what the user
+            // was carrying, and `captureViaCommandC` returns nil for all three.
+            // Gating restoration on a decoded string therefore walked away
+            // leaving the probe's spoils on the clipboard permanently — the
+            // Accessibility fallback would then even succeed, so the run looked
+            // perfectly healthy while the user's clipboard was gone.
+            let countAfterProbe = NSPasteboard.general.changeCount
+            if countAfterProbe != saved.changeCount {
+                PasteboardTransaction.restore(saved, ifChangeCountStill: countAfterProbe)
+            }
+
             guard !Task.isCancelled else {
                 self.finishInlineProcessing()
                 return
-            }
-
-            // Restore the user's clipboard before the AI round-trip.
-            if capturedText != nil {
-                PasteboardTransaction.restore(
-                    saved, ifChangeCountStill: NSPasteboard.general.changeCount
-                )
             }
 
             guard let text = capturedText, !text.isEmpty else {
