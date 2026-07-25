@@ -1121,7 +1121,6 @@ actor AXSnapshotService {
         // one tries again.
         guard budget.remainingCalls > 0, !budget.isPastDeadline else { return false }
         pruneTerminatedApps()
-        enabledApps[pid] = identity
 
         // `AXManualAccessibility` is Chromium's own private attribute — nothing
         // else implements it — so accepting it is what identifies a browser
@@ -1130,6 +1129,18 @@ actor AXSnapshotService {
         let manual = AXUIElementSetAttributeValue(
             app, "AXManualAccessibility" as CFString, kCFBooleanTrue
         )
+        // The cache records an answer, never an attempt. Only a conclusive
+        // reply is one: success (a Chromium host, now enabled) or a rejection
+        // of the attribute itself (anything else, which will reject it again
+        // forever). `kAXErrorCannotComplete` is neither — it is the transient
+        // this actor sees often enough to retry every read for — and stamping
+        // it would mark a live Chromium/Electron process as already-asked for
+        // the whole menu-bar session, so its lazily-built tree is never
+        // requested and every press there captures empty context until the app
+        // is relaunched. Leaving it unstamped costs one more set attribute on
+        // the next press; stamping it costs the feature.
+        guard Self.isConclusive(manual) else { return false }
+        enabledApps[pid] = identity
         guard manual == .success else { return false }
 
         // `AXEnhancedUserInterface` is AppKit's "an assistive client is
@@ -1151,6 +1162,25 @@ actor AXSnapshotService {
             app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue
         )
         return true
+    }
+
+    /// Whether an `AXUIElementSetAttributeValue` result settles the question
+    /// "does this process implement the attribute", as opposed to merely
+    /// reporting that this one call did not get through.
+    ///
+    /// `nonisolated static` and exhaustive over the settled cases rather than a
+    /// `!= .cannotComplete` test: the transient set is open-ended (a target
+    /// mid-launch answers `.invalidUIElement`, a busy one `.notImplemented`),
+    /// and the safe direction is to re-ask. An answer this returns false for is
+    /// asked again on the next press, which is cheap; one it wrongly returns
+    /// true for is never asked again at all.
+    private nonisolated static func isConclusive(_ result: AXError) -> Bool {
+        switch result {
+        case .success, .attributeUnsupported, .noValue, .illegalArgument:
+            return true
+        default:
+            return false
+        }
     }
 
     /// Identity of the application currently holding a PID. `.distantPast`

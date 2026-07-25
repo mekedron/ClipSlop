@@ -42,6 +42,19 @@ enum MagicSelectionCapture {
         guard isTargetFrontmost(snapshot) else { return snapshot }
 
         let saved = await PasteboardTransaction.save()
+        // A capture that crossed `saveBudgetBytes` holds no faithful copy, so a
+        // ⌘C posted now would overwrite the clipboard with the probe's spoils
+        // and `restore` would then refuse to give it back — the user's
+        // several-hundred-megabyte image is gone, permanently, with nothing on
+        // screen to say so.
+        //
+        // The insert path accepts that trade because refusing it means the
+        // press produces nothing at all. This one must not: the probe is an
+        // OPTIONAL refinement of a selection AX would not hand over, and
+        // declining it costs exactly what an app that copies nothing already
+        // costs — the press continues on the unrefined snapshot. Nobody's
+        // clipboard is worth a better `field.selection`.
+        guard saved.isRestorable else { return snapshot }
 
         var captured = await PasteboardTransaction.captureViaCommandC()
         if captured == nil {
