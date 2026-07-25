@@ -224,7 +224,9 @@ actor AXSnapshotService {
         // Chromium and Electron build their AX tree lazily and only for
         // clients that announce themselves (§5.1). Ask once per process,
         // give the renderer a beat to materialize the tree the first time.
-        let freshlyEnabled = enableAccessibilityIfNeeded(app: app, pid: appInfo.pid)
+        let freshlyEnabled = enableAccessibilityIfNeeded(
+            app: app, pid: appInfo.pid, budget: &budget
+        )
         if freshlyEnabled {
             try? await Task.sleep(for: .milliseconds(250))
         }
@@ -236,14 +238,14 @@ actor AXSnapshotService {
               Self.pid(of: focused) == appInfo.pid
         else { return contentless(budget) }
 
-        // Fail closed when the role is unreadable (§3.1). Defaulting it to
-        // "AXUnknown" meant a secure text field whose role read merely timed
-        // out (`kAXErrorCannotComplete`, a transient this actor sees often
-        // enough to count) sailed past the secure guard below and went on to
-        // read `kAXValueAttribute` — one attribute that may well answer — so
-        // password text could enter the snapshot and the generation prompt.
-        // The invariant is that a secure value is never touched; the only way
-        // to keep it when the role is unknown is to capture nothing.
+        // Fail closed when the role is unreadable (§3.1). Any default role —
+        // "AXUnknown" included — carries a secure text field whose role read
+        // merely timed out (`kAXErrorCannotComplete`, a transient this actor
+        // sees often enough to count) straight past the secure guard below and
+        // on to `kAXValueAttribute`, one attribute that may well answer, so
+        // password text enters the snapshot and the generation prompt. The
+        // invariant is that a secure value is never touched; with the role
+        // unknown, the only way to keep it is to capture nothing.
         guard let role = copyString(focused, kAXRoleAttribute, &budget) else {
             return contentless(budget)
         }
@@ -293,17 +295,21 @@ actor AXSnapshotService {
         let selectionRange = copyRange(focused, kAXSelectedTextRangeAttribute, &budget)
         let characterRange = selectionRange.flatMap { Self.characterRange($0, in: fullValue) }
 
-        // `field_value_max_chars` truncation, caret-aware. A bare prefix threw
-        // away the one part of a long field the press is actually about: the
-        // caret sits at the *end* of a draft far more often than in its first
-        // 50k characters. Cutting there also made the range conversion fail
-        // (offsets pointing past the prefix), so the assembler built its
-        // continuation from the end of the prefix while the paste landed at
-        // the real caret, and a selection lost its before/after positioning.
-        // The retained window therefore ends exactly at the reported caret /
-        // selection end — which is the position every consumer already assumes
-        // when no range survives (`ContinuationSeam` clamps to `value.count`,
-        // `PromptAssembler` keeps the draft's tail).
+        // `field_value_max_chars` truncation, caret-aware: the retained window
+        // ends exactly at the reported caret / selection end.
+        //
+        // A bare prefix throws away the one part of a long field the press is
+        // actually about — the caret sits at the *end* of a draft far more
+        // often than inside its first 50k characters — and it breaks the range
+        // conversion with it, since the offsets then point past what was kept.
+        // The assembler would build its continuation from the end of the prefix
+        // while the paste lands at the real caret, and a selection would lose
+        // its before/after positioning entirely.
+        //
+        // The caret is also the position every consumer already assumes when no
+        // range survives (`ContinuationSeam` clamps to `value.count`,
+        // `PromptAssembler` keeps the draft's tail), so ending there is what
+        // makes the windowed and the un-windowed cases agree.
         //
         // The offsets stay ABSOLUTE, i.e. character offsets into the field's
         // whole value: that is what `MagicPressCoordinator.reassertSelectionIfLost`
@@ -506,7 +512,11 @@ actor AXSnapshotService {
         guard pid > 0 else { return }
         configureTimeoutOnce()
         let app = AXUIElementCreateApplication(pid)
-        _ = enableAccessibilityIfNeeded(app: app, pid: pid)
+        // No deadline: this runs at app activation with nobody waiting, so the
+        // call cap is the whole bound. The budget exists only because the
+        // enablement writes are charged like every other AX call.
+        var budget = Budget(config: .default)
+        _ = enableAccessibilityIfNeeded(app: app, pid: pid, budget: &budget)
     }
 
     /// The observer's cheap read (§5.1): focused element identity, role,
@@ -1083,26 +1093,64 @@ actor AXSnapshotService {
     /// of leaving it on is the R11 tradeoff the design accepts for V0.
     /// Returns true on the first request to a process (the caller then
     /// waits for the tree to build).
-    private func enableAccessibilityIfNeeded(app: AXUIElement, pid: pid_t) -> Bool {
+    /// Asks a Chromium/Electron process to build its accessibility tree, once
+    /// per process. Returns true only when this call is what enabled it — the
+    /// caller reads that as "the tree may still be materializing" and pays for
+    /// a settle plus one retry walk.
+    ///
+    /// The cache is keyed by PID but *valued* by process identity, because a
+    /// PID is not one: the kernel hands it out again once the process exits and
+    /// this actor lives for the whole menu-bar session. Keyed on the PID alone,
+    /// a replacement Chromium/Electron process that inherits a dead one's PID
+    /// reads as already-enabled and is never asked to build its tree, so it
+    /// serves an empty one until ClipSlop restarts. The launch date of whatever
+    /// holds the PID *now* is the part a recycled PID cannot inherit.
+    private func enableAccessibilityIfNeeded(
+        app: AXUIElement, pid: pid_t, budget: inout Budget
+    ) -> Bool {
         guard pid > 0 else { return false }
-        // A PID is not a process identity — the kernel hands it out again once
-        // the process exits, and this actor lives for the whole menu-bar
-        // session. Keyed on the PID alone, the replacement Chromium/Electron
-        // process looked already-enabled and was never asked to build its
-        // tree, so it kept serving an empty one until ClipSlop restarted. The
-        // launch date of whatever holds the PID *now* is the part a recycled
-        // PID cannot inherit.
         let identity = Self.processIdentity(pid)
         guard enabledApps[pid] != identity else { return false }
+        // Two synchronous AX writes, each able to block for the process-wide
+        // 0.35 s messaging timeout. They are charged and deadline-gated like
+        // every other AX call this actor makes, or the capture's hard bound
+        // (R4) is short by exactly the time this pair can take — and it is the
+        // one pair that runs *before* the first walk gets to check anything.
+        // Charged before the cache is stamped, so a press that could not afford
+        // the attempt leaves the process still marked un-enabled and the next
+        // one tries again.
+        guard budget.remainingCalls > 0, !budget.isPastDeadline else { return false }
         pruneTerminatedApps()
         enabledApps[pid] = identity
+
+        // `AXManualAccessibility` is Chromium's own private attribute — nothing
+        // else implements it — so accepting it is what identifies a browser
+        // engine, and rejecting it is what identifies everything else.
+        budget.remainingCalls -= 1
         let manual = AXUIElementSetAttributeValue(
             app, "AXManualAccessibility" as CFString, kCFBooleanTrue
         )
-        let enhanced = AXUIElementSetAttributeValue(
+        guard manual == .success else { return false }
+
+        // `AXEnhancedUserInterface` is AppKit's "an assistive client is
+        // watching" flag. It is process-wide, permanent for the life of the
+        // target (nothing here ever unsets it), and on an ordinary AppKit app it
+        // changes window move/resize behaviour — a documented source of conflict
+        // with window managers, and a side effect bought for a tree that was
+        // never lazily built in the first place. Ordinary AppKit apps also
+        // *accept* it, so setting it unconditionally marks every app the user
+        // activates as freshly-enabled and charges every first press the settle
+        // and retry walk above.
+        //
+        // Only a Chromium host reaches here, which is the only place the flag
+        // buys anything: some Chromium/Electron versions answer to it and not to
+        // the attribute above.
+        guard budget.remainingCalls > 0, !budget.isPastDeadline else { return true }
+        budget.remainingCalls -= 1
+        AXUIElementSetAttributeValue(
             app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue
         )
-        return manual == .success || enhanced == .success
+        return true
     }
 
     /// Identity of the application currently holding a PID. `.distantPast`

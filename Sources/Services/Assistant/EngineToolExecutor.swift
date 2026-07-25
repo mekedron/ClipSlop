@@ -601,10 +601,10 @@ final class EngineToolExecutor {
 
         // The baseline has to be the catalog AS IT IS NOW, which includes the
         // file being written whenever it already exists. Resolving `others`
-        // alone made every dependent of the target's CURRENT id broken in the
-        // baseline as well, so the combined-vs-baseline diff wrote the breakage
-        // off as pre-existing — and an `id:` change silently disabled every
-        // card that `extends` the old id, which is precisely what these
+        // alone leaves every dependent of the target's CURRENT id broken in the
+        // baseline too, so the combined-vs-baseline diff writes the breakage off
+        // as pre-existing — and an `id:` change then silently disables every
+        // card that `extends` the id it replaced, which is precisely what these
         // side-effect warnings exist to catch.
         var baselineRaws = others
         if let existing = try? String(contentsOf: target, encoding: .utf8),

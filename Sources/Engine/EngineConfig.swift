@@ -39,7 +39,7 @@ struct MagicEngineConfig: Sendable, Equatable {
     /// Hierarchical screen context (0/1): capture the surroundings as a
     /// structured tree and render them as an indented outline with an
     /// explicit ⟨YOUR FIELD⟩ marker; overflow keeps the content nearest
-    /// the field. 0 = the old flat text blob (tail kept on overflow).
+    /// the field. 0 = a flat text blob instead (tail kept on overflow).
     var surroundingTreeEnabled = 1
     /// Cap on the focused field's own value read.
     var fieldValueMaxChars = 50_000

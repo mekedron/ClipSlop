@@ -26,6 +26,13 @@ struct MagicDebugEntry: Sendable {
 actor MagicDebugLogger {
     private let directory: URL
     private let keepDays: Int
+    /// When `pruneOldLogs` last ran on this actor. The header of every file
+    /// here promises a 7-day life, and a prune that only happens at launch
+    /// keeps that promise for nobody: ClipSlop is a menu-bar accessory that
+    /// routinely stays up for weeks, so the files it swore to delete are
+    /// exactly the ones it never gets around to.
+    private var lastPrune: ContinuousClock.Instant?
+    private static let pruneInterval: Duration = .seconds(3600)
 
     init(
         directory: URL = Constants.Engine.logsDirectory.appendingPathComponent("debug"),
@@ -36,7 +43,21 @@ actor MagicDebugLogger {
     }
 
     func write(_ entry: MagicDebugEntry) {
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        // 0700 on the directory, 0600 on every file. These hold the user's
+        // draft, their screen, and other people's messages verbatim — the exact
+        // content the always-on trace is contentless in order to avoid keeping.
+        // The engine tree lives in a home directory shared with every process
+        // running as this user, so the default 0755/0644 publishes it to all of
+        // them. `atomically:` writes through a temp file and the rename carries
+        // that file's mode, so the chmod has to follow the write rather than
+        // precede it.
+        try? FileManager.default.createDirectory(
+            at: directory, withIntermediateDirectories: true,
+            attributes: [.posixPermissions: 0o700]
+        )
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o700], ofItemAtPath: directory.path
+        )
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
@@ -45,7 +66,24 @@ actor MagicDebugLogger {
         let shortID = String(entry.trace.traceID.uuidString.prefix(8))
         let url = directory.appendingPathComponent("press-\(stamp)-\(shortID).md")
 
-        try? Self.render(entry).write(to: url, atomically: true, encoding: .utf8)
+        do {
+            try Self.render(entry).write(to: url, atomically: true, encoding: .utf8)
+        } catch {
+            return
+        }
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o600], ofItemAtPath: url.path
+        )
+        pruneIfDue()
+    }
+
+    /// Hourly at most, off the press that triggered it: the prune is a
+    /// directory listing plus a `resourceValues` per file, and the press path
+    /// is already the latency-sensitive one.
+    private func pruneIfDue(now: ContinuousClock.Instant = ContinuousClock().now) {
+        if let lastPrune, now - lastPrune < Self.pruneInterval { return }
+        lastPrune = now
+        pruneOldLogs()
     }
 
     func pruneOldLogs(now: Date = Date()) {

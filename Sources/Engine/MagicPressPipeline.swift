@@ -55,6 +55,13 @@ struct DryRunReport: Codable, Sendable {
     let totalTokens: Int
     let providerName: String
     let modelID: String
+    /// What the privacy binding (P7) would do with this surface: "allowed",
+    /// "no_cloud:local_substitute", or "no_cloud:refused". A dry run sends
+    /// nothing, so it does not need the binding to be safe — it needs it to be
+    /// honest. Naming the role's configured provider on a surface where a real
+    /// press would have refused, or swapped to a local one, is a diagnostic
+    /// that misleads on the one surface where the answer matters.
+    let privacy: String
     // Snapshot diagnostics — what the collector actually saw.
     let fieldRole: String?
     let fieldSubrole: String?
@@ -333,6 +340,28 @@ enum MagicPressPipeline {
         case .chips: presentation = "chips"
         }
 
+        // Same binding call `execute` makes, on the same inputs, so the report
+        // names the provider a real press would actually have used — see
+        // `DryRunReport.privacy`.
+        let privacy: String
+        let provider: AIProviderConfig
+        switch PrivacyBinding.enforce(
+            resolved: plan.provider, binding: plan.roleBinding, providers: plan.providers,
+            noCloud: plan.noCloud, bundleId: snapshot.app.bundleId,
+            urlHost: EngineRouter.urlHost(of: snapshot.url),
+            webSurfaceWithUnknownHost: PrivacyBinding.hasUnreadableWebHost(snapshot)
+        ) {
+        case .allowed(let allowed):
+            provider = allowed
+            privacy = allowed.id == plan.provider.id ? "allowed" : "no_cloud:local_substitute"
+        case .refused:
+            // The refusal is the finding. The role's own provider is still
+            // reported so the report says WHICH binding could not serve the
+            // surface, not merely that something could not.
+            provider = plan.provider
+            privacy = "no_cloud:refused"
+        }
+
         return DryRunReport(
             situationClass: decision.situationClass,
             tier: String(describing: decision.tier),
@@ -344,8 +373,9 @@ enum MagicPressPipeline {
             workflowChain: workflow.chain,
             slots: assembled.slots,
             totalTokens: assembled.totalTokensEstimated,
-            providerName: plan.provider.name,
-            modelID: plan.provider.modelID,
+            providerName: provider.name,
+            modelID: provider.modelID,
+            privacy: privacy,
             fieldRole: snapshot.field?.role,
             fieldSubrole: snapshot.field?.subrole,
             fieldEditable: snapshot.field?.editable,

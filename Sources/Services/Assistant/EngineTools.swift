@@ -140,9 +140,10 @@ enum EngineTools {
     }
 
     /// `standardizedFileURL` resolves "." and ".." lexically but never
-    /// symlinks, so a symlinked entry *inside* the tree — `workflows/leak.md`
-    /// pointing at `~/.ssh/id_rsa` — satisfied the prefix check above and
-    /// `read_engine_file` followed it straight out of the sandbox.
+    /// symlinks, so the prefix check above passes for a symlinked entry that
+    /// sits *inside* the tree and points outside it — `workflows/leak.md` →
+    /// `~/.ssh/id_rsa` is a path every lexical test calls confined, and
+    /// `read_engine_file` would follow it straight out of the sandbox.
     ///
     /// Rejected rather than resolved: nothing in an engine tree we write
     /// ourselves legitimately needs a symlink, and rejection is also the right

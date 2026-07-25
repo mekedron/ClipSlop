@@ -128,26 +128,25 @@ struct CLIToolService: AIService {
         }
     }
 
-    /// One consumer, one subprocess — and exactly one `onTermination` handler.
+    /// One consumer, one subprocess — and exactly ONE `onTermination` handler,
+    /// doing all three teardown steps.
     ///
-    /// This assigned `continuation.onTermination` twice: once inside the `Task`
-    /// right after `process.run()` (stop the watchdog, kill the child) and once
-    /// at the end of the synchronous builder body (`task.cancel()`). It is a
-    /// single property, so the second write silently discarded the first, and
-    /// *which* write landed second was up to the scheduler. In practice the
-    /// inner one won — the builder returns long before the task is scheduled —
-    /// so `task.cancel()` was never called at all; when the ordering inverted,
-    /// nothing terminated the tool, and a CLI nobody was reading any more kept
-    /// running while its readability handler yielded into a dead continuation.
+    /// `continuation.onTermination` is a single property, so a second
+    /// assignment silently discards the first and *which* one lands last is up
+    /// to the scheduler. Split the teardown across two writes — stop the
+    /// watchdog and kill the child from inside the `Task`, cancel the task from
+    /// the synchronous builder body — and one half is always lost: either the
+    /// tool is never terminated and a CLI nobody is reading keeps running while
+    /// its readability handler yields into a dead continuation, or the task is
+    /// never cancelled.
     ///
     /// Neither half is optional. `MagicPressPipeline`'s hard `budget.ms` cap
     /// abandons the stream and relies on exactly this handler to take the CLI
-    /// down with it — an invariant nothing else enforces. So there is now one
-    /// handler, installed once, after the task exists and therefore
-    /// deterministically last, doing all three things. The process it has to
-    /// signal does not exist yet at that point (the task creates it), so it
-    /// arrives through `StreamRun` — the same "who owns the child" handoff
-    /// `runProcess` uses.
+    /// down with it — an invariant nothing else enforces. So the handler is
+    /// installed once, after the task exists and therefore deterministically
+    /// last. The process it has to signal does not exist at that point (the task
+    /// creates it), so it arrives through `StreamRun` — the same "who owns the
+    /// child" handoff `runProcess` uses.
     func stream(text: String, systemPrompt: String, config: AIProviderConfig) -> AsyncThrowingStream<String, Error> {
         let timeout = Self.timeout(for: config)
         return AsyncThrowingStream { continuation in

@@ -156,6 +156,56 @@ struct PrivacyBindingTests {
         ))
     }
 
+    /// The dry run sends nothing, so it does not need the binding to be safe —
+    /// it needs it to be honest. Reporting the role's configured cloud provider
+    /// on a surface where a real press refuses, or swaps to a local one, is a
+    /// diagnostic that misleads on the only surface where the answer matters.
+    @Test func dryRunReportsThePrivacyVerdictAndTheProviderAPressWouldUse() throws {
+        let (workflows, _) = try MagicTestSupport.seedCatalog()
+        func plan(_ providers: [AIProviderConfig]) -> MagicPressPlan {
+            var plan = MagicPressPlan(
+                catalog: WorkflowCatalog(
+                    workflows: workflows, loadedAt: Date(timeIntervalSince1970: 0)
+                ),
+                core: .empty,
+                provider: cloud,
+                workflowLoadErrors: []
+            )
+            plan.providers = providers
+            plan.noCloud = ["textedit"]
+            return plan
+        }
+        let onProtectedSurface = MagicTestSupport.makeSnapshot(
+            bundleId: "com.apple.TextEdit", value: "a draft to continue"
+        )
+        let elsewhere = MagicTestSupport.makeSnapshot(
+            bundleId: "com.example.other", value: "a draft to continue"
+        )
+
+        // A local provider in the pool: the press would swap, so the report
+        // names the substitute rather than the binding's own provider.
+        let swapped = try #require(MagicPressPipeline.dryRun(
+            plan: plan([cloud, local]), snapshot: onProtectedSurface
+        ))
+        #expect(swapped.privacy == "no_cloud:local_substitute")
+        #expect(swapped.providerName == local.name)
+
+        // Nothing local to swap to: the press refuses (P9), and so does the
+        // report — naming the binding that could not serve the surface.
+        let refused = try #require(MagicPressPipeline.dryRun(
+            plan: plan([cloud]), snapshot: onProtectedSurface
+        ))
+        #expect(refused.privacy == "no_cloud:refused")
+        #expect(refused.providerName == cloud.name)
+
+        // An unprotected surface is unchanged.
+        let allowed = try #require(MagicPressPipeline.dryRun(
+            plan: plan([cloud, local]), snapshot: elsewhere
+        ))
+        #expect(allowed.privacy == "allowed")
+        #expect(allowed.providerName == cloud.name)
+    }
+
     @Test func costFloorStillHoldsDuringSwap() {
         // The only local provider sits below the role's min cost class →
         // refuse rather than silently degrade (P9 beats convenience).

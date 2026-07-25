@@ -199,9 +199,9 @@ struct FrontmatterParserTests {
         }
     }
 
-    /// A repeated key used to win by being last, so a duplicated `when:` or
-    /// `no_cloud:` changed engine behaviour while the file still reported as
-    /// valid — the opposite of the fail-visible contract.
+    /// Last-wins on a repeated key lets a duplicated `when:` or `no_cloud:`
+    /// change engine behaviour while the file still reports as valid — the
+    /// opposite of the fail-visible contract.
     @Test func rejectsDuplicateTopLevelKeys() {
         do {
             _ = try FrontmatterParser.parse("---\nid: x\nsummary: \"a\"\nid: y\n---\n")
@@ -217,6 +217,23 @@ struct FrontmatterParserTests {
         #expect(throws: FrontmatterError.self) {
             try FrontmatterParser.parse("---\nwhen:\n  app: [a]\nwhen:\n  app: [b]\n---\n")
         }
+    }
+
+    /// Only TOP-LEVEL keys can duplicate each other. `fieldLines` doubles as the
+    /// reporting namespace for nested entries and records them under dotted
+    /// paths ("when.url"), while `splitKey` allows a dot in a key — so reading
+    /// the duplicate check out of that same map refuses a file whose only sin is
+    /// spelling a key the way a nested path happens to be spelled.
+    @Test func aDottedTopLevelKeyIsNotADuplicateOfANestedPath() throws {
+        let document = try FrontmatterParser.parse(
+            "---\nwhen:\n  url: [a]\nwhen.url: literal\n---\n"
+        )
+        #expect(document.fields["when.url"] == .scalar("literal"))
+        guard case .map(let when)? = document.fields["when"] else {
+            Issue.record("expected 'when' to parse as a block map")
+            return
+        }
+        #expect(when["url"] == .list(["a"]))
     }
 
     @Test func rejectsYamlAnchors() {

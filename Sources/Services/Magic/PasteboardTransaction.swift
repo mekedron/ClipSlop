@@ -64,13 +64,13 @@ enum PasteboardTransaction {
     /// A fuse against a pasteboard that should not exist — NOT a memory policy
     /// for everyday content. Read the trade-off before touching the number.
     ///
-    /// The eager whole-pasteboard read below (see `Saved.items`) had no upper
-    /// bound at all, and it runs on every Magic hotkey whether or not the press
-    /// ends up touching the clipboard: a screenshot lives on the clipboard as
-    /// TIFF *and* PNG *and* PDF at once, so a retina capture is tens of
-    /// megabytes copied into our address space and held for the length of the
-    /// insert — the paste confirmation loop runs up to 700 ms, plus the 400 ms
-    /// restore grace, so roughly 1.1 s. That is a transient spike, and it ends.
+    /// The eager whole-pasteboard read below (see `Saved.items`) runs on every
+    /// Magic hotkey whether or not the press ends up touching the clipboard,
+    /// and it copies bytes: a screenshot lives on the clipboard as TIFF *and*
+    /// PNG *and* PDF at once, so a retina capture is tens of megabytes in our
+    /// address space, held for the length of the insert — the paste
+    /// confirmation loop runs up to 700 ms, plus the 400 ms restore grace, so
+    /// roughly 1.1 s. That is a transient spike, and it ends.
     ///
     /// Crossing this budget does NOT end: `save()` abandons the capture, the
     /// press still calls `writeGenerated`, and `restore()` then refuses — so
@@ -298,11 +298,13 @@ enum PasteboardTransaction {
     }
 
     /// Posts ⌘C and polls `changeCount` until the frontmost app has written
-    /// (20 ms steps). Replaces the legacy fixed 200 ms sleep + string
-    /// comparison — resolves in 40–80 ms on cooperative apps, and an
-    /// unchanged count *is* the "nothing was selected" signal, so identical
-    /// re-selections no longer read as failures. The captured text is left
-    /// on the pasteboard; callers own restore.
+    /// (20 ms steps), which resolves in 40–80 ms on cooperative apps.
+    ///
+    /// The count, not the text, is the signal. An unchanged count *is* "nothing
+    /// was selected"; comparing the pasteboard string against what was there
+    /// before cannot tell that apart from a selection identical to the last
+    /// copy, and reports the successful copy as a failure. The captured text is
+    /// left on the pasteboard; callers own restore.
     static func captureViaCommandC(timeout: Duration = .milliseconds(400)) async -> String? {
         let pasteboard = NSPasteboard.general
         let countBefore = pasteboard.changeCount

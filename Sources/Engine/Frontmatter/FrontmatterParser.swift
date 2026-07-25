@@ -85,6 +85,14 @@ enum FrontmatterParser {
 
         var fields: [String: FrontmatterValue] = [:]
         var fieldLines: [String: Int] = [:]
+        /// The duplicate check reads THIS, not `fieldLines`. `fieldLines` is a
+        /// flat reporting namespace that also holds dotted paths for nested
+        /// entries ("when.url", "providers.0.id"), while `splitKey` allows a
+        /// dot in a key — so a file carrying both a `when:` block with a `url:`
+        /// under it and a literal top-level `when.url:` key would be refused as
+        /// a duplicate of something that is not one. Only top-level keys can
+        /// duplicate each other, so only they are counted here.
+        var topLevelLines: [String: Int] = [:]
 
         var index = 0
         while index < frontmatterLines.count {
@@ -109,12 +117,13 @@ enum FrontmatterParser {
             // `when:` or `no_cloud:` change engine behaviour while Settings
             // reports the file as valid — the opposite of the fail-visible
             // contract (§15.3). Reject it, naming both line numbers.
-            if let firstLine = fieldLines[key] {
+            if let firstLine = topLevelLines[key] {
                 throw FrontmatterError(
                     line: fileLine,
                     message: "duplicate key '\(key)' — already set on line \(firstLine); remove one"
                 )
             }
+            topLevelLines[key] = fileLine
 
             if rest.isEmpty {
                 // Block form: nested map or block list on the following indented lines.
@@ -284,9 +293,15 @@ enum FrontmatterParser {
 
     /// Cuts a trailing ` # comment` off a flow collection. A '#' only starts a
     /// comment when it follows whitespace and sits outside every quote and
-    /// bracket, so `[a#b]`, `["a # b"]`, and nested `{k: [1, 2]}` are left
-    /// alone. Flow-only: `parseScalar` handles scalars, where a quoted '#'
-    /// must survive.
+    /// bracket, so `[a#b]` and `["a # b"]` are left alone. Flow-only:
+    /// `parseScalar` handles scalars, where a quoted '#' must survive.
+    ///
+    /// The bracket depth is tracked so that a '#' inside a NESTED collection is
+    /// not read as a comment. That is a property of this scan alone and not a
+    /// claim about the subset: `splitFlowItems` splits on top-level commas
+    /// without tracking depth, so `{k: [1, 2]}` is rejected downstream either
+    /// way. Depth here means the rejection arrives as the schema error it is
+    /// rather than as a truncation this function performed on the way past.
     ///
     /// Escapes are tracked exactly as `splitFlowItems` tracks them — a `\`
     /// inside a DOUBLE-quoted item escapes the next character, single quotes

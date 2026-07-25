@@ -290,26 +290,24 @@ enum DeterministicVerifier {
         collect(bigNumberRegex, as: .number)
 
         // Month-name dates ("May 15", "15 мая"). The only class assembled from
-        // two words rather than matched whole, which is why it ran over
-        // `components(separatedBy:)` — and why it was the only class whose
-        // `nearCommitment` was computed over the ENTIRE output: splitting into
-        // words throws away the offsets, so there was no range to put a window
-        // around. The consequence was a verifier that fired on the wrong
-        // paragraph. One "pay", "by ", "отправлю" or "mennessä" anywhere in the
-        // draft — a sign-off, an unrelated sentence, a quoted line — promoted
-        // every worded date in it to actionable (§10.2), so a date grounded
-        // only by screen content raised `actionableUngrounded` and the press
-        // landed in the warning panel instead of the field. False refusals are
-        // the expensive direction for a feature whose value is the press just
-        // working, and dates are the class most likely to appear next to
-        // harmless verbs.
+        // two adjacent words rather than matched whole, so it walks word RANGES
+        // rather than `components(separatedBy:)`.
         //
-        // Walking word RANGES instead keeps every rule the split version had
-        // (day on either side, punctuation stripped, `"<day> <month>"` as the
-        // token text so dedup by `token.text` still collapses repeats) while
-        // giving the date a real span in `output` — the day word and the month
-        // word together — to hand to the same ±60-char window every other class
-        // uses.
+        // The ranges are the point. Splitting into words throws the offsets
+        // away, and with no span in `output` there is nothing to put the
+        // ±60-char commitment window around — `nearCommitment` would have to be
+        // computed over the ENTIRE output, and one "pay", "by ", "отправлю" or
+        // "mennessä" anywhere in the draft (a sign-off, an unrelated sentence, a
+        // quoted line) then promotes every worded date in it to actionable
+        // (§10.2). A date grounded only by screen content would raise
+        // `actionableUngrounded` and send the press to the warning panel instead
+        // of the field. False refusals are the expensive direction for a feature
+        // whose value is the press just working, and dates are the class most
+        // likely to sit next to a harmless verb.
+        //
+        // Everything the word split gives is kept: day on either side,
+        // punctuation stripped, `"<day> <month>"` as the token text so dedup by
+        // `token.text` still collapses repeats.
         let wordRanges = wordRegex.matches(in: output, range: fullRange)
             .compactMap { Range($0.range, in: output) }
         for (index, monthRange) in wordRanges.enumerated() {
@@ -415,12 +413,13 @@ enum DeterministicVerifier {
         case .number, .money, .iban, .phone, .date:
             let tokenDigits = String(token.text.unicodeScalars.filter { CharacterSet.decimalDigits.contains($0) })
             guard !tokenDigits.isEmpty else { return true }
-            // Within a SINGLE run, aligned to its start. The old check
-            // collapsed the whole context into one digit stream and accepted a
-            // match at any offset inside it, so a context holding "1" and "234"
-            // grounded an invented "1234" and a context holding "1500" grounded
-            // "$50" — invented amounts and dates walked straight through the
-            // pre-insert guard.
+            // Within a SINGLE run, aligned to its start. Both halves of that
+            // are load bearing, and each is what stops one class of invented
+            // number from walking through the pre-insert guard: collapsing the
+            // context into one digit stream splices a "1" and a "234" from
+            // unrelated sentences into a grounding for an invented "1234",
+            // while accepting a match at any offset inside a run lets "1500"
+            // ground "$50".
             //
             // Start alignment is what makes an amount safe while keeping the
             // legitimate sub-value readings: "50" still grounds off "50.00" and

@@ -574,9 +574,10 @@ final class MagicPressCoordinator {
     private func showChips(_ candidates: [ResolvedWorkflow]) {
         guard !candidates.isEmpty else {
             // Never silent (§15.3). An empty candidate list means routing
-            // matched nothing on this surface — the bare `phase = .idle` this
-            // replaces ended the press with no hint, no toast and no trace,
-            // indistinguishable from the hotkey never having fired.
+            // matched nothing on this surface, and that is a fact the user has
+            // to be told: dropping straight back to `.idle` ends the press with
+            // no hint, no toast and no trace, which is indistinguishable from
+            // the hotkey never having fired.
             if var press = activePress {
                 press.trace.outcome = "noCandidates"
                 submitTrace(press.trace)
@@ -812,12 +813,13 @@ final class MagicPressCoordinator {
         if result.verdict.passed {
             await performInsert(result.output)
         } else {
-            // Stamp the default outcome now: `execute` never sets one, so a
-            // warning panel closed with ✕/Escape or left to auto-dismiss used
-            // to submit the trace with PressTrace's `unknown`, losing the
-            // guard-health signal for warnings the user declined (§10.2).
-            // Every other exit — insertAnyway, regenerate, copy — overwrites
-            // it, so this only survives when the user really did walk away.
+            // Stamp the default outcome now, because `execute` never sets one
+            // and a warning panel closed with ✕/Escape or left to auto-dismiss
+            // has no other exit to stamp it: without this the trace submits
+            // PressTrace's `unknown` and the guard-health signal for warnings
+            // the user declined is lost (§10.2). Every other exit —
+            // insertAnyway, regenerate, copy — overwrites it, so this value
+            // only survives when the user really did walk away.
             press.trace.outcome = "verifierDismissed"
             activePress = press
             phase = .toast
@@ -1442,7 +1444,13 @@ final class MagicPressCoordinator {
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             if let data = try? encoder.encode(report) {
-                ClipboardService.setText(String(decoding: data, as: UTF8.self))
+                // Through the transient+concealed marker, not a plain copy: the
+                // report carries every assembled slot, which is the captured
+                // screen content verbatim — including the surfaces the user
+                // marked `no_cloud`. A plain write hands that to every clipboard
+                // manager on the machine to archive, which is the one place it
+                // may not end up. The user still pastes it wherever they meant to.
+                PasteboardTransaction.writeGenerated(String(decoding: data, as: UTF8.self))
                 self.showHint("Dry-run report copied to clipboard")
             }
         }
