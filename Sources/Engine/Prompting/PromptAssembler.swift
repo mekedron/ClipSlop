@@ -538,12 +538,29 @@ enum PromptAssembler {
     // separates a fence forgery from prose: a person who writes "the end
     // surrounding context of the thread" in a chat message keeps their
     // sentence, because without the rail nothing matches.
+    //
+    // ONE rail is enough, and it may sit on EITHER side — hence the two
+    // alternatives per pattern, differing only in which side is mandatory. A
+    // half-written fence still reads to the model as a boundary, and the two
+    // halves are not distinguishable in how convincing they are: `END
+    // SURROUNDING CONTEXT ===` closes the untrusted block exactly as well as
+    // `=== END SURROUNDING CONTEXT` does. Requiring the leading rail would let
+    // a forgery through by deleting three characters, which is not a bar an
+    // attacker has to think about clearing.
+    //
+    // What must NOT become optional is the rail as such: with both sides
+    // optional the pattern degenerates to the bare words, and ordinary prose
+    // that happens to name the block ("the end surrounding context of that
+    // discussion") would be rewritten. Prose survives precisely because it
+    // carries no rail.
     private static let closeFenceForgeryRegex = try! NSRegularExpression(
-        pattern: #"={2,}[ \t]*END[ \t]*SURROUNDING[ \t]*CONTEXT([ \t]*={2,})?"#,
+        pattern: #"={2,}[ \t]*END[ \t]*SURROUNDING[ \t]*CONTEXT([ \t]*={2,})?"#
+            + #"|END[ \t]*SURROUNDING[ \t]*CONTEXT[ \t]*={2,}"#,
         options: [.caseInsensitive]
     )
     private static let openFenceForgeryRegex = try! NSRegularExpression(
-        pattern: #"={2,}[ \t]*SURROUNDING[ \t]*CONTEXT([ \t]*\([^)\n]*\))?([ \t]*={2,})?"#,
+        pattern: #"={2,}[ \t]*SURROUNDING[ \t]*CONTEXT([ \t]*\([^)\n]*\))?([ \t]*={2,})?"#
+            + #"|SURROUNDING[ \t]*CONTEXT([ \t]*\([^)\n]*\))?[ \t]*={2,}"#,
         options: [.caseInsensitive]
     )
 
@@ -584,14 +601,18 @@ enum PromptAssembler {
         var result = text
         // Close first — its pattern is the narrower of the two (it demands the
         // word END), so it claims its own matches before the open pattern gets
-        // to look. Today the two cannot actually collide: the open pattern
-        // requires its rail IMMEDIATELY before "SURROUNDING", and in a close
-        // marker the word "END" sits between them, so it cannot match a close
-        // marker's tail. The ordering is kept as cheap insurance against the
-        // next edit to either pattern — loosening the open one to tolerate a
-        // word after the rail would make the collision real, and a forged close
-        // marker rewritten as an OPEN one is the one failure this whole function
-        // exists to prevent.
+        // to look.
+        //
+        // This ordering is LOAD BEARING, not a tidy-up. The open pattern's
+        // trailing-rail alternative needs no rail before "SURROUNDING", so it
+        // matches the tail of a trailing-rail close marker: `END SURROUNDING
+        // CONTEXT ===` contains `SURROUNDING CONTEXT ===`. Let the open pattern
+        // look first and that forgery is rewritten as an OPEN marker with a
+        // stray `END ` in front of it — a forged close turned into something
+        // the model reads as the start of the untrusted block, which is the
+        // exact failure this whole function exists to prevent. Close runs
+        // first, consumes the whole marker, and leaves the open pattern
+        // nothing to find.
         for (regex, replacement) in [
             (closeFenceForgeryRegex, neutralizedFenceClose),
             (openFenceForgeryRegex, neutralizedFenceOpen),
