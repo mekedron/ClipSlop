@@ -121,6 +121,48 @@ actor AXSnapshotService {
         return copyString(element, kAXSubroleAttribute, &budget) == "AXSecureTextField"
     }
 
+    /// The text one leaf node contributes to the surrounding context, or nil
+    /// when it contributes none.
+    ///
+    /// Every walk in this file — flat and structured, native and web — reads its
+    /// leaves through here, so the rule about which values may be read at all
+    /// has exactly one home. That is the whole point: `isSecureField` is a
+    /// privacy invariant, and an invariant with five call sites is one forgotten
+    /// edit away from being false on the path nobody was looking at.
+    ///
+    /// The two parameters are the only things the walks legitimately disagree
+    /// about, and both are load bearing:
+    ///
+    /// - `descriptionFallback` — `AXDescription` is a useful last resort in a
+    ///   native tree and noise in a web one, where decorative containers carry
+    ///   one each.
+    /// - `collapseInternalWhitespace` — the outline renders one line per node,
+    ///   so the tree walks fold newlines here. The flat walks must NOT: they
+    ///   leave folding to `assembleContent` and count the untouched length
+    ///   against their char caps, and collapsing early would make those budgets
+    ///   measure something other than what they spend.
+    private func nodeText(
+        of element: AXUIElement,
+        role: String,
+        descriptionFallback: Bool,
+        collapseInternalWhitespace: Bool,
+        budget: inout Budget
+    ) -> String? {
+        guard !isSecureField(element, role: role, budget: &budget) else { return nil }
+        var raw = copyString(element, kAXValueAttribute, &budget)
+            ?? copyString(element, kAXTitleAttribute, &budget)
+        if raw == nil, descriptionFallback {
+            raw = copyString(element, kAXDescriptionAttribute, &budget)
+        }
+        guard let raw else { return nil }
+        let cleaned = collapseInternalWhitespace
+            ? Self.collapseWhitespace(raw)
+            : raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        // One character is a bullet, a separator glyph, a stray digit — never
+        // context worth a slot in the prompt.
+        return cleaned.count > 1 ? cleaned : nil
+    }
+
     /// Captures the focused field and its surroundings. Always returns a
     /// snapshot — on budget/deadline exhaustion it is partial, never absent.
     /// `appInfo` is read by the caller on the main actor before the hop
@@ -545,15 +587,12 @@ actor AXSnapshotService {
             guard depth < budget.maxWebDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return }
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
             if Self.textRoles.contains(role) {
-                if isSecureField(element, role: role, budget: &budget) { return }
-                let text = copyString(element, kAXValueAttribute, &budget)
-                    ?? copyString(element, kAXTitleAttribute, &budget)
-                if let text {
-                    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if cleaned.count > 1 {
-                        pieces.append(cleaned)
-                        chars += cleaned.count
-                    }
+                if let cleaned = nodeText(
+                    of: element, role: role, descriptionFallback: false,
+                    collapseInternalWhitespace: false, budget: &budget
+                ) {
+                    pieces.append(cleaned)
+                    chars += cleaned.count
                 }
                 return
             }
@@ -623,15 +662,12 @@ actor AXSnapshotService {
 
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
             if Self.textRoles.contains(role) {
-                if isSecureField(element, role: role, budget: &budget) { return }
-                let text = copyString(element, kAXValueAttribute, &budget)
-                    ?? copyString(element, kAXTitleAttribute, &budget)
-                if let text {
-                    let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if cleaned.count > 1 {
-                        if seenFocused { after.append(cleaned) } else { before.append(cleaned) }
-                        collectedChars += cleaned.count
-                    }
+                if let cleaned = nodeText(
+                    of: element, role: role, descriptionFallback: false,
+                    collapseInternalWhitespace: false, budget: &budget
+                ) {
+                    if seenFocused { after.append(cleaned) } else { before.append(cleaned) }
+                    collectedChars += cleaned.count
                 }
                 return
             }
@@ -730,16 +766,12 @@ actor AXSnapshotService {
         guard let role = copyString(element, kAXRoleAttribute, &budget) else { return }
 
         if Self.textRoles.contains(role) {
-            if isSecureField(element, role: role, budget: &budget) { return }
-            let text = copyString(element, kAXValueAttribute, &budget)
-                ?? copyString(element, kAXTitleAttribute, &budget)
-                ?? copyString(element, kAXDescriptionAttribute, &budget)
-            if let text {
-                let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
-                if cleaned.count > 1 {
-                    pieces.append(cleaned)
-                    totalChars += cleaned.count
-                }
+            if let cleaned = nodeText(
+                of: element, role: role, descriptionFallback: true,
+                collapseInternalWhitespace: false, budget: &budget
+            ) {
+                pieces.append(cleaned)
+                totalChars += cleaned.count
             }
             return
         }
@@ -822,15 +854,10 @@ actor AXSnapshotService {
         guard depth < maxDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return nil }
         guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
         if Self.textRoles.contains(role) {
-            if isSecureField(element, role: role, budget: &budget) { return nil }
-            var text = copyString(element, kAXValueAttribute, &budget)
-                ?? copyString(element, kAXTitleAttribute, &budget)
-            if text == nil, descriptionFallback {
-                text = copyString(element, kAXDescriptionAttribute, &budget)
-            }
-            guard let text else { return nil }
-            let cleaned = Self.collapseWhitespace(text)
-            guard cleaned.count > 1 else { return nil }
+            guard let cleaned = nodeText(
+                of: element, role: role, descriptionFallback: descriptionFallback,
+                collapseInternalWhitespace: true, budget: &budget
+            ) else { return nil }
             chars += cleaned.count
             return SurroundingNode(role: role, text: cleaned)
         }
@@ -946,12 +973,10 @@ actor AXSnapshotService {
 
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
             if Self.textRoles.contains(role) {
-                if isSecureField(element, role: role, budget: &budget) { return nil }
-                let text = copyString(element, kAXValueAttribute, &budget)
-                    ?? copyString(element, kAXTitleAttribute, &budget)
-                guard let text else { return nil }
-                let cleaned = Self.collapseWhitespace(text)
-                guard cleaned.count > 1 else { return nil }
+                guard let cleaned = nodeText(
+                    of: element, role: role, descriptionFallback: false,
+                    collapseInternalWhitespace: true, budget: &budget
+                ) else { return nil }
                 collectedChars += cleaned.count
                 return SurroundingNode(role: role, text: cleaned)
             }
