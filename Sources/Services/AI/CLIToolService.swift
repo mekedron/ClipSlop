@@ -98,14 +98,16 @@ struct CLIToolService: AIService {
     }
 
     func process(text: String, systemPrompt: String, config: AIProviderConfig) async throws -> String {
-        let (binaryPath, definition) = try resolveToolInfo(config: config)
+        let (binaryPath, definition, model) = try resolveToolInfo(config: config)
 
         // For tools that dump logs to stdout, capture the final answer via a temp file.
         let outputFile: URL? = definition.usesOutputFile
             ? FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".txt")
             : nil
 
-        let arguments = definition.buildArguments(text, systemPrompt, outputFile?.path)
+        let arguments = definition.buildArguments(
+            text, systemPrompt, outputFile?.path, model, config.effectiveReasoningEffort
+        )
 
         defer { if let outputFile { try? FileManager.default.removeItem(at: outputFile) } }
 
@@ -154,10 +156,12 @@ struct CLIToolService: AIService {
             let run = StreamRun()
             let task = Task {
                 do {
-                    let (binaryPath, definition) = try resolveToolInfo(config: config)
+                    let (binaryPath, definition, model) = try resolveToolInfo(config: config)
 
                     // Streaming always reads stdout directly (no output file).
-                    let arguments = definition.buildArguments(text, systemPrompt, nil)
+                    let arguments = definition.buildArguments(
+                        text, systemPrompt, nil, model, config.effectiveReasoningEffort
+                    )
 
                     // Nothing in this task suspends before `process.run()`, so
                     // `task.cancel()` alone cannot stop the launch: a consumer
@@ -302,19 +306,22 @@ struct CLIToolService: AIService {
 
     // MARK: - Private
 
-    private func resolveToolInfo(config: AIProviderConfig) throws -> (String, CLIToolDefinition) {
-        guard let definition = CLIToolDefinition.find(byID: config.modelID) else {
+    private func resolveToolInfo(
+        config: AIProviderConfig
+    ) throws -> (path: String, definition: CLIToolDefinition, model: String?) {
+        let (toolID, model) = CLIToolDefinition.parseModelID(config.modelID)
+        guard let definition = CLIToolDefinition.find(byID: toolID) else {
             throw AIServiceError.cliToolNotFound(config.modelID)
         }
 
         // Check stored path first
         if CLIToolDetector.isAvailable(at: config.baseURL) {
-            return (config.baseURL, definition)
+            return (config.baseURL, definition, model)
         }
 
         // Re-detect in case the binary moved (e.g. Homebrew upgrade)
         if let newPath = CLIToolDetector.resolvePath(for: definition) {
-            return (newPath, definition)
+            return (newPath, definition, model)
         }
 
         throw AIServiceError.cliToolNotFound(definition.displayName)

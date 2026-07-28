@@ -38,7 +38,7 @@ Record keys:
 | `type` | yes | `openAIChatGPT` \| `openAI` \| `anthropic` \| `ollama` \| `openAICompatible` \| `cliTool`. |
 | `base_url` | no | Endpoint override (Ollama host, OpenAI-compatible server, …). |
 | `api_key_ref` | no | Keychain reference key — **never a secret, and never yours to touch**. Written only when it differs from the default `clipslop.api-key.<id>`. Do not create, edit, or move it. |
-| `model` | no | Model id sent to the API. |
+| `model` | no | Model id sent to the API. For `cliTool` it addresses the tool, optionally with the underlying model after a slash: `claude` (tool default) or `claude/sonnet` (runs `claude --model sonnet`). |
 | `max_tokens` | no | Response token cap (integer, 1–1000000). `0`, a negative value, or anything out of that range is rejected with a warning and the default is kept — an invalid limit would otherwise reach the API and fail every generation through this provider. |
 | `temperature` | no | Sampling temperature (number). |
 | `reasoning_effort` | no | For reasoning models; omitted = provider default. |

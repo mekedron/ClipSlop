@@ -30,7 +30,7 @@ struct AIProviderConfigTests {
 
     @Test("Providers without reasoning support never send an effort value")
     func unsupportedProvidersDoNotSend() {
-        for type in [AIProviderType.openAI, .anthropic, .openAICompatible, .cliTool] {
+        for type in [AIProviderType.openAI, .anthropic, .openAICompatible] {
             let config = AIProviderConfig(
                 name: type.rawValue,
                 providerType: type,

@@ -103,6 +103,9 @@ enum AIProviderType: String, Codable, Sendable, CaseIterable, Identifiable {
         switch self {
         case .openAIChatGPT: [.low, .medium, .high, .xhigh]
         case .ollama: [.none, .low, .medium, .high, .max]
+        // Passed to the tool as `--effort` (claude); "none" means "omit the
+        // flag" and is filtered in the argument builder.
+        case .cliTool: [.none, .low, .medium, .high, .xhigh]
         default: []
         }
     }
