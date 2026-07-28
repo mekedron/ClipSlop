@@ -55,8 +55,10 @@ enum EngineSeedContent {
     # block of the prompt. When the captured text overflows it, the tail
     # (nearest the field — a thread's newest messages) is kept and the head
     # is dropped. 0 = unlimited: everything captured is sent, untrimmed,
-    # and per-workflow budgets never cut it either.
-    surrounding_max_tokens: 8000
+    # and per-workflow budgets never cut it either. Sized generously —
+    # today's models take large contexts, and more of the real thread is
+    # what makes replies land in the right branch.
+    surrounding_max_tokens: 24000
 
     # Hierarchical screen context (0 or 1): render the captured screen as an
     # indented outline — posts, comments, message lists — with an explicit
@@ -116,7 +118,7 @@ enum EngineSeedContent {
     # the same text costs many more requests; a long LinkedIn or Gmail
     # thread wants thousands.
     ax_call_budget: 600
-    web_call_budget: 3000
+    web_call_budget: 8000
 
     # Elements, not characters: how deep and how wide the tree walk goes.
     # max_gather_depth — levels descended inside one native subtree;
@@ -131,10 +133,13 @@ enum EngineSeedContent {
     # Characters of gathered screen text. surrounding_max_chars caps the
     # total; on web the text nearest the field wins — up to
     # web_before_keep_chars from before the field (a chat's newest
-    # messages live there) and web_after_keep_chars from after it.
+    # messages live there) and web_after_keep_chars from after it. The
+    # after window matters on threaded pages: sibling replies — often the
+    # very message being answered — sit after the composer in document
+    # order.
     surrounding_max_chars: 32000
     web_before_keep_chars: 20000
-    web_after_keep_chars: 6000
+    web_after_keep_chars: 16000
 
     # Characters: cap on reading the focused field's own content.
     field_value_max_chars: 50000
@@ -251,7 +256,7 @@ enum EngineSeedContent {
     id: base.reply
     kind: workflow
     mode: direct
-    version: 2
+    version: 3
     extends: base.generation
     summary: "Reply to what's on screen"
     intents: [reply]
@@ -260,7 +265,7 @@ enum EngineSeedContent {
     ---
     ## Rules
     - The surrounding content is a conversation or post; write the user's reply to it.
-    - Reply inside the conversation that holds ⟨YOUR FIELD⟩: address the most recent message directed at the user in that conversation.
+    - Reply inside the INNERMOST section marked "contains your field": address the most recent message directed at the user in that section. Adjacency lies — a message rendered next to ⟨YOUR FIELD⟩ can belong to a different branch.
     - Screens often show several conversations at once — a conversation list, previews, a chat window docked in a corner. Messages outside the field's own conversation are background: never answer them, even when they are newer.
     - Keep the reply proportionate: a short message earns a short reply.
     """
@@ -391,7 +396,7 @@ enum EngineSeedContent {
     id: comment.social
     kind: workflow
     mode: direct
-    version: 1
+    version: 2
     extends: base.generation
     priority: 70
     surface: public
@@ -405,6 +410,8 @@ enum EngineSeedContent {
     ## Rules
     - One or two sentences that add something: a perspective, a concrete experience, a sharp question. Never bare agreement.
     - Professional-warm. No hashtag spam, no emoji stacking, no "Great post!".
+    - A comment box pre-filled with just a person's name is a reply to that person: answer THEIR most recent message, in the reply thread that contains your field — not the post, not other branches.
+    - Comment threads nest: the innermost section marked "contains your field" is the branch being replied in. What sits next to the field in reading order may belong to a different branch — go by the marked sections, not by adjacency.
     - If the field holds a selected note, treat it as the user's brief for the comment: obey it, replace it.
 
     ## Anti-examples

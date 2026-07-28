@@ -50,6 +50,10 @@ struct PressTrace: Codable, Sendable {
     var warmHit: Bool
     /// `kAXErrorCannotComplete` count during capture — the R4 metric.
     var axErrors: Int
+    /// The surrounding walk stopped on budget/deadline rather than at the
+    /// page's edge — the capture is incomplete. Contentless; written only
+    /// when true.
+    var axBudgetExhausted: Bool?
     var latencyMs: Latency
     /// "inserted" | "insertedAnyway" | "panelOnly" | "focusMismatch" |
     /// "selectionChanged" | "verifierDismissed" | "noCandidates" |
@@ -104,6 +108,7 @@ struct PressTrace: Codable, Sendable {
         verifierChecks = []
         warmHit = snapshot.warmHit
         axErrors = snapshot.axCannotComplete
+        axBudgetExhausted = snapshot.surrounding?.captureExhausted == true ? true : nil
         latencyMs = Latency()
         outcome = "unknown"
     }

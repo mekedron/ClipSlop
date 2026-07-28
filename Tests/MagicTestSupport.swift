@@ -19,6 +19,7 @@ enum MagicTestSupport {
         surroundingContent: String? = nil,
         surroundingAuthor: String? = nil,
         surroundingTree: SurroundingNode? = nil,
+        captureExhausted: Bool = false,
         hasField: Bool = true
     ) -> MagicSnapshot {
         let surrounding: MagicSnapshot.Surrounding? = {
@@ -26,10 +27,13 @@ enum MagicTestSupport {
                 return .axTreeStructured(
                     content: surroundingContent
                         ?? SurroundingTreeRenderer.render(surroundingTree, maxTokens: 0).text,
-                    tree: surroundingTree
+                    tree: surroundingTree,
+                    captureExhausted: captureExhausted
                 )
             }
-            return surroundingContent.map { .axTree(content: $0, author: surroundingAuthor) }
+            return surroundingContent.map {
+                .axTree(content: $0, author: surroundingAuthor, captureExhausted: captureExhausted)
+            }
         }()
         return MagicSnapshot(
             app: .init(name: appName, bundleId: bundleId, pid: 1),

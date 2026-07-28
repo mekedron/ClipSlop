@@ -136,7 +136,7 @@ struct SurroundingTreeRendererTests {
         #expect(!rendered.contains("[Messaging — contains your field]"))
     }
 
-    @Test func unlabeledGroupOffPathEmitsNoLineButIndents() {
+    @Test func unlabeledGroupOffPathEmitsNoLineAndNoExtraIndent() {
         let tree = SurroundingNode(role: "AXWebArea", label: "page", children: [
             SurroundingNode(role: "AXGroup", children: [text("inside silent group"), text("second line")]),
             field,
@@ -145,8 +145,12 @@ struct SurroundingTreeRendererTests {
         let lines = rendered.components(separatedBy: "\n")
         // No "[group]" line for the off-path unlabeled group…
         #expect(!lines.contains(where: { $0.trimmingCharacters(in: .whitespaces) == "[group]" }))
-        // …but its children keep the extra indent level (2 = root + silent group).
-        #expect(lines.contains("    inside silent group"))
+        // …and no phantom indent level either: indent tracks emitted lines
+        // only, so the silent group's children sit at the root's child
+        // level. Depth stays meaningful — one level per visible line —
+        // instead of being diluted by every invisible wrapper.
+        #expect(lines.contains("  inside silent group"))
+        #expect(!lines.contains("    inside silent group"))
     }
 
     @Test func markerSitsAtTheExactFieldPosition() throws {
@@ -265,5 +269,116 @@ struct SurroundingTreeRendererTests {
         #expect(rendered.contains("MESSAGE-12"))
         #expect(!rendered.contains("MESSAGE-1 "))
         #expect(rendered.contains(SurroundingTreeRenderer.trimMarker))
+    }
+
+    // MARK: - Article boundaries (structural subroles)
+
+    private func article(_ children: [SurroundingNode]) -> SurroundingNode {
+        SurroundingNode(role: "AXGroup", subrole: "AXDocumentArticle", children: children)
+    }
+
+    @Test func unlabeledArticleEmitsItsBoundaryLineEvenOffPath() {
+        let tree = SurroundingNode(role: "AXWebArea", label: "page", children: [
+            article([text("COMMENT-A body"), text("COMMENT-A timestamp")]),
+            article([text("COMMENT-B body"), field]),
+        ])
+        let (rendered, _) = SurroundingTreeRenderer.render(tree, maxTokens: 0)
+        let lines = rendered.components(separatedBy: "\n")
+        // Off-path article draws its boundary; on-path one carries the note.
+        #expect(lines.contains(where: { $0.trimmingCharacters(in: .whitespaces) == "[article]" }))
+        #expect(rendered.contains("[article — contains your field]"))
+    }
+
+    @Test func singleChildArticleSurvivesNormalization() {
+        // A one-line comment is still one comment — hoisting its article
+        // wrapper would merge it visually into the neighboring thread.
+        let tree = SurroundingNode(role: "AXWebArea", label: "page", children: [
+            article([text("lone one-line comment")]),
+            field,
+        ])
+        let normalized = SurroundingTreeRenderer.normalize(tree)
+        #expect(normalized.children.first?.subrole == "AXDocumentArticle")
+        let (rendered, _) = SurroundingTreeRenderer.render(tree, maxTokens: 0)
+        #expect(rendered.contains("[article]"))
+    }
+
+    @Test func nestedArticlesRenderNestedBoundaries() throws {
+        // A reply thread: comment article containing a reply article.
+        let tree = SurroundingNode(role: "AXWebArea", label: "page", children: [
+            article([
+                text("PARENT comment body"),
+                article([text("REPLY body"), field]),
+            ]),
+        ])
+        let (rendered, _) = SurroundingTreeRenderer.render(tree, maxTokens: 0)
+        let lines = rendered.components(separatedBy: "\n")
+        let outer = try #require(lines.firstIndex { $0.hasSuffix("[article — contains your field]") })
+        let inner = try #require(lines.lastIndex { $0.hasSuffix("[article — contains your field]") })
+        #expect(outer < inner)
+        // The inner article is indented one level deeper than the outer.
+        let indent = { (line: String) in line.prefix(while: { $0 == " " }).count }
+        #expect(indent(lines[inner]) == indent(lines[outer]) + 2)
+        // The chain header names the nesting.
+        #expect(rendered.contains("YOU ARE WRITING IN: page › article › article"))
+    }
+
+    @Test func leafNoteRendersAfterTheTextInMarkerBrackets() {
+        var author = text("Dave V")
+        author.note = "LIKELY REPLY TARGET"
+        let tree = SurroundingNode(role: "AXWebArea", label: "page", children: [
+            article([author, text("What harnesses try?")]),
+            field,
+        ])
+        let (rendered, _) = SurroundingTreeRenderer.render(tree, maxTokens: 0)
+        #expect(rendered.contains("Dave V  ⟨LIKELY REPLY TARGET⟩"))
+        // The note never leaks into the grounding/language pool.
+        #expect(!tree.plainText.contains("LIKELY REPLY TARGET"))
+    }
+
+    /// Modeled on the real misfire `press-2026-07-27-212716-35349BB4`: a
+    /// post with several comment threads, the composer inside one nested
+    /// reply thread, unrelated comments adjacent in document order.
+    private func linkedInThreadedPost() -> SurroundingNode {
+        func comment(_ author: String, _ body: String, replies: [SurroundingNode] = []) -> SurroundingNode {
+            article([text(author), text("6d"), text(body)] + replies)
+        }
+        return SurroundingNode(role: "AXWebArea", label: "Post | LinkedIn", children: [
+            article([
+                text("Swiss Army knife"),
+                text("POST body about subscriptions and one-time purchases."),
+                SurroundingNode(role: "AXList", label: "comments", children: [
+                    comment("Ilia Brakhov", "OTHER-THREAD subscriptions are necessary for servers."),
+                    comment("Michael Long", "TARGET-THREAD you can add a local model option.", replies: [
+                        article([text("Nikita Rabykin"), text("REPLY the app supports ollama already."), field]),
+                    ]),
+                    comment("Eugene Malikov", "ADJACENT local models could be extremely slow."),
+                ]),
+            ]),
+        ])
+    }
+
+    @Test func threadedPostChainAndContainmentSingleOutTheReplyBranch() {
+        let (rendered, _) = SurroundingTreeRenderer.render(linkedInThreadedPost(), maxTokens: 0)
+        // The enclosing branch (Michael Long's thread) carries containment…
+        let lines = rendered.components(separatedBy: "\n")
+        let containing = lines.filter { $0.contains(SurroundingTreeRenderer.containsFieldNote) }
+        #expect(containing.count >= 3)
+        // …while the sibling threads' articles visibly lack it.
+        let bareArticles = lines.filter { $0.trimmingCharacters(in: .whitespaces) == "[article]" }
+        #expect(bareArticles.count == 2)
+        // Author names render beside the bodies they wrote.
+        for name in ["Ilia Brakhov", "Michael Long", "Eugene Malikov", "Nikita Rabykin"] {
+            #expect(rendered.contains(name))
+        }
+    }
+
+    @Test func threadedPostTrimNeverDropsTheInnermostThread() {
+        let (rendered, truncated) = SurroundingTreeRenderer.render(linkedInThreadedPost(), maxTokens: 150)
+        #expect(truncated)
+        // The reply branch (unit 0 chain + nearest siblings) survives the
+        // squeeze; the unrelated threads go first.
+        #expect(rendered.contains("TARGET-THREAD"))
+        #expect(rendered.contains(SurroundingTreeRenderer.fieldMarkerPrefix))
+        #expect(!rendered.contains("OTHER-THREAD"))
     }
 }

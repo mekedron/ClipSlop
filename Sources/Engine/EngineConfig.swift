@@ -15,8 +15,9 @@ struct MagicEngineConfig: Sendable, Equatable {
     var axCallBudget = 600
     /// The same request budget for web pages. Chromium wraps every div in
     /// an empty AXGroup, so reaching the text costs many more requests —
-    /// a long LinkedIn/Gmail thread wants thousands.
-    var webCallBudget = 3000
+    /// a long LinkedIn/Gmail thread wants thousands, and recovering author
+    /// names from inside blank links costs a few reads per comment on top.
+    var webCallBudget = 8000
     /// Depth of the text gather inside one native sibling subtree.
     var maxGatherDepth = 6
     /// Depth cap inside web subtrees.
@@ -28,14 +29,19 @@ struct MagicEngineConfig: Sendable, Equatable {
     /// Cap on the assembled surrounding text.
     var surroundingMaxChars = 32_000
     /// Web walk: how much text preceding the field to keep (a chat's newest
-    /// messages) and how much after it.
+    /// messages) and how much after it. The after window is not an
+    /// afterthought: on a threaded page the sibling replies — including the
+    /// message being answered — often sit AFTER the composer in document
+    /// order.
     var webBeforeKeepChars = 20_000
-    var webAfterKeepChars = 6_000
+    var webAfterKeepChars = 16_000
     /// Token ceiling for the prompt's SURROUNDING CONTEXT block — the one
     /// knob that decides how much captured screen text the model sees.
     /// 0 = unlimited: everything the collector gathered is passed
-    /// untrimmed, and workflow-card budgets never cut it either.
-    var surroundingMaxTokens = 8_000
+    /// untrimmed, and workflow-card budgets never cut it either. Sized for
+    /// large-context models; the structure-aware trim still keeps the
+    /// content nearest the field when a page overruns it.
+    var surroundingMaxTokens = 24_000
     /// Hierarchical screen context (0/1): capture the surroundings as a
     /// structured tree and render them as an indented outline with an
     /// explicit ⟨YOUR FIELD⟩ marker; overflow keeps the content nearest
@@ -86,7 +92,7 @@ struct MagicEngineConfig: Sendable, Equatable {
         [
         ("capture_deadline_ms", 300...10_000, \.captureDeadlineMs),
         ("ax_call_budget", 50...5_000, \.axCallBudget),
-        ("web_call_budget", 50...10_000, \.webCallBudget),
+        ("web_call_budget", 50...30_000, \.webCallBudget),
         ("max_gather_depth", 1...50, \.maxGatherDepth),
         ("max_web_depth", 5...100, \.maxWebDepth),
         ("max_siblings_per_level", 2...200, \.maxSiblingsPerLevel),

@@ -454,7 +454,7 @@ struct EngineToolExecutorTests {
         let error = #expect(throws: ToolError.self) {
             try executor(root).perform(call("set_config", ["values": ["web_call_budget": 99999]]))
         }
-        #expect(error?.message.contains("outside 50–10000") == true)
+        #expect(error?.message.contains("outside 50–30000") == true)
         let after = try String(contentsOf: root.appendingPathComponent("config.yaml"), encoding: .utf8)
         #expect(before == after)  // Nothing written.
     }

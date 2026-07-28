@@ -139,7 +139,7 @@ actor MagicDebugLogger {
             - grammar row: \(snapshot.grammarRow)
             - field: role=\(field?.role ?? "—") subrole=\(field?.subrole ?? "—") editable=\(field.map { String($0.editable) } ?? "—") secure=\(field.map { String($0.secure) } ?? "—")
             - ancestor roles: \(snapshot.ancestorRoles.joined(separator: " > "))
-            - warm hit: \(snapshot.warmHit) · ax cannotComplete: \(snapshot.axCannotComplete)
+            - warm hit: \(snapshot.warmHit) · ax cannotComplete: \(snapshot.axCannotComplete) · ax calls denied: \(snapshot.axCallsDenied)\(snapshot.surrounding?.captureExhausted == true ? " · capture EXHAUSTED" : "")
 
             ### Field value (\(field?.value.count ?? 0) chars)
             ```
@@ -157,6 +157,25 @@ actor MagicDebugLogger {
             ```
 
             """
+
+            // The raw captured tree, machine-loadable: a misfiring press then
+            // ships its own renderer/detector test fixture instead of needing
+            // the page reconstructed by hand from the rendered outline.
+            if let tree = snapshot.surrounding?.tree {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                if let data = try? encoder.encode(tree),
+                   let json = String(data: data, encoding: .utf8) {
+                    out += """
+
+                    ### Surrounding tree (JSON — replayable fixture)
+                    ```json
+                    \(json)
+                    ```
+
+                    """
+                }
+            }
         }
 
         if let classification = entry.classification {

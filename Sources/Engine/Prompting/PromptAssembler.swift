@@ -61,11 +61,18 @@ enum PromptAssembler {
     writing into. Always read it first and ground your output in it — who is being answered, \
     what was asked, what tone the conversation carries.
     When the context is a SCREEN OUTLINE with a ⟨YOUR FIELD⟩ marker, your text is inserted \
-    exactly at that marker. Anchor on it: what you write belongs to the sections marked \
-    "contains your field" — the conversation or post the field is part of. A screen often \
-    shows several conversations at once (a conversation list, previews, a chat window docked \
-    in a corner); everything outside the field's own sections is background to read, never \
-    the thing to answer — even when its messages are newer.
+    exactly at that marker. Anchor on the SMALLEST section marked "contains your field" — \
+    that innermost section is the exact thread or conversation branch being written in; each \
+    wider marked section is progressively wider context. A screen often shows several \
+    conversations at once (a conversation list, previews, other comment threads); everything \
+    in sections not marked "contains your field" is background to read, never the thing to \
+    answer — even when its messages are newer. Trust the marked containment over adjacency: \
+    screen-reading order can place unrelated messages right next to ⟨YOUR FIELD⟩, so the \
+    nearest line is not automatically the one being answered.
+    A field that holds only a person's name is a pre-filled reply mention, not prose to \
+    continue: the reply is addressed to that person — find where they wrote (marked \
+    ⟨LIKELY REPLY TARGET⟩ when detected) and answer their most recent message inside the \
+    innermost marked section.
     LANGUAGE: write in the language of the surrounding conversation. If the user's draft, \
     selection, or note is in a different language than the conversation, translate — deliver \
     the output in the conversation's language — unless the user explicitly asks for a specific \
@@ -85,14 +92,33 @@ enum PromptAssembler {
     ) -> AssembledPrompt {
         var slots: [AssembledSlot] = []
 
+        // Reply-target pass: a draft that is nothing but a person's name the
+        // page also displays is a pre-filled mention, not prose to continue.
+        // Detected here — deterministically, before any slot renders — so the
+        // outline can mark where that person wrote and the field slot can say
+        // who the reply is for. Gated on `.draft`: with a selection or an
+        // empty field there is no mention to read.
+        let replyTarget = snapshot.fieldState == .draft
+            ? ReplyTargetDetector.detect(
+                fieldValue: snapshot.field?.value ?? "",
+                tree: snapshot.surrounding?.tree
+            )
+            : nil
+
         slots.append(pinnedSlot(core: core))
         slots.append(workflowBodySlot(workflow: workflow, outputMaxChars: outputMaxChars))
         // FEW-SHOT is structurally present but empty in V0 — there is no
         // example store yet. Kept so dry-run shows the slot at 0 and the
         // upgrade is additive.
         slots.append(AssembledSlot(id: .fewShot, text: "", tokensEstimated: 0, truncated: false, untrusted: false))
-        slots.append(surroundingSlot(snapshot: snapshot, budgetTokens: surroundingMaxTokens))
-        slots.append(fieldInputSlot(snapshot: snapshot, classification: classification, hint: hint))
+        slots.append(surroundingSlot(
+            snapshot: snapshot, budgetTokens: surroundingMaxTokens,
+            annotatedTree: replyTarget?.annotatedTree
+        ))
+        slots.append(fieldInputSlot(
+            snapshot: snapshot, classification: classification, hint: hint,
+            replyTarget: replyTarget?.target
+        ))
 
         // A workflow may cap the total below the slot-table sum. Cross-slot
         // trim order when it does: workflow body, then pinned — the
@@ -316,15 +342,18 @@ enum PromptAssembler {
     /// field (the newest messages in a thread, the post above a comment
     /// box) is at the END; the head is chrome and sidebar noise. The budget
     /// comes from config.yaml `surrounding_max_tokens`; 0 means unlimited.
-    private static func surroundingSlot(snapshot: MagicSnapshot, budgetTokens: Int) -> AssembledSlot {
+    private static func surroundingSlot(
+        snapshot: MagicSnapshot, budgetTokens: Int, annotatedTree: SurroundingNode? = nil
+    ) -> AssembledSlot {
         guard let surrounding = snapshot.surrounding, !surrounding.content.isEmpty else {
             return AssembledSlot(id: .surrounding, text: "", tokensEstimated: 0, truncated: false, untrusted: true)
         }
         var content: String
         var truncated = false
-        if let tree = surrounding.tree {
+        if let tree = annotatedTree ?? surrounding.tree {
             (content, truncated) = SurroundingTreeRenderer.render(
-                tree, maxTokens: budgetTokens, fieldNote: fieldNote(for: snapshot)
+                tree, maxTokens: budgetTokens,
+                fieldNote: fieldNote(for: snapshot, replyTargetActive: annotatedTree != nil)
             )
         } else {
             content = surrounding.content
@@ -354,6 +383,12 @@ enum PromptAssembler {
             lines.append("Author: \(neutralizeFenceMarkers(author))")
         }
         lines.append(content)
+        if surrounding.captureExhausted {
+            // Without this line a budget-truncated capture is invisible: the
+            // outline just ends, and a missing branch reads as "not on
+            // screen" instead of "not captured".
+            lines.append("[NOTE: screen capture ran out of its read budget — parts of the page may be missing]")
+        }
         lines.append(untrustedFenceClose)
 
         let text = lines.joined(separator: "\n")
@@ -367,7 +402,7 @@ enum PromptAssembler {
     /// One short clause for the outline's ⟨YOUR FIELD⟩ marker line, tying
     /// the field's spot on screen to the field/input slot that carries its
     /// actual content.
-    static func fieldNote(for snapshot: MagicSnapshot) -> String? {
+    static func fieldNote(for snapshot: MagicSnapshot, replyTargetActive: Bool = false) -> String? {
         switch snapshot.fieldState {
         case .empty:
             if let placeholder = snapshot.field?.placeholder, !placeholder.isEmpty {
@@ -375,7 +410,9 @@ enum PromptAssembler {
             }
             return "currently empty"
         case .draft:
-            return "your draft is in the DRAFT section below"
+            return replyTargetActive
+                ? "it holds a pre-filled reply mention — see REPLY TARGET below"
+                : "your draft is in the DRAFT section below"
         case .selection:
             return "the selected text it holds is in the SELECTED TEXT section below"
         }
@@ -387,7 +424,8 @@ enum PromptAssembler {
     private static func fieldInputSlot(
         snapshot: MagicSnapshot,
         classification: SelectionClassification?,
-        hint: String?
+        hint: String?,
+        replyTarget: ReplyTargetDetector.ReplyTarget? = nil
     ) -> AssembledSlot {
         let budget = SlotID.fieldInput.budgetTokens
         var parts: [String] = []
@@ -436,7 +474,24 @@ enum PromptAssembler {
             // press then produces a suffix for the LAST sentence and drops it
             // into the middle of an earlier one.
             let draftBudget = budget - 20
-            if let position = splitAtCaret(value: value, range: field?.selectedRange) {
+            if let replyTarget {
+                // The whole value is the pre-filled mention (that is what the
+                // detector verified), so caret framing has nothing to add:
+                // the reply is appended after the name and the model's job is
+                // to answer that person, not to continue prose.
+                var framing = "REPLY TARGET: the field holds only a pre-filled mention of "
+                    + "\"\(replyTarget.name)\" — the page inserted it to address a reply; it is "
+                    + "NOT a draft to continue. Write the user's reply to \(replyTarget.name). "
+                    + "Their name is marked ⟨\(ReplyTargetDetector.noteText)⟩ in the SCREEN "
+                    + "OUTLINE wherever they appear."
+                if replyTarget.matchCount > 1 {
+                    framing += " The name is marked more than once — answer their most recent "
+                        + "message inside the smallest section marked \"contains your field\"."
+                }
+                framing += " Your text is appended right after the mention: do not repeat the "
+                    + "name, just write the reply."
+                parts.append(framing)
+            } else if let position = splitAtCaret(value: value, range: field?.selectedRange) {
                 var beforeText = position.before
                 var afterText = position.after
                 if TokenEstimator.estimate(beforeText) + TokenEstimator.estimate(afterText) > draftBudget {

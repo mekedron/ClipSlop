@@ -729,4 +729,84 @@ struct PromptAssemblerTests {
         #expect(result.contains("- a"))
         #expect(result.contains("- c"))
     }
+
+    // MARK: - Reply target
+
+    private func mentionTree(extraLeaves: [String] = []) -> SurroundingNode {
+        SurroundingNode(role: "AXWebArea", label: "page", children:
+            [
+                SurroundingNode(role: "AXStaticText", text: "Dave V"),
+                SurroundingNode(role: "AXStaticText", text: "What harnesses try?"),
+            ]
+            + extraLeaves.map { SurroundingNode(role: "AXStaticText", text: $0) }
+            + [SurroundingNode(role: "AXTextArea", isField: true)]
+        )
+    }
+
+    @Test func replyTargetMentionReplacesDraftFraming() {
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+            value: "Dave V ",
+            surroundingTree: mentionTree()
+        ))
+        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
+        #expect(fieldSlot.text.contains("REPLY TARGET"))
+        #expect(fieldSlot.text.contains("\"Dave V\""))
+        #expect(!fieldSlot.text.contains("THE USER'S DRAFT SO FAR"))
+        // Single match → no "most recent message" disambiguation needed.
+        #expect(!fieldSlot.text.contains("marked more than once"))
+        let surroundingSlot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(surroundingSlot.text.contains("Dave V  ⟨\(ReplyTargetDetector.noteText)⟩"))
+        #expect(surroundingSlot.text.contains("pre-filled reply mention — see REPLY TARGET below"))
+    }
+
+    @Test func replyTargetMultiMatchAsksForTheMostRecentMessage() {
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+            value: "Dave V ",
+            surroundingTree: mentionTree(extraLeaves: ["Dave V", "Great work!"])
+        ))
+        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
+        #expect(fieldSlot.text.contains("marked more than once"))
+        #expect(fieldSlot.text.contains("most recent"))
+    }
+
+    @Test func ordinaryDraftKeepsDraftFraming() {
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+            value: "I think we should reconsider ",
+            surroundingContent: "Some post."
+        ))
+        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
+        #expect(fieldSlot.text.contains("THE USER'S DRAFT SO FAR"))
+        #expect(!fieldSlot.text.contains("REPLY TARGET"))
+    }
+
+    @Test func selectionStateNeverFiresReplyTarget() {
+        // A selected name is a request about that text, not a mention.
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+            value: "Dave V ",
+            selection: .init(range: nil, text: "Dave V"),
+            surroundingTree: mentionTree()
+        ))
+        let fieldSlot = prompt.slots.first { $0.id == .fieldInput }!
+        #expect(fieldSlot.text.contains("SELECTED TEXT"))
+        #expect(!fieldSlot.text.contains("REPLY TARGET"))
+    }
+
+    // MARK: - Capture exhaustion
+
+    @Test func captureExhaustedNoteRendersInsideTheFence() throws {
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(
+            surroundingContent: "Some post.",
+            captureExhausted: true
+        ))
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        let note = try #require(slot.text.range(of: "ran out of its read budget"))
+        let close = try #require(slot.text.range(of: PromptAssembler.untrustedFenceClose))
+        #expect(note.lowerBound < close.lowerBound)
+    }
+
+    @Test func completeCaptureCarriesNoExhaustionNote() {
+        let prompt = assemble(snapshot: MagicTestSupport.makeSnapshot(surroundingContent: "Some post."))
+        let slot = prompt.slots.first { $0.id == .surrounding }!
+        #expect(!slot.text.contains("ran out of its read budget"))
+    }
 }

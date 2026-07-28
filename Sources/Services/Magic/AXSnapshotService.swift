@@ -14,6 +14,12 @@ actor AXSnapshotService {
         /// (`kAXErrorCannotComplete`) during this capture. Surfaces in the
         /// contentless trace so real-world frequency is measurable.
         var cannotCompleteCount = 0
+        /// Reads refused because the call budget was already spent. A walk
+        /// that exhausts its budget stops silently mid-page — the outline
+        /// just ends, indistinguishable from a page with nothing more on
+        /// it. This counter is what makes that visible: the snapshot, the
+        /// trace, and the prompt all get told the capture is incomplete.
+        var callsDenied = 0
         let maxSiblingsPerLevel: Int
         let maxGatherDepth: Int
         let maxContentChars: Int
@@ -133,9 +139,10 @@ actor AXSnapshotService {
     /// The two parameters are the only things the walks legitimately disagree
     /// about, and both are load bearing:
     ///
-    /// - `descriptionFallback` — `AXDescription` is a useful last resort in a
-    ///   native tree and noise in a web one, where decorative containers carry
-    ///   one each.
+    /// - `descriptionFallback` — whether `AXDescription` may stand in when
+    ///   value and title are both empty. Only ever consulted as a last
+    ///   resort, so a web tree's decorative containers cannot flood the
+    ///   outline: they are not text roles and never reach this function.
     /// - `collapseInternalWhitespace` — the outline renders one line per node,
     ///   so the tree walks fold newlines here. The flat walks must NOT: they
     ///   leave folding to `assembleContent` and count the untouched length
@@ -161,6 +168,76 @@ actor AXSnapshotService {
         // One character is a bullet, a separator glyph, a stray digit — never
         // context worth a slot in the prompt.
         return cleaned.count > 1 ? cleaned : nil
+    }
+
+    /// Leaf text for the tree walks, with link recovery.
+    ///
+    /// A link tries its own value/title first, then the visible text of its
+    /// children, then (when the walk allows it) the accessible description.
+    /// Chromium routinely leaves an anchor's AXLink node blank and parks the
+    /// visible words in child static texts — an author byline on a comment
+    /// is exactly this shape — so treating the link as an opaque leaf erases
+    /// the names a threaded conversation needs to say who wrote what. The
+    /// description comes last because it is a computed name ("View X's
+    /// profile"), wordier than the words actually on screen.
+    private func treeLeafText(
+        of element: AXUIElement,
+        role: String,
+        descriptionFallback: Bool,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> String? {
+        let isLink = role == "AXLink"
+        if let direct = nodeText(
+            of: element, role: role,
+            descriptionFallback: descriptionFallback && !isLink,
+            collapseInternalWhitespace: true, budget: &budget
+        ) { return direct }
+        guard isLink else { return nil }
+        if let merged = inlineChildText(of: element, budget: &budget, expired: expired) {
+            return merged
+        }
+        guard descriptionFallback,
+              let raw = copyString(element, kAXDescriptionAttribute, &budget)
+        else { return nil }
+        let cleaned = Self.collapseWhitespace(raw)
+        return cleaned.count > 1 ? cleaned : nil
+    }
+
+    /// Text recovered from inside a blank link, merged into ONE line — a
+    /// link never becomes a sub-outline, so link-heavy pages (a news front
+    /// page, a docs sidebar) cost one line per link exactly as before. The
+    /// descent is shallow and narrow, and reads leaves only through
+    /// `nodeText` so the secure-field invariant keeps its single home.
+    private func inlineChildText(
+        of element: AXUIElement,
+        depth: Int = 0,
+        budget: inout Budget,
+        expired: () -> Bool
+    ) -> String? {
+        guard depth < 3, budget.remainingCalls > 0, !expired() else { return nil }
+        guard let children: [AXUIElement] = copyElementArray(element, kAXChildrenAttribute, &budget) else {
+            return nil
+        }
+        var pieces: [String] = []
+        for child in children.prefix(8) {
+            guard budget.remainingCalls > 0, !expired() else { break }
+            guard let role = copyString(child, kAXRoleAttribute, &budget) else { continue }
+            if Self.textRoles.contains(role) {
+                if let text = nodeText(
+                    of: child, role: role, descriptionFallback: false,
+                    collapseInternalWhitespace: true, budget: &budget
+                ) {
+                    pieces.append(text)
+                }
+            } else if let nested = inlineChildText(
+                of: child, depth: depth + 1, budget: &budget, expired: expired
+            ) {
+                pieces.append(nested)
+            }
+        }
+        guard !pieces.isEmpty else { return nil }
+        return pieces.joined(separator: " ")
     }
 
     /// Captures the focused field and its surroundings. Always returns a
@@ -192,6 +269,7 @@ actor AXSnapshotService {
             var stamped = snapshot
             stamped.warmHit = warmUsable
             stamped.axCannotComplete = budget.cannotCompleteCount
+            stamped.axCallsDenied = budget.callsDenied
             return stamped
         }
         /// A press that captured nothing: no field, no target, no content.
@@ -452,9 +530,18 @@ actor AXSnapshotService {
         // races the tree build — one retry with a fresh budget. With the
         // warm observer running, enablement happens at app activation, so
         // this path is the fallback for presses that beat the observer.
+        // "The walk this surrounding actually came from stopped short" —
+        // budget spent, reads denied, or the deadline arrived. Computed per
+        // walk so a successful retry reports the retry's budget, not the
+        // exhausted first attempt's.
+        func exhausted(_ budget: Budget) -> Bool {
+            budget.remainingCalls <= 0 || budget.callsDenied > 0 || expired()
+        }
+
         var surrounding: MagicSnapshot.Surrounding?
         if config.surroundingTreeEnabled != 0 {
             var tree = treeWalk(&budget)
+            var walkExhausted = exhausted(budget)
             if !tree.hasText, freshlyEnabled, !expired() {
                 try? await Task.sleep(for: .milliseconds(300))
                 var retryBudget = Budget(config: config)
@@ -463,6 +550,8 @@ actor AXSnapshotService {
                 retryBudget.remainingLabelReads = Budget.labelReadCap(forCalls: retryBudget.remainingCalls)
                 tree = treeWalk(&retryBudget)
                 budget.cannotCompleteCount += retryBudget.cannotCompleteCount
+                budget.callsDenied += retryBudget.callsDenied
+                walkExhausted = exhausted(retryBudget)
             }
             if tree.hasText {
                 // `content` carries a full (untrimmed) render so every
@@ -472,10 +561,13 @@ actor AXSnapshotService {
                 if content.count > budget.maxContentChars {
                     content = String(content.prefix(budget.maxContentChars))
                 }
-                surrounding = .axTreeStructured(content: content, tree: tree)
+                surrounding = .axTreeStructured(
+                    content: content, tree: tree, captureExhausted: walkExhausted
+                )
             }
         } else {
             var surroundingText = walk(&budget)
+            var walkExhausted = exhausted(budget)
             if surroundingText.isEmpty, freshlyEnabled, !expired() {
                 try? await Task.sleep(for: .milliseconds(300))
                 var retryBudget = Budget(config: config)
@@ -483,8 +575,12 @@ actor AXSnapshotService {
                 retryBudget.remainingCalls = retryBudget.webSweepCalls
                 surroundingText = walk(&retryBudget)
                 budget.cannotCompleteCount += retryBudget.cannotCompleteCount
+                budget.callsDenied += retryBudget.callsDenied
+                walkExhausted = exhausted(retryBudget)
             }
-            surrounding = surroundingText.isEmpty ? nil : .axTree(content: surroundingText)
+            surrounding = surroundingText.isEmpty
+                ? nil
+                : .axTree(content: surroundingText, captureExhausted: walkExhausted)
         }
 
         return finish(MagicSnapshot(
@@ -857,6 +953,23 @@ actor AXSnapshotService {
         return nil
     }
 
+    /// Subroles that mark a real content boundary — an `<article>`: a post,
+    /// a comment, a reply. Chromium exposes these as unlabeled AXGroups, so
+    /// without the subrole a nested comment thread flattens into one
+    /// indistinguishable run of text; the renderer draws a boundary line for
+    /// exactly these.
+    private static let structuralSubroles: Set<String> = ["AXDocumentArticle"]
+
+    /// One extra attribute read per multi-child container, spent from the
+    /// same caps as the label reads.
+    private func structuralSubrole(_ element: AXUIElement, budget: inout Budget) -> String? {
+        guard budget.remainingLabelReads > 0 else { return nil }
+        budget.remainingLabelReads -= 1
+        guard let subrole = copyString(element, kAXSubroleAttribute, &budget),
+              Self.structuralSubroles.contains(subrole) else { return nil }
+        return subrole
+    }
+
     /// Deep gather mirroring `gather`/`gatherText` — same visit order, same
     /// depth/width/char caps, same expiry checks — accumulating nodes
     /// instead of strings. `reverse` spends the budget nearest-first (the
@@ -877,9 +990,9 @@ actor AXSnapshotService {
         guard depth < maxDepth, budget.remainingCalls > 0, !expired(), chars < cap else { return nil }
         guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
         if Self.textRoles.contains(role) {
-            guard let cleaned = nodeText(
+            guard let cleaned = treeLeafText(
                 of: element, role: role, descriptionFallback: descriptionFallback,
-                collapseInternalWhitespace: true, budget: &budget
+                budget: &budget, expired: expired
             ) else { return nil }
             chars += cleaned.count
             return SurroundingNode(role: role, text: cleaned)
@@ -905,7 +1018,10 @@ actor AXSnapshotService {
         let label = children.count >= 2
             ? containerLabel(element, isSpine: false, budget: &budget)
             : nil
-        return SurroundingNode(role: role, label: label, children: collected)
+        let subrole = children.count >= 2
+            ? structuralSubrole(element, budget: &budget)
+            : nil
+        return SurroundingNode(role: role, subrole: subrole, label: label, children: collected)
     }
 
     /// Tree counterpart of `collectWebNearestFirst`: the ancestor spine
@@ -937,7 +1053,7 @@ actor AXSnapshotService {
                 if let node = gatherNode(
                     sibling, depth: 0, maxDepth: budget.maxWebDepth,
                     maxChildren: budget.maxWebChildrenPerNode, reverse: true,
-                    descriptionFallback: false,
+                    descriptionFallback: true,
                     chars: &beforeChars, cap: budget.webBeforeKeepChars,
                     budget: &budget, expired: expired
                 ) {
@@ -950,7 +1066,7 @@ actor AXSnapshotService {
                 if let node = gatherNode(
                     sibling, depth: 0, maxDepth: budget.maxWebDepth,
                     maxChildren: budget.maxWebChildrenPerNode, reverse: false,
-                    descriptionFallback: false,
+                    descriptionFallback: true,
                     chars: &afterChars, cap: budget.webAfterKeepChars,
                     budget: &budget, expired: expired
                 ) {
@@ -963,8 +1079,11 @@ actor AXSnapshotService {
             let label = children.count >= 2
                 ? containerLabel(parent, isSpine: true, budget: &budget)
                 : nil
+            let subrole = children.count >= 2
+                ? structuralSubrole(parent, budget: &budget)
+                : nil
             current = SurroundingNode(
-                role: parentRole, label: label,
+                role: parentRole, subrole: subrole, label: label,
                 children: beforeReversed.reversed() + [current] + after
             )
         }
@@ -996,9 +1115,9 @@ actor AXSnapshotService {
 
             guard let role = copyString(element, kAXRoleAttribute, &budget) else { return nil }
             if Self.textRoles.contains(role) {
-                guard let cleaned = nodeText(
-                    of: element, role: role, descriptionFallback: false,
-                    collapseInternalWhitespace: true, budget: &budget
+                guard let cleaned = treeLeafText(
+                    of: element, role: role, descriptionFallback: true,
+                    budget: &budget, expired: expired
                 ) else { return nil }
                 collectedChars += cleaned.count
                 return SurroundingNode(role: role, text: cleaned)
@@ -1015,7 +1134,10 @@ actor AXSnapshotService {
             let label = children.count >= 2
                 ? containerLabel(element, isSpine: false, budget: &budget)
                 : nil
-            return SurroundingNode(role: role, label: label, children: collected)
+            let subrole = children.count >= 2
+                ? structuralSubrole(element, budget: &budget)
+                : nil
+            return SurroundingNode(role: role, subrole: subrole, label: label, children: collected)
         }
 
         var rootNode = sweepNode(root, depth: 0) ?? SurroundingNode(role: "AXWebArea")
@@ -1086,8 +1208,11 @@ actor AXSnapshotService {
             let label = children.count >= 2
                 ? containerLabel(ancestor, isSpine: true, budget: &budget)
                 : nil
+            let subrole = children.count >= 2
+                ? structuralSubrole(ancestor, budget: &budget)
+                : nil
             current = SurroundingNode(
-                role: ancestorRole, label: label,
+                role: ancestorRole, subrole: subrole, label: label,
                 children: before + [current] + after
             )
         }
@@ -1235,7 +1360,10 @@ actor AXSnapshotService {
     /// messaging timeout, so the deadline has to be enforced per call and not
     /// only between walk steps, or the promised hard bound (R4) is nominal.
     private func copyRaw(_ element: AXUIElement, _ attribute: String, _ budget: inout Budget) -> CFTypeRef? {
-        guard budget.remainingCalls > 0, !budget.isPastDeadline else { return nil }
+        guard budget.remainingCalls > 0, !budget.isPastDeadline else {
+            if budget.remainingCalls <= 0 { budget.callsDenied += 1 }
+            return nil
+        }
         var value: CFTypeRef?
         budget.remainingCalls -= 1
         var result = AXUIElementCopyAttributeValue(element, attribute as CFString, &value)

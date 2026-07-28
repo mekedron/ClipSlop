@@ -52,7 +52,11 @@ enum SurroundingTreeRenderer {
         // text or the field always survives) → gone.
         if !hasOwnText, node.children.isEmpty { return nil }
         // Wrapper: no label, no text, exactly one child → the child hoists.
-        if !hasOwnText, (node.label ?? "").isEmpty, node.children.count == 1 {
+        // A structural subrole blocks the hoist: an article IS content
+        // structure (this comment vs. the next one), and hoisting a
+        // single-child article would erase exactly the boundary it exists
+        // to draw.
+        if !hasOwnText, (node.label ?? "").isEmpty, node.subrole == nil, node.children.count == 1 {
             return node.children[0]
         }
         return node
@@ -91,7 +95,9 @@ enum SurroundingTreeRenderer {
 
     private static func chainElement(for node: SurroundingNode) -> String? {
         if let label = node.label, !label.isEmpty { return truncatedLabel(label) }
-        guard !genericContainerRoles.contains(node.role), node.text == nil else { return nil }
+        guard node.text == nil else { return nil }
+        if node.subrole != nil { return structureTag(node) }
+        guard !genericContainerRoles.contains(node.role) else { return nil }
         return roleTag(node.role)
     }
 
@@ -100,6 +106,13 @@ enum SurroundingTreeRenderer {
     private static func roleTag(_ role: String) -> String {
         let stripped = role.hasPrefix("AX") ? String(role.dropFirst(2)) : role
         return stripped.lowercased()
+    }
+
+    /// The tag a container renders under. A structural subrole wins over the
+    /// role: Chromium exposes an `<article>` as a bare AXGroup, and "article"
+    /// is the word that tells the model "one post / one comment / one reply".
+    private static func structureTag(_ node: SurroundingNode) -> String {
+        node.subrole == "AXDocumentArticle" ? "article" : roleTag(node.role)
     }
 
     private static func truncatedLabel(_ label: String) -> String {
@@ -112,14 +125,17 @@ enum SurroundingTreeRenderer {
     /// `containsFieldNote` suffix (see its comment for why containment has
     /// to be spelled out).
     private static func containerLine(for node: SurroundingNode, onFieldPath: Bool) -> String? {
-        let generic = genericContainerRoles.contains(node.role)
+        // A structural subrole makes the container non-generic: an article
+        // draws its boundary line even unlabeled and off the field path —
+        // that line is what separates one comment from the next.
+        let generic = genericContainerRoles.contains(node.role) && node.subrole == nil
         let note = onFieldPath ? " — \(containsFieldNote)" : ""
         if let label = node.label, !label.isEmpty {
             let clipped = truncatedLabel(label)
-            return generic ? "[\(clipped)\(note)]" : "[\(roleTag(node.role)): \(clipped)\(note)]"
+            return generic ? "[\(clipped)\(note)]" : "[\(structureTag(node)): \(clipped)\(note)]"
         }
         guard !generic || onFieldPath else { return nil }
-        return "[\(roleTag(node.role))\(note)]"
+        return "[\(structureTag(node))\(note)]"
     }
 
     private static func fieldMarkerLine(note: String?) -> String {
@@ -173,13 +189,22 @@ enum SurroundingTreeRenderer {
             let lineUnit = onPath ? 0 : unit
             var childIndent = indent
             if let text = node.text, !text.isEmpty {
-                append(text, indent: indent, unit: lineUnit)
+                // An engine-side note (the reply-target mark) renders after
+                // the text, in the same bracket style as the field marker so
+                // the model reads it as ours, not as screen content.
+                let line = node.note.map { "\(text)  ⟨\($0)⟩" } ?? text
+                append(line, indent: indent, unit: lineUnit)
                 childIndent = indent + 1
             } else if !node.children.isEmpty {
+                // Indent tracks EMITTED lines only. A silent container that
+                // still indented its children diluted depth with every
+                // Chromium wrapper div, so a reply and the comment beside it
+                // rendered at arbitrary, meaningless depths — nesting must
+                // be readable as "one level per visible line".
                 if let line = containerLine(for: node, onFieldPath: onPath) {
                     append(line, indent: indent, unit: lineUnit)
+                    childIndent = indent + 1
                 }
-                childIndent = indent + 1
             }
             let pathIndex = pathRemainder?.first
             for (index, child) in node.children.enumerated() {

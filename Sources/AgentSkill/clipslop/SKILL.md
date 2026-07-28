@@ -113,7 +113,7 @@ context-blind presses always ask.
 
 CONFIG.YAML KEYS (key range: meaning)
 capture_deadline_ms 300–10000: snapshot deadline per press.
-ax_call_budget 50–5000: AX calls, native walk. web_call_budget 50–10000:
+ax_call_budget 50–5000: AX calls, native walk. web_call_budget 50–30000:
 AX calls, web walk. max_gather_depth 1–50: native subtree depth.
 max_web_depth 5–100: web depth cap. max_siblings_per_level 2–200.
 max_web_children_per_node 5–500. surrounding_max_chars 500–200000: cap on

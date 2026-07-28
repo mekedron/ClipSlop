@@ -22,15 +22,15 @@ Behavior of the parser:
 |---|---|---|---|
 | `capture_deadline_ms` | 2500 | 300–10000 | **Milliseconds**: total wall-clock deadline for reading the screen on a press — a cap, not a target; on expiry the press continues with what was gathered. |
 | `ax_call_budget` | 600 | 50–5000 | **Requests**: Accessibility API reads (one = one attribute of one element — role, text, or children) allowed per press in native apps. Native trees are text-dense, few requests suffice. |
-| `web_call_budget` | 3000 | 50–10000 | **Requests**, same unit, for web pages — Chromium wraps every div in an empty AXGroup, so reaching the text costs many more; long threads want thousands. |
+| `web_call_budget` | 8000 | 50–30000 | **Requests**, same unit, for web pages — Chromium wraps every div in an empty AXGroup, so reaching the text costs many more; long threads want thousands, and recovering author names from inside blank links adds a few reads per comment. |
 | `max_gather_depth` | 6 | 1–50 | **Tree levels** descended inside one native sibling subtree. |
 | `max_web_depth` | 30 | 5–100 | **Tree levels** cap inside web subtrees (deep nesting is normal on web). |
 | `max_siblings_per_level` | 16 | 2–200 | **Elements**: neighbors visited per level in the native walk. |
 | `max_web_children_per_node` | 60 | 5–500 | **Elements**: children visited per node in web subtrees. |
 | `surrounding_max_chars` | 32000 | 500–200000 | Cap on the surrounding text the collector gathers. |
 | `web_before_keep_chars` | 20000 | 200–150000 | Web walk: text *before* the field kept (a chat's newest messages live here). |
-| `web_after_keep_chars` | 6000 | 0–50000 | Web walk: text *after* the field kept. |
-| `surrounding_max_tokens` | 8000 | 0–200000 | **THE screen-context knob**: token ceiling for the prompt's SURROUNDING CONTEXT block. On overflow the tail (nearest the field — a thread's newest messages) is kept and the head (sidebar/chrome noise) is dropped. **0 = unlimited** — everything captured is sent untrimmed, and per-workflow `budget.prompt_tokens_total` never cuts the surroundings either. config.yaml is the only switch — there is no UI control. |
+| `web_after_keep_chars` | 16000 | 0–50000 | Web walk: text *after* the field kept — on threaded pages the sibling replies (often the very message being answered) sit after the composer in document order. |
+| `surrounding_max_tokens` | 24000 | 0–200000 | **THE screen-context knob**: token ceiling for the prompt's SURROUNDING CONTEXT block. On overflow the tail (nearest the field — a thread's newest messages) is kept and the head (sidebar/chrome noise) is dropped. **0 = unlimited** — everything captured is sent untrimmed, and per-workflow `budget.prompt_tokens_total` never cuts the surroundings either. config.yaml is the only switch — there is no UI control. |
 | `surrounding_tree_enabled` | 1 | 0–1 | Hierarchical screen context: the captured surroundings render as an indented outline (posts, comments, message lists) with a ⟨YOUR FIELD⟩ marker at the exact box being written in, and overflow trimming is structure-aware — the field's ancestor chain and the content nearest the field survive, the farthest subtrees drop first (trace field `surroundingTree`). **0 = the old flat text blob** with plain tail-keeping on overflow. |
 | `field_value_max_chars` | 50000 | 1000–500000 | Cap on reading the focused field's own value. |
 | `toast_dismiss_seconds` | 8 | 2–120 | Post-insert toast auto-dismiss. |

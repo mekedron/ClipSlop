@@ -114,15 +114,27 @@ struct MagicSnapshot: Sendable {
         /// always holds a rendered string alongside it, so consumers that
         /// only read text keep working; tree-aware consumers branch on this.
         var tree: SurroundingNode? = nil
+        /// The walk stopped because it ran out of AX-call budget or hit the
+        /// capture deadline — the outline ends mid-page rather than at the
+        /// page's edge. The assembler tells the model, so a missing branch
+        /// reads as "not captured", never as "not on screen".
+        var captureExhausted: Bool = false
 
-        static func axTree(content: String, author: String? = nil) -> Surrounding {
-            Surrounding(method: "ax_tree", author: author, content: content, trust: "untrusted")
+        static func axTree(
+            content: String, author: String? = nil, captureExhausted: Bool = false
+        ) -> Surrounding {
+            Surrounding(
+                method: "ax_tree", author: author, content: content,
+                trust: "untrusted", captureExhausted: captureExhausted
+            )
         }
 
-        static func axTreeStructured(content: String, tree: SurroundingNode) -> Surrounding {
+        static func axTreeStructured(
+            content: String, tree: SurroundingNode, captureExhausted: Bool = false
+        ) -> Surrounding {
             Surrounding(
                 method: "ax_tree_structured", author: nil, content: content,
-                trust: "untrusted", tree: tree
+                trust: "untrusted", tree: tree, captureExhausted: captureExhausted
             )
         }
     }
@@ -144,6 +156,10 @@ struct MagicSnapshot: Sendable {
     var warmHit: Bool = false
     /// `kAXErrorCannotComplete` occurrences during capture (R4 frequency).
     var axCannotComplete: Int = 0
+    /// Attribute reads refused because the capture's AX-call budget was
+    /// already spent — the direct measure of a walk truncated by budget
+    /// rather than by the page ending.
+    var axCallsDenied: Int = 0
 
     /// True when the press carries ZERO content signal: no surrounding text
     /// was collected and the field's own value and selection are empty.
